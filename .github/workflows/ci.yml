@@ -79,12 +79,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install CocoaPods gem
+        run: sudo gem install cocoapods -v 1.15.2 --no-document
+
       - name: Install CocoaPods
         env:
           RUBYOPT: "-rlogger"
         run: |
           cd ios
-          bundle exec pod install --repo-update
+          pod repo update
+          pod install --repo-update
 
       - name: Build iOS Simulator App
         run: |

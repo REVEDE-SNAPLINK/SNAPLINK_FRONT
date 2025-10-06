@@ -21,9 +21,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Link assets (fonts)
-        run: npx react-native-asset
-
       - name: Install dependencies
         run: npm ci
 
@@ -81,9 +78,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Link assets (fonts)
-        run: npx react-native asset
 
       - name: Install CocoaPods
         run: sudo gem install cocoapods -v 1.15.2 --no-document

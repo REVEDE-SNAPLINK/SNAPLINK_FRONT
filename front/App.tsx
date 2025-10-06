@@ -1,45 +1,30 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { SafeAreaView, StatusBar, Text, TouchableOpacity, useColorScheme } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext.tsx';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+function MainScreen() {
+  const { theme } = useTheme();
+  return (
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }}
+    >
+      <TouchableOpacity style={{ backgroundColor: theme.colors.primary, justifyContent: 'center', alignItems: 'center', width: 200, height: 40 }}>
+        <Text style={{ color: theme.colors.textPrimary, fontFamily: theme.typography.fontFamily["800"], fontWeight: 800, fontSize: theme.typography.size.xl }}>Hello World!!</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  )
+}
 
-function App() {
+export default function App() {
   const isDarkMode = useColorScheme() === 'dark';
+  const barStyle = isDarkMode ? 'light-content' : 'dark-content';
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
+    <ThemeProvider>
+      <SafeAreaProvider>
+        <StatusBar barStyle={barStyle} />
+        <MainScreen />
+      </SafeAreaProvider>
+    </ThemeProvider>
+  )
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;

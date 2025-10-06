@@ -107,7 +107,7 @@ jobs:
         run: |
           xcodebuild \
             -workspace ios/snaplinkapp.xcworkspace \
-            -scheme SnaplinkApp \
+            -scheme snaplinkapp \
             -sdk iphonesimulator \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 15' \

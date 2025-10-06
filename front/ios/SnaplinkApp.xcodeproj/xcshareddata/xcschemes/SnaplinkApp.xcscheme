@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "SnaplinkApp.app"
-               BlueprintName = "SnaplinkApp"
-               ReferencedContainer = "container:SnaplinkApp.xcodeproj">
+               BuildableName = "snaplinkapp.app"
+               BlueprintName = "snaplinkapp"
+               ReferencedContainer = "container:snaplinkapp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "SnaplinkAppTests.xctest"
-               BlueprintName = "SnaplinkAppTests"
-               ReferencedContainer = "container:SnaplinkApp.xcodeproj">
+               BuildableName = "snaplinkappTests.xctest"
+               BlueprintName = "snaplinkappTests"
+               ReferencedContainer = "container:snaplinkapp.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "SnaplinkApp.app"
-            BlueprintName = "SnaplinkApp"
-            ReferencedContainer = "container:SnaplinkApp.xcodeproj">
+            BuildableName = "snaplinkapp.app"
+            BlueprintName = "snaplinkapp"
+            ReferencedContainer = "container:snaplinkapp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "SnaplinkApp.app"
-            BlueprintName = "SnaplinkApp"
-            ReferencedContainer = "container:SnaplinkApp.xcodeproj">
+            BuildableName = "snaplinkapp.app"
+            BlueprintName = "snaplinkapp"
+            ReferencedContainer = "container:snaplinkapp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

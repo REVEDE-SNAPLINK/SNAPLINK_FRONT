@@ -1,5 +1,5 @@
-import { SafeAreaView, StatusBar, Text, TouchableOpacity, useColorScheme } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar, Text, TouchableOpacity, useColorScheme } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext.tsx';
 
 function MainScreen() {

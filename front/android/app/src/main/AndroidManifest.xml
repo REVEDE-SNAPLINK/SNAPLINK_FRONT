@@ -2,7 +2,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <applicati
+    <application
       android:name=".MainApplication"
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
@@ -35,5 +35,5 @@
             <data android:scheme="https" android:host="snap.lnk" />
         </intent-filter>
       </activity>
-    </applicati>
+    </application>
 </manifest>

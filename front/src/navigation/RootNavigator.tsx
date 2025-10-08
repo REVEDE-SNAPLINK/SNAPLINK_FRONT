@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import SplashScreen from '@/screens/SplashScreen.tsx';
 import MainStack from '@/navigation/stacks/MainStack.tsx';
 import AuthStack from '@/navigation/stacks/AuthStack.tsx';
+import OnboardingStack from '@/navigation/stacks/OnboardingStack.tsx';
 
-export type RootStackParamList = { Auth: undefined; Main: undefined; }
+export type RootStackParamList = { Onboarding: undefined; Auth: undefined; Main: undefined; }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -13,7 +14,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const MIN_SPLASH_DELAY = __DEV__ ? 400 : 1200;
 
 export default function RootNavigator() {
-  const { status } = useAuth();
+  const { status, onboardingSeen } = useAuth();
   const [minDelayDone, setMinDelayDone] = useState(false);
 
   useEffect(() => {
@@ -28,7 +29,9 @@ export default function RootNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{headerShown: false}} >
-      {status === 'signedIn' ? (
+      {!onboardingSeen ? (
+        <Stack.Screen name="Onboarding" component={OnboardingStack} />
+      ) : status === 'signedIn' ? (
         <Stack.Screen name="Main" component={MainStack} />
       ) : (
         <Stack.Screen name="Auth" component={AuthStack} />

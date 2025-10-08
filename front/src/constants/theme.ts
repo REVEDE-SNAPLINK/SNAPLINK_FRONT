@@ -102,8 +102,20 @@ export const theme = {
   typography,
   spacing,
   radius,
+
+  // ✅ 가로 방향(Width 기반) 비율 조정
+  // - 예: 버튼의 가로 길이, 좌우 마진, 텍스트의 가로 간격 등
+  // - 기준 디바이스(예: iPhone X, width 375) 대비 비율로 크기를 자동 조정
   scale: s,
+
+  // ✅ 세로 방향(Height 기반) 비율 조정
+  // - 예: 이미지 높이, 상하 마진, 세로 패딩 등
+  // - 화면 높이에 따라 비율로 크기를 조정
   verticalScale: vs,
+
+  // ✅ 중간 비율 조정 (scale과의 절충)
+  // - 예: 폰트 크기, 아이콘 크기 등 "너무 커지거나 작아지면 안 되는" 요소
+  // - 두 축의 비율 차이를 완화해 자연스러운 스케일링
   moderateScale: ms,
 }
 

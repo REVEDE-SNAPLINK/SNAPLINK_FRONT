@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { scale as s, verticalScale as vs, moderateScale as ms } from 'react-native-size-matters';
 
 export const colors = {
   // Brand
@@ -28,24 +29,33 @@ export const colors = {
 }
 
 const typography = {
-  fontFamily: {
+  size: {
+    xs: ms(10),
+    sm: ms(12),
+    md: ms(14),
+    lg: ms(16),
+    xl: ms(22),
+    xxl: ms(40),
+  },
+  lineHeight: {
+    xs: ms(14),
+    sm: ms(16),
+    md: ms(20),
+    lg: ms(22),
+    xl: ms(28),
+    xxl: ms(48),
+  },
+  byWeightNumber: {
     100: 'Pretendard-Thin',
     200: 'Pretendard-ExtraLight',
     300: 'Pretendard-Light',
     400: 'Pretendard-Regular',
     500: 'Pretendard-Medium',
-    600: 'Pretendard-Bold',
-    700: 'Pretendard-SemiBold',
-    800: 'Pretendard-ExtraLight',
+    600: 'Pretendard-SemiBold',
+    700: 'Pretendard-Bold',
+    800: 'Pretendard-ExtraBold',
     900: 'Pretendard-Black',
-  },
-  size: {
-    xs: 10,
-    sm: 12,
-    md: 14,
-    lg: 16,
-    xl: 22,
-  }
+  } as const,
 }
 
 export const boxShadow = {
@@ -73,9 +83,28 @@ export const boxShadow = {
   },
 };
 
+const spacing = {
+  xs: s(4),
+  sm: s(8),
+  md: s(16),
+  lg: s(24),
+  xl: s(32),
+};
+
+const radius = {
+  sm: s(6),
+  md: s(10),
+  lg: s(16),
+};
+
 export const theme = {
   colors,
-  typography
+  typography,
+  spacing,
+  radius,
+  scale: s,
+  verticalScale: vs,
+  moderateScale: ms,
 }
 
 export type Theme = typeof theme;

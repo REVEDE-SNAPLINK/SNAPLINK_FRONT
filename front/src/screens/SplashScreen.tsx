@@ -1,33 +1,53 @@
 import React from 'react';
-import { StatusBar, StyleSheet, View, Text } from 'react-native';
+import { StatusBar, Text, View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext.tsx';
+import AppText from '@/components/AppText.tsx';
+import Logo from '@/assets/icons/logo.svg'
 
-// 배경 이미지를 안 쓴다면 ImageBackground 대신 View+그라디언트로 대체해도 OK
 export default function SplashScreen() {
   const { theme } = useTheme();
 
   return (
     <>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-        <View style={styles.center}>
-          <Text
-            style={{
-              color: '#FFF',
-              fontFamily: theme.typography.fontFamily["800"],
-              fontSize: 32,
-            }}
-          >
-            SnapLink
-          </Text>
-          <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 8 }}>
-            가장 빠른 링크 공유
-          </Text>
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: theme.colors.secondary,
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: theme.verticalScale(40),
+            marginBottom: theme.verticalScale(33),
+          }}
+        >
+          <Logo width={theme.scale(41)} height={theme.scale(40)} style={{ marginRight: theme.scale(11) }} />
+          <AppText size='xxl' weight={800} color='background'>Snaplink</AppText>
         </View>
+        <Text
+          style={{
+            fontSize: theme.moderateScale(20),
+            color: theme.colors.background,
+            fontWeight: 700,
+            fontFamily: 'KBODiaGothic-Bold',
+            lineHeight: theme.moderateScale(40),
+            letterSpacing: theme.scale(-0.8),
+            position: 'absolute',
+            bottom: theme.verticalScale(63),
+          }}
+        >Revede</Text>
+      </View>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-});

@@ -1,6 +1,6 @@
 import { useAuth } from '@/context/AuthContext.tsx';
 import React from 'react';
-import LoginView from '@/screens/auth/View/LoginView.tsx';
+import LoginView from './LoginView';
 import { User } from '@/types/auth.ts';
 
 export default function LoginContainer({ navigation }: any) {

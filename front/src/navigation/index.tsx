@@ -15,11 +15,6 @@ const linking = {
           Login: 'auth/login',
           SelectType: 'auth/select',
         }
-      },
-      Main: {
-        screens: {
-          Home: 'home',
-        }
       }
     }
   }

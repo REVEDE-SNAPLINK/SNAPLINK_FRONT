@@ -1,11 +1,9 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoginContainer from '@/screens/auth/Container/LoginContainer.tsx';
+import LoginContainer from '@/screens/auth/Login/LoginContainer';
+import SelectTypeContainer from '@/screens/auth/SelectType/SelectTypeContainer';
+import { AuthStackParamList } from '@/types/navigation';
 
-type AuthParamList = {
-  Login: undefined;
-}
-
-const Stack = createNativeStackNavigator<AuthParamList>();
+const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthStack() {
   return (
@@ -14,7 +12,7 @@ export default function AuthStack() {
       screenOptions={{headerShown: false}}
     >
       <Stack.Screen name="Login" component={LoginContainer} />
-      <Stack.Screen name="Login" component={LoginContainer} />
+      <Stack.Screen name="SelectType" component={SelectTypeContainer} />
     </Stack.Navigator>
   )
 }

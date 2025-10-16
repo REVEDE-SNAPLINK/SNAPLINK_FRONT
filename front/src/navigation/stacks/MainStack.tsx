@@ -1,12 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '@/screens/HomeScreen.tsx';
+import { MainStackParamList } from '@/types/navigation';
 
-
-type HomeParamList = {
-  Home: undefined;
-}
-
-const Stack = createNativeStackNavigator<HomeParamList>();
+const Stack = createNativeStackNavigator<MainStackParamList>();
 
 export default function MainStack() {
   return (

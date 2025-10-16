@@ -5,8 +5,7 @@ import SplashScreen from '@/screens/SplashScreen.tsx';
 import MainStack from '@/navigation/stacks/MainStack.tsx';
 import AuthStack from '@/navigation/stacks/AuthStack.tsx';
 import OnboardingStack from '@/navigation/stacks/OnboardingStack.tsx';
-
-export type RootStackParamList = { Onboarding: undefined; Auth: undefined; Main: undefined; }
+import { RootStackParamList } from '@/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

@@ -81,45 +81,46 @@ export default function LoginView({
 }
 
 const Container = styled(SafeAreaView)`
-  background-color: #E9E9E9;
+    background-color: #E9E9E9;
 `;
 
 const LogoContainer = styled.View`
-  justify-content: center;
-  align-items: center;
-  margin-top:  ${theme.verticalScale(100)};
-  margin-bottom: ${theme.verticalScale(90)};
+    justify-content: center;
+    align-items: center;
+    margin-top:  ${theme.verticalScale(100)};
+    margin-bottom: ${theme.verticalScale(90)};
 `
 
 const LogoWrapper = styled.View`
-  flex-direction: row;
-  margin-bottom: ${theme.verticalScale(10)};
+    flex-direction: row;
+    margin-bottom: ${theme.verticalScale(10)};
 `
 
 const LoginButtonWrapper = styled.View`
-  height: 100%;
-  background-color: ${theme.colors.white};
-  border-top-left-radius: ${theme.moderateScale(50)};
-  border-top-right-radius: ${theme.moderateScale(50)};
-  padding-top: ${theme.verticalScale(47)};
-  align-items: center;
+    height: 100%;
+    background-color: ${theme.colors.white};
+    border-top-left-radius: ${theme.moderateScale(50)};
+    border-top-right-radius: ${theme.moderateScale(50)};
+    padding-top: ${theme.verticalScale(47)};
+    align-items: center;
 `
 
 const StyledSocialLoginButton = styled.TouchableOpacity<{ backgroundColor: string }>`
-  width: ${theme.horizontalScale(335)};
-  height: ${theme.verticalScale(55)};
-  border-radius: 10px;
-  margin-bottom: ${theme.verticalScale(15)};
-  background-color: ${({ backgroundColor }) => backgroundColor};
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
+    width: ${theme.horizontalScale(335)};
+    height: ${theme.verticalScale(55)};
+    border-radius: ${theme.moderateScale(10)}px;
+    margin-bottom: ${theme.verticalScale(15)};
+    background-color: ${({ backgroundColor }) => backgroundColor};
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
 `;
 
 type SocialLoginButtonProps = TouchableOpacityProps & {
-  backgroundColor: string;
-  Icon: React.FC<SvgProps>;
-  text: string;
+    backgroundColor: string;
+    Icon: React.FC<SvgProps>;
+    text: string;
 }
 
 const SocialLoginButton = ({
@@ -136,9 +137,7 @@ const SocialLoginButton = ({
         fontSize={16}
         fontWeight={500}
         lineHeight={20}
-          style={{
-            marginLeft: theme.horizontalScale(12),
-          }}
+        marginLeft={12}
     >{text} 계정으로 로그인</AppText>
   </StyledSocialLoginButton>
 )

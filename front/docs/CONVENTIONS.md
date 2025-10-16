@@ -96,7 +96,7 @@ font-size: ${theme.moderateScale(16)}px;
 
 ✅ **권장:**
 ```tsx
-<AppText size="lg" weight={700} color="primary">
+<AppText fontSize={16} fontWeight={700} color="primary">
   텍스트 내용
 </AppText>
 ```
@@ -110,18 +110,27 @@ font-size: ${theme.moderateScale(16)}px;
 
 ### AppText Props
 ```tsx
-size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'  // 기본: 'md'
-weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900  // 기본: 400
-color?: 'primary' | 'secondary' | 'textPrimary' | 'textSecondary' | ...
-special?: 'kboBold'  // 특수 폰트
-align?: 'left' | 'center' | 'right'  // 기본: 'left'
-lh?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'  // line-height
+fontSize: number                                    // 필수: 폰트 크기 (Figma px 값)
+color?: ColorKey | string                           // theme.colors 키 또는 직접 색상값, 기본: 'textPrimary'
+fontWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900  // 기본: 400
+textAlign?: 'left' | 'center' | 'right'            // 기본: 'left'
+lineHeight?: number                                 // 줄 높이 (Figma px 값, verticalScale 적용)
+letterSpacing?: number                              // 자간 (Figma px 값, horizontalScale 적용)
+special?: 'kboBold'                                 // 특수 폰트 (KBODiaGothic-Bold)
+textDecorationLine?: 'none' | 'underline' | 'line-through'
+textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+marginTop?: number                                  // 상단 마진 (Figma px 값, verticalScale 적용)
+marginBottom?: number                               // 하단 마진 (Figma px 값, verticalScale 적용)
+marginLeft?: number                                 // 좌측 마진 (Figma px 값, horizontalScale 적용)
+marginRight?: number                                // 우측 마진 (Figma px 값, horizontalScale 적용)
+marginHorizontal?: number                           // 좌우 마진 (Figma px 값, horizontalScale 적용)
+marginVertical?: number                             // 상하 마진 (Figma px 값, verticalScale 적용)
 ```
 
 ### 특수 폰트 사용
 ```tsx
 // KBODiaGothic-Bold 폰트
-<AppText special="kboBold" size="lg">
+<AppText special="kboBold" fontSize={16}>
   Revede
 </AppText>
 ```

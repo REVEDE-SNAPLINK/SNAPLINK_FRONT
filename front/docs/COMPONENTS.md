@@ -10,12 +10,21 @@
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `size` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| 'xxl'` | `'md'` | 폰트 크기 (10px ~ 40px) |
-| `weight` | `100 \| 200 \| ... \| 900` | `400` | 폰트 굵기 (Pretendard) |
-| `color` | `ColorKey` | `'textPrimary'` | 텍스트 색상 (theme.colors) |
+| `fontSize` | `number` | - | 폰트 크기 (Figma px 값) |
+| `color` | `ColorKey \| string` | `'textPrimary'` | 텍스트 색상 (theme.colors 키 또는 직접 색상값) |
+| `fontWeight` | `100 \| 200 \| ... \| 900` | `400` | 폰트 굵기 (Pretendard) |
+| `textAlign` | `'left' \| 'center' \| 'right'` | `'left'` | 텍스트 정렬 |
+| `lineHeight` | `number` | - | 줄 높이 (Figma px 값, verticalScale 적용됨) |
+| `letterSpacing` | `number` | - | 자간 (Figma px 값, horizontalScale 적용됨) |
 | `special` | `'kboBold'` | - | 특수 폰트 (KBODiaGothic-Bold) |
-| `align` | `'left' \| 'center' \| 'right'` | `'left'` | 텍스트 정렬 |
-| `lh` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| 'xxl'` | `'md'` | 줄 높이 |
+| `textDecorationLine` | `'none' \| 'underline' \| 'line-through'` | - | 텍스트 장식선 |
+| `textTransform` | `'none' \| 'uppercase' \| 'lowercase' \| 'capitalize'` | - | 텍스트 변환 |
+| `marginTop` | `number` | - | 상단 마진 (Figma px 값, verticalScale 적용됨) |
+| `marginBottom` | `number` | - | 하단 마진 (Figma px 값, verticalScale 적용됨) |
+| `marginLeft` | `number` | - | 좌측 마진 (Figma px 값, horizontalScale 적용됨) |
+| `marginRight` | `number` | - | 우측 마진 (Figma px 값, horizontalScale 적용됨) |
+| `marginHorizontal` | `number` | - | 좌우 마진 (Figma px 값, horizontalScale 적용됨) |
+| `marginVertical` | `number` | - | 상하 마진 (Figma px 값, verticalScale 적용됨) |
 | `style` | `TextStyle` | - | 추가 스타일 (inline) |
 
 #### 사용 예시
@@ -24,39 +33,56 @@
 import AppText from '@/components/AppText';
 
 // 기본 사용
-<AppText>텍스트 내용</AppText>
+<AppText fontSize={14}>텍스트 내용</AppText>
 
 // 크기와 굵기 지정
-<AppText size="lg" weight={700}>
+<AppText fontSize={16} fontWeight={700}>
   제목 텍스트
 </AppText>
 
 // 색상 지정
-<AppText color="primary" weight={600}>
+<AppText fontSize={14} color="primary" fontWeight={600}>
   강조 텍스트
 </AppText>
 
 // 특수 폰트 사용
-<AppText special="kboBold" size="xl">
+<AppText special="kboBold" fontSize={22}>
   Revede
 </AppText>
 
-// 줄 높이 조정
-<AppText size="md" lh="lg">
+// 줄 높이와 자간 조정
+<AppText fontSize={14} lineHeight={20} letterSpacing={-0.5}>
   줄 간격이 넓은 텍스트
 </AppText>
 
+// 마진 사용 (반응형 스케일링 자동 적용)
+<AppText fontSize={14} marginTop={20} marginBottom={10}>
+  마진이 적용된 텍스트
+</AppText>
+
+<AppText fontSize={16} marginVertical={15} marginHorizontal={20}>
+  상하좌우 마진이 적용된 텍스트
+</AppText>
+
 // 중첩 사용 (색상 혼합)
-<AppText size="lg" weight={700}>
+<AppText fontSize={16} fontWeight={700}>
   일반 텍스트 <AppText color="primary">강조 부분</AppText>
+</AppText>
+
+// 텍스트 장식
+<AppText
+  fontSize={14}
+  textDecorationLine="underline"
+  textTransform="uppercase"
+>
+  밑줄과 대문자 변환
 </AppText>
 
 // inline style 추가 (최소한으로 사용)
 <AppText
-  size="md"
+  fontSize={14}
   style={{
-    letterSpacing: theme.scale(-0.5),
-    textDecorationLine: 'underline'
+    opacity: 0.7
   }}
 >
   추가 스타일이 필요한 텍스트
@@ -72,35 +98,35 @@ import AppText from '@/components/AppText';
 'tertiary'     // #333D49
 
 // Surface colors
-'background'   // #FFFFFF
 'formBackground'    // #F4F4F4
 'inputBackground'   // #EAEAEA
 'selected'     // #ECECEC
 'disabled'     // #A4A4A4
 
 // Text colors
-'textPrimary'   // #000000
 'textSecondary' // #646161
 
 // Placeholder colors
 'placeholder'    // #767676
-'placeholderDim' // #545454
 
 // Other colors
-'yellow'  // #FFB23F
-'red'     // #E84E4E
+'black'    // #000000
+'white'    // #FFFFFF
+'yellow'   // #FFB23F
+'red'      // #E84E4E
+'shadow'   // rgba(0, 0, 0, 0.08)
 ```
 
 #### 폰트 크기 참고
 
-| Size | Pixel | Use Case |
-|------|-------|----------|
-| `xs` | 10px | 작은 캡션 |
-| `sm` | 12px | 캡션, 부가 정보 |
-| `md` | 14px | 본문 (기본) |
-| `lg` | 16px | 부제목 |
-| `xl` | 22px | 제목 |
-| `xxl` | 40px | 대형 타이틀 |
+| Pixel | Use Case |
+|-------|----------|
+| 10px | 작은 캡션 |
+| 12px | 캡션, 부가 정보 |
+| 14px | 본문 (기본) |
+| 16px | 부제목 |
+| 22px | 제목 |
+| 40px | 대형 타이틀 |
 
 #### 폰트 굵기 참고
 
@@ -307,7 +333,7 @@ font-size: 16px;
 ### 4. AppText 우선 사용
 ```tsx
 // ✅ AppText 사용
-<AppText size="lg" weight={700}>제목</AppText>
+<AppText fontSize={16} fontWeight={700}>제목</AppText>
 
 // ❌ styled.Text 직접 사용
 const Title = styled.Text`

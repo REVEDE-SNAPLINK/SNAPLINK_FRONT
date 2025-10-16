@@ -3,61 +3,121 @@ import {Text as RNText, TextProps as RNTextProps, StyleSheet, TextStyle, Platfor
 import { theme } from "@/constants/theme.ts";
 
 type Weight = 100|200|300|400|500|600|700|800|900;
-type SizeKey = keyof typeof theme.typography.size;
 type ColorKey = keyof typeof theme.colors;
-type LineHeightKey = keyof typeof theme.typography.lineHeight;
 type SpecialFontKey = keyof typeof theme.typography.special;
 
 export type AppTextProps = RNTextProps & {
-    /** Font size - xs(10px), sm(12px), md(14px), lg(16px), xl(22px), xxl(40px) */
-    size?: SizeKey;
-    color?: ColorKey;
-    weight?: Weight;
-    align?: TextStyle['textAlign'];
-    /** Line height - xs(14px), sm(16px), md(20px), lg(22px), xl(28px), xxl(48px) */
-    lh?: LineHeightKey;
+    /** Font size - theme key or number (Figma px value) */
+    fontSize: number;
+
+    /** Color - theme key or hex/rgba string */
+    color?: ColorKey | string;
+
+    /** Font weight */
+    fontWeight?: Weight;
+
+    /** Text alignment */
+    textAlign?: TextStyle['textAlign'];
+
+    /** Line height - number (Figma px value) */
+    lineHeight?: number;
+
+    /** Letter spacing - number (Figma px value) */
+    letterSpacing?: number;
+
     /** Special fonts - kboBold(KBODiaGothic-Bold) */
     special?: SpecialFontKey;
+
+    /** Text decoration */
+    textDecorationLine?: TextStyle['textDecorationLine'];
+
+    /** Text transform */
+    textTransform?: TextStyle['textTransform'];
+
+    /** Margin */
+    marginTop?: number;
+    marginBottom?: number;
+    marginLeft?: number;
+    marginRight?: number;
+    marginHorizontal?: number;
+    marginVertical?: number;
+
     style?: TextStyle | TextStyle[];
 }
 
 export default function AppText({
-    size = 'md',
+    fontSize,
     color = 'textPrimary',
-    weight = 400,
-    align = 'left',
-    lh = 'md',
+    fontWeight = 400,
+    textAlign = 'left',
+    lineHeight,
+    letterSpacing,
     special,
+    textDecorationLine,
+    textTransform,
+    marginTop,
+    marginBottom,
+    marginLeft,
+    marginRight,
+    marginHorizontal,
+    marginVertical,
     style,
-    allowFontScaling = true, // 접근성 기본 on,
+    allowFontScaling = true,
     ...rest
 }: AppTextProps) {
     const family = special
         ? theme.typography.special[special]
-        : theme.typography.byWeightNumber[weight] ?? theme.typography.byWeightNumber[400];
+        : theme.typography.byWeightNumber[fontWeight] ?? theme.typography.byWeightNumber[400];
 
-    const fontSize = theme.typography.size[size];
-    const lineHeight = lh ? theme.typography.lineHeight[lh] : theme.typography.lineHeight[size];
+    // color: theme key인지 확인, 아니면 직접 색상값
+    const finalColor = color in theme.colors
+        ? theme.colors[color as ColorKey]
+        : color;
+
+    // lineHeight: 직접 지정값, verticalScale 적용
+    const finalLineHeight = lineHeight
+        ? theme.verticalScale(lineHeight)
+        : undefined;
+
+    // letterSpacing: 직접 지정값, scale 적용
+    const finalLetterSpacing = letterSpacing
+        ? theme.horizontalScale(letterSpacing)
+        : undefined;
 
     const weightStyle: TextStyle =
         Platform.OS === 'ios' && !special
-        ? { fontWeight: String(weight) as TextStyle['fontWeight'] }
+        ? { fontWeight: String(fontWeight) as TextStyle['fontWeight'] }
         : {};
+
+    const textStyle: TextStyle = {
+        color: finalColor,
+        fontFamily: family,
+        fontSize: fontSize,
+        textAlign,
+        fontWeight: fontWeight,
+        ...(finalLineHeight && { lineHeight: finalLineHeight }),
+        ...(finalLetterSpacing && { letterSpacing: finalLetterSpacing }),
+        ...(textDecorationLine && { textDecorationLine }),
+        ...(textTransform && { textTransform }),
+    };
+
+    const marginStyle: TextStyle = {
+        ...(marginTop !== undefined && { marginTop: theme.verticalScale(marginTop) }),
+        ...(marginBottom !== undefined && { marginBottom: theme.verticalScale(marginBottom) }),
+        ...(marginLeft !== undefined && { marginLeft: theme.horizontalScale(marginLeft) }),
+        ...(marginRight !== undefined && { marginRight: theme.horizontalScale(marginRight) }),
+        ...(marginHorizontal !== undefined && { marginHorizontal: theme.horizontalScale(marginHorizontal) }),
+        ...(marginVertical !== undefined && { marginVertical: theme.verticalScale(marginVertical) }),
+    };
 
     return (
         <RNText
             allowFontScaling={allowFontScaling}
             style={[
                 styles.base,
-                {
-                    color: theme.colors[color],
-                    fontFamily: family,
-                    fontSize,
-                    lineHeight,
-                    textAlign: align,
-                    fontWeight: weight,
-                },
+                textStyle,
                 weightStyle,
+                marginStyle,
                 style,
             ]}
             {...rest}

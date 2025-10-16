@@ -1,12 +1,31 @@
 import React from 'react';
-import { StatusBar, Text, View } from 'react-native';
-import { useTheme } from '@/context/ThemeContext.tsx';
+import { StatusBar } from 'react-native';
+import styled from 'styled-components/native';
+import { theme } from '@/constants/theme';
 import AppText from '@/components/AppText.tsx';
 import Logo from '@/assets/icons/logo.svg'
 
-export default function SplashScreen() {
-  const { theme } = useTheme();
+const Container = styled.View`
+  flex: 1;
+  background-color: ${theme.colors.secondary};
+  justify-content: center;
+  align-items: center;
+`;
 
+const LogoContainer = styled.View`
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  height: ${theme.verticalScale(40)}px;
+  margin-bottom: ${theme.verticalScale(33)}px;
+`;
+
+const LogoWrapper = styled.View`
+  margin-right: ${theme.scale(11)}px;
+`;
+
+export default function SplashScreen() {
   return (
     <>
       <StatusBar
@@ -14,40 +33,34 @@ export default function SplashScreen() {
         translucent
         backgroundColor="transparent"
       />
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: theme.colors.secondary,
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}
-      >
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: theme.verticalScale(40),
-            marginBottom: theme.verticalScale(33),
-          }}
-        >
-          <Logo width={theme.scale(41)} height={theme.scale(40)} style={{ marginRight: theme.scale(11) }} />
-          <AppText size='xxl' weight={800} color='background'>Snaplink</AppText>
-        </View>
-        <Text
+      <Container>
+        <LogoContainer>
+          <LogoWrapper>
+            <Logo width={theme.scale(41)} height={theme.scale(40)} />
+          </LogoWrapper>
+          <AppText
+            size='xxl'
+            weight={800}
+            color='background'
+            style={{
+              lineHeight: theme.moderateScale(40)
+            }}
+          >Snaplink</AppText>
+        </LogoContainer>
+        <AppText
+          size='md'
+          weight={700}
+          special='kboBold'
+          color='background'
           style={{
             fontSize: theme.moderateScale(20),
-            color: theme.colors.background,
-            fontWeight: 700,
-            fontFamily: 'KBODiaGothic-Bold',
             lineHeight: theme.moderateScale(40),
             letterSpacing: theme.scale(-0.8),
             position: 'absolute',
             bottom: theme.verticalScale(63),
           }}
-        >Revede</Text>
-      </View>
+        >Revede</AppText>
+      </Container>
     </>
   );
 }

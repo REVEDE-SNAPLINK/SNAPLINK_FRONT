@@ -1,11 +1,6 @@
 import React, {useRef, useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import {Dimensions, TouchableOpacity} from 'react-native';
+import styled from 'styled-components/native';
 import Swiper from 'react-native-swiper';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {theme} from '@/constants/theme';
@@ -16,6 +11,108 @@ import Onboarding3Svg from '@/assets/imgs/onboarding3.svg';
 import {useAuth} from '@/context/AuthContext';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
+
+const Container = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${theme.colors.background};
+`;
+
+const Slide = styled.View`
+  flex: 1;
+`;
+
+const PageContainer = styled.View`
+  flex: 1;
+`;
+
+const ContentContainer = styled.View<{ isThirdPage?: boolean }>`
+  padding-horizontal: ${theme.scale(32)}px;
+  padding-top: ${({ isThirdPage }) =>
+    isThirdPage ? 0 : theme.verticalScale(80)}px;
+  padding-bottom: ${({ isThirdPage }) =>
+    isThirdPage ? theme.verticalScale(120) : 0}px;
+`;
+
+const ImageBottom = styled.View`
+  width: ${SCREEN_WIDTH}px;
+  height: ${theme.verticalScale(300)}px;
+  margin-top: auto;
+  margin-bottom: ${theme.verticalScale(120)}px;
+`;
+
+const ImageCenterTop = styled.View`
+  width: ${SCREEN_WIDTH}px;
+  height: ${theme.verticalScale(250)}px;
+  margin-top: ${theme.verticalScale(100)}px;
+  margin-bottom: ${theme.verticalScale(30)}px;
+`;
+
+const PaginationContainer = styled.View`
+  position: absolute;
+  bottom: ${theme.verticalScale(60)}px;
+  left: 0;
+  right: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-horizontal: ${theme.scale(32)}px;
+`;
+
+const DotsContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: ${theme.scale(6)}px;
+`;
+
+const Dot = styled.View<{ isActive?: boolean }>`
+  width: ${({ isActive }) => theme.scale(isActive ? 16 : 8)}px;
+  height: ${theme.scale(4)}px;
+  border-radius: ${theme.scale(2)}px;
+  background-color: ${({ isActive }) =>
+    isActive ? theme.colors.primary : '#D6D9E1'};
+`;
+
+const NextButton = styled.TouchableOpacity`
+  width: ${theme.scale(56)}px;
+  height: ${theme.scale(56)}px;
+  border-radius: ${theme.scale(28)}px;
+  background-color: ${theme.colors.primary};
+  align-items: center;
+  justify-content: center;
+`;
+
+const GetStartedContainer = styled.View`
+  flex: 1;
+`;
+
+const GetStartedImage = styled.Image`
+  width: ${SCREEN_WIDTH}px;
+  height: ${theme.verticalScale(300)}px;
+  margin-top: ${theme.verticalScale(60)}px;
+`;
+
+const GetStartedTextContainer = styled.View`
+  padding-horizontal: ${theme.scale(32)}px;
+  padding-top: ${theme.verticalScale(40)}px;
+  padding-bottom: ${theme.verticalScale(20)}px;
+`;
+
+const GetStartedButton = styled.TouchableOpacity`
+  margin-horizontal: ${theme.scale(32)}px;
+  margin-bottom: ${theme.verticalScale(60)}px;
+  height: ${theme.scale(56)}px;
+  border-radius: ${theme.radius.md}px;
+  background-color: ${theme.colors.primary};
+  align-items: center;
+  justify-content: center;
+`;
+
+const BottomImage = styled.Image`
+  width: ${SCREEN_WIDTH}px;
+  height: ${theme.verticalScale(300)}px;
+  margin-top: auto;
+  margin-bottom: ${theme.verticalScale(120)}px;
+`;
 
 const OnboardingScreen = () => {
   const swiperRef = useRef<Swiper>(null);
@@ -42,125 +139,114 @@ const OnboardingScreen = () => {
 
   if (showGetStarted) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.getStartedContainer}>
-          <Image
+      <Container edges={['top']}>
+        <GetStartedContainer>
+          <GetStartedImage
             source={require('@/assets/imgs/onboarding4.png')}
-            style={styles.getStartedImage}
             resizeMode="contain"
           />
 
-          <View style={styles.getStartedTextContainer}>
+          <GetStartedTextContainer>
             <AppText
               weight={600}
-              style={[
-                styles.title,
-                styles.titleCenter,
-                {
-                  fontSize: theme.moderateScale(25),
-                  lineHeight: theme.moderateScale(40),
-                  letterSpacing: theme.moderateScale(-1),
-                },
-              ]}>
+              align="center"
+              color="textPrimary"
+              style={{
+                fontSize: theme.moderateScale(25),
+                lineHeight: theme.moderateScale(40),
+                letterSpacing: theme.moderateScale(-1),
+              }}>
               당신의 가장 빛나는 순간,{'\n'}더 이상 미루지 마세요.
             </AppText>
-          </View>
+          </GetStartedTextContainer>
 
-          <TouchableOpacity
-            style={styles.getStartedButton}
+          <GetStartedButton
             onPress={handleGetStarted}
             activeOpacity={0.8}>
             <AppText
               weight={700}
+              color="background"
               style={{
                 fontSize: theme.moderateScale(15),
                 lineHeight: theme.moderateScale(45),
-                color: theme.colors.background,
               }}>
               Snaplink 시작하기
             </AppText>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+          </GetStartedButton>
+        </GetStartedContainer>
+      </Container>
     );
   }
 
   // 첫 번째 페이지
   const Page1 = () => (
-    <View style={styles.pageContainer}>
-      <View style={styles.contentContainer}>
+    <PageContainer>
+      <ContentContainer>
         <AppText
           weight={700}
-          style={[
-            styles.title,
-            {
-              fontSize: theme.moderateScale(25),
-              lineHeight: theme.moderateScale(40),
-              letterSpacing: theme.moderateScale(-1),
-            },
-          ]}>
-          '인생샷' 한 장에 <AppText weight={700} style={{color: theme.colors.primary, fontSize: theme.moderateScale(25), lineHeight: theme.moderateScale(40)}}>10만 원</AppText>,{'\n'}정말 이게 최선일까요?
+          color="textPrimary"
+          style={{
+            fontSize: theme.moderateScale(25),
+            lineHeight: theme.moderateScale(40),
+            letterSpacing: theme.moderateScale(-1),
+          }}>
+          '인생샷' 한 장에 <AppText weight={700} color="primary" style={{fontSize: theme.moderateScale(25), lineHeight: theme.moderateScale(40)}}>10만 원</AppText>,{'\n'}정말 이게 최선일까요?
         </AppText>
-      </View>
+      </ContentContainer>
 
-      <Image
+      <BottomImage
         source={require('@/assets/imgs/onboarding1.png')}
-        style={styles.imageBottom}
         resizeMode="contain"
       />
-    </View>
+    </PageContainer>
   );
 
   // 두 번째 페이지
   const Page2 = () => (
-    <View style={styles.pageContainer}>
-      <View style={styles.contentContainer}>
+    <PageContainer>
+      <ContentContainer>
         <AppText
           weight={700}
-          style={[
-            styles.title,
-            {
-              fontSize: theme.moderateScale(25),
-              lineHeight: theme.moderateScale(40),
-              letterSpacing: theme.moderateScale(-1),
-            },
-          ]}>
-          <AppText weight={700} style={{color: theme.colors.primary, fontSize: theme.moderateScale(25), lineHeight: theme.moderateScale(40)}}>스냅 작가</AppText>님 예약,{'\n'}아직도 인스타에서 헤매고 있나요?
+          color="textPrimary"
+          style={{
+            fontSize: theme.moderateScale(25),
+            lineHeight: theme.moderateScale(40),
+            letterSpacing: theme.moderateScale(-1),
+          }}>
+          <AppText weight={700} color="primary" style={{fontSize: theme.moderateScale(25), lineHeight: theme.moderateScale(40)}}>스냅 작가</AppText>님 예약,{'\n'}아직도 인스타에서 헤매고 있나요?
         </AppText>
-      </View>
+      </ContentContainer>
 
-      <View style={styles.imageBottom}>
+      <ImageBottom>
         <Onboarding2Svg width={SCREEN_WIDTH} />
-      </View>
-    </View>
+      </ImageBottom>
+    </PageContainer>
   );
 
   // 세 번째 페이지
   const Page3 = () => (
-    <View style={styles.pageContainer}>
-      <View style={styles.imageCenterTop}>
+    <PageContainer>
+      <ImageCenterTop>
         <Onboarding3Svg width={SCREEN_WIDTH} />
-      </View>
+      </ImageCenterTop>
 
-      <View style={[styles.contentContainer, styles.contentContainerThird]}>
+      <ContentContainer isThirdPage>
         <AppText
           weight={700}
-          style={[
-            styles.title,
-            {
-              fontSize: theme.moderateScale(23),
-              lineHeight: theme.moderateScale(40),
-              letterSpacing: theme.moderateScale(-0.92),
-            },
-          ]}>
-          이 모든 고민,{'\n'}<AppText weight={700} style={{color: theme.colors.primary, fontSize: theme.moderateScale(23), lineHeight: theme.moderateScale(40)}}>스냅 링크</AppText>가 단번에 해결해 드릴게요.
+          color="textPrimary"
+          style={{
+            fontSize: theme.moderateScale(23),
+            lineHeight: theme.moderateScale(40),
+            letterSpacing: theme.moderateScale(-0.92),
+          }}>
+          이 모든 고민,{'\n'}<AppText weight={700} color="primary" style={{fontSize: theme.moderateScale(23), lineHeight: theme.moderateScale(40)}}>스냅 링크</AppText>가 단번에 해결해 드릴게요.
         </AppText>
-      </View>
-    </View>
+      </ContentContainer>
+    </PageContainer>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Container edges={['top']}>
       <Swiper
         ref={swiperRef}
         loop={false}
@@ -168,149 +254,46 @@ const OnboardingScreen = () => {
         showsPagination={false}
         onIndexChanged={setCurrentIndex}
         scrollEnabled={false}>
-        <View style={styles.slide}>
+        <Slide>
           <Page1 />
-        </View>
-        <View style={styles.slide}>
+        </Slide>
+        <Slide>
           <Page2 />
-        </View>
-        <View style={styles.slide}>
+        </Slide>
+        <Slide>
           <Page3 />
-        </View>
+        </Slide>
       </Swiper>
 
-      <View style={styles.paginationContainer}>
+      <PaginationContainer>
         <TouchableOpacity onPress={handleSkip}>
           <AppText
             weight={400}
+            color="textSecondary"
             style={{
               fontSize: theme.moderateScale(14),
-              color: theme.colors.textSecondary,
             }}>
             skip
           </AppText>
         </TouchableOpacity>
 
-        <View style={styles.dotsContainer}>
+        <DotsContainer>
           {[0, 1, 2].map(i => (
-            <View
+            <Dot
               key={i}
-              style={[
-                styles.dot,
-                i === currentIndex && styles.dotActive,
-              ]}
+              isActive={i === currentIndex}
             />
           ))}
-        </View>
+        </DotsContainer>
 
-        <TouchableOpacity
-          style={styles.nextButton}
+        <NextButton
           onPress={handleNext}
           activeOpacity={0.8}>
           <ArrowRightIcon width={theme.scale(28)} height={theme.scale(28)} />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        </NextButton>
+      </PaginationContainer>
+    </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  slide: {
-    flex: 1,
-  },
-  pageContainer: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: theme.scale(32),
-    paddingTop: theme.verticalScale(80),
-  },
-  contentContainerThird: {
-    paddingTop: 0,
-    paddingBottom: theme.verticalScale(120),
-  },
-  title: {
-    color: theme.colors.textPrimary,
-  },
-  titleCenter: {
-    textAlign: 'center',
-  },
-  imageTop: {
-    width: SCREEN_WIDTH,
-    height: theme.verticalScale(200),
-    marginTop: theme.verticalScale(60),
-  },
-  imageCenterTop: {
-    width: SCREEN_WIDTH,
-    height: theme.verticalScale(250),
-    marginTop: theme.verticalScale(100),
-    marginBottom: theme.verticalScale(30),
-  },
-  imageBottom: {
-    width: SCREEN_WIDTH,
-    height: theme.verticalScale(300),
-    marginTop: 'auto',
-    marginBottom: theme.verticalScale(120),
-  },
-  paginationContainer: {
-    position: 'absolute',
-    bottom: theme.verticalScale(60),
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.scale(32),
-  },
-  dotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.scale(6),
-  },
-  dot: {
-    width: theme.scale(8),
-    height: theme.scale(4),
-    borderRadius: theme.scale(2),
-    backgroundColor: '#D6D9E1',
-  },
-  dotActive: {
-    width: theme.scale(16),
-    backgroundColor: theme.colors.primary,
-  },
-  nextButton: {
-    width: theme.scale(56),
-    height: theme.scale(56),
-    borderRadius: theme.scale(28),
-    backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  getStartedContainer: {
-    flex: 1,
-  },
-  getStartedImage: {
-    width: SCREEN_WIDTH,
-    height: theme.verticalScale(300),
-    marginTop: theme.verticalScale(60),
-  },
-  getStartedTextContainer: {
-    paddingHorizontal: theme.scale(32),
-    paddingTop: theme.verticalScale(40),
-    paddingBottom: theme.verticalScale(20),
-  },
-  getStartedButton: {
-    marginHorizontal: theme.scale(32),
-    marginBottom: theme.verticalScale(60),
-    height: theme.scale(56),
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 export default OnboardingScreen;

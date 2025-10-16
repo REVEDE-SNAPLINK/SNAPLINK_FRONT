@@ -6,6 +6,7 @@ type Weight = 100|200|300|400|500|600|700|800|900;
 type SizeKey = keyof typeof theme.typography.size;
 type ColorKey = keyof typeof theme.colors;
 type LineHeightKey = keyof typeof theme.typography.lineHeight;
+type SpecialFontKey = keyof typeof theme.typography.special;
 
 export type AppTextProps = RNTextProps & {
     /** Font size - xs(10px), sm(12px), md(14px), lg(16px), xl(22px), xxl(40px) */
@@ -15,6 +16,8 @@ export type AppTextProps = RNTextProps & {
     align?: TextStyle['textAlign'];
     /** Line height - xs(14px), sm(16px), md(20px), lg(22px), xl(28px), xxl(48px) */
     lh?: LineHeightKey;
+    /** Special fonts - kboBold(KBODiaGothic-Bold) */
+    special?: SpecialFontKey;
     style?: TextStyle | TextStyle[];
 }
 
@@ -29,13 +32,15 @@ export default function AppText({
     allowFontScaling = true, // 접근성 기본 on,
     ...rest
 }: AppTextProps) {
-    const family = theme.typography.byWeightNumber[weight] ?? theme.typography.byWeightNumber[400];
+    const family = special
+        ? theme.typography.special[special]
+        : theme.typography.byWeightNumber[weight] ?? theme.typography.byWeightNumber[400];
 
     const fontSize = theme.typography.size[size];
     const lineHeight = lh ? theme.typography.lineHeight[lh] : theme.typography.lineHeight[size];
 
     const weightStyle: TextStyle =
-        Platform.OS === 'ios'
+        Platform.OS === 'ios' && !special
         ? { fontWeight: String(weight) as TextStyle['fontWeight'] }
         : {};
 

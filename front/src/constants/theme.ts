@@ -68,6 +68,9 @@ const typography = {
     800: 'Pretendard-ExtraBold',
     900: 'Pretendard-Black',
   } as const,
+  special: {
+    kboBold: 'KBODiaGothic-Bold',
+  } as const,
 }
 
 export const boxShadow = {

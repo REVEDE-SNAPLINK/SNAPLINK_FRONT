@@ -8,10 +8,12 @@ type ColorKey = keyof typeof theme.colors;
 type LineHeightKey = keyof typeof theme.typography.lineHeight;
 
 export type AppTextProps = RNTextProps & {
+    /** Font size - xs(10px), sm(12px), md(14px), lg(16px), xl(22px), xxl(40px) */
     size?: SizeKey;
     color?: ColorKey;
     weight?: Weight;
     align?: TextStyle['textAlign'];
+    /** Line height - xs(14px), sm(16px), md(20px), lg(22px), xl(28px), xxl(48px) */
     lh?: LineHeightKey;
     style?: TextStyle | TextStyle[];
 }
@@ -21,7 +23,8 @@ export default function AppText({
     color = 'textPrimary',
     weight = 400,
     align = 'left',
-    lh,
+    lh = 'md',
+    special,
     style,
     allowFontScaling = true, // 접근성 기본 on,
     ...rest

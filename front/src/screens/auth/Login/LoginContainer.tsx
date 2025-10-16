@@ -2,9 +2,13 @@ import { useAuth } from '@/context/AuthContext.tsx';
 import React from 'react';
 import LoginView from './LoginView';
 import { User } from '@/types/auth.ts';
+import { useNavigation } from '@react-navigation/native';
+import {AuthNavigationProp, MainNavigationProp} from '@/types/navigation';
 
-export default function LoginContainer({ navigation }: any) {
+export default function LoginContainer() {
   const { signIn } = useAuth();
+  const authNavigation = useNavigation<AuthNavigationProp>();
+  const mainNavigation = useNavigation<MainNavigationProp>();
 
   const onLogin = async (apiUrl: string) => {
     console.log(apiUrl);
@@ -18,9 +22,9 @@ export default function LoginContainer({ navigation }: any) {
     }
     signIn(token, user, !response.isAllowed);
     if (response.isAllowed) {
-      navigation.replace('Home');
+      mainNavigation.navigate('Home');
     } else {
-      navigation.navigate('Login/auth/select');
+      authNavigation.navigate('SelectType')
     }
   }
 

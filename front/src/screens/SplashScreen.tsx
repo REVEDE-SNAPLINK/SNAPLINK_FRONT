@@ -5,6 +5,39 @@ import { theme } from '@/constants/theme';
 import AppText from '@/components/AppText.tsx';
 import Logo from '@/assets/icons/logo.svg'
 
+export default function SplashScreen() {
+  return (
+    <>
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+      <Container>
+        <LogoContainer>
+          <LogoWrapper>
+            <Logo width={theme.horizontalScale(41.233)} height={theme.verticalScale(40)} />
+          </LogoWrapper>
+          <AppText
+            color='white'
+            fontSize={40}
+            fontWeight={800}
+            lineHeight={40}
+          >Snaplink</AppText>
+        </LogoContainer>
+        <BottomText
+          color='white'
+          special='kboBold'
+          fontSize={20}
+          fontWeight={700}
+          lineHeight={40}
+          letterSpacing={-0.8}
+        >Revede</BottomText>
+      </Container>
+    </>
+  );
+}
+
 const Container = styled.View`
   flex: 1;
   background-color: ${theme.colors.secondary};
@@ -22,45 +55,10 @@ const LogoContainer = styled.View`
 `;
 
 const LogoWrapper = styled.View`
-  margin-right: ${theme.scale(11)}px;
+  margin-right: ${theme.horizontalScale(11)}px;
 `;
 
-export default function SplashScreen() {
-  return (
-    <>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-      <Container>
-        <LogoContainer>
-          <LogoWrapper>
-            <Logo width={theme.scale(41)} height={theme.scale(40)} />
-          </LogoWrapper>
-          <AppText
-            size='xxl'
-            weight={800}
-            color='background'
-            style={{
-              lineHeight: theme.moderateScale(40)
-            }}
-          >Snaplink</AppText>
-        </LogoContainer>
-        <AppText
-          size='md'
-          weight={700}
-          special='kboBold'
-          color='background'
-          style={{
-            fontSize: theme.moderateScale(20),
-            lineHeight: theme.moderateScale(40),
-            letterSpacing: theme.scale(-0.8),
-            position: 'absolute',
-            bottom: theme.verticalScale(63),
-          }}
-        >Revede</AppText>
-      </Container>
-    </>
-  );
-}
+const BottomText = styled(AppText)`
+  position: absolute;
+  bottom: ${theme.verticalScale(63)}px;
+`;

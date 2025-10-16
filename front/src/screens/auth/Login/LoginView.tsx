@@ -8,6 +8,7 @@ import { SvgProps } from 'react-native-svg';
 import Kakao from '@/assets/icons/kakao.svg';
 import Naver from '@/assets/icons/naver.svg';
 import Google from '@/assets/icons/google.svg';
+import {TouchableOpacityProps} from "react-native";
 
 type LoginViewProps = {
   onKakaoLogin: () => void;
@@ -24,27 +25,36 @@ export default function LoginView({
     <Container>
       <LogoContainer>
         <LogoWrapper>
-          <Logo width={theme.scale(41.233)} height={theme.scale(40)} style={{ marginRight: theme.scale(11.77) }} />
+          <Logo
+              width={theme.horizontalScale(41.233)}
+              height={theme.verticalScale(40)}
+              style={{ marginRight: theme.horizontalScale(11.77) }}
+          />
           <AppText
-            weight={700}
-            size='xxl'
-            special='kboBold'
             color='primary'
-            style={{
-              lineHeight: theme.moderateScale(40),
-              letterSpacing: theme.moderateScale(-1.6)
-            }}
+            special='kboBold'
+            fontSize={40}
+            fontWeight={700}
+            lineHeight={40}
+            letterSpacing={-1.6}
           >Snaplink</AppText>
         </LogoWrapper>
-        <AppText color="textPrimary" weight={500} size="md" lh="md">Snaplink와 함께 추억을 만들어보세요!</AppText>
+        <AppText
+            color="black"
+            textAlign='center'
+            fontSize={14}
+            fontWeight={500}
+            lineHeight={20}
+        >Snaplink와 함께 추억을 만들어보세요!</AppText>
       </LogoContainer>
       <LoginButtonWrapper>
         <AppText
-          color='placeholderDim'
-          weight={500}
-          style={{
-            marginBottom: theme.verticalScale(30),
-          }}
+          color='#545454'
+          textAlign='center'
+          fontSize={14}
+          fontWeight={500}
+          lineHeight={20}
+          marginBottom={30}
         >SNS 계정으로 스냅링크를 이용해보세요</AppText>
         {/* social login buttons */}
         <SocialLoginButton
@@ -88,16 +98,16 @@ const LogoWrapper = styled.View`
 
 const LoginButtonWrapper = styled.View`
   height: 100%;
-  background-color: ${theme.colors.background};
-  border-top-left-radius: ${theme.scale(50)};
-  border-top-right-radius: ${theme.scale(50)};
+  background-color: ${theme.colors.white};
+  border-top-left-radius: ${theme.moderateScale(50)};
+  border-top-right-radius: ${theme.moderateScale(50)};
   padding-top: ${theme.verticalScale(47)};
   align-items: center;
 `
 
 const StyledSocialLoginButton = styled.TouchableOpacity<{ backgroundColor: string }>`
-  width: ${theme.scale(335)};
-  height: ${theme.scale(55)};
+  width: ${theme.horizontalScale(335)};
+  height: ${theme.verticalScale(55)};
   border-radius: 10px;
   margin-bottom: ${theme.verticalScale(15)};
   background-color: ${({ backgroundColor }) => backgroundColor};
@@ -106,23 +116,29 @@ const StyledSocialLoginButton = styled.TouchableOpacity<{ backgroundColor: strin
   align-items: center;
 `;
 
-interface SocialLoginButtonProps {
+type SocialLoginButtonProps = TouchableOpacityProps & {
   backgroundColor: string;
   Icon: React.FC<SvgProps>;
   text: string;
-  onPress: () => void;
 }
 
-const SocialLoginButton = ({ backgroundColor, Icon, text, onPress }: SocialLoginButtonProps) => (
-  <StyledSocialLoginButton backgroundColor={backgroundColor} onPress={onPress}>
-    <Icon width={theme.scale(16)} height={theme.verticalScale(16)} />
+const SocialLoginButton = ({
+    backgroundColor,
+    Icon,
+    text,
+    ...rest
+}: SocialLoginButtonProps) => (
+  <StyledSocialLoginButton backgroundColor={backgroundColor} {...rest}>
+    <Icon width={theme.horizontalScale(16)} height={theme.verticalScale(16)} />
     <AppText
-      color="textPrimary"
-      size='lg'
-      weight={500}
-      style={{
-        marginLeft: theme.scale(12),
-      }}
+        color="black"
+        textAlign='center'
+        fontSize={16}
+        fontWeight={500}
+        lineHeight={20}
+          style={{
+            marginLeft: theme.horizontalScale(12),
+          }}
     >{text} 계정으로 로그인</AppText>
   </StyledSocialLoginButton>
 )

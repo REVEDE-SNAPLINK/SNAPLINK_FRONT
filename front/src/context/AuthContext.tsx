@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '../types/auth.ts';
+import { User } from '@/types/auth.ts';
 
 /**
  * 로그인 상태

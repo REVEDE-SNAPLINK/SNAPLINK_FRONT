@@ -1,7 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingScreen from '@/screens/OnboardingScreen';
+import { OnboardingStackParamList } from '@/types/navigation';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 export default function OnboardingStack() {
   return (

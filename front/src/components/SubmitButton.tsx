@@ -52,7 +52,7 @@ export default function SubmitButton({
 
 const StyledSubmitButton = styled.TouchableOpacity<StyledSubmitButtonProps>`
   width: 100%;
-  height: ${theme.verticalScale(55)}px;
+  height: ${theme.verticalScale(45)}px;
   background: ${({ disabled }) => disabled ? theme.colors.disabled : theme.colors.primary};
   ${({ marginTop }) => marginTop !== undefined && `margin-top: ${theme.verticalScale(marginTop)}px;`}
   ${({ marginBottom }) => marginBottom !== undefined && `margin-bottom: ${theme.verticalScale(marginBottom)}px;`}

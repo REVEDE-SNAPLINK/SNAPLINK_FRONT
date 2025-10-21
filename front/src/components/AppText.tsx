@@ -8,7 +8,7 @@ type SpecialFontKey = keyof typeof theme.typography.special;
 
 export type AppTextProps = RNTextProps & {
     /** Font size - theme key or number (Figma px value) */
-    fontSize: number;
+    fontSize?: number;
 
     /** Color - theme key or hex/rgba string */
     color?: ColorKey | string;
@@ -46,7 +46,7 @@ export type AppTextProps = RNTextProps & {
 }
 
 export default function AppText({
-    fontSize,
+    fontSize = 14,
     color = 'textPrimary',
     fontWeight = 400,
     textAlign = 'left',

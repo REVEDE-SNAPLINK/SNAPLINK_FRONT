@@ -30,8 +30,7 @@ export default function BottomModal({
       onRequestClose={onClose}
     >
       <Overlay>
-        <Pressable
-          style={{ flex: 1 }}
+        <StyledPressable
           onPress={onClose}
         />
         <ModalContainer>
@@ -51,8 +50,7 @@ export default function BottomModal({
             marginTop={60}
           />
         </ModalContainer>
-        <Pressable
-          style={{ flex: 1 }}
+        <StyledPressable
           onPress={onClose}
         />
       </Overlay>
@@ -78,3 +76,7 @@ const ModalContainer = styled.View`
   padding-right: ${theme.horizontalScale(16)}px;
   justify-content: space-between;
 `;
+
+const StyledPressable = styled(Pressable)`
+  flex: 1
+`

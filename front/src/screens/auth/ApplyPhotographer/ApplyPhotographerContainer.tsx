@@ -276,7 +276,9 @@ export default function ApplyPhotographerContainer() {
     return `${year}-${month}-${day}`;
   }
 
-  const onSubmit = handleSubmit(async (data: ApplyPhotographerFormData) => {
+  const onSubmit = handleSubmit(async (
+      // data: ApplyPhotographerFormData
+  ) => {
     try {
       // TODO: API call to submit photographer application
       // Data structure:

@@ -13,7 +13,7 @@ export default function BackButton ({
 }: BackButtonProps) {
 
   return (
-    <StyledBackButton onPress={onPress} {...rest}>
+    <StyledBackButton onPress={onPress} testID="back-button" {...rest}>
       <ArrowLeftIcon
         width={theme.horizontalScale(30)} height={theme.verticalScale(30)}
       />

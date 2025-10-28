@@ -107,7 +107,7 @@ const LoginButtonWrapper = styled.View`
 
 const StyledSocialLoginButton = styled.TouchableOpacity<{ backgroundColor: string }>`
     width: ${theme.horizontalScale(335)};
-    height: ${theme.verticalScale(55)};
+    height: ${theme.verticalScale(45)};
     border-radius: ${theme.moderateScale(10)}px;
     margin-bottom: ${theme.verticalScale(15)};
     background-color: ${({ backgroundColor }) => backgroundColor};

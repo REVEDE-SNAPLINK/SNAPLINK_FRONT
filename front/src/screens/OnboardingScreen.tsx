@@ -1,5 +1,4 @@
 import {useState, useRef} from "react";
-import { useNavigation } from "@react-navigation/native";
 import Swiper from "react-native-swiper";
 import BottomSwipeNavigation from "@/components/onboarding/BottomSwipeNavigation.tsx";
 import styled from 'styled-components/native';
@@ -9,18 +8,19 @@ import { Text, View } from 'react-native';
 import Onboarding2Image from '@/assets/imgs/onboarding2.svg';
 import Onboarding3Image from '@/assets/imgs/onboarding3.svg';
 import SubmitButton from '@/components/SubmitButton.tsx';
-import { AuthNavigationProp } from '@/types/navigation.ts';
+import { useAuth } from '@/context/AuthContext.tsx';
 
 const LENGTH = 3;
 
 export default function OnboardingScreen() {
+    const { setOnboardingSeen } = useAuth();
+
     const [currentIdx, setCurrentIdx] = useState<number>(0);
     const mainSwiperRef = useRef<Swiper>(null);
     const parentSwiperRef = useRef<Swiper>(null);
-    const navigation = useNavigation<AuthNavigationProp>();
 
     const onSkip = () => {
-      navigation.navigate('Login');
+      setOnboardingSeen();
     }
 
     const onNext = () => {
@@ -32,7 +32,7 @@ export default function OnboardingScreen() {
     }
 
     const onComplete = () => {
-      navigation.navigate('Login');
+      setOnboardingSeen();
     }
 
     return (

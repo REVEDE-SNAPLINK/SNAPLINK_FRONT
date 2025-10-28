@@ -1,0 +1,9 @@
+# iOS Configuration
+app_identifier(ENV["IOS_APP_IDENTIFIER"] || "com.snaplink.app")
+apple_id(ENV["APPLE_ID"] || "your-apple-id@example.com")
+team_id(ENV["APPLE_TEAM_ID"] || "YOUR_TEAM_ID")
+itc_team_id(ENV["APP_STORE_CONNECT_TEAM_ID"] || "YOUR_APP_STORE_CONNECT_TEAM_ID")
+
+# Android Configuration
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "./google-play-key.json")
+package_name(ENV["ANDROID_PACKAGE_NAME"] || "com.snaplink.app")

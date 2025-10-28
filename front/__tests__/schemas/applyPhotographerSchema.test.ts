@@ -10,6 +10,26 @@ describe('applyPhotographerSchema', () => {
     photofolioImages: [{ uri: 'test.jpg' }],
     introduction: '안녕하세요. 10년 경력의 사진작가입니다.',
     profileImage: { uri: 'profile.jpg' },
+    consents: [
+      {
+        id: '1',
+        title: '만 14세 이상입니다 (필수)',
+        required: true,
+        isChecked: true,
+      },
+      {
+        id: '2',
+        title: '브랜디 약관 동의 (필수)',
+        required: true,
+        isChecked: true,
+      },
+      {
+        id: '3',
+        title: '마케팅 수신 동의 (선택)',
+        required: false,
+        isChecked: false,
+      },
+    ],
   };
 
   describe('Valid cases', () => {
@@ -136,6 +156,66 @@ describe('applyPhotographerSchema', () => {
           '프로필 사진을 업로드해주세요'
         );
       }
+    });
+  });
+
+  describe('Consent validation', () => {
+    it('should fail when required consent is not checked', () => {
+      const result = applyPhotographerSchema.safeParse({
+        ...validData,
+        consents: [
+          {
+            id: '1',
+            title: '만 14세 이상입니다 (필수)',
+            required: true,
+            isChecked: false, // Not checked
+          },
+          {
+            id: '2',
+            title: '브랜디 약관 동의 (필수)',
+            required: true,
+            isChecked: true,
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe(
+          '필수 동의 항목을 모두 체크해주세요'
+        );
+      }
+    });
+
+    it('should pass when all required consents are checked', () => {
+      const result = applyPhotographerSchema.safeParse({
+        ...validData,
+        consents: [
+          {
+            id: '1',
+            title: '만 14세 이상입니다 (필수)',
+            required: true,
+            isChecked: true,
+          },
+          {
+            id: '2',
+            title: '브랜디 약관 동의 (필수)',
+            required: true,
+            isChecked: true,
+          },
+          {
+            id: '3',
+            title: '마케팅 수신 동의 (선택)',
+            required: false,
+            isChecked: false, // Optional, not checked is OK
+          },
+        ],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should pass when optional consent is not checked', () => {
+      const result = applyPhotographerSchema.safeParse(validData);
+      expect(result.success).toBe(true);
     });
   });
 });

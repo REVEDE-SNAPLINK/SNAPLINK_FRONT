@@ -1,4 +1,49 @@
-## 📌Commit Convention
+# SNAPLINK - 스냅 사진 작가 예약 플랫폼
+
+스냅 사진 작가와 고객을 연결하는 모바일 애플리케이션
+
+## 📱 프로젝트 구조
+
+```
+SNAPLINK_FRONT/
+├── front/          # React Native 앱
+│   ├── src/        # 소스 코드
+│   └── docs/       # 개발 문서
+└── README.md       # 프로젝트 전체 가이드
+```
+
+## 📚 개발 문서
+
+프론트엔드 개발자를 위한 상세 가이드:
+
+- **[SETUP.md](front/docs/SETUP.md)** - 개발 환경 설정
+- **[ARCHITECTURE.md](front/docs/ARCHITECTURE.md)** - 프로젝트 구조 및 아키텍처
+- **[CONVENTIONS.md](front/docs/CONVENTIONS.md)** - 코딩 컨벤션
+- **[COMPONENTS.md](front/docs/COMPONENTS.md)** - 컴포넌트 사용 가이드
+
+## 🚀 빠른 시작
+
+```bash
+cd front
+npm install
+
+# iOS (시뮬레이터)
+cd ios && bundle exec pod install && cd ..
+npx react-native run-ios
+
+# Android (에뮬레이터)
+npx react-native run-android
+```
+
+## 🛠 기술 스택
+
+- React Native 0.81.4
+- TypeScript
+- React Navigation
+- styled-components
+- Context API (상태 관리)
+
+## 📌 Commit Convention
 
 | Commit Type        | Description                              |
 |--------------------|------------------------------------------|

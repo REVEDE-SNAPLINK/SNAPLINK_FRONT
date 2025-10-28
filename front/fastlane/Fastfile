@@ -1,0 +1,98 @@
+# Fastfile for SnapLink App
+# This file contains the fastlane.tools configuration
+
+default_platform(:ios)
+
+# iOS Platform
+platform :ios do
+  desc "Build and upload iOS app to TestFlight"
+  lane :beta do
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "./ios/snaplinkapp.xcodeproj"
+    )
+
+    # Install CocoaPods dependencies
+    cocoapods(
+      podfile: "./ios/Podfile"
+    )
+
+    # Build the app
+    build_app(
+      scheme: "snaplinkapp",
+      workspace: "./ios/snaplinkapp.xcworkspace",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          ENV["IOS_APP_IDENTIFIER"] => ENV["IOS_PROVISIONING_PROFILE_NAME"]
+        }
+      },
+      output_directory: "./build/ios",
+      output_name: "SnaplinkApp.ipa"
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: ENV["CHANGELOG"] || "Bug fixes and improvements"
+    )
+
+    # Send notification (optional)
+    slack(
+      message: "iOS app successfully uploaded to TestFlight!",
+      success: true,
+      slack_url: ENV["SLACK_WEBHOOK_URL"]
+    ) if ENV["SLACK_WEBHOOK_URL"]
+  end
+
+  desc "Sync code signing certificates and profiles"
+  lane :sync_certificates do
+    match(
+      type: "appstore",
+      readonly: true
+    )
+  end
+end
+
+# Android Platform
+platform :android do
+  desc "Build and upload Android app to Internal Testing"
+  lane :beta do
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "./android/app/build.gradle"
+    )
+
+    # Build the release APK/AAB
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "./android"
+    )
+
+    # Upload to Google Play Internal Testing
+    upload_to_play_store(
+      track: "internal",
+      aab: "./android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    # Send notification (optional)
+    slack(
+      message: "Android app successfully uploaded to Internal Testing!",
+      success: true,
+      slack_url: ENV["SLACK_WEBHOOK_URL"]
+    ) if ENV["SLACK_WEBHOOK_URL"]
+  end
+
+  desc "Build Android release APK"
+  lane :build_release do
+    gradle(
+      task: "assemble",
+      build_type: "Release",
+      project_dir: "./android"
+    )
+  end
+end

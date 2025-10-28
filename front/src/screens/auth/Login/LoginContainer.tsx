@@ -1,0 +1,46 @@
+import { useAuth } from '@/context/AuthContext.tsx';
+import React from 'react';
+import LoginView from './LoginView';
+import { User } from '@/types/auth.ts';
+import { useNavigation } from '@react-navigation/native';
+import {AuthNavigationProp, MainNavigationProp} from '@/types/navigation';
+
+export default function LoginContainer() {
+  const { signIn } = useAuth();
+  const authNavigation = useNavigation<AuthNavigationProp>();
+  const mainNavigation = useNavigation<MainNavigationProp>();
+
+  const onLogin = async (apiUrl: string) => {
+    console.log(apiUrl);
+    const response = { isAllowed: false };
+    let token = "asdf";
+    const user: User = {
+      id: '1',
+      name: 'user1',
+      email: '',
+      userType: 'user',
+    }
+    signIn(token, user, !response.isAllowed);
+    if (response.isAllowed) {
+      mainNavigation.navigate('Home');
+    } else {
+      authNavigation.navigate('SelectType')
+    }
+  }
+
+  const handleKakaoLogin = async () => {
+    await onLogin('/api/v1/auth/kakao/login');
+  }
+  const handleNaverLogin = async () => {
+    await onLogin('/api/v1/auth/kakao/login');
+  }
+  const handleGoogleLogin = async () => {
+    await onLogin('/api/v1/auth/kakao/login');
+  }
+
+  return <LoginView
+    onKakaoLogin={handleKakaoLogin}
+    onNaverLogin={handleNaverLogin}
+    onGoogleLogin={handleGoogleLogin}
+  />
+}

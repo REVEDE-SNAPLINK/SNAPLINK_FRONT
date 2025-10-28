@@ -52,6 +52,18 @@ yarn-error.log
 **/fastlane/Preview.html
 **/fastlane/screenshots
 **/fastlane/test_output
+**/fastlane/*.cer
+**/fastlane/*.certSigningRequest
+**/fastlane/*.mobileprovision
+**/fastlane/*.p12
+**/fastlane/*.dSYM.zip
+**/fastlane/certs/
+
+# Sensitive files
+google-play-key.json
+GoogleService-Info.plist
+android/keystore.properties
+android/app/release.keystore
 
 # Bundle artifact
 *.jsbundle

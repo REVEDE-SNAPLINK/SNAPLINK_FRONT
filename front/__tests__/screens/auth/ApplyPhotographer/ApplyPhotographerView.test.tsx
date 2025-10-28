@@ -9,12 +9,14 @@ const mockProps = {
   profileImageURI: null,
   name: '',
   setName: jest.fn(),
+  gender: null,
   setGender: jest.fn(),
   onPressSelectBirthdayButton: jest.fn(),
   birthday: '',
   onPressSelectLocationButton: jest.fn(),
   location: '',
   categoryList: ['스냅', '웨딩', '커플', '졸업'],
+  category: null,
   setCategory: jest.fn(),
   photofolioImageURIs: [],
   onPressSelectPhotofolioImageButton: jest.fn(),
@@ -23,6 +25,23 @@ const mockProps = {
   setIntroduction: jest.fn(),
   isValid: false,
   onSubmit: jest.fn(),
+  consents: [
+    {
+      id: '1',
+      title: '만 14세 이상입니다 (필수)',
+      required: true,
+      isChecked: false,
+    },
+    {
+      id: '2',
+      title: '브랜디 약관 동의 (필수)',
+      required: true,
+      isChecked: false,
+    },
+  ],
+  allChecked: false,
+  onToggleAllConsents: jest.fn(),
+  onToggleConsent: jest.fn(),
 };
 
 describe('ApplyPhotographerView', () => {
@@ -171,5 +190,59 @@ describe('ApplyPhotographerView', () => {
     mockProps.categoryList.forEach((category) => {
       expect(getByText(category)).toBeTruthy();
     });
+  });
+
+  it('renders consent section with all consent items', () => {
+    const { getByText } = render(<ApplyPhotographerView {...mockProps} />);
+
+    expect(getByText('전체 동의')).toBeTruthy();
+    mockProps.consents.forEach((consent) => {
+      expect(getByText(consent.title)).toBeTruthy();
+    });
+  });
+
+  it('calls onToggleAllConsents when "전체 동의" is pressed', () => {
+    const { getByText } = render(<ApplyPhotographerView {...mockProps} />);
+
+    const allConsentButton = getByText('전체 동의');
+    fireEvent.press(allConsentButton);
+
+    expect(mockProps.onToggleAllConsents).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onToggleConsent when individual consent is pressed', () => {
+    const { getByText } = render(<ApplyPhotographerView {...mockProps} />);
+
+    const firstConsent = getByText(mockProps.consents[0].title);
+    fireEvent.press(firstConsent);
+
+    expect(mockProps.onToggleConsent).toHaveBeenCalledWith('1');
+  });
+
+  it('renders gender select with correct value', () => {
+    const { getByText } = render(
+      <ApplyPhotographerView {...mockProps} gender={0} />
+    );
+
+    expect(getByText('남성')).toBeTruthy();
+    expect(getByText('여성')).toBeTruthy();
+  });
+
+  it('calls setGender when gender is selected', () => {
+    const { getByText } = render(<ApplyPhotographerView {...mockProps} />);
+
+    const maleButton = getByText('남성');
+    fireEvent.press(maleButton);
+
+    expect(mockProps.setGender).toHaveBeenCalledWith(0);
+  });
+
+  it('calls setCategory when category is selected', () => {
+    const { getByText } = render(<ApplyPhotographerView {...mockProps} />);
+
+    const snapButton = getByText('스냅');
+    fireEvent.press(snapButton);
+
+    expect(mockProps.setCategory).toHaveBeenCalledWith(0);
   });
 });

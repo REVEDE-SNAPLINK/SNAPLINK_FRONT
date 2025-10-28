@@ -8,3 +8,10 @@ export type User = {
   email?: string;
   profileImage?: string;
 }
+
+export type Consent = {
+  id: string;
+  title: string;
+  required: boolean;
+  isChecked: boolean;
+}

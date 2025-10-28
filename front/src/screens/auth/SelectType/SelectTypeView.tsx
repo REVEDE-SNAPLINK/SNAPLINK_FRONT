@@ -1,8 +1,6 @@
 import { ReactElement, useMemo } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacityProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp } from '@/types/navigation';
 import styled from 'styled-components/native';
 import { theme, boxShadow } from '@/constants/theme';
 import AppText from '@/components/AppText.tsx';
@@ -11,6 +9,7 @@ import Type1 from '@/assets/imgs/type1.svg';
 import SubmitButton from '@/components/SubmitButton.tsx';
 
 interface SelectTypeViewProps {
+  onPressBackButton: () => void;
   isSelectedUser: boolean;
   isSelectedPhotographer: boolean;
   onPressUser: () => void;
@@ -20,6 +19,7 @@ interface SelectTypeViewProps {
 }
 
 export default function SelectTypeView({
+  onPressBackButton,
   isSelectedUser,
   isSelectedPhotographer,
   onPressUser,
@@ -27,8 +27,6 @@ export default function SelectTypeView({
   isValid,
   onSubmit
 }:  SelectTypeViewProps) {
-  const navigation = useNavigation<AuthNavigationProp>();
-
   const UserImg = useMemo(() =>
     <Type1 width={theme.horizontalScale(100)} height={theme.verticalScale(100)} />,
     []);
@@ -38,9 +36,7 @@ export default function SelectTypeView({
   return (
     <Container>
       <Header>
-        <StyledBackButton
-          onPress={() => navigation.goBack()}
-        />
+        <StyledBackButton onPress={onPressBackButton}/>
         <AppText
           color="primary"
           fontWeight={800}

@@ -11,6 +11,7 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   Login: undefined;
   SelectType: undefined;
+  ApplyPhotographer: undefined;
 }
 
 // Main Stack

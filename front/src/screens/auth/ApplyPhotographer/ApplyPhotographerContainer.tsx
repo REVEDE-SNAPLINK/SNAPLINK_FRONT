@@ -238,10 +238,24 @@ export default function ApplyPhotographerContainer() {
   }
 
   const handleSelectLocation = (locations: string[]) => {
-    // '전체 선택'을 제외하고 쉼표로 연결
+    // '전체 선택'을 제외하고 저장
     const filteredLocations = locations.filter(loc => loc !== '전체 선택');
     const locationString = filteredLocations.join(', ');
     setValue('location', locationString, { shouldValidate: true });
+  }
+
+  // 활동 지역을 "외 N개" 형식으로 포맷
+  const formatLocationDisplay = (locationString: string): string => {
+    if (!locationString) return '';
+
+    const locations = locationString.split(', ').filter(loc => loc.trim() !== '');
+
+    if (locations.length === 0) return '';
+    if (locations.length === 1) return locations[0];
+    if (locations.length === 2) return `${locations[0]}, ${locations[1]}`;
+
+    // 3개 이상일 때: "서울, 경기 외 N개"
+    return `${locations[0]}, ${locations[1]} 외 ${locations.length - 2}개`;
   }
 
   const handleGalleryForPhotofolioImage = async () => {
@@ -294,7 +308,7 @@ export default function ApplyPhotographerContainer() {
         onPressSelectBirthdayButton={handleOpenDatePicker}
         birthday={formatDate(birthday)}
         onPressSelectLocationButton={handleOpenLocationPicker}
-        location={location || ''}
+        location={formatLocationDisplay(location || '')}
         categoryList={categoryList}
         category={category}
         setCategory={(value: number) => setValue('category', value, { shouldValidate: true })}

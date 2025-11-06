@@ -1,0 +1,39 @@
+- name: frontend
+  color: 0e8a16
+  description: 프론트엔드 관련 이슈 (React, UI, Hooks 등)
+
+- name: bug
+  color: d73a4a
+  description: 버그 또는 UI 동작 오류
+
+- name: enhancement
+  color: a2eeef
+  description: 새로운 기능 제안 또는 개선
+
+- name: design
+  color: ff9f43
+  description: UI/UX 디자인 관련 작업
+
+- name: performance
+  color: fbca04
+  description: 렌더링/성능 개선 관련
+
+- name: refactor
+  color: c2e0c6
+  description: 코드 구조 개선 또는 리팩터링
+
+- name: dependencies
+  color: 0366d6
+  description: 패키지 의존성 업데이트 관련
+
+- name: documentation
+  color: 0075ca
+  description: 문서 수정 또는 README, 주석 개선
+
+- name: good first issue
+  color: 7057ff
+  description: 초보자에게 적합한 이슈
+
+- name: discussion
+  color: cfd3d7
+  description: 아이디어, 토론 또는 기획 관련

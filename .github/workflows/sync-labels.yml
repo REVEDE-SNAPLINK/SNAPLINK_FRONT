@@ -3,7 +3,7 @@ name: Sync Labels
 on:
   push:
     paths:
-      - '.github/labels.json'
+      - '.github/labels.yml'
     branches:
       - main
       - develop
@@ -12,14 +12,16 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Sync labels
-        uses: micnncim/action-label-syncer@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Sync GitHub labels
+        uses: crazy-max/ghaction-github-labeler@v5.3.0
         with:
-          manifest: .github/labels.json
-          prune: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          yaml-file: .github/labels.yml
+          skip-delete: false

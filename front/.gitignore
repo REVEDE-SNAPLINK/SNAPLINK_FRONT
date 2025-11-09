@@ -85,3 +85,7 @@ android/app/release.keystore
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Build logs
+build.log
+ios/xcodebuild.log

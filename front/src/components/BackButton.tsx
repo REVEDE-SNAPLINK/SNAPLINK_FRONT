@@ -1,27 +1,32 @@
 import { TouchableOpacityProps } from 'react-native';
-import styled from "styled-components/native";
-import {theme} from '@/constants/theme'
-import ArrowLeftIcon from '@/assets/icons/arrow-left.svg';
+import { styled } from '@/utils/CustomStyled';
 
-type BackButtonProps = TouchableOpacityProps & {
-  onPress: () => void;
-}
+type BackButtonProps = TouchableOpacityProps;
 
-export default function BackButton ({
-  onPress,
-  ...rest
-}: BackButtonProps) {
-
-  return (
-    <StyledBackButton onPress={onPress} testID="back-button" {...rest}>
-      <ArrowLeftIcon
-        width={theme.horizontalScale(30)} height={theme.verticalScale(30)}
-      />
-    </StyledBackButton>
-  )
-}
-
-const StyledBackButton = styled.TouchableOpacity`
+const StyledButton = styled.TouchableOpacity`
+  width: 40px;
+  height: 40px;
   justify-content: center;
   align-items: center;
-`
+`;
+
+const Arrow = styled.Text`
+  font-size: 24px;
+  color: #000000;
+`;
+
+/**
+ * 뒤로가기 버튼 컴포넌트
+ *
+ * @example
+ * ```tsx
+ * <BackButton onPress={() => navigation.goBack()} />
+ * ```
+ */
+export default function BackButton(props: BackButtonProps) {
+  return (
+    <StyledButton {...props}>
+      <Arrow>←</Arrow>
+    </StyledButton>
+  );
+}

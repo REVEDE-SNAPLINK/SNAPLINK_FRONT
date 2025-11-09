@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components/native';
 import { ScrollView, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { theme } from '@/constants/theme';
+import { styled } from '@/utils/CustomStyled';
 import BottomModal from '@/components/BottomModal';
-import AppText from '@/components/AppText';
+import Typography from '@/components/theme/Typography';
 
 type DatePickerProps = {
   visible: boolean;
@@ -15,11 +14,11 @@ type DatePickerProps = {
 const ITEM_HEIGHT = 31;
 
 export default function DatePicker({
-  visible,
-  onClose,
-  onConfirm,
-  initialDate = new Date(),
-}: DatePickerProps) {
+                                     visible,
+                                     onClose,
+                                     onConfirm,
+                                     initialDate = new Date(),
+                                   }: DatePickerProps) {
   const [currentDate, setCurrentDate] = useState(initialDate);
 
   const currentYear = currentDate.getFullYear();
@@ -100,10 +99,10 @@ const HighlightBox = styled.View`
   position: absolute;
   top: ${ITEM_HEIGHT * 1.5}px;
   left: 50%;
-  margin-left: ${-theme.horizontalScale(40)}px;
-  background-color: ${theme.colors.inputBackground};
-  border-radius: ${theme.moderateScale(10)}px;
-  width: ${theme.horizontalScale(80)}px;
+  margin-left: -40px;
+  background-color: #F0F0F0;
+  border-radius: 10px;
+  width: 80px;
   height: ${ITEM_HEIGHT}px;
   pointer-events: none;
 `;
@@ -113,6 +112,10 @@ const PickerItem = styled.View`
   justify-content: center;
   align-items: center;
   flex-direction: row;
+`;
+
+const SuffixText = styled.View`
+  margin-left: 4px;
 `;
 
 interface DateElementPickerProps {
@@ -180,22 +183,23 @@ const DateElementPicker = ({ items, value, setValue, suffix }: DateElementPicker
         onScrollEndDrag={handleScroll}>
         {items.map((item: string, index: number) => (
           <PickerItem key={`${item}-${index}`}>
-            <AppText
-              color={item === value ? theme.colors.black : theme.colors.disabled}
+            <Typography
+              color={item === value ? '#000000' : '#C8C8C8'}
               fontSize={16}
-              fontWeight={500}
+              fontWeight="medium"
               lineHeight={20}>
               {item}
-            </AppText>
+            </Typography>
             {suffix && (
-              <AppText
-                color={item === value ? theme.colors.black : theme.colors.disabled}
-                fontSize={16}
-                fontWeight={500}
-                lineHeight={20}
-                marginLeft={4}>
-                {suffix}
-              </AppText>
+              <SuffixText>
+                <Typography
+                  color={item === value ? '#000000' : '#C8C8C8'}
+                  fontSize={16}
+                  fontWeight="medium"
+                  lineHeight={20}>
+                  {suffix}
+                </Typography>
+              </SuffixText>
             )}
           </PickerItem>
         ))}

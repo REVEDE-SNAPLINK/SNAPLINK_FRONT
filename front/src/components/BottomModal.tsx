@@ -1,9 +1,8 @@
 import { ReactNode } from 'react';
 import { Modal, Pressable } from 'react-native';
-import styled from 'styled-components/native';
-import { theme } from '@/constants/theme';
-import AppText from '@/components/AppText';
-import SubmitButton from '@/components/SubmitButton';
+import { styled } from '@/utils/CustomStyled';
+import Typography from '@/components/theme/Typography';
+import SubmitButton from '@/components/theme/SubmitButton';
 
 type BottomModalProps = {
   visible: boolean;
@@ -34,21 +33,22 @@ export default function BottomModal({
           onPress={onClose}
         />
         <ModalContainer>
-          <AppText
-            fontSize={16}
-            fontWeight={600}
-            lineHeight={22.4}
-            letterSpacing={-0.4}
-            marginBottom={60}
-            textAlign="center"
-          >{title}</AppText>
+          <TitleWrapper>
+            <Typography
+              fontSize={16}
+              fontWeight="semiBold"
+              lineHeight={22.4}
+              letterSpacing={-0.4}
+            >{title}</Typography>
+          </TitleWrapper>
           {children}
-          <SubmitButton
-            text="완료"
-            disabled={confirmDisabled}
-            onPress={onConfirm}
-            marginTop={60}
-          />
+          <ButtonWrapper>
+            <SubmitButton
+              text="완료"
+              disabled={confirmDisabled}
+              onPress={onConfirm}
+            />
+          </ButtonWrapper>
         </ModalContainer>
         <StyledPressable
           onPress={onClose}
@@ -66,15 +66,24 @@ const Overlay = styled.View`
 `;
 
 const ModalContainer = styled.View`
-  width: ${theme.horizontalScale(333)}px;
-  min-height: ${theme.verticalScale(400)}px;
-  border-radius: ${theme.moderateScale(10)}px;
-  background-color: ${theme.colors.white};
-  padding-top: ${theme.verticalScale(41)}px;
-  padding-bottom: ${theme.verticalScale(38.98)}px;
-  padding-left: ${theme.horizontalScale(16)}px;
-  padding-right: ${theme.horizontalScale(16)}px;
+  width: 333px;
+  min-height: 400px;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  padding-top: 41px;
+  padding-bottom: 38.98px;
+  padding-left: 16px;
+  padding-right: 16px;
   justify-content: space-between;
+`;
+
+const TitleWrapper = styled.View`
+  margin-bottom: 60px;
+  align-items: center;
+`;
+
+const ButtonWrapper = styled.View`
+  margin-top: 60px;
 `;
 
 const StyledPressable = styled(Pressable)`

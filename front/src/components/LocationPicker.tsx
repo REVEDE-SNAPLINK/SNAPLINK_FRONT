@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import styled from 'styled-components/native';
-import { theme } from '@/constants/theme';
+import { ScrollView } from 'react-native';
+import { styled } from '@/utils/CustomStyled';
 import BottomModal from '@/components/BottomModal';
-import AppText from '@/components/AppText';
+import Typography from '@/components/theme/Typography';
 
 type LocationPickerProps = {
   visible: boolean;
@@ -33,11 +33,11 @@ const DUMMY_LOCATIONS = [
 ];
 
 export default function LocationPicker({
-  visible,
-  onClose,
-  onConfirm,
-  initialLocations = [],
-}: LocationPickerProps) {
+                                         visible,
+                                         onClose,
+                                         onConfirm,
+                                         initialLocations = [],
+                                       }: LocationPickerProps) {
   const [selectedLocations, setSelectedLocations] = useState<string[]>(
     initialLocations
   );
@@ -89,7 +89,7 @@ export default function LocationPicker({
       title="활동 지역"
       confirmDisabled={selectedLocations.length === 0}
     >
-      <ScrollContainer>
+      <ScrollContainer showsVerticalScrollIndicator={false}>
         <LocationGrid>
           {DUMMY_LOCATIONS.map((location, index) => {
             const isSelected = selectedLocations.includes(location);
@@ -98,15 +98,15 @@ export default function LocationPicker({
               <LocationButton
                 key={`${location}-${index}`}
                 onPress={() => handleLocationPress(location)}
-                selected={isSelected}
+                $selected={isSelected}
               >
-                <ButtonText
+                <Typography
                   fontSize={14}
-                  fontWeight={500}
-                  color={isSelected ? 'black' : 'disabled'}
+                  fontWeight="medium"
+                  color={isSelected ? '#000000' : '#C8C8C8'}
                 >
                   {location}
-                </ButtonText>
+                </Typography>
               </LocationButton>
             );
           })}
@@ -116,32 +116,28 @@ export default function LocationPicker({
   );
 }
 
-const ScrollContainer = styled.ScrollView.attrs({
-  showsVerticalScrollIndicator: false,
-})`
+const ScrollContainer = styled(ScrollView)`
   width: 100%;
-  max-height: ${theme.verticalScale(300)}px;
+  max-height: 300px;
 `;
 
 const LocationGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
-  gap: ${theme.horizontalScale(8)}px;
-  row-gap: ${theme.verticalScale(8)}px;
+  gap: 8px;
+  row-gap: 8px;
 `;
 
-const LocationButton = styled.TouchableOpacity<{ selected: boolean }>`
-  padding-vertical: ${theme.verticalScale(10)}px;
-  padding-horizontal: ${theme.horizontalScale(16)}px;
-  border-radius: ${theme.moderateScale(20)}px;
+const LocationButton = styled.TouchableOpacity<{ $selected: boolean }>`
+  padding-vertical: 10px;
+  padding-horizontal: 16px;
+  border-radius: 20px;
   border-width: 1px;
-  border-color: ${({ selected }) =>
-    selected ? theme.colors.primary : theme.colors.disabled};
-  background-color: ${({ selected }) =>
-    selected ? theme.colors.selected : 'transparent'};
+  border-color: ${({ $selected }) =>
+  $selected ? '#00A980' : '#C8C8C8'};
+  background-color: ${({ $selected }) =>
+  $selected ? '#E6F7F3' : 'transparent'};
   align-items: center;
   justify-content: center;
-  min-height: ${theme.verticalScale(36)}px;
+  min-height: 36px;
 `;
-
-const ButtonText = styled(AppText)``;

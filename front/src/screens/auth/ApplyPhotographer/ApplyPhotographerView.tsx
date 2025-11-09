@@ -1,17 +1,15 @@
-import styled from 'styled-components/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '@/constants/theme.ts';
-import BackButton from '@/components/BackButton.tsx';
-import AppText from '@/components/AppText.tsx';
-import ProfileIcon from '@/assets/imgs/profile.svg';
-import Select from '@/components/form/Select';
-import { Input, IconInput } from '@/components/form/Input';
 import { FlatList, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import SubmitButton from '@/components/SubmitButton.tsx';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { styled } from '@/utils/CustomStyled';
+import Typography from '@/components/theme/Typography';
+import BackButton from '@/components/BackButton';
+import SubmitButton from '@/components/theme/SubmitButton';
+import TextInput from '@/components/theme/TextInput';
+import ProfileIcon from '@/assets/imgs/profile.svg';
 import ConsentIcon from '@/assets/icons/consent.svg';
 import { Consent } from '@/types/auth';
 
-const GENDER = ['남성', '여성']
+const GENDER = ['남성', '여성'];
 
 interface ApplyPhotographerProps {
   onPressBackButton: () => void;
@@ -75,42 +73,39 @@ export default function ApplyPhotographerView({
       <Header>
         <StyledBackButton onPress={onPressBackButton} />
         <HeaderTextWrapper>
-          <AppText
-            color="black"
+          <Typography
             fontSize={18}
-            fontWeight={600}
+            fontWeight="semiBold"
             lineHeight={25.2}
             letterSpacing={-0.45}
           >
             작가 프로필 작성
-          </AppText>
-          <AppText
-            color="textSecondary"
+          </Typography>
+          <Typography
+            color="#8E8E93"
             fontSize={14}
-            fontWeight={400}
+            fontWeight="regular"
             lineHeight={19.6}
             letterSpacing={-0.35}
           >
             사용자들에게 작가님을 소개해 주세요
-          </AppText>
+          </Typography>
         </HeaderTextWrapper>
       </Header>
+
       <StyledKeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView
+        <StyledScrollView
           persistentScrollbar={false}
           nestedScrollEnabled
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: theme.verticalScale(40) }}
         >
           <DefaultInfoFormWrapper>
             <ProfileImageWrapper>
-              <SelectProfileImageButton
-                onPress={onPressSelectProfileImageButton}
-              >
+              <SelectProfileImageButton onPress={onPressSelectProfileImageButton}>
                 {isUploadedProfileImage && profileImageURI !== null ? (
                   <SelectProfileImage source={{ uri: profileImageURI }} />
                 ) : (
@@ -119,134 +114,85 @@ export default function ApplyPhotographerView({
               </SelectProfileImageButton>
               {isUploadedProfileImage && <PlusIcon />}
             </ProfileImageWrapper>
+
             <DefaultInfoInputWrapper>
-              <Input
-                placeholder="이름"
-                marginBottom={10}
-                value={name}
-                onChangeText={setName}
-              />
-              <Select itemWidth={80} items={GENDER} value={gender} setValue={setGender} />
+              <InputWrapper>
+                <TextInput
+                  placeholder="이름"
+                  value={name}
+                  onChangeText={setName}
+                  width="100%"
+                />
+              </InputWrapper>
+              <Select items={GENDER} value={gender} setValue={setGender} itemWidth={80} />
             </DefaultInfoInputWrapper>
           </DefaultInfoFormWrapper>
+
           <IconInput
-            width="100%"
-            marginBottom={11.99}
-            Icon={<InputIcon source={require('@/assets/icons/calendar.png')} />}
             placeholder="생년월일"
             value={birthday}
             onPress={onPressSelectBirthdayButton}
+            iconSource={require('@/assets/icons/calendar.png')}
           />
+
           <IconInput
-            width="100%"
-            marginBottom={13.98}
-            Icon={<InputIcon source={require('@/assets/icons/location.png')} />}
             placeholder="활동 지역을 선택해주세요"
             value={location}
             onPress={onPressSelectLocationButton}
+            iconSource={require('@/assets/icons/location.png')}
           />
-          <AppText
-            color="black"
-            fontSize={16}
-            fontWeight={500}
-            lineHeight={20}
-            marginLeft={2.98}
-            marginBottom={9.01}
-          >
-            촬영 유형
-          </AppText>
-          <Select itemWidth="24%" items={categoryList} value={category} setValue={setCategory} />
-          <AppText
-            color="black"
-            fontSize={16}
-            fontWeight={600}
-            lineHeight={22.4}
-            letterSpacing={-0.4}
-            marginTop={30.03}
-            marginLeft={2.98}
-            marginBottom={3.99}
-          >
-            포토폴리오
-          </AppText>
-          <AppText
-            color="textSecondary"
-            fontSize={16}
-            fontWeight={400}
-            lineHeight={22.4}
-            letterSpacing={-0.4}
-            marginLeft={2.98}
-            marginBottom={12.99}
-          >
+
+          <SectionTitle>촬영 유형</SectionTitle>
+          <Select items={categoryList} value={category} setValue={setCategory} itemWidth="24%" />
+
+          <SectionTitleBold>포토폴리오</SectionTitleBold>
+          <SectionDescription>
             사용자들에게 작가님을 대표 작품을 소개해주세요
-          </AppText>
+          </SectionDescription>
+
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
             data={['add', ...photofolioImageURIs]}
             keyExtractor={(item, index) => item + index}
             style={{ overflow: 'visible' }}
-            contentContainerStyle={{ paddingVertical: theme.verticalScale(8) }}
+            contentContainerStyle={{ paddingVertical: 8 }}
             renderItem={({ item, index }) =>
               item === 'add' ? (
-                <UploadPhotofolioButton
-                  onPress={onPressSelectPhotofolioImageButton}
-                >
-                  <AppText color="black" fontSize={30} fontWeight={400}>
+                <UploadPhotofolioButton onPress={onPressSelectPhotofolioImageButton}>
+                  <Typography fontSize={30} fontWeight="regular">
                     +
-                  </AppText>
+                  </Typography>
                 </UploadPhotofolioButton>
               ) : (
                 <PhotofolioImageWrapper>
                   <PhotographerImage source={{ uri: item }} />
                   <DeletePhotofolioButton
-                    onPress={() =>
-                      onPressDeletePhotofolioImageButton(index - 1)
-                    }
+                    onPress={() => onPressDeletePhotofolioImageButton(index - 1)}
                   >
-                    <AppText
-                      color="black"
-                      fontSize={18}
-                      fontWeight={400}
-                      lineHeight={18}
-                    >
+                    <Typography fontSize={18} fontWeight="regular" lineHeight={18}>
                       ×
-                    </AppText>
+                    </Typography>
                   </DeletePhotofolioButton>
                 </PhotofolioImageWrapper>
               )
             }
           />
-          <AppText
-            color="black"
-            fontSize={16}
-            fontWeight={600}
-            lineHeight={22.4}
-            letterSpacing={-0.4}
-            marginLeft={2.98}
-            marginTop={20.04}
-            marginBottom={3.99}
-          >
-            자기소개
-          </AppText>
-          <AppText
-            color="textSecondary"
-            fontSize={16}
-            fontWeight={400}
-            lineHeight={22.4}
-            letterSpacing={-0.4}
-            marginLeft={2.98}
-            marginBottom={11.98}
-          >
+
+          <SectionTitleBold style={{ marginTop: 20.04 }}>자기소개</SectionTitleBold>
+          <SectionDescription>
             사용자들에게 작가님에 대해 이야기해 주세요
-          </AppText>
-          <Input
+          </SectionDescription>
+
+          <TextInput
             placeholder="입력"
             value={introduction}
             onChangeText={setIntroduction}
             multiline
             height={100}
-            marginBottom={30}
+            maxLength={500}
           />
+
           <ConsentInput
             isChecked={allChecked}
             onPress={onToggleAllConsents}
@@ -262,30 +208,116 @@ export default function ApplyPhotographerView({
               marginBottom={5}
             />
           ))}
-          <SubmitButton
-            text="완료"
-            disabled={!isValid}
-            onPress={onSubmit}
-            marginTop={30}
-          />
-        </ScrollView>
+
+          <SubmitButtonWrapper>
+            <SubmitButton text="완료" disabled={!isValid} onPress={onSubmit} />
+          </SubmitButtonWrapper>
+        </StyledScrollView>
       </StyledKeyboardAvoidingView>
     </Container>
   );
 }
 
+// ===== Select Component (임시) =====
+interface SelectProps {
+  items: string[];
+  value: number | null;
+  setValue: (index: number) => void;
+  itemWidth: number | string;
+}
+
+const Select = ({ items, value, setValue, itemWidth }: SelectProps) => {
+  return (
+    <SelectContainer>
+      {items.map((item, index) => (
+        <SelectItem
+          key={index}
+          onPress={() => setValue(index)}
+          $selected={value === index}
+          $itemWidth={itemWidth}
+        >
+          <Typography
+            fontSize={14}
+            fontWeight="medium"
+            color={value === index ? '#FFFFFF' : '#000000'}
+          >
+            {item}
+          </Typography>
+        </SelectItem>
+      ))}
+    </SelectContainer>
+  );
+};
+
+const SelectContainer = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const SelectItem = styled.TouchableOpacity<{ $selected: boolean; $itemWidth: number | string }>`
+  width: ${({ $itemWidth }) => typeof $itemWidth === 'string' ? $itemWidth : `${$itemWidth}px`};
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  background-color: ${({ $selected }) => $selected ? '#00A980' : '#F0F0F0'};
+`;
+
+// ===== IconInput Component (임시) =====
+interface IconInputProps {
+  placeholder: string;
+  value: string;
+  onPress: () => void;
+  iconSource: any;
+}
+
+const IconInput = ({ placeholder, value, onPress, iconSource }: IconInputProps) => {
+  return (
+    <IconInputWrapper>
+      <InputIcon source={iconSource} />
+      <IconInputButton onPress={onPress}>
+        <Typography
+          fontSize={14}
+          fontWeight="regular"
+          color={value ? '#000000' : '#8E8E93'}
+        >
+          {value || placeholder}
+        </Typography>
+      </IconInputButton>
+    </IconInputWrapper>
+  );
+};
+
+const IconInputWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 43px;
+  border: 1px solid #E5E5EA;
+  border-radius: 8px;
+  padding: 0px 15px;
+  margin-bottom: 11.99px;
+`;
+
+const IconInputButton = styled.TouchableOpacity`
+  flex: 1;
+  justify-content: center;
+  margin-left: 10px;
+`;
+
+// ===== Styled Components =====
 const Container = styled(SafeAreaView)`
   flex: 1;
-  padding-left: ${theme.horizontalScale(28)};
-  padding-right: ${theme.horizontalScale(28)};
-`
+  padding: 0px 28px;
+`;
 
 const Header = styled.View`
-  margin-top: ${theme.verticalScale(11.98)}px;
+  margin-top: 11.98px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  margin-bottom: ${theme.verticalScale(25)};
+  margin-bottom: 25px;
 `;
 
 const StyledBackButton = styled(BackButton)`
@@ -301,123 +333,160 @@ const StyledKeyboardAvoidingView = styled(KeyboardAvoidingView)`
   flex: 1;
 `;
 
+const StyledScrollView = styled(ScrollView)`
+  padding-bottom: 40px;
+`;
+
 const DefaultInfoFormWrapper = styled.View`
-  margin-top: ${theme.verticalScale(25.98)};
+  margin-top: 25.98px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: ${theme.verticalScale(32.01)};
-`
+  margin-bottom: 32.01px;
+`;
 
 const ProfileImageWrapper = styled.View`
-  width: ${theme.moderateScale(100)};
-  height: ${theme.moderateScale(100)};
-`
+  width: 100px;
+  height: 100px;
+`;
 
 const SelectProfileImageButton = styled.TouchableOpacity`
   width: 100%;
   height: 100%;
-  border-radius: ${theme.moderateScale(50)}px;
+  border-radius: 50px;
   overflow: hidden;
-`
+`;
 
 const StyledPlusIcon = styled.View`
-  width: ${theme.moderateScale(30)};
-  height: ${theme.moderateScale(30)};
-  background-color: ${theme.colors.white};
-  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  background-color: #FFFFFF;
+  border-radius: 50px;
   align-items: center;
+  justify-content: center;
   position: absolute;
   bottom: 5px;
   right: 0;
-`
+`;
 
 const PlusIcon = () => {
   return (
     <StyledPlusIcon>
-      <AppText
-        color="black"
-        fontSize={30}
-        fontWeight={400}
-        lineHeight={25}
-      >+</AppText>
+      <Typography fontSize={30} fontWeight="regular" lineHeight={25}>
+        +
+      </Typography>
     </StyledPlusIcon>
-  )
-}
+  );
+};
 
 const SelectProfileImage = styled.Image`
   width: 100%;
   height: 100%;
-`
+`;
 
 const StyledProfileIcon = styled(ProfileIcon)`
   width: 100%;
   height: 100%;
-`
+`;
 
 const DefaultInfoInputWrapper = styled.View`
-  width: ${theme.horizontalScale(166)};
-`
+  width: 166px;
+`;
+
+const InputWrapper = styled.View`
+  margin-bottom: 10px;
+`;
 
 const InputIcon = styled.Image`
-  max-width: ${theme.moderateScale(20)};
-  max-height: ${theme.moderateScale(20)};
-`
+  width: 20px;
+  height: 20px;
+`;
+
+const SectionTitle = styled(Typography).attrs({
+  fontSize: 16,
+  fontWeight: 'medium',
+  lineHeight: 20,
+})`
+  margin-left: 2.98px;
+  margin-bottom: 9.01px;
+`;
+
+const SectionTitleBold = styled(Typography).attrs({
+  fontSize: 16,
+  fontWeight: 'semiBold',
+  lineHeight: 22.4,
+  letterSpacing: -0.4,
+})`
+  margin-left: 2.98px;
+  margin-top: 30.03px;
+  margin-bottom: 3.99px;
+`;
+
+const SectionDescription = styled(Typography).attrs({
+  color: '#8E8E93',
+  fontSize: 16,
+  fontWeight: 'regular',
+  lineHeight: 22.4,
+  letterSpacing: -0.4,
+})`
+  margin-left: 2.98px;
+  margin-bottom: 11.98px;
+`;
 
 const UploadPhotofolioButton = styled.TouchableOpacity`
-  width: ${theme.moderateScale(80)};
-  height: ${theme.moderateScale(80)};
-  border-radius: ${theme.moderateScale(10)}px;
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
   background-color: #D9D9D9;
   justify-content: center;
   align-items: center;
-`
+`;
 
 const PhotofolioImageWrapper = styled.View`
-  width: ${theme.moderateScale(80)};
-  height: ${theme.moderateScale(80)};
-  margin-left: ${theme.horizontalScale(7)};
+  width: 80px;
+  height: 80px;
+  margin-left: 7px;
   position: relative;
-`
+`;
 
 const PhotographerImage = styled.Image`
   width: 100%;
   height: 100%;
-  border-radius: ${theme.moderateScale(10)}px;
-`
+  border-radius: 10px;
+`;
 
 const DeletePhotofolioButton = styled.TouchableOpacity`
   position: absolute;
-  top: -${theme.moderateScale(6)}px;
-  right: -${theme.moderateScale(6)}px;
-  width: ${theme.moderateScale(24)};
-  height: ${theme.moderateScale(24)};
-  border-radius: ${theme.moderateScale(12)}px;
-  background-color: ${theme.colors.white};
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: #FFFFFF;
   justify-content: center;
   align-items: center;
   z-index: 10;
-`
+`;
 
-const ConsentButton = styled.TouchableOpacity<{ marginBottom?: number }>`
+const ConsentButton = styled.TouchableOpacity<{ $marginBottom?: number }>`
   flex-direction: row;
   width: 100%;
   align-items: center;
-  height: ${theme.moderateScale(20)};
-  ${({ marginBottom }) => marginBottom && `margin-bottom: ${theme.verticalScale(marginBottom)};`}
-`
+  height: 20px;
+  ${({ $marginBottom }) => $marginBottom && `margin-bottom: ${$marginBottom}px;`}
+`;
 
-const ConsentIconWrapper = styled.View<{ isChecked: boolean }>`
+const ConsentIconWrapper = styled.View<{ $isChecked: boolean }>`
   justify-content: center;
   align-items: center;
-  border-radius: ${theme.moderateScale(5)}px;
-  width: ${theme.moderateScale(20)};
-  height: ${theme.moderateScale(20)};
-  box-sizing: border-box;
-  border: 1px solid ${({ isChecked }) => (isChecked ? 'transparent' : theme.colors.black)};
-  margin-right: ${theme.horizontalScale(10)}px;
-  background: ${({ isChecked }) => (isChecked ? theme.colors.primary: 'transparent')};
-`
+  border-radius: 5px;
+  width: 20px;
+  height: 20px;
+  border-width: 1px;
+  border-color: ${({ $isChecked }) => ($isChecked ? 'transparent' : '#000000')};
+  margin-right: 10px;
+  background-color: ${({ $isChecked }) => ($isChecked ? '#00A980' : 'transparent')};
+`;
 
 interface ConsentInputProps {
   isChecked: boolean;
@@ -433,30 +502,36 @@ const ConsentInput = ({
   marginBottom,
 }: ConsentInputProps) => {
   return (
-    <ConsentButton onPress={onPress} marginBottom={marginBottom}>
-      <ConsentIconWrapper isChecked={isChecked}>
+    <ConsentButton onPress={onPress} $marginBottom={marginBottom}>
+      <ConsentIconWrapper $isChecked={isChecked}>
         <ConsentIcon
-          width={theme.moderateScale(8)}
-          height={theme.moderateScale(10)}
-          color={isChecked ? theme.colors.white : theme.colors.disabled}
+          width={8}
+          height={10}
+          color={isChecked ? '#FFFFFF' : '#C8C8C8'}
         />
       </ConsentIconWrapper>
-      <AppText
-        color="black"
+      <Typography
         fontSize={15}
-        fontWeight={400}
+        fontWeight="regular"
         lineHeight={15}
         letterSpacing={-0.375}
-      >{title}</AppText>
+      >
+        {title}
+      </Typography>
     </ConsentButton>
-  )
-}
+  );
+};
 
 const Divider = styled.View`
-  background-color: ${theme.colors.disabled};
+  background-color: #C8C8C8;
   height: 1px;
-  width: calc(100% - ${theme.horizontalScale(28)});
-  margin-left: ${theme.horizontalScale(28)};
+  width: 100%;
+  padding-right: 28px;
+  margin-left: 28px;
   margin-top: 2px;
-  margin-bottom: ${theme.verticalScale(15)};
-`
+  margin-bottom: 15px;
+`;
+
+const SubmitButtonWrapper = styled.View`
+  margin-top: 30px;
+`;

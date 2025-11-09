@@ -1,6 +1,5 @@
-import styled from 'styled-components/native';
-import {theme} from '@/constants/theme.ts';
-import AppText from '@/components/AppText.tsx';
+import { styled } from '@/utils/CustomStyled';
+import Typography from '@/components/theme/Typography';
 import ArrowRightIcon from '@/assets/icons/arrow-right.svg';
 
 interface BottomSwipeNavigationProps {
@@ -16,33 +15,33 @@ export default function BottomSwipeNavigation ({
   return (
     <Container>
       <SkipButton onPress={onSkip} testID="skip-button">
-        <AppText
+        <Typography
           fontSize={14}
           color='#B8BFCC'
-          fontWeight={700}
+          fontWeight="bold"
           lineHeight={20}
-        >Skip</AppText>
+        >Skip</Typography>
       </SkipButton>
       <Pagination>
         {Array(length).fill(0).map((_, index) => (
-          <Dot key={index} isActive={index === idx} testID={`pagination-dot-${index}`} />
+          <Dot key={index} $isActive={index === idx} testID={`pagination-dot-${index}`} />
         ))}
       </Pagination>
       <NextButton onPress={onNext} testID="next-button">
-        <ArrowRightIcon width={theme.moderateScale(25)} height={theme.moderateScale(25)} />
+        <ArrowRightIcon width={25} height={25} />
       </NextButton>
     </Container>
   )
 }
 
 const Container = styled.View`
-  width: ${theme.horizontalScale(311)};
-  height: ${theme.moderateScale(36)};
+  width: 311px;
+  height: 36px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   position: absolute;
-  bottom: ${theme.verticalScale(77)};
+  bottom: 77px;
 `
 
 const SkipButton = styled.TouchableOpacity`
@@ -50,24 +49,24 @@ const SkipButton = styled.TouchableOpacity`
 `
 
 const Pagination = styled.View`
-  width: ${theme.horizontalScale(38)};
+  width: 38px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 `
 
-const Dot = styled.View<{ isActive: boolean }>`
-  width: ${({ isActive }) => isActive ? theme.horizontalScale(16) : theme.horizontalScale(8)}px;
-  height: ${theme.verticalScale(4)}px;
-  background-color: ${({ isActive }) => isActive ? theme.colors.primary : '#D6D9E1'};
-  border-radius: ${theme.moderateScale(2)}px;
+const Dot = styled.View<{ $isActive: boolean }>`
+  width: ${({ $isActive }) => $isActive ? '16px' : '8px'};
+  height: 4px;
+  background-color: ${({ $isActive }) => $isActive ? '#00A980' : '#D6D9E1'};
+  border-radius: 2px;
 `
 
 const NextButton = styled.TouchableOpacity`
-  height: ${theme.moderateScale(36)};
-  width: ${theme.moderateScale(36)};
-  border-radius: 50%;
+  height: 36px;
+  width: 36px;
+  border-radius: 18px;
   justify-content: center;
   align-items: center;
-  background-color: ${theme.colors.primary};
+  background-color: #00A980;
 `

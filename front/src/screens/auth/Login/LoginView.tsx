@@ -5,6 +5,7 @@ import SocialLoginButton from '@/components/SocialLoginButton';
 import Kakao from '@/assets/icons/kakao.svg';
 import Naver from '@/assets/icons/naver.svg';
 import Google from '@/assets/icons/google.svg';
+import ScreenContainer from '@/components/ScreenContainer.tsx';
 
 type LoginViewProps = {
   onKakaoLogin: () => void;
@@ -18,7 +19,7 @@ export default function LoginView({
   onGoogleLogin,
 }: LoginViewProps) {
   return (
-    <Container>
+    <ScreenContainer>
       <LogoContainer>
         <LogoImageWrapper>
           <LogoImage source={require('@/assets/imgs/logo.png')} />
@@ -56,32 +57,26 @@ export default function LoginView({
           onPress={onGoogleLogin}
         />
       </SocialLoginContainer>
-    </Container>
+    </ScreenContainer>
   );
 }
 
-const Container = styled(SafeAreaView)`
-  flex: 1;
-  background-color: #fff;
-  align-items: center;
-`;
-
-const LogoContainer = CustomStyled.View`
+const LogoContainer = styled.View`
   flex: 0.8;
   justify-content: flex-end;
 `
 
-const LogoImageWrapper = CustomStyled.View`
+const LogoImageWrapper = styled.View`
   width: 223px;
   height: 40px;
 `;
 
-const LogoImage = CustomStyled.Image`
+const LogoImage = styled.Image`
   max-width: 100%;
   max-height: 100%;
 `
 
-const SocialLoginContainer = CustomStyled.View`
+const SocialLoginContainer = styled.View`
   flex: 1;
   justify-content: center;
 `

@@ -306,7 +306,6 @@ const IconInputButton = styled.TouchableOpacity`
   margin-left: 10px;
 `;
 
-// ===== Styled Components =====
 const Container = styled(SafeAreaView)`
   flex: 1;
   padding: 0px 28px;

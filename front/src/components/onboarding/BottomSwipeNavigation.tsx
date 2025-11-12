@@ -1,4 +1,4 @@
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import ArrowRightIcon from '@/assets/icons/arrow-right.svg';
 

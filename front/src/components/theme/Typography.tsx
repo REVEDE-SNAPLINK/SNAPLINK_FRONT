@@ -1,19 +1,22 @@
 import { ReactNode } from 'react';
 import { TextProps, Text } from 'react-native';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import { theme } from '@/theme';
 import { fontFamily, fontWeightMap, FontWeight } from '@/theme/tokens/fontFamily';
 
-type Variant = keyof typeof theme.typography;
-
 type Props = TextProps & {
-  variant?: Variant;
   color?: string;
   children?: ReactNode;
   fontWeight?: FontWeight;
   fontSize?: number;
   lineHeight?: number | string;
   letterSpacing?: number | string;
+  marginHorizontal?: number;
+  marginVertical?: number;
+  marginTop?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginRight?: number;
 }
 
 /**
@@ -21,27 +24,32 @@ type Props = TextProps & {
  * px 값은 자동으로 스케일링됩니다
  */
 const StyledText = styled(Text)<{
-  $variant: Variant;
   $color: string;
   $fontWeight: FontWeight;
   $fontSize?: number;
   $lineHeight?: number;
   $letterSpacing?: number;
+  marginHorizontal?: number;
+  marginVertical?: number;
+  marginTop?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginRight?: number;
 }>`
-  font-size: ${({ $variant, $fontSize }) =>
-    $fontSize !== undefined ? $fontSize : theme.typography[$variant].fontSize
-  }px;
-  line-height: ${({ $variant, $lineHeight }) =>
-    $lineHeight !== undefined ? $lineHeight : theme.typography[$variant].lineHeight
-  }px;
-  letter-spacing: ${({ $variant, $letterSpacing }) =>
-    $letterSpacing !== undefined ? $letterSpacing : theme.typography[$variant].letterSpacing
-  }px;
+  ${({ $fontSize }) => $fontSize !== undefined ? `font-size: ${$fontSize}px;` : ''}
+  ${({ $lineHeight }) => $lineHeight !== undefined ? `line-height: ${$lineHeight}px;` : ''}
+  ${({ $letterSpacing }) => $letterSpacing !== undefined ? `letter-spacing: ${$letterSpacing}px;` : ''}
   font-family: ${({ $fontWeight }) => fontFamily[$fontWeight] || fontFamily.regular};
   font-weight: ${({ $fontWeight }) => fontWeightMap[$fontWeight] || '400'};
   color: ${({ $color }) =>
     $color in theme.colors ? theme.colors[$color as keyof typeof theme.colors] : $color
   };
+  ${({ marginHorizontal }) => marginHorizontal !== undefined ? `margin-horizontal: ${marginHorizontal}px;` : ''}
+  ${({ marginVertical }) => marginVertical !== undefined ? `margin-vertical: ${marginVertical}px;` : ''}
+  ${({ marginTop }) => marginTop !== undefined ? `margin-top: ${marginTop}px;` : ''}
+  ${({ marginBottom }) => marginBottom !== undefined ? `margin-bottom: ${marginBottom}px;` : ''}
+  ${({ marginLeft }) => marginLeft !== undefined ? `margin-left: ${marginLeft}px;` : ''}
+  ${({ marginRight }) => marginRight !== undefined ? `margin-right: ${marginRight}px;` : ''}
 `;
 
 /**
@@ -49,34 +57,29 @@ const StyledText = styled(Text)<{
  *
  * @example
  * ```tsx
- * // variant 기반 사용
- * <Typography variant="title1" color="aqua" fontWeight={600}>
+ * // 기본 사용
+ * <Typography fontSize={16} color="aqua" fontWeight="semibold">
  *   제목 텍스트
  * </Typography>
  *
- * // Figma 스타일 fontWeight (문자열)
- * <Typography variant="title1" fontWeight="bold">
- *   굵은 텍스트
- * </Typography>
- *
- * <Typography variant="body1" fontWeight="medium">
- *   중간 굵기 텍스트
- * </Typography>
- *
- * // 커스텀 폰트 크기 사용
- * <Typography variant="body1" fontSize={18} lineHeight={24}>
+ * // 커스텀 폰트 크기와 lineHeight
+ * <Typography fontSize={18} lineHeight={24}>
  *   커스텀 크기 텍스트
  * </Typography>
  *
+ * // 퍼센트 기반 lineHeight
+ * <Typography fontSize={14} lineHeight="140%">
+ *   본문 텍스트
+ * </Typography>
+ *
  * // 직접 색상 지정
- * <Typography variant="body1" color="#333333">
+ * <Typography fontSize={14} color="#333333">
  *   본문 텍스트
  * </Typography>
  * ```
  */
 export default function Typography({
-  variant = 'caption2',
-  color = '#000',
+  color = 'textPrimary',
   fontWeight = 'regular',
   fontSize,
   lineHeight,
@@ -87,7 +90,7 @@ export default function Typography({
   // lineHeight를 퍼센트에서 숫자로 변환
   const processedLineHeight = lineHeight !== undefined
     ? (typeof lineHeight === 'string' && lineHeight.includes('%')
-        ? (fontSize || theme.typography[variant].fontSize) * (parseFloat(lineHeight) / 100)
+        ? fontSize ? fontSize * (parseFloat(lineHeight) / 100) : undefined
         : typeof lineHeight === 'string'
         ? parseFloat(lineHeight)
         : lineHeight)
@@ -96,7 +99,7 @@ export default function Typography({
   // letterSpacing을 퍼센트에서 숫자로 변환
   const processedLetterSpacing = letterSpacing !== undefined
     ? (typeof letterSpacing === 'string' && letterSpacing.includes('%')
-        ? (fontSize || theme.typography[variant].fontSize) * (parseFloat(letterSpacing) / 100)
+        ? fontSize ? fontSize * (parseFloat(letterSpacing) / 100) : undefined
         : typeof letterSpacing === 'string'
         ? parseFloat(letterSpacing)
         : letterSpacing)
@@ -104,7 +107,6 @@ export default function Typography({
 
   return (
     <StyledText
-      $variant={variant}
       $color={color}
       $fontWeight={fontWeight}
       $fontSize={fontSize}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 
 export default function SplashScreen() {

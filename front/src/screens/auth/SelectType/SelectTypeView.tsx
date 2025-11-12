@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SelectButton from '@/components/SelectButton';
 import BackButton from '@/components/BackButton';

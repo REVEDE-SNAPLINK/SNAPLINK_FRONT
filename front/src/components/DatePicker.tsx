@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ScrollView, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import BottomModal from '@/components/BottomModal';
 import Typography from '@/components/theme/Typography';
 

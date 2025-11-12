@@ -332,7 +332,7 @@ function createAutoScaledStyled(componentCreator: any): any {
  * const Safe = styled(SafeAreaView)`...`;
  * ```
  */
-export const styled = new Proxy(styledNative, {
+const styled = new Proxy(styledNative, {
   get(target, prop) {
     if (prop === 'default') {
       return (target as any)[prop];

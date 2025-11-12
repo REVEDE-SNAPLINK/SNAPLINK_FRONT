@@ -1,6 +1,5 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomStyled, { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SocialLoginButton from '@/components/SocialLoginButton';
 import Kakao from '@/assets/icons/kakao.svg';

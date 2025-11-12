@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Modal, Pressable } from 'react-native';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SubmitButton from '@/components/theme/SubmitButton';
 

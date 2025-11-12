@@ -1,0 +1,91 @@
+import { ImageSourcePropType } from 'react-native';
+import styled from '@/utils/scale/CustomStyled';
+import Typography from '@/components/theme/Typography';
+import Icon from '@/components/Icon';
+import { ComponentType } from 'react';
+import { SvgProps } from 'react-native-svg';
+
+export type TabItem = {
+  key: string;
+  label: string;
+} & (
+  | { iconSource: ImageSourcePropType }
+  | { IconSvg: ComponentType<SvgProps> }
+);
+
+type BottomNavigationProps = {
+  tabs: TabItem[];
+  activeIndex: number;
+  onTabPress: (index: number) => void;
+};
+
+export default function BottomNavigation({
+  tabs,
+  activeIndex,
+  onTabPress,
+}: BottomNavigationProps) {
+  return (
+    <Container>
+      {tabs.map((tab, index) => {
+        const isActive = index === activeIndex;
+
+        return (
+          <TabButton
+            key={tab.key}
+            onPress={() => onTabPress(index)}
+            activeOpacity={0.7}
+          >
+            <IconWrapper>
+              {'IconSvg' in tab ? (
+                <Icon width={24} height={24} Svg={tab.IconSvg} />
+              ) : (
+                <Icon width={24} height={24} source={tab.iconSource} />
+              )}
+            </IconWrapper>
+            <Typography
+              fontSize={10}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color={isActive ? '#00A980' : '#AAAAAA'}
+            >
+              {tab.label}
+            </Typography>
+            {isActive && <Highlight />}
+          </TabButton>
+        );
+      })}
+    </Container>
+  );
+}
+
+const Container = styled.View`
+  height: 80px;
+  background: #fff;
+  border-top-left-radius: 25px;
+  border-top-right-radius: 25px;
+  padding-top: 11px;
+  padding-horizontal: 27px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.08);
+`;
+
+const TabButton = styled.TouchableOpacity`
+  align-items: center;
+  justify-content: center;
+  position: relative;
+`;
+
+const IconWrapper = styled.View`
+  margin-bottom: 4px;
+`;
+
+const Highlight = styled.View`
+  position: absolute;
+  bottom: -11px;
+  width: 40px;
+  height: 3px;
+  background-color: #00A980;
+  border-radius: 2px;
+`;

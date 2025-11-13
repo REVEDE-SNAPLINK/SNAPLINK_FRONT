@@ -24,6 +24,7 @@ export default function SearchPhotographerList({
 }: SearchPhotographerListProps) {
   return (
     <FlatList
+      testID="photographer-list"
       data={photographers}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (

@@ -34,13 +34,13 @@ export default function DatePicker({
       const newDate = new Date(prevDate);
       switch (type) {
         case 'year':
-          newDate.setFullYear(parseInt(value));
+          newDate.setFullYear(parseInt(value, 10));
           break;
         case 'month':
-          newDate.setMonth(parseInt(value) - 1);
+          newDate.setMonth(parseInt(value, 10) - 1);
           break;
         case 'day':
-          newDate.setDate(parseInt(value));
+          newDate.setDate(parseInt(value, 10));
           break;
       }
       return newDate;

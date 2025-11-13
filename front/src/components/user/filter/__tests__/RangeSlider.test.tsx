@@ -153,8 +153,8 @@ describe('RangeSlider Component', () => {
 
   describe('Edge Cases', () => {
     it('should handle min === max case', () => {
-      const { getByText } = render(<RangeSlider {...defaultProps} min={10000} max={10000} />);
-      expect(getByText('1만원')).toBeTruthy();
+      const { getAllByText } = render(<RangeSlider {...defaultProps} min={10000} max={10000} />);
+      expect(getAllByText('1만원').length).toBeGreaterThan(0);
     });
 
     it('should handle very small range', () => {

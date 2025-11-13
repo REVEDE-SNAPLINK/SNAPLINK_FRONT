@@ -1,9 +1,20 @@
 export const GestureDetector = ({ children }) => children;
-export const Gesture = {
-  Pan: () => ({
-    onStart: () => ({}),
-    onUpdate: () => ({}),
-    onEnd: () => ({}),
-  }),
+
+const createGestureMock = () => {
+  const gesture = {
+    onStart: jest.fn(() => gesture),
+    onUpdate: jest.fn(() => gesture),
+    onEnd: jest.fn(() => gesture),
+    onTouchesDown: jest.fn(() => gesture),
+    enabled: jest.fn(() => gesture),
+  };
+  return gesture;
 };
+
+export const Gesture = {
+  Pan: jest.fn(() => createGestureMock()),
+  Tap: jest.fn(() => createGestureMock()),
+  LongPress: jest.fn(() => createGestureMock()),
+};
+
 export const GestureHandlerRootView = ({ children }) => children;

@@ -36,6 +36,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: true,
     gender: '여성작가',
     shootingTypes: ['커플', '웨딩'],
+    styleTags: ['우정', '자연광', '감성'],
     region: '서울',
     createdAt: '2024-01-15T10:00:00Z',
   },
@@ -57,6 +58,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: false,
     gender: '남성작가',
     shootingTypes: ['인물', '사물'],
+    styleTags: ['모던', '스튜디오', '정통'],
     region: '경기',
     createdAt: '2024-02-20T14:30:00Z',
   },
@@ -75,6 +77,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: true,
     gender: '여성작가',
     shootingTypes: ['웨딩', '인물', '반려동물'],
+    styleTags: ['빈티지', '감성', '자연광', '로맨틱'],
     region: '서울',
     createdAt: '2024-03-05T09:15:00Z',
   },
@@ -93,6 +96,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: true,
     gender: '여성작가',
     shootingTypes: ['인물'],
+    styleTags: ['뷰티', '프로필', '클린'],
     region: '부산',
     createdAt: '2024-01-20T11:20:00Z',
   },
@@ -111,6 +115,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: false,
     gender: '남성작가',
     shootingTypes: ['커플', '인물'],
+    styleTags: ['감성', '우정', '일상'],
     region: '인천',
     createdAt: '2024-02-10T16:45:00Z',
   },
@@ -129,6 +134,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: true,
     gender: '여성작가',
     shootingTypes: ['반려동물'],
+    styleTags: ['자연광', '애정', '생동감'],
     region: '서울',
     createdAt: '2024-03-15T13:30:00Z',
   },
@@ -147,6 +153,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: true,
     gender: '남성작가',
     shootingTypes: ['웨딩'],
+    styleTags: ['로맨틱', '클래식', '감동'],
     region: '경기',
     createdAt: '2024-03-20T10:00:00Z',
   },
@@ -165,6 +172,7 @@ const DUMMY_PHOTOGRAPHERS: Photographer[] = [
     isPartner: false,
     gender: '남성작가',
     shootingTypes: ['사물'],
+    styleTags: ['미니멀', '모던', '정통'],
     region: '서울',
     createdAt: '2024-02-25T15:00:00Z',
   },
@@ -179,10 +187,27 @@ function filterPhotographers(
 ): Photographer[] {
   let filtered = [...photographers];
 
-  // Search by nickname
+  // Search by nickname, shooting types, and style tags
   if (params.searchKey && params.searchKey.trim() !== '') {
     const searchLower = params.searchKey.toLowerCase();
-    filtered = filtered.filter((p) => p.nickname.toLowerCase().includes(searchLower));
+    filtered = filtered.filter((p) => {
+      // Check nickname
+      if (p.nickname.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+
+      // Check shooting types
+      if (p.shootingTypes.some((type) => type.toLowerCase().includes(searchLower))) {
+        return true;
+      }
+
+      // Check style tags
+      if (p.styleTags.some((tag) => tag.toLowerCase().includes(searchLower))) {
+        return true;
+      }
+
+      return false;
+    });
   }
 
   // Apply filters

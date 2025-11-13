@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 import { TouchableOpacityProps } from 'react-native';
-import CustomStyled from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 
 type SelectButtonProps = TouchableOpacityProps & {
@@ -9,7 +9,7 @@ type SelectButtonProps = TouchableOpacityProps & {
   description: string;
 }
 
-const StyledButton = CustomStyled.TouchableOpacity`
+const StyledButton = styled.TouchableOpacity`
   width: 100%;
   height: 124px;
   padding-left: 24px;
@@ -20,15 +20,15 @@ const StyledButton = CustomStyled.TouchableOpacity`
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
-const ImgContainer = CustomStyled.View`
+const ImgContainer = styled.View`
   width: 100px;
 `;
 
-const TextContainer = CustomStyled.View`
+const TextContainer = styled.View`
   margin-left: 15px;
 `;
 
-const Spacer = CustomStyled.View`
+const Spacer = styled.View`
   height: 7px;
 `
 
@@ -57,7 +57,6 @@ export default function SelectButton({
       <ImgContainer>{Img}</ImgContainer>
       <TextContainer>
         <Typography
-          color="#111111"
           fontSize={16}
           fontWeight="semiBold"
           lineHeight="140%"

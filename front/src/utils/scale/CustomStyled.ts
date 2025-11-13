@@ -158,7 +158,8 @@ function convertBoxShadowToPlatform(shadow: ParsedBoxShadow): string {
   } else {
     // Android는 elevation 사용
     // blurRadius를 기준으로 elevation 계산
-    const elevation = Math.max(scaledBlurRadius / 2, 1);
+    // Android elevation은 그림자 퍼짐이 작아서 더 크게 설정
+    const elevation = Math.max(scaledBlurRadius * 2.5, 8);
 
     return `elevation: ${elevation};`;
   }
@@ -332,7 +333,7 @@ function createAutoScaledStyled(componentCreator: any): any {
  * const Safe = styled(SafeAreaView)`...`;
  * ```
  */
-export const styled = new Proxy(styledNative, {
+const styled = new Proxy(styledNative, {
   get(target, prop) {
     if (prop === 'default') {
       return (target as any)[prop];

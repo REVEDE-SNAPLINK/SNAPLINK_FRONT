@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SelectButton from '@/components/SelectButton';
 import BackButton from '@/components/BackButton';
 import Type1 from '@/assets/imgs/type1.svg';
+import ScreenContainer from '@/components/ScreenContainer.tsx';
 
 interface SelectTypeViewProps {
   onPressBackButton: () => void;
@@ -24,45 +25,47 @@ export default function SelectTypeView({
     <StyledImage source={require('@/assets/imgs/type2.png')} />, []);
 
   return (
-    <Container>
-      <Header>
-        <StyledBackButton onPress={onPressBackButton} />
-        <Typography
-          color="primary"
-          fontWeight="extraBold"
-          fontSize={27}
-          lineHeight={40}
-          letterSpacing={-1.08}
-        >
-          Snaplink
-        </Typography>
-      </Header>
+    <ScreenContainer>
+      <Container>
+        <Header>
+          <StyledBackButton onPress={onPressBackButton} />
+          <Typography
+            color="primary"
+            fontWeight="extraBold"
+            fontSize={27}
+            lineHeight={40}
+            letterSpacing={-1.08}
+          >
+            Snaplink
+          </Typography>
+        </Header>
 
-      <TitleWrapper>
-        <Typography
-          fontSize={18}
-          fontWeight="bold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-        >스냅링크를 어떻게 이용하고 싶으신가요?</Typography>
-      </TitleWrapper>
+        <TitleWrapper>
+          <Typography
+            fontSize={18}
+            fontWeight="bold"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+          >스냅링크를 어떻게 이용하고 싶으신가요?</Typography>
+        </TitleWrapper>
 
-      <SelectButton
-        Img={UserImg}
-        title="촬영 모델"
-        description={'내가 원하는 작가님을 찾아서\n사진 촬영을 하고 싶어요.'}
-        onPress={onPressUser}
-      />
+        <SelectButton
+          Img={UserImg}
+          title="촬영 모델"
+          description={'내가 원하는 작가님을 찾아서\n사진 촬영을 하고 싶어요.'}
+          onPress={onPressUser}
+        />
 
-      <Spacer />
+        <Spacer />
 
-      <SelectButton
-        Img={PhotographerImg}
-        title="사진 작가"
-        description={'스냅 사진작가로 활동하고\n사진 촬영을 하고 싶어요.'}
-        onPress={onPressPhotographer}
-      />
-    </Container>
+        <SelectButton
+          Img={PhotographerImg}
+          title="사진 작가"
+          description={'스냅 사진작가로 활동하고\n사진 촬영을 하고 싶어요.'}
+          onPress={onPressPhotographer}
+        />
+      </Container>
+    </ScreenContainer>
   );
 }
 

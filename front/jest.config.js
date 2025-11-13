@@ -8,9 +8,10 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.svg$': '<rootDir>/__mocks__/svgMock.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-safe-area-context|react-native-screens|@react-navigation|react-native-size-matters|react-native-svg)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-safe-area-context|react-native-screens|@react-navigation|react-native-size-matters|react-native-svg|react-native-gesture-handler)/)',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

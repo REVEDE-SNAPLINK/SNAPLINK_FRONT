@@ -17,6 +17,7 @@ export type AuthStackParamList = {
 // Main Stack
 export type MainStackParamList = {
   Home: undefined;
+  SearchPhotographer: { searchKey: string };
 }
 
 // Onboarding Stack

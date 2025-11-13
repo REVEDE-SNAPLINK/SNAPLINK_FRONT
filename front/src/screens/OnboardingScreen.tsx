@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import Swiper from "react-native-swiper";
 import BottomSwipeNavigation from "@/components/onboarding/BottomSwipeNavigation";
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from "@/components/theme/Typography";
 import SubmitButton from '@/components/theme/SubmitButton';
 import { useAuth } from '@/context/AuthContext';

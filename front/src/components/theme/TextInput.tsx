@@ -1,6 +1,6 @@
 import { forwardRef, useState, useEffect } from 'react';
 import { TextInput as RNTextInput, TextInputProps } from 'react-native';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacityProps } from 'react-native';
 import { SvgProps } from 'react-native-svg';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 
 type SocialLoginButtonProps = TouchableOpacityProps & {
@@ -48,7 +48,6 @@ export default function SocialLoginButton({
         fontSize={16}
         fontWeight="medium"
         lineHeight={20}
-        color="#000000"
       >
         {' '}{text} 계정으로 로그인
       </Typography>

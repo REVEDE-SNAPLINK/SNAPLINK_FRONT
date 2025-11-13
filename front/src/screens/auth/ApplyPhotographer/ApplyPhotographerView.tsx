@@ -1,6 +1,6 @@
 import { FlatList, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import BackButton from '@/components/BackButton';
 import SubmitButton from '@/components/theme/SubmitButton';
@@ -306,7 +306,6 @@ const IconInputButton = styled.TouchableOpacity`
   margin-left: 10px;
 `;
 
-// ===== Styled Components =====
 const Container = styled(SafeAreaView)`
   flex: 1;
   padding: 0px 28px;

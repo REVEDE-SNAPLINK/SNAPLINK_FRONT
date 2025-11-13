@@ -1,5 +1,5 @@
 import { TouchableOpacityProps } from 'react-native';
-import { styled } from '@/utils/CustomStyled';
+import styled from '@/utils/scale/CustomStyled';
 
 type BackButtonProps = TouchableOpacityProps;
 

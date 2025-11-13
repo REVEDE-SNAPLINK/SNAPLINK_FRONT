@@ -51,6 +51,7 @@ describe('SearchPhotographerView', () => {
       isPartner: true,
       gender: '여성작가',
       shootingTypes: ['커플', '웨딩'],
+      styleTags: ['우정', '자연광', '감성'],
       region: '서울',
       createdAt: '2024-01-15T10:00:00Z',
     },

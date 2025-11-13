@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { ActivityIndicator } from 'react-native';
 import SearchPhotographerList from '../SearchPhotographerList';
 import { Photographer } from '@/types/photographer';
 
@@ -19,6 +20,7 @@ describe('SearchPhotographerList Component', () => {
       isPartner: true,
       gender: '여성작가',
       shootingTypes: ['커플', '웨딩'],
+      styleTags: ['우정', '자연광', '감성'],
       region: '서울',
       createdAt: '2024-01-15T10:00:00Z',
     },
@@ -33,6 +35,7 @@ describe('SearchPhotographerList Component', () => {
       isPartner: false,
       gender: '남성작가',
       shootingTypes: ['인물', '사물'],
+      styleTags: ['모던', '스튜디오', '정통'],
       region: '경기',
       createdAt: '2024-02-20T14:30:00Z',
     },
@@ -147,7 +150,7 @@ describe('SearchPhotographerList Component', () => {
       const { UNSAFE_getByType } = render(
         <SearchPhotographerList {...defaultProps} isFetchingNextPage={true} />
       );
-      expect(UNSAFE_getByType('ActivityIndicator')).toBeTruthy();
+      expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
     });
 
     it('should not show ActivityIndicator when isFetchingNextPage is false', () => {

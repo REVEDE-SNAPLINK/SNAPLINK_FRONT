@@ -1,6 +1,5 @@
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import IconButton from '@/components/IconButton.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 import Filter from '@/components/user/filter/Filter.tsx';
@@ -9,6 +8,7 @@ import { FilterCategory, FilterValue, FilterChip } from '@/types/filter';
 import Typography from '@/components/theme/Typography.tsx';
 import SearchPhotographerList from '@/components/user/SearchPhotographerList';
 import { Photographer } from '@/types/photographer';
+import BackButton from '@/components/BackButton.tsx';
 
 interface SearchPhotographerViewProps {
   onPressBackButton: () => void;
@@ -65,12 +65,7 @@ export default function SearchPhotographerView({
     <>
       <ScreenContainer paddingHorizontal={20}>
         <Header>
-          <IconButton
-            width={19.44}
-            height={20.37}
-            source={require('@/assets/icons/arrow-left.png')}
-            onPress={onPressBackButton}
-          />
+          <BackButton onPress={onPressBackButton} />
           <SearchInputWrapper>
             <SearchInput
               value={searchKey}

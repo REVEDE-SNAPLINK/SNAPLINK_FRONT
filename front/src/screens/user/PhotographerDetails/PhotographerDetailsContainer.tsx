@@ -73,7 +73,7 @@ export default function PhotographerDetailsContainer() {
   const handlePressReservation = useCallback(() => {
     // TODO: Navigate to reservation screen
     console.log('Navigate to reservation');
-    navigation.navigate('Reserve', { id: photographerId });
+    navigation.navigate('Booking', { id: photographerId });
   }, [navigation, photographerId]);
 
   const handleEndReached = useCallback(() => {

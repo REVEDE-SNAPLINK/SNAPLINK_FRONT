@@ -1,4 +1,4 @@
-import ReserveView from '@/screens/user/Reserve/ReserveView.tsx';
+import BookingView from '@/screens/user/Booking/BookingView.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useEffect, useMemo, useState } from 'react';
@@ -7,10 +7,10 @@ import { getPhotographerDetails, getReservationData } from '@/api/photographer.t
 import { ActivityIndicator, View } from 'react-native';
 import { theme } from '@/theme';
 
-type ReserveRouteProp = RouteProp<MainStackParamList, 'Reserve'>;
+type BookingRouteProp = RouteProp<MainStackParamList, 'Booking'>;
 
-export default function ReserveContainer () {
-  const route = useRoute<ReserveRouteProp>();
+export default function BookingContainer () {
+  const route = useRoute<BookingRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
   const { id: photographerId } = route.params;
 
@@ -118,7 +118,7 @@ export default function ReserveContainer () {
   }
 
   return (
-    <ReserveView
+    <BookingView
       onPressBack={handleBackButtonPress}
       onChangeDate={handleChangeDate}
       nickname={photographerDetails.nickname}

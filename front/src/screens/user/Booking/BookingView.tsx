@@ -10,7 +10,7 @@ import { TimeSelector } from '@/components/TimeSelector.tsx';
 import { RequiredOption, OptionalOption, OptionLabel } from '@/components/ShootingOptions.tsx';
 import { useMemo } from 'react';
 
-interface ReserveViewProps {
+interface BookingViewProps {
   onPressBack: () => void;
   onChangeDate: (date: string) => void;
   nickname: string;
@@ -30,7 +30,7 @@ interface ReserveViewProps {
   onSubmit: () => void;
 }
 
-export default function ReserveView({
+export default function BookingView({
   onPressBack,
   onChangeDate,
   nickname,
@@ -48,7 +48,7 @@ export default function ReserveView({
   onOptionalQuantityChange,
   totalPrice,
   onSubmit,
-}: ReserveViewProps) {
+}: BookingViewProps) {
   // Split time slots into morning (오전) and afternoon (오후)
   const { morningSlots, afternoonSlots } = useMemo(() => {
     const morning: TimeSlot[] = [];

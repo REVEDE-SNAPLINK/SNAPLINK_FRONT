@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, waitFor, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import ReserveContainer from '../ReserveContainer';
+import BookingContainer from '../BookingContainer';
 import * as photographerApi from '@/api/photographer';
 
 // Mock navigation
@@ -23,8 +23,8 @@ const mockNavigation = {
 
 const mockRoute = {
   params: { id: '1' },
-  key: 'Reserve-1',
-  name: 'Reserve' as const,
+  key: 'Booking-1',
+  name: 'Booking' as const,
 };
 
 jest.mock('@react-navigation/native', () => ({
@@ -33,11 +33,11 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => mockRoute,
 }));
 
-// Mock ReserveView
-jest.mock('../ReserveView', () => {
+// Mock BookingView
+jest.mock('../BookingView', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity } = require('react-native');
-  return function MockReserveView(props: any) {
+  return function MockBookingView(props: any) {
     return (
       <View testID="reserve-view">
         <Text testID="photographer-nickname">{props.nickname}</Text>
@@ -140,7 +140,7 @@ const mockReservationData = {
   ],
 };
 
-describe('ReserveContainer', () => {
+describe('BookingContainer', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -168,7 +168,7 @@ describe('ReserveContainer', () => {
 
   describe('Data Fetching', () => {
     it('should fetch photographer details on mount', async () => {
-      renderWithQuery(<ReserveContainer />);
+      renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(photographerApi.getPhotographerDetails).toHaveBeenCalledWith('1');
@@ -176,7 +176,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should fetch reservation data on mount', async () => {
-      renderWithQuery(<ReserveContainer />);
+      renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(photographerApi.getReservationData).toHaveBeenCalledWith('1');
@@ -184,12 +184,12 @@ describe('ReserveContainer', () => {
     });
 
     it('should display loading indicator while fetching data', () => {
-      const { UNSAFE_getByType } = renderWithQuery(<ReserveContainer />);
+      const { UNSAFE_getByType } = renderWithQuery(<BookingContainer />);
       expect(UNSAFE_getByType('ActivityIndicator' as any)).toBeTruthy();
     });
 
-    it('should render ReserveView after data is loaded', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+    it('should render BookingView after data is loaded', async () => {
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('reserve-view')).toBeTruthy();
@@ -197,7 +197,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should display photographer nickname after loading', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('photographer-nickname')).toBeTruthy();
@@ -207,7 +207,7 @@ describe('ReserveContainer', () => {
 
   describe('Navigation', () => {
     it('should call navigation.goBack when back button is pressed', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('back-button')).toBeTruthy();
@@ -220,7 +220,7 @@ describe('ReserveContainer', () => {
 
   describe('State Management', () => {
     it('should initialize required option as checked', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('total-price').children[0]).toBe('50000');
@@ -228,7 +228,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should initialize optional quantities as 0', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('optional-option-opt-1')).toBeTruthy();
@@ -237,7 +237,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should reset selected time when date changes', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('time-slot-10:00')).toBeTruthy();
@@ -253,7 +253,7 @@ describe('ReserveContainer', () => {
 
   describe('Price Calculation', () => {
     it('should calculate total price with required option only', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('total-price').children[0]).toBe('50000');
@@ -261,7 +261,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should update total price when optional quantity increases', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('increase-opt-1')).toBeTruthy();
@@ -275,7 +275,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should calculate total price with multiple optional options', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('increase-opt-1')).toBeTruthy();
@@ -296,7 +296,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should update price when required option is unchecked', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('required-option-checkbox')).toBeTruthy();
@@ -313,7 +313,7 @@ describe('ReserveContainer', () => {
 
   describe('Time Slot Selection', () => {
     it('should allow selecting available time slots', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('time-slot-10:00')).toBeTruthy();
@@ -324,7 +324,7 @@ describe('ReserveContainer', () => {
     });
 
     it('should display time slots for current date', async () => {
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('time-slot-10:00')).toBeTruthy();
@@ -337,7 +337,7 @@ describe('ReserveContainer', () => {
   describe('Submission', () => {
     it('should handle submit button press', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const { getByTestId } = renderWithQuery(<ReserveContainer />);
+      const { getByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(getByTestId('submit-button')).toBeTruthy();
@@ -356,7 +356,7 @@ describe('ReserveContainer', () => {
         new Error('API Error')
       );
 
-      const { queryByTestId } = renderWithQuery(<ReserveContainer />);
+      const { queryByTestId } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(queryByTestId('reserve-view')).toBeFalsy();
@@ -366,7 +366,7 @@ describe('ReserveContainer', () => {
     it('should return null when data is not available', async () => {
       (photographerApi.getPhotographerDetails as jest.Mock).mockResolvedValue(null);
 
-      const { toJSON } = renderWithQuery(<ReserveContainer />);
+      const { toJSON } = renderWithQuery(<BookingContainer />);
 
       await waitFor(() => {
         expect(toJSON()).toBeNull();

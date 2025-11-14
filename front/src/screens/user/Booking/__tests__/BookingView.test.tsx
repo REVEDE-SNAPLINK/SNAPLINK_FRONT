@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import ReserveView from '../ReserveView';
+import BookingView from '../BookingView';
 import { TimeSlot, RequiredShootingOption, OptionalShootingOption } from '@/api/photographer';
 
 // Mock icons
@@ -26,7 +26,7 @@ jest.mock('@/components/Calendar.tsx', () => {
   };
 });
 
-describe('ReserveView', () => {
+describe('BookingView', () => {
   const mockTimeSlots: TimeSlot[] = [
     { time: '09:00', isReserved: false },
     { time: '10:00', isReserved: false },
@@ -87,28 +87,28 @@ describe('ReserveView', () => {
 
   describe('Rendering', () => {
     it('should render photographer nickname in header', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('유앤미스냅')).toBeTruthy();
     });
 
     it('should render calendar with available dates', () => {
-      const { getByTestId } = render(<ReserveView {...defaultProps} />);
+      const { getByTestId } = render(<BookingView {...defaultProps} />);
       expect(getByTestId('mock-calendar')).toBeTruthy();
     });
 
     it('should render section title for date and time', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('날짜와 시간을 선택해 주세요')).toBeTruthy();
     });
 
     it('should render morning and afternoon labels', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('오전')).toBeTruthy();
       expect(getByText('오후')).toBeTruthy();
     });
 
     it('should split time slots into morning and afternoon', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       // Morning times (<=12:00)
       expect(getByText('09:00')).toBeTruthy();
       expect(getByText('10:00')).toBeTruthy();
@@ -120,29 +120,29 @@ describe('ReserveView', () => {
     });
 
     it('should render shooting options section title', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('촬영 항목을 선택해 주세요')).toBeTruthy();
     });
 
     it('should render required options label', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('필수 항목')).toBeTruthy();
     });
 
     it('should render required option', () => {
-      const { getByText, getAllByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText, getAllByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('2인 기본 촬영')).toBeTruthy();
       // There will be multiple "50,000원" text (required option and total price)
       expect(getAllByText('50,000원').length).toBeGreaterThanOrEqual(1);
     });
 
     it('should render optional options label', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('선택 항목')).toBeTruthy();
     });
 
     it('should render all optional options', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('촬영 인원 추가')).toBeTruthy();
       expect(getByText('10,000원')).toBeTruthy();
       expect(getByText('원본 사진 요청')).toBeTruthy();
@@ -150,52 +150,52 @@ describe('ReserveView', () => {
     });
 
     it('should render total price section', () => {
-      const { getByText, getAllByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText, getAllByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('합계')).toBeTruthy();
       // There will be multiple "50,000원" text (required option and total price)
       expect(getAllByText('50,000원').length).toBeGreaterThanOrEqual(1);
     });
 
     it('should render submit button', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       expect(getByText('예약하기')).toBeTruthy();
     });
 
     it('should display updated total price', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} totalPrice={65000} />);
+      const { getByText } = render(<BookingView {...defaultProps} totalPrice={65000} />);
       expect(getByText('65,000원')).toBeTruthy();
     });
   });
 
   describe('Interactions', () => {
     it('should call onChangeDate when date is selected in calendar', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       fireEvent.press(getByText('2025-11-18'));
       expect(defaultProps.onChangeDate).toHaveBeenCalledWith('2025-11-18');
     });
 
     it('should call onSelectTime when available time slot is clicked', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       fireEvent.press(getByText('10:00'));
       expect(defaultProps.onSelectTime).toHaveBeenCalledWith('10:00');
     });
 
     it('should not call onSelectTime for reserved time slots', () => {
       const onSelectTime = jest.fn();
-      const { getByText } = render(<ReserveView {...defaultProps} onSelectTime={onSelectTime} />);
+      const { getByText } = render(<BookingView {...defaultProps} onSelectTime={onSelectTime} />);
       fireEvent.press(getByText('11:00'));
       expect(onSelectTime).not.toHaveBeenCalled();
     });
 
     it('should render all interactive elements', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       // Verify that interactive elements are rendered
       expect(getByText('2인 기본 촬영')).toBeTruthy();
       expect(getByText('예약하기')).toBeTruthy();
     });
 
     it('should call onOptionalQuantityChange when optional quantity is changed', () => {
-      const { getAllByText } = render(<ReserveView {...defaultProps} />);
+      const { getAllByText } = render(<BookingView {...defaultProps} />);
       const plusButtons = getAllByText('+');
       // Click first plus button (촬영 인원 추가)
       fireEvent.press(plusButtons[0]);
@@ -203,7 +203,7 @@ describe('ReserveView', () => {
     });
 
     it('should call onSubmit when submit button is pressed', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} />);
+      const { getByText } = render(<BookingView {...defaultProps} />);
       fireEvent.press(getByText('예약하기'));
       expect(defaultProps.onSubmit).toHaveBeenCalledTimes(1);
     });
@@ -211,7 +211,7 @@ describe('ReserveView', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty time slots', () => {
-      const { queryByText } = render(<ReserveView {...defaultProps} timeSlots={[]} />);
+      const { queryByText } = render(<BookingView {...defaultProps} timeSlots={[]} />);
       expect(queryByText('오전')).toBeFalsy();
       expect(queryByText('오후')).toBeFalsy();
     });
@@ -221,7 +221,7 @@ describe('ReserveView', () => {
         { time: '09:00', isReserved: false },
         { time: '10:00', isReserved: false },
       ];
-      const { getByText, queryByText } = render(<ReserveView {...defaultProps} timeSlots={morningSlots} />);
+      const { getByText, queryByText } = render(<BookingView {...defaultProps} timeSlots={morningSlots} />);
       expect(getByText('오전')).toBeTruthy();
       expect(queryByText('오후')).toBeFalsy();
     });
@@ -231,25 +231,25 @@ describe('ReserveView', () => {
         { time: '14:00', isReserved: false },
         { time: '15:00', isReserved: false },
       ];
-      const { getByText, queryByText } = render(<ReserveView {...defaultProps} timeSlots={afternoonSlots} />);
+      const { getByText, queryByText } = render(<BookingView {...defaultProps} timeSlots={afternoonSlots} />);
       expect(queryByText('오전')).toBeFalsy();
       expect(getByText('오후')).toBeTruthy();
     });
 
     it('should show selected time with correct styling', () => {
-      const { getByText } = render(<ReserveView {...defaultProps} selectedTime="10:00" />);
+      const { getByText } = render(<BookingView {...defaultProps} selectedTime="10:00" />);
       expect(getByText('10:00')).toBeTruthy();
     });
 
     it('should display zero quantity for optional options initially', () => {
-      const { getAllByText } = render(<ReserveView {...defaultProps} />);
+      const { getAllByText } = render(<BookingView {...defaultProps} />);
       const zeroTexts = getAllByText('0');
       expect(zeroTexts.length).toBeGreaterThanOrEqual(2); // At least 2 optional options
     });
 
     it('should display updated quantities for optional options', () => {
       const { getByText } = render(
-        <ReserveView {...defaultProps} optionalQuantities={{ 'opt-1': 3, 'opt-2': 5 }} />
+        <BookingView {...defaultProps} optionalQuantities={{ 'opt-1': 3, 'opt-2': 5 }} />
       );
       expect(getByText('3')).toBeTruthy();
       expect(getByText('5')).toBeTruthy();

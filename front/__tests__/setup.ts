@@ -47,6 +47,7 @@ jest.mock('@/assets/imgs/profile.svg', () => 'ProfileIcon');
 jest.mock('@/assets/icons/consent.svg', () => 'ConsentIcon');
 jest.mock('@/assets/imgs/type1.svg', () => 'Type1Icon');
 jest.mock('@/assets/icons/arrow-left2.svg', () => 'ArrowLeftIcon');
+jest.mock('@/assets/icons/arrow-right2.svg', () => 'ArrowRightIcon');
 
 // Mock image assets
 jest.mock('@/assets/icons/calendar.png', () => 'CalendarIcon');

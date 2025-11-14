@@ -11,14 +11,14 @@ import { Photographer } from '@/types/photographer';
 import BackButton from '@/components/BackButton.tsx';
 
 interface SearchPhotographerViewProps {
-  onPressBackButton: () => void;
+  onPressBack: () => void;
   searchKey: string;
   onChangeSearchKey: (key: string) => void;
   onSubmitSearchKey: () => void;
   filterCategories: FilterCategory[];
   activeCategoryIds: string[];
   filterChips: FilterChip[];
-  onPressFilterButton: () => void;
+  onPressFilter: () => void;
   onPressCategoryChip: (categoryId: string) => void;
   onPressFilterChip: (chipId: string) => void;
   isFilterModalOpen: boolean;
@@ -37,14 +37,14 @@ interface SearchPhotographerViewProps {
 }
 
 export default function SearchPhotographerView({
-  onPressBackButton,
+  onPressBack,
   searchKey,
   onChangeSearchKey,
   onSubmitSearchKey,
   filterCategories,
   activeCategoryIds,
   filterChips,
-  onPressFilterButton,
+  onPressFilter,
   onPressCategoryChip,
   onPressFilterChip,
   isFilterModalOpen,
@@ -65,7 +65,7 @@ export default function SearchPhotographerView({
     <>
       <ScreenContainer paddingHorizontal={20}>
         <Header>
-          <BackButton onPress={onPressBackButton} />
+          <BackButton onPress={onPressBack} />
           <SearchInputWrapper>
             <SearchInput
               value={searchKey}
@@ -79,7 +79,7 @@ export default function SearchPhotographerView({
           categories={filterCategories}
           activeCategoryIds={activeCategoryIds}
           filterChips={filterChips}
-          onPressFilterButton={onPressFilterButton}
+          onPressFilterButton={onPressFilter}
           onPressCategoryChip={onPressCategoryChip}
           onPressFilterChip={onPressFilterChip}
         />

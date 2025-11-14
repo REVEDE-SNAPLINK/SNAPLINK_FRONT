@@ -58,14 +58,14 @@ describe('SearchPhotographerView', () => {
   ];
 
   const defaultProps = {
-    onPressBackButton: jest.fn(),
+    onPressBack: jest.fn(),
     searchKey: '테스트',
     onChangeSearchKey: jest.fn(),
     onSubmitSearchKey: jest.fn(),
     filterCategories: mockFilterCategories,
     activeCategoryIds: [],
     filterChips: [],
-    onPressFilterButton: jest.fn(),
+    onPressFilter: jest.fn(),
     onPressCategoryChip: jest.fn(),
     onPressFilterChip: jest.fn(),
     isFilterModalOpen: false,
@@ -117,7 +117,7 @@ describe('SearchPhotographerView', () => {
   });
 
   describe('User Interactions', () => {
-    it('should call onPressBackButton when back button is pressed', () => {
+    it('should call onPressBack when back button is pressed', () => {
       const { getByTestId } = render(<SearchPhotographerView {...defaultProps} />);
       // Note: IconButton needs testID prop added for this to work
       // For now, we'll skip this specific test implementation
@@ -144,7 +144,7 @@ describe('SearchPhotographerView', () => {
       expect(defaultProps.onToggleSort).toHaveBeenCalled();
     });
 
-    it('should call onPressFilterButton when filter button is pressed', () => {
+    it('should call onPressFilter when filter button is pressed', () => {
       const { UNSAFE_getByType } = render(<SearchPhotographerView {...defaultProps} />);
       // Filter component interaction would need proper testID
     });

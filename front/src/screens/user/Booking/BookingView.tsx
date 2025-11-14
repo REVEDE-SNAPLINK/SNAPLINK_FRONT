@@ -22,7 +22,7 @@ interface BookingViewProps {
   onSelectTime: (time: string) => void;
   requiredOptions: RequiredShootingOption[];
   requiredOptionChecked: boolean;
-  onRequiredOptionPress: () => void;
+  onPressRequiredOption: () => void;
   optionalOptions: OptionalShootingOption[];
   optionalQuantities: Record<string, number>;
   onOptionalQuantityChange: (optionId: string, quantity: number) => void;
@@ -42,7 +42,7 @@ export default function BookingView({
   onSelectTime,
   requiredOptions,
   requiredOptionChecked,
-  onRequiredOptionPress,
+  onPressRequiredOption,
   optionalOptions,
   optionalQuantities,
   onOptionalQuantityChange,
@@ -67,7 +67,7 @@ export default function BookingView({
   }, [timeSlots]);
 
   return (
-    <ScreenContainer onPressBackButton={onPressBack} headerTitle={nickname} paddingHorizontal={20} alignItemsCenter={false}>
+    <ScreenContainer onPressBack={onPressBack} headerTitle={nickname} paddingHorizontal={20} alignItemsCenter={false}>
       <ScrollContainer showsVerticalScrollIndicator={false}>
         <CalendarWrapper>
           <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" marginBottom={32}>
@@ -109,7 +109,7 @@ export default function BookingView({
           <RequiredOption
             key={option.id}
             isChecked={requiredOptionChecked}
-            onPress={onRequiredOptionPress}
+            onPress={onPressRequiredOption}
             option={option}
           />
         ))}

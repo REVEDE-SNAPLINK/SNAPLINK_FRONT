@@ -121,7 +121,7 @@ export default function PhotographerDetailsView({
       <ScreenContainer
         headerShown={true}
         headerTitle=""
-        onPressBackButton={onPressBack}
+        onPressBack={onPressBack}
       >
         <LoadingContainer>
           <ActivityIndicator size="large" color="#000" />
@@ -135,7 +135,7 @@ export default function PhotographerDetailsView({
       <ScreenContainer
         headerShown={true}
         headerTitle=""
-        onPressBackButton={onPressBack}
+        onPressBack={onPressBack}
       >
         <LoadingContainer>
           <Typography fontSize={14} color={theme.colors.textSecondary}>
@@ -150,9 +150,9 @@ export default function PhotographerDetailsView({
     <ScreenContainer
       headerShown={true}
       headerTitle={photographer.nickname}
-      onPressBackButton={onPressBack}
+      onPressBack={onPressBack}
       headerToolIcon={UploadIcon}
-      onPressToolButton={onPressUpload}
+      onPressTool={onPressUpload}
     >
 
       <ContentContainer>

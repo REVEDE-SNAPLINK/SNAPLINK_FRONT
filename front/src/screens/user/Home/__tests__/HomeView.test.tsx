@@ -73,10 +73,10 @@ describe('HomeView Component', () => {
   ];
 
   const defaultProps = {
-    onPressNotificationButton: jest.fn(),
-    onPressAIButton: jest.fn(),
-    onPressAllPhotographerButton: jest.fn(),
-    onPressPopularPhotographerButton: jest.fn(),
+    onPressNotification: jest.fn(),
+    onPressAI: jest.fn(),
+    onPressAllPhotographer: jest.fn(),
+    onPressPopularPhotographer: jest.fn(),
     onPressAllPhotographerItem: jest.fn(),
     onPressPopularPhotographerItem: jest.fn(),
     searchKey: '',
@@ -179,25 +179,25 @@ describe('HomeView Component', () => {
   });
 
   describe('Button Interactions', () => {
-    it('should call onPressAIButton when AI button is pressed', () => {
+    it('should call onPressAI when AI button is pressed', () => {
       const { getByText } = render(<HomeView {...defaultProps} />);
       const aiButton = getByText('AI 추천');
       fireEvent.press(aiButton);
-      expect(defaultProps.onPressAIButton).toHaveBeenCalled();
+      expect(defaultProps.onPressAI).toHaveBeenCalled();
     });
 
-    it('should call onPressAllPhotographerButton when title is pressed', () => {
+    it('should call onPressAllPhotographer when title is pressed', () => {
       const { getByText } = render(<HomeView {...defaultProps} />);
       const title = getByText('스냅링크 전체 작가');
       fireEvent.press(title);
-      expect(defaultProps.onPressAllPhotographerButton).toHaveBeenCalled();
+      expect(defaultProps.onPressAllPhotographer).toHaveBeenCalled();
     });
 
-    it('should call onPressPopularPhotographerButton when title is pressed', () => {
+    it('should call onPressPopularPhotographer when title is pressed', () => {
       const { getByText } = render(<HomeView {...defaultProps} />);
       const title = getByText('지금 가장 인기있는 작가');
       fireEvent.press(title);
-      expect(defaultProps.onPressPopularPhotographerButton).toHaveBeenCalled();
+      expect(defaultProps.onPressPopularPhotographer).toHaveBeenCalled();
     });
 
     it('should call onPressAllPhotographerItem when photographer item is pressed', () => {

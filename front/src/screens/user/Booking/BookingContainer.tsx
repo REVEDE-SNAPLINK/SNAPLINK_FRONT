@@ -32,7 +32,7 @@ export default function BookingContainer () {
     queryFn: () => getReservationData(photographerId),
   });
 
-  const handleBackButtonPress = () => {
+  const handlePressBack = () => {
     navigation.goBack();
   };
 
@@ -43,6 +43,10 @@ export default function BookingContainer () {
 
   const handleSelectTime = (time: string) => {
     setSelectedTime(time);
+  };
+
+  const handlePressRequiredOption = () => {
+    setRequiredOptionChecked(!requiredOptionChecked);
   };
 
   const handleOptionalQuantityChange = (optionId: string, quantity: number) => {
@@ -119,7 +123,7 @@ export default function BookingContainer () {
 
   return (
     <BookingView
-      onPressBack={handleBackButtonPress}
+      onPressBack={handlePressBack}
       onChangeDate={handleChangeDate}
       nickname={photographerDetails.nickname}
       initialDate={initialDate}
@@ -130,7 +134,7 @@ export default function BookingContainer () {
       onSelectTime={handleSelectTime}
       requiredOptions={reservationData.requiredOptions}
       requiredOptionChecked={requiredOptionChecked}
-      onRequiredOptionPress={() => setRequiredOptionChecked(!requiredOptionChecked)}
+      onPressRequiredOption={handlePressRequiredOption}
       optionalOptions={reservationData.optionalOptions}
       optionalQuantities={optionalQuantities}
       onOptionalQuantityChange={handleOptionalQuantityChange}

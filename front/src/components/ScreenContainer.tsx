@@ -14,22 +14,22 @@ interface Props {
   // Header props
   headerShown?: boolean;
   headerTitle?: string;
-  onPressBackButton?: () => void;
+  onPressBack?: () => void;
   headerToolIcon?: ComponentType<SvgProps>;
-  onPressToolButton?: () => void;
+  onPressTool?: () => void;
 }
 
 export default function ScreenContainer({
   children,
+  onPressBack,
+  onPressTool,
   barBackgroundColor = "#fff",
   backgroundColor = "#fff",
   paddingHorizontal,
   alignItemsCenter = true,
   headerShown = true,
   headerTitle = "",
-  onPressBackButton,
   headerToolIcon,
-  onPressToolButton,
 }: Props) {
   return (
     <StyledSafeAreaView
@@ -39,12 +39,12 @@ export default function ScreenContainer({
       alignItemsCenter={alignItemsCenter}
     >
       <StatusBar barStyle="dark-content" backgroundColor={barBackgroundColor} />
-      {headerShown && onPressBackButton && (
+      {headerShown && onPressBack && (
         <HeaderWithBackButton
-          onPressBackButton={onPressBackButton}
+          onPressBack={onPressBack}
+          onPressTool={onPressTool}
           title={headerTitle}
           ToolIcon={headerToolIcon}
-          onPressToolButton={onPressToolButton}
         />
       )}
       {children}

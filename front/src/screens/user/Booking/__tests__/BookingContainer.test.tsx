@@ -59,7 +59,7 @@ jest.mock('../BookingView', () => {
         ))}
         <TouchableOpacity
           testID="required-option-checkbox"
-          onPress={props.onRequiredOptionPress}
+          onPress={props.onPressRequiredOption}
         >
           <Text>Required Option</Text>
         </TouchableOpacity>

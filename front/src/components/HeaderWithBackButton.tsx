@@ -6,22 +6,22 @@ import { SvgProps } from 'react-native-svg';
 import { ComponentType } from 'react';
 
 interface HeaderWithBackButtonProps {
-  onPressBackButton: () => void;
+  onPressBack: () => void;
+  onPressTool?: () => void;
   title: string;
   ToolIcon?: ComponentType<SvgProps>;
-  onPressToolButton?: () => void;
 }
 
 export default function HeaderWithBackButton({
-  onPressBackButton,
+  onPressBack,
+  onPressTool,
   title,
   ToolIcon,
-  onPressToolButton,
 }: HeaderWithBackButtonProps) {
   return (
     <Container>
       <BackButtonWrapper>
-        <BackButton onPress={onPressBackButton} />
+        <BackButton onPress={onPressBack} />
       </BackButtonWrapper>
       <Typography
         fontSize={20}
@@ -32,8 +32,8 @@ export default function HeaderWithBackButton({
         {title}
       </Typography>
       <ToolButtonWrapper>
-        {ToolIcon !== undefined && onPressToolButton && (
-          <IconButton width={24} height={24} Svg={ToolIcon} onPress={onPressToolButton} />
+        {ToolIcon !== undefined && onPressTool && (
+          <IconButton width={24} height={24} Svg={ToolIcon} onPress={onPressTool} />
         )}
       </ToolButtonWrapper>
     </Container>

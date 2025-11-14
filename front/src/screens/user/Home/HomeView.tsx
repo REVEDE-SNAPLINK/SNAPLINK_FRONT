@@ -9,10 +9,10 @@ import { PhotographerInfo } from '@/types/photographer.ts';
 import PhotographerList from '@/components/user/PhotographerList.tsx';
 
 interface HomeViewProps {
-  onPressNotificationButton: () => void;
-  onPressAIButton:  () => void;
-  onPressAllPhotographerButton: () => void;
-  onPressPopularPhotographerButton: () => void;
+  onPressNotification: () => void;
+  onPressAI:  () => void;
+  onPressAllPhotographer: () => void;
+  onPressPopularPhotographer: () => void;
   onPressAllPhotographerItem: (id: string) => void;
   onPressPopularPhotographerItem: (id: string) => void;
   searchKey: string;
@@ -24,10 +24,10 @@ interface HomeViewProps {
 }
 
 export default function HomeView({
-  onPressNotificationButton,
-  onPressAIButton,
-  onPressAllPhotographerButton,
-  onPressPopularPhotographerButton,
+  onPressNotification,
+  onPressAI,
+  onPressAllPhotographer,
+  onPressPopularPhotographer,
   onPressAllPhotographerItem,
   onPressPopularPhotographerItem,
   bannerItems,
@@ -60,11 +60,11 @@ export default function HomeView({
           width={24}
           height={24}
           source={require('@/assets/icons/notification.png')}
-          onPress={onPressNotificationButton}
+          onPress={onPressNotification}
         />
       </Header>
       <SearchFormWrapper>
-        <AIButton onPress={onPressAIButton}>
+        <AIButton onPress={onPressAI}>
           <Icon
             width={13.02}
             height={16.56}
@@ -106,7 +106,7 @@ export default function HomeView({
           items={allPhotographerItems}
           marginTop={24}
           title="스냅링크 전체 작가"
-          onPressTitle={onPressAllPhotographerButton}
+          onPressTitle={onPressAllPhotographer}
           onPressItem={onPressAllPhotographerItem}
           enabledFilter
         />
@@ -114,7 +114,7 @@ export default function HomeView({
           items={popularPhotographerItems}
           marginTop={15}
           title="지금 가장 인기있는 작가"
-          onPressTitle={onPressPopularPhotographerButton}
+          onPressTitle={onPressPopularPhotographer}
           onPressItem={onPressPopularPhotographerItem}
         />
         <ScrollSpacer />

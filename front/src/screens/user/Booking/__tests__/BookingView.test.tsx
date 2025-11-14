@@ -73,7 +73,7 @@ describe('BookingView', () => {
     onSelectTime: jest.fn(),
     requiredOptions: mockRequiredOptions,
     requiredOptionChecked: true,
-    onRequiredOptionPress: jest.fn(),
+    onPressRequiredOption: jest.fn(),
     optionalOptions: mockOptionalOptions,
     optionalQuantities: { 'opt-1': 0, 'opt-2': 0 },
     onOptionalQuantityChange: jest.fn(),

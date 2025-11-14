@@ -4,6 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import UserTab from '@/screens/user/UserTab';
 import PhotographerTab from '@/screens/photographer/PhotographerTab';
 import SearchPhotographerContainer from '@/screens/user/SearchPhotographer/SearchPhotographerContainer.tsx';
+import PhotographerDetailsContainer from '@/screens/user/PhotographerDetails/PhotographerDetailsContainer.tsx';
+import ReserveContainer from '@/screens/user/Reserve/ReserveContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -20,6 +22,8 @@ export default function MainStack() {
     >
       <Stack.Screen name="Home" component={TabComponent} />
       <Stack.Screen name="SearchPhotographer" component={SearchPhotographerContainer} />
+      <Stack.Screen name="PhotographerDetails" component={PhotographerDetailsContainer} />
+      <Stack.Screen name="Reserve" component={ReserveContainer} />
     </Stack.Navigator>
   )
 }

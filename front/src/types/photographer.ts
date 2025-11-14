@@ -21,3 +21,15 @@ export type Photographer = {
   region: string; // e.g., "서울", "경기"
   createdAt: string; // ISO date string for sorting
 };
+
+export type PhotographerDetails = Photographer & {
+  name: string; // 실명
+  introduction: string; // 소개글
+  portfolioCount: number; // 전체 포트폴리오 개수
+};
+
+export type PortfolioImage = {
+  id: string;
+  url: string;
+  createdAt: string;
+};

@@ -1,4 +1,4 @@
-import { Photographer } from '@/types/photographer';
+import { Photographer, PhotographerDetails, PortfolioImage } from '@/types/photographer';
 import { FilterValue } from '@/types/filter';
 
 export interface SearchPhotographerParams {
@@ -271,5 +271,203 @@ export async function searchPhotographers(
     totalCount: filtered.length,
     hasNextPage: endIndex < filtered.length,
     nextPage: endIndex < filtered.length ? params.page + 1 : null,
+  };
+}
+
+/**
+ * Get photographer details by ID
+ * TODO: Replace with actual API call when backend is ready
+ *
+ * API endpoint will be: GET /api/photographers/:id
+ */
+export async function getPhotographerDetails(
+  photographerId: string
+): Promise<PhotographerDetails> {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  const photographer = DUMMY_PHOTOGRAPHERS.find((p) => p.id === photographerId);
+
+  if (!photographer) {
+    throw new Error('Photographer not found');
+  }
+
+  // Extend with additional details
+  return {
+    ...photographer,
+    name: `${photographer.nickname} 작가`,
+    introduction: `안녕하세요, ${photographer.nickname}입니다.\n${photographer.shootingTypes.join(', ')} 촬영을 전문으로 하고 있으며, ${photographer.styleTags.join(', ')} 스타일의 사진을 주로 촬영합니다.\n\n고객님의 소중한 순간을 아름답게 담아드리겠습니다.`,
+    portfolioCount: 120, // Dummy count
+  };
+}
+
+export interface GetPortfolioImagesParams {
+  photographerId: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface GetPortfolioImagesResponse {
+  images: PortfolioImage[];
+  totalCount: number;
+  hasNextPage: boolean;
+  nextPage: number | null;
+}
+
+/**
+ * Get photographer's portfolio images with pagination
+ * TODO: Replace with actual API call when backend is ready
+ *
+ * API endpoint will be: GET /api/photographers/:id/portfolio
+ * Query params: page, pageSize
+ */
+export async function getPortfolioImages(
+  params: GetPortfolioImagesParams
+): Promise<GetPortfolioImagesResponse> {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Generate dummy portfolio images (simulate 120 images)
+  const totalImages = 120;
+  const startIndex = (params.page - 1) * params.pageSize;
+  const endIndex = Math.min(startIndex + params.pageSize, totalImages);
+
+  const images: PortfolioImage[] = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    images.push({
+      id: `portfolio-${params.photographerId}-${i + 1}`,
+      url: `https://picsum.photos/400/400?random=${i + 1}`,
+      createdAt: new Date(Date.now() - i * 86400000).toISOString(), // Each image 1 day apart
+    });
+  }
+
+  return {
+    images,
+    totalCount: totalImages,
+    hasNextPage: endIndex < totalImages,
+    nextPage: endIndex < totalImages ? params.page + 1 : null,
+  };
+}
+
+/**
+ * Types for reservation data
+ */
+export interface TimeSlot {
+  time: string; // "10:00", "14:00", etc.
+  isReserved: boolean;
+}
+
+export interface RequiredShootingOption {
+  id: string;
+  title: string;
+  price: number;
+  duration: string; // "2시간", "3시간", etc.
+  description: string;
+}
+
+export interface OptionalShootingOption {
+  id: string;
+  title: string;
+  price: number;
+  maxQuantity?: number;
+}
+
+export interface ReservationData {
+  photographerId: string;
+  availableDates: string[]; // ["2025-11-17", "2025-11-18", ...]
+  timeSlotsByDate: Record<string, TimeSlot[]>; // { "2025-11-17": [...], ... }
+  requiredOptions: RequiredShootingOption[];
+  optionalOptions: OptionalShootingOption[];
+}
+
+/**
+ * Get reservation data for a photographer
+ * TODO: Replace with actual API call when backend is ready
+ *
+ * API endpoint will be: GET /api/photographers/:id/reservation
+ */
+export async function getReservationData(
+  photographerId: string
+): Promise<ReservationData> {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Dummy data
+  return {
+    photographerId,
+    availableDates: ['2025-11-17', '2025-11-18', '2025-11-20', '2025-11-21', '2025-11-23', '2025-11-25'],
+    timeSlotsByDate: {
+      '2025-11-17': [
+        { time: '10:00', isReserved: false },
+        { time: '11:00', isReserved: true },
+        { time: '12:00', isReserved: false },
+        { time: '14:00', isReserved: false },
+        { time: '15:00', isReserved: false },
+        { time: '16:00', isReserved: true },
+      ],
+      '2025-11-18': [
+        { time: '09:00', isReserved: false },
+        { time: '10:00', isReserved: false },
+        { time: '11:00', isReserved: false },
+        { time: '14:00', isReserved: false },
+        { time: '15:00', isReserved: true },
+        { time: '17:00', isReserved: false },
+      ],
+      '2025-11-20': [
+        { time: '10:00', isReserved: false },
+        { time: '11:00', isReserved: false },
+        { time: '12:00', isReserved: false },
+        { time: '13:00', isReserved: false },
+        { time: '14:00', isReserved: false },
+        { time: '16:00', isReserved: false },
+      ],
+      '2025-11-21': [
+        { time: '09:00', isReserved: true },
+        { time: '10:00', isReserved: false },
+        { time: '11:00', isReserved: false },
+        { time: '15:00', isReserved: false },
+        { time: '16:00', isReserved: false },
+        { time: '17:00', isReserved: false },
+      ],
+      '2025-11-23': [
+        { time: '10:00', isReserved: false },
+        { time: '11:00', isReserved: false },
+        { time: '14:00', isReserved: false },
+        { time: '15:00', isReserved: false },
+        { time: '16:00', isReserved: false },
+      ],
+      '2025-11-25': [
+        { time: '09:00', isReserved: false },
+        { time: '10:00', isReserved: false },
+        { time: '11:00', isReserved: true },
+        { time: '12:00', isReserved: false },
+        { time: '14:00', isReserved: false },
+        { time: '15:00', isReserved: false },
+        { time: '16:00', isReserved: false },
+      ],
+    },
+    requiredOptions: [
+      {
+        id: 'req-1',
+        title: '2인 기본 촬영',
+        price: 50000,
+        duration: '2시간',
+        description: '2인 기준 기본 촬영 단가로 인원 추가나 시간 추가, 컨셉 추가 등에 따라 추가 비용이 발생할 수 있으며 선택 항목에서 확인 가능해요.',
+      },
+    ],
+    optionalOptions: [
+      {
+        id: 'opt-1',
+        title: '촬영 인원 추가',
+        price: 10000,
+        maxQuantity: 10,
+      },
+      {
+        id: 'opt-2',
+        title: '원본 사진 요청',
+        price: 5000,
+        maxQuantity: 100,
+      },
+    ],
   };
 }

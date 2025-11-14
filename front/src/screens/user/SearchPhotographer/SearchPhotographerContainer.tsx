@@ -209,10 +209,7 @@ export default function SearchPhotographerContainer() {
     refetch();
   };
 
-  const handlePressPhotographer = (photographerId: string) => {
-    // TODO: Navigate to photographer detail page
-    console.log('Navigate to photographer:', photographerId);
-  };
+  const handlePressPhotographer = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
 
   /**
    * Remove all filters for a category when category chip is clicked

@@ -7,6 +7,9 @@ import IconButton from '@/components/IconButton.tsx';
 import Banner, { BannerItem } from '@/components/user/Banner.tsx';
 import { PhotographerInfo } from '@/types/photographer.ts';
 import PhotographerList from '@/components/user/PhotographerList.tsx';
+import LogoIcon from '@/assets/icons/logo-icon.svg'
+import NotificationIcon from '@/assets/icons/notification.svg';
+import AIButtonIcon from '@/assets/icons/ai-button.svg'
 
 interface HomeViewProps {
   onPressNotification: () => void;
@@ -44,7 +47,7 @@ export default function HomeView({
           <Icon
             width={18}
             height={17}
-            source={require('@/assets/icons/logo-icon.png')}
+            Svg={LogoIcon}
           />
           <Typography
             fontSize={20}
@@ -59,27 +62,17 @@ export default function HomeView({
         <IconButton
           width={24}
           height={24}
-          source={require('@/assets/icons/notification.png')}
+          Svg={NotificationIcon}
           onPress={onPressNotification}
         />
       </Header>
       <SearchFormWrapper>
-        <AIButton onPress={onPressAI}>
-          <Icon
-            width={13.02}
-            height={16.56}
-            source={require('@/assets/icons/profile.png')}
-          />
-          <Typography
-            fontSize={8}
-            fontWeight="bold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#fff"
-          >
-            AI 추천
-          </Typography>
-        </AIButton>
+        <IconButton
+          width={40}
+          height={41}
+          Svg={AIButtonIcon}
+          onPress={onPressAI}
+        />
         <SearchInputWrapper>
           <Icon
             width={16.67}
@@ -144,17 +137,6 @@ const SearchFormWrapper = styled.View`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 28px;
-`;
-
-const AIButton = styled.TouchableOpacity`
-  background-color: ${theme.colors.primary};
-  width: 40px;
-  height: 41px;
-  border-radius: 20px;
-  align-items: center;
-  justify-content: space-between;
-  padding-vertical: 5px;
-  box-sizing: border-box;
 `;
 
 const SearchInputWrapper = styled.View`

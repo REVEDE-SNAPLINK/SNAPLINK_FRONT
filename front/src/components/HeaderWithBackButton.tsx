@@ -44,10 +44,9 @@ const Container = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  height: 101px;
+  height: 100px;
   background-color: #fff;
   width: 100%;
-  padding-bottom: 20px;
 `
 
 const BackButtonWrapper = styled.View`

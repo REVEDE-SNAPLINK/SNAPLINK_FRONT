@@ -54,6 +54,7 @@ export default function Calendar({
       )}
       renderHeader={(date) => (
         <Typography
+          testID="calendar-header"
           fontSize={16}
           fontWeight="semiBold"
           color={theme.colors.disabled}

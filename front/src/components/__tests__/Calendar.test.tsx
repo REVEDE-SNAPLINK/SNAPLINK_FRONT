@@ -34,8 +34,10 @@ describe('Calendar Component', () => {
     });
 
     it('should render month and year header', () => {
-      const { getByText } = render(<Calendar {...defaultProps} />);
-      expect(getByText('2025.11')).toBeTruthy();
+      const { UNSAFE_queryAllByProps } = render(<Calendar {...defaultProps} />);
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2025.11');
     });
   });
 
@@ -100,22 +102,28 @@ describe('Calendar Component', () => {
 
   describe('Header Rendering', () => {
     it('should render custom header with month and year', () => {
-      const { getByText } = render(<Calendar {...defaultProps} />);
-      expect(getByText('2025.11')).toBeTruthy();
+      const { UNSAFE_queryAllByProps } = render(<Calendar {...defaultProps} />);
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2025.11');
     });
 
     it('should format header as YYYY.MM', () => {
-      const { getByText } = render(
+      const { UNSAFE_queryAllByProps } = render(
         <Calendar {...defaultProps} initialDate="2024-01-15" />
       );
-      expect(getByText('2024.01')).toBeTruthy();
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2024.01');
     });
 
     it('should update header when month changes', () => {
-      const { getByText } = render(
+      const { UNSAFE_queryAllByProps } = render(
         <Calendar {...defaultProps} initialDate="2025-12-01" />
       );
-      expect(getByText('2025.12')).toBeTruthy();
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2025.12');
     });
   });
 
@@ -236,8 +244,10 @@ describe('Calendar Component', () => {
     });
 
     it('should apply disabled color to header text', () => {
-      const { getByText } = render(<Calendar {...defaultProps} />);
-      const header = getByText('2025.11');
+      const { UNSAFE_queryAllByProps } = render(<Calendar {...defaultProps} />);
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2025.11');
       // Header should use disabled color
     });
   });
@@ -251,24 +261,30 @@ describe('Calendar Component', () => {
     });
 
     it('should handle different initial dates', () => {
-      const { getByText } = render(
+      const { UNSAFE_queryAllByProps } = render(
         <Calendar {...defaultProps} initialDate="2024-06-15" />
       );
-      expect(getByText('2024.06')).toBeTruthy();
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2024.06');
     });
 
     it('should handle past dates as initial date', () => {
-      const { getByText } = render(
+      const { UNSAFE_queryAllByProps } = render(
         <Calendar {...defaultProps} initialDate="2020-01-01" />
       );
-      expect(getByText('2020.01')).toBeTruthy();
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2020.01');
     });
 
     it('should handle future dates as initial date', () => {
-      const { getByText } = render(
+      const { UNSAFE_queryAllByProps } = render(
         <Calendar {...defaultProps} initialDate="2030-12-31" />
       );
-      expect(getByText('2030.12')).toBeTruthy();
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2030.12');
     });
   });
 
@@ -317,10 +333,12 @@ describe('Calendar Component', () => {
     });
 
     it('should handle year boundary', () => {
-      const { getByText } = render(
+      const { UNSAFE_queryAllByProps } = render(
         <Calendar {...defaultProps} initialDate="2024-12-31" />
       );
-      expect(getByText('2024.12')).toBeTruthy();
+      const headers = UNSAFE_queryAllByProps({ testID: 'calendar-header' });
+      expect(headers.length).toBeGreaterThan(0);
+      expect(headers[0].props.children).toBe('2024.12');
     });
 
     it('should handle all dates being unavailable', () => {

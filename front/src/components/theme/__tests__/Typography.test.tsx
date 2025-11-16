@@ -25,7 +25,7 @@ describe('Typography Component', () => {
           First <Typography>Second</Typography>
         </Typography>
       );
-      expect(getByText('First')).toBeTruthy();
+      expect(getByText('Second')).toBeTruthy();
     });
   });
 

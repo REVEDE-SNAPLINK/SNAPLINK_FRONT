@@ -70,6 +70,7 @@ export default function ToggleButton({
 
   return (
     <ToggleContainer
+      testID="toggle-button"
       $isActive={value}
       $disabled={disabled}
       onPress={handlePress}

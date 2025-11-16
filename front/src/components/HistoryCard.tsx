@@ -97,8 +97,7 @@ const HeaderContainer = styled.View`
 `
 
 const ViewDetailButton = styled.TouchableOpacity`
-  width: 48px;
-  height: 21px;
+  padding: 3px 5px;
   border-radius: 100px;
   border: 1px solid ${theme.colors.disabled};
   justify-content: center;
@@ -137,15 +136,15 @@ const DescriptionWrapper = styled.View<{ marginBottom?: number }>`
 `
 
 const DescriptionNameWrapper = styled.View`
-  width: 40px;
-  margin-right: 40px; 
+  width: 45px;
+  margin-right: 40px;
 `
 
 const Description = ({ name, value, marginBottom }: {name: string, value: string, marginBottom?: number}) => (
   <DescriptionWrapper marginBottom={marginBottom}>
     <DescriptionNameWrapper>
       <Typography
-        fontSize="11"
+        fontSize={11}
         lineHeight="140%"
         letterSpacing="-2.5%"
         color={theme.colors.disabled}
@@ -154,7 +153,7 @@ const Description = ({ name, value, marginBottom }: {name: string, value: string
       </Typography>
     </DescriptionNameWrapper>
     <Typography
-      fontSize="11"
+      fontSize={11}
       lineHeight="140%"
       letterSpacing="-2.5%"
       color={theme.colors.textSecondary}

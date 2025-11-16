@@ -40,7 +40,7 @@ const StyledText = styled(Text)<{
   ${({ $lineHeight }) => $lineHeight !== undefined ? `line-height: ${$lineHeight}px;` : ''}
   ${({ $letterSpacing }) => $letterSpacing !== undefined ? `letter-spacing: ${$letterSpacing}px;` : ''}
   font-family: ${({ $fontWeight }) => fontFamily[$fontWeight] || fontFamily.regular};
-  font-weight: ${({ $fontWeight }) => fontWeightMap[$fontWeight] || '400'};
+  font-weight: ${({ $fontWeight }) => Number(fontWeightMap[$fontWeight]) || 400};
   color: ${({ $color }) =>
     $color in theme.colors ? theme.colors[$color as keyof typeof theme.colors] : $color
   };

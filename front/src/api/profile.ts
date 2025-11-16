@@ -19,7 +19,7 @@ const DUMMY_USER_PROFILE: UserProfile = {
  * Fetch user profile data
  * TODO: Replace with actual API call
  */
-export const getUserProfile = async (userId: string): Promise<UserProfile> => {
+export const getUserProfile = async (_userId: string): Promise<UserProfile> => {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));
 

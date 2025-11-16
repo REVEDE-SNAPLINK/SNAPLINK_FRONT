@@ -21,7 +21,6 @@ export default function PhotographerDetailsContainer() {
   const {
     data: photographer,
     isLoading: isLoadingPhotographer,
-    error: photographerError,
   } = useQuery({
     queryKey: ['photographer', photographerId],
     queryFn: () => getPhotographerDetails(photographerId),
@@ -30,7 +29,6 @@ export default function PhotographerDetailsContainer() {
   // Fetch portfolio images with infinite scroll
   const {
     data: portfolioData,
-    isLoading: isLoadingPortfolio,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -63,7 +61,8 @@ export default function PhotographerDetailsContainer() {
   const handlePressFavorite = useCallback(() => {
     setIsFavorite((prev) => !prev);
     // TODO: API call to toggle favorite
-  }, []);
+    console.log('Toggle favorite:', isFavorite ? 'remove' : 'add');
+  }, [isFavorite]);
 
   const handlePressInquiry = useCallback(() => {
     // TODO: Navigate to inquiry screen or open chat

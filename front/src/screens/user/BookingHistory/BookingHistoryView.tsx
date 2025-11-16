@@ -28,7 +28,7 @@ export default function BookingHistoryView({
   isError,
   onLoadMore,
   isFetchingNextPage,
-  hasNextPage,
+  hasNextPage: _hasNextPage,
   onPressPhotographerDetail,
   onRefresh,
   onPressShowPhoto,

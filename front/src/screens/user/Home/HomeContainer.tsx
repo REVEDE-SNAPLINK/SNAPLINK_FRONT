@@ -87,16 +87,14 @@ export default function HomeContainer() {
   const handlePressAllPhotographer = () => {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
-  const handlePressPopularPhotographer = () => {};
-  const handlePressAllPhotographerItem = (id: string) => { console.log('handlePressAllPhotographerItem', id); };
-  const handlePressPopularPhotographerItem = (id: string) => { console.log('handlePressPopularPhotographerItem', id); };
+  const handlePressAllPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
+  const handlePressPopularPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
 
   return (
     <HomeView
       onPressNotification={handlePressNotification}
       onPressAI={handlePressAI}
       onPressAllPhotographer={handlePressAllPhotographer}
-      onPressPopularPhotographer={handlePressPopularPhotographer}
       onPressAllPhotographerItem={handlePressAllPhotographerItem}
       onPressPopularPhotographerItem={handlePressPopularPhotographerItem}
       searchKey={searchKey}

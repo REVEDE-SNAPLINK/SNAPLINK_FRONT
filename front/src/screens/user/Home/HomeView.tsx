@@ -15,9 +15,8 @@ interface HomeViewProps {
   onPressNotification: () => void;
   onPressAI:  () => void;
   onPressAllPhotographer: () => void;
-  onPressPopularPhotographer: () => void;
-  onPressAllPhotographerItem: (id: string) => void;
-  onPressPopularPhotographerItem: (id: string) => void;
+  onPressAllPhotographerItem: (photographerId: string) => void;
+  onPressPopularPhotographerItem: (photographerId: string) => void;
   searchKey: string;
   onChangeSearchKey: (searchKey: string) => void;
   onSubmitSearchKey: () => void;
@@ -30,7 +29,6 @@ export default function HomeView({
   onPressNotification,
   onPressAI,
   onPressAllPhotographer,
-  onPressPopularPhotographer,
   onPressAllPhotographerItem,
   onPressPopularPhotographerItem,
   bannerItems,
@@ -101,13 +99,11 @@ export default function HomeView({
           title="스냅링크 전체 작가"
           onPressTitle={onPressAllPhotographer}
           onPressItem={onPressAllPhotographerItem}
-          enabledFilter
         />
         <PhotographerList
           items={popularPhotographerItems}
           marginTop={15}
           title="지금 가장 인기있는 작가"
-          onPressTitle={onPressPopularPhotographer}
           onPressItem={onPressPopularPhotographerItem}
         />
         <ScrollSpacer />

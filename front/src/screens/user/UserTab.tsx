@@ -6,7 +6,7 @@ import HomeContainer from '@/screens/user/Home/HomeContainer';
 import CommunityScreen from '@/screens/CommunityScreen';
 import ChatScreen from '@/screens/ChatScreen';
 import ScrapScreen from '@/screens/ScrapScreen';
-import MoreScreen from '@/screens/MoreScreen';
+import ProfileContainer from '@/screens/user/Profile/ProfileContainer.tsx';
 
 const tabs: TabItem[] = [
   { key: 'community', label: '커뮤니티', iconSource: require('@/assets/icons/group.png') },
@@ -30,7 +30,7 @@ export default function UserTab() {
       case 3:
         return <ScrapScreen />;
       case 4:
-        return <MoreScreen />;
+        return <ProfileContainer />;
       default:
         return <HomeContainer />;
     }

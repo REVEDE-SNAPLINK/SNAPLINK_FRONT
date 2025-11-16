@@ -9,6 +9,17 @@ export type User = {
   profileImage?: string;
 }
 
+export type UserProfile = {
+  id: string;
+  nickname: string;
+  name: string;
+  email: string;
+  profileImage?: string;
+  userType: UserType;
+  isExpertMode: boolean;
+  createdAt: string;
+}
+
 export type Consent = {
   id: string;
   title: string;

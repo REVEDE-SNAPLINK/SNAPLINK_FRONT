@@ -173,7 +173,7 @@ export default function SearchPhotographerContainer() {
 
   const totalCount = data?.pages[0]?.totalCount ?? 0;
 
-  const handleBackButtonPress = () => {
+  const handlePressBack = () => {
     navigation.goBack();
   };
 
@@ -186,7 +186,7 @@ export default function SearchPhotographerContainer() {
     setSortBy((prev) => (prev === 'recommended' ? 'latest' : 'recommended'));
   };
 
-  const handleOpenFilterModal = () => {
+  const handlePressFilter = () => {
     setIsFilterModalOpen(true);
   };
 
@@ -209,10 +209,7 @@ export default function SearchPhotographerContainer() {
     refetch();
   };
 
-  const handlePressPhotographer = (photographerId: string) => {
-    // TODO: Navigate to photographer detail page
-    console.log('Navigate to photographer:', photographerId);
-  };
+  const handlePressPhotographer = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
 
   /**
    * Remove all filters for a category when category chip is clicked
@@ -224,7 +221,7 @@ export default function SearchPhotographerContainer() {
   /**
    * Remove a specific filter chip
    */
-  const handleRemoveFilterChip = (chipId: string) => {
+  const handlePressFilterChip = (chipId: string) => {
     // Parse chipId: format is "categoryId-value" or "categoryId-range"
     const dashIndex = chipId.lastIndexOf('-');
     if (dashIndex === -1) return;
@@ -256,16 +253,16 @@ export default function SearchPhotographerContainer() {
 
   return (
     <SearchPhotographerView
-      onPressBackButton={handleBackButtonPress}
+      onPressBack={handlePressBack}
       searchKey={searchKey}
       onChangeSearchKey={setSearchKey}
       onSubmitSearchKey={handleSubmitSearchKey}
       filterCategories={FILTER_CATEGORIES}
       activeCategoryIds={activeCategoryIds}
       filterChips={filterChips}
-      onPressFilterButton={handleOpenFilterModal}
+      onPressFilter={handlePressFilter}
       onPressCategoryChip={handlePressCategoryChip}
-      onPressFilterChip={handleRemoveFilterChip}
+      onPressFilterChip={handlePressFilterChip}
       isFilterModalOpen={isFilterModalOpen}
       onCloseFilterModal={handleCloseFilterModal}
       selectedFilters={selectedFilters}

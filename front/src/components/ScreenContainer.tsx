@@ -1,7 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, ComponentType } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SvgProps } from 'react-native-svg';
 import styled from '@/utils/scale/CustomStyled';
+import HeaderWithBackButton from './HeaderWithBackButton';
 
 interface Props {
   children: ReactNode;
@@ -9,14 +11,25 @@ interface Props {
   backgroundColor?: string;
   paddingHorizontal?: number;
   alignItemsCenter?: boolean;
+  // Header props
+  headerShown?: boolean;
+  headerTitle?: string;
+  onPressBack?: () => void;
+  headerToolIcon?: ComponentType<SvgProps>;
+  onPressTool?: () => void;
 }
 
 export default function ScreenContainer({
   children,
+  onPressBack,
+  onPressTool,
   barBackgroundColor = "#fff",
   backgroundColor = "#fff",
   paddingHorizontal,
   alignItemsCenter = true,
+  headerShown = true,
+  headerTitle = "",
+  headerToolIcon,
 }: Props) {
   return (
     <StyledSafeAreaView
@@ -26,6 +39,14 @@ export default function ScreenContainer({
       alignItemsCenter={alignItemsCenter}
     >
       <StatusBar barStyle="dark-content" backgroundColor={barBackgroundColor} />
+      {headerShown && onPressBack && (
+        <HeaderWithBackButton
+          onPressBack={onPressBack}
+          onPressTool={onPressTool}
+          title={headerTitle}
+          ToolIcon={headerToolIcon}
+        />
+      )}
       {children}
     </StyledSafeAreaView>
   )

@@ -79,26 +79,24 @@ export default function HomeContainer() {
 
   const [searchKey, setSearchKey] = useState('');
 
-  const handleNotificationButton = () => {};
-  const handleAIButton = () => {};
+  const handlePressNotification = () => {};
+  const handlePressAI = () => {};
   const handleSubmitSearchKey = () => {
     navigation.navigate('SearchPhotographer', { searchKey });
   };
-  const handleAllPhotographerButton = () => {
+  const handlePressAllPhotographer = () => {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
-  const handlePopularPhotographerButton = () => {};
-  const handleAllPhotographerItem = (id: string) => { console.log('handleAllPhotographerButton', id); };
-  const handlePopularPhotographerItem = (id: string) => { console.log('handlePopularPhotographerItemButton', id); };
+  const handlePressAllPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
+  const handlePressPopularPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
 
   return (
     <HomeView
-      onPressNotificationButton={handleNotificationButton}
-      onPressAIButton={handleAIButton}
-      onPressAllPhotographerButton={handleAllPhotographerButton}
-      onPressPopularPhotographerButton={handlePopularPhotographerButton}
-      onPressAllPhotographerItem={handleAllPhotographerItem}
-      onPressPopularPhotographerItem={handlePopularPhotographerItem}
+      onPressNotification={handlePressNotification}
+      onPressAI={handlePressAI}
+      onPressAllPhotographer={handlePressAllPhotographer}
+      onPressAllPhotographerItem={handlePressAllPhotographerItem}
+      onPressPopularPhotographerItem={handlePressPopularPhotographerItem}
       searchKey={searchKey}
       onChangeSearchKey={setSearchKey}
       onSubmitSearchKey={handleSubmitSearchKey}

@@ -1,6 +1,5 @@
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import IconButton from '@/components/IconButton.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 import Filter from '@/components/user/filter/Filter.tsx';
@@ -9,16 +8,17 @@ import { FilterCategory, FilterValue, FilterChip } from '@/types/filter';
 import Typography from '@/components/theme/Typography.tsx';
 import SearchPhotographerList from '@/components/user/SearchPhotographerList';
 import { Photographer } from '@/types/photographer';
+import BackButton from '@/components/BackButton.tsx';
 
 interface SearchPhotographerViewProps {
-  onPressBackButton: () => void;
+  onPressBack: () => void;
   searchKey: string;
   onChangeSearchKey: (key: string) => void;
   onSubmitSearchKey: () => void;
   filterCategories: FilterCategory[];
   activeCategoryIds: string[];
   filterChips: FilterChip[];
-  onPressFilterButton: () => void;
+  onPressFilter: () => void;
   onPressCategoryChip: (categoryId: string) => void;
   onPressFilterChip: (chipId: string) => void;
   isFilterModalOpen: boolean;
@@ -37,14 +37,14 @@ interface SearchPhotographerViewProps {
 }
 
 export default function SearchPhotographerView({
-  onPressBackButton,
+  onPressBack,
   searchKey,
   onChangeSearchKey,
   onSubmitSearchKey,
   filterCategories,
   activeCategoryIds,
   filterChips,
-  onPressFilterButton,
+  onPressFilter,
   onPressCategoryChip,
   onPressFilterChip,
   isFilterModalOpen,
@@ -65,12 +65,7 @@ export default function SearchPhotographerView({
     <>
       <ScreenContainer paddingHorizontal={20}>
         <Header>
-          <IconButton
-            width={19.44}
-            height={20.37}
-            source={require('@/assets/icons/arrow-left.png')}
-            onPress={onPressBackButton}
-          />
+          <BackButton onPress={onPressBack} />
           <SearchInputWrapper>
             <SearchInput
               value={searchKey}
@@ -84,7 +79,7 @@ export default function SearchPhotographerView({
           categories={filterCategories}
           activeCategoryIds={activeCategoryIds}
           filterChips={filterChips}
-          onPressFilterButton={onPressFilterButton}
+          onPressFilterButton={onPressFilter}
           onPressCategoryChip={onPressCategoryChip}
           onPressFilterChip={onPressFilterChip}
         />

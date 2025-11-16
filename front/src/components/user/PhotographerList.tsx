@@ -2,21 +2,19 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import { PhotographerInfo } from '@/types/photographer.ts';
-import { theme } from '@/theme';
 import { formatNumber } from '@/utils/format.ts';
+import { useMemo } from 'react';
 
 interface Props {
   items: PhotographerInfo[],
-  enabledFilter?: boolean,
   marginTop: number,
   title: string,
-  onPressTitle: () => void;
+  onPressTitle?: () => void;
   onPressItem: (id: string) => void;
 }
 
 export default function PhotographerList ({
   items,
-  enabledFilter = false,
   marginTop,
   title,
   onPressTitle,
@@ -26,18 +24,6 @@ export default function PhotographerList ({
     <>
       <PhotographerListHeader marginTop={marginTop}>
         <PhotographerListTitle title={title} onPress={onPressTitle} />
-        {enabledFilter && (
-          <SortButton>
-            <Typography
-              fontSize={12}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              color={theme.colors.disabled}
-              marginRight={2.21}
-            >최신순</Typography>
-            <Icon width={11.42} height={10.4} source={require('@/assets/icons/swap.png')} />
-          </SortButton>
-        )}
       </PhotographerListHeader>
       <PhotographerListWrapper>
         {items.map((item: PhotographerInfo) => (
@@ -66,25 +52,33 @@ const PhotographerListTitleWrapper = styled.TouchableOpacity`
   align-items: center;
 `
 
-const PhotographerListTitle = ({ title, onPress }: { title: string, onPress:() => void }) => {
-  return (
-    <PhotographerListTitleWrapper onPress={onPress}>
-      <Typography
+const PhotographerListTitle = ({ title, onPress }: { title: string, onPress?:() => void }) => {
+
+  const Title = useMemo(() => (
+        <Typography
         fontSize={16}
         fontWeight="semiBold"
         lineHeight="140%"
         letterSpacing="-2.5%"
         marginRight={7.75}
       >{title}</Typography>
-      <Icon width={24} height={24} source={require('@/assets/icons/arrow-right2.png')} />
+  ), [title])
+
+  if (onPress !== undefined) {
+    return (
+      <PhotographerListTitleWrapper onPress={onPress}>
+        {Title}
+        <Icon width={24} height={24} source={require('@/assets/icons/arrow-right2.png')} />
+      </PhotographerListTitleWrapper>
+    )
+  }
+
+  return (
+    <PhotographerListTitleWrapper>
+      {Title}
     </PhotographerListTitleWrapper>
   )
 }
-
-const SortButton = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-`
 
 const PhotographerListWrapper = styled.View`
   flex-direction: row;

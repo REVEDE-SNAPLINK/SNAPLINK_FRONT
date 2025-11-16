@@ -11,7 +11,7 @@ module.exports = {
     '\\.svg$': '<rootDir>/__mocks__/svgMock.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-safe-area-context|react-native-screens|@react-navigation|react-native-size-matters|react-native-svg|react-native-gesture-handler)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-reanimated|react-native-safe-area-context|react-native-screens|@react-navigation|react-native-size-matters|react-native-svg|react-native-gesture-handler|react-native-calendars|react-native-swipe-gestures)/)',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

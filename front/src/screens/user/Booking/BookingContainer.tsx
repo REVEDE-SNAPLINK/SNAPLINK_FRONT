@@ -22,7 +22,7 @@ export default function BookingContainer () {
 
   // Fetch photographer details
   const { data: photographerDetails, isLoading: isLoadingPhotographer } = useQuery({
-    queryKey: ['photographerDetails', photographerId],
+    queryKey: ['photographer', photographerId],
     queryFn: () => getPhotographerDetails(photographerId),
   });
 

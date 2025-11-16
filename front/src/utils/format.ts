@@ -95,3 +95,20 @@ export function formatKoreanCurrency(value: number, unit: string = '원'): strin
 export function formatPriceRange(min: number, max: number, unit: string = '원'): string {
   return `${formatKoreanCurrency(min, unit)} ~ ${formatKoreanCurrency(max, unit)}`;
 }
+
+/**
+ * 날짜와 시간을 지정된 형식으로 포맷팅합니다.
+ *
+ * @example
+ * ```typescript
+ * formatDateTime('2025-11-20', '14:00') // "2025.11.20 14:00"
+ * formatDateTime('2025-01-05', '09:30') // "2025.01.05 09:30"
+ * ```
+ */
+export function formatDateTime(date: string, time: string): string {
+  const dateObj = new Date(date);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day} ${time}`;
+}

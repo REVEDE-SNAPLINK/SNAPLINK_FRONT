@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { MainNavigationProp } from '@/types/navigation.ts';
@@ -10,6 +11,7 @@ const DUMMY_USER_ID = 'user-1'; // TODO: Replace with actual user ID from auth c
 
 export default function BookingHistoryContainer() {
   const navigation = useNavigation<MainNavigationProp>();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
     data,
@@ -33,8 +35,8 @@ export default function BookingHistoryContainer() {
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressPhotographerDetail = (photographerId: string) => {
-    navigation.navigate('PhotographerDetails', { id: photographerId });
+  const handlePressBookingDetail = (bookingId: string) => {
+    navigation.navigate('BookingDetails', { id: bookingId });
   };
 
   const handleLoadMore = () => {
@@ -43,14 +45,20 @@ export default function BookingHistoryContainer() {
     }
   };
 
-  const handlePressShowPhoto = (bookingId: string) => {
+  const handlePressViewPhotos = (bookingId: string) => {
     // TODO: Navigate to photo gallery screen
-    console.log('Show photos for booking:', bookingId);
+    console.log('View photos for booking:', bookingId);
   };
 
   const handlePressWriteReview = (bookingId: string) => {
     // TODO: Navigate to review writing screen
     console.log('Write review for booking:', bookingId);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
   };
 
   const bookings = data?.pages.flatMap((page) => page.bookings) ?? [];
@@ -64,9 +72,10 @@ export default function BookingHistoryContainer() {
       onLoadMore={handleLoadMore}
       isFetchingNextPage={isFetchingNextPage}
       hasNextPage={hasNextPage}
-      onPressPhotographerDetail={handlePressPhotographerDetail}
-      onRefresh={refetch}
-      onPressShowPhoto={handlePressShowPhoto}
+      onPressBookingDetail={handlePressBookingDetail}
+      onRefresh={handleRefresh}
+      isRefreshing={isRefreshing}
+      onPressViewPhotos={handlePressViewPhotos}
       onPressWriteReview={handlePressWriteReview}
     />
   );

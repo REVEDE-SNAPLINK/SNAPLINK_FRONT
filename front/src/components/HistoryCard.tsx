@@ -4,7 +4,7 @@ import styled from '@/utils/scale/CustomStyled.ts';
 
 interface HistoryCardProps {
   onPress: () => void;
-  onPressShowPhoto?: () => void;
+  onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED';
   nickname: string;
@@ -15,7 +15,7 @@ interface HistoryCardProps {
 
 export default function HistoryCard({
   onPress,
-  onPressShowPhoto,
+  onPressViewPhotos,
   onPressWriteReview,
   status,
   nickname,
@@ -41,8 +41,8 @@ export default function HistoryCard({
         />
       ) : (
         <ActionButtonWrapper>
-          {onPressShowPhoto && (
-            <ShowPhotoButton onPress={onPressShowPhoto}>
+          {onPressViewPhotos && (
+            <ViewPhotosButton onPress={onPressViewPhotos}>
               <Typography
                 fontSize={12}
                 fontWeight="bold"
@@ -52,7 +52,7 @@ export default function HistoryCard({
               >
                 사진 보기
               </Typography>
-            </ShowPhotoButton>
+            </ViewPhotosButton>
           )}
           {onPressWriteReview && (
             <WriteReviewButton onPress={onPressWriteReview}>
@@ -137,7 +137,7 @@ const DescriptionWrapper = styled.View<{ marginBottom?: number }>`
 
 const DescriptionNameWrapper = styled.View`
   width: 45px;
-  margin-right: 40px;
+  margin-right: 20px;
 `
 
 const Description = ({ name, value, marginBottom }: {name: string, value: string, marginBottom?: number}) => (
@@ -201,7 +201,7 @@ const ActionButton = styled.TouchableOpacity`
   align-items: center;
 `
 
-const ShowPhotoButton = styled(ActionButton)`
+const ViewPhotosButton = styled(ActionButton)`
   background-color: ${theme.colors.primary};
   margin-right: 7px;
 `

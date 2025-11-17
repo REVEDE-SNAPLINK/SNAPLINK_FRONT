@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Dimensions,
 } from 'react-native';
@@ -8,6 +7,7 @@ import ScreenContainer from '@/components/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import Icon from '@/components/Icon';
+import Loading from '@/components/Loading';
 import { theme } from '@/theme';
 import type { PhotographerDetails, PortfolioImage } from '@/types/photographer';
 import HeartIcon from '@/assets/icons/heart.svg';
@@ -106,14 +106,8 @@ export default function PhotographerDetailsView({
   };
 
   const renderFooter = () => {
-    if (isFetchingNextPage) {
-      return (
-        <FooterLoadingContainer>
-          <ActivityIndicator size="small" color="#000" />
-        </FooterLoadingContainer>
-      );
-    }
-    return null;
+    if (!isFetchingNextPage) return null;
+    return <Loading size="small" variant="inline" />;
   };
 
   if (isLoadingPhotographer) {
@@ -123,9 +117,7 @@ export default function PhotographerDetailsView({
         headerTitle=""
         onPressBack={onPressBack}
       >
-        <LoadingContainer>
-          <ActivityIndicator size="large" color="#000" />
-        </LoadingContainer>
+        <Loading size="large" variant="fullscreen" />
       </ScreenContainer>
     );
   }
@@ -137,11 +129,11 @@ export default function PhotographerDetailsView({
         headerTitle=""
         onPressBack={onPressBack}
       >
-        <LoadingContainer>
+        <ContentContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
           <Typography fontSize={14} color={theme.colors.textSecondary}>
             작가 정보를 불러울 수 없습니다.
           </Typography>
-        </LoadingContainer>
+        </ContentContainer>
       </ScreenContainer>
     );
   }
@@ -189,12 +181,6 @@ const ContentContainer = styled.View`
   flex: 1;
 `;
 
-const LoadingContainer = styled.View`
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-`;
-
 const DefaultInfoWrapper = styled.View`
   padding-horizontal: 26px;
   width: 100%;
@@ -234,11 +220,6 @@ const PortfolioImageWrapper = styled.View`
 const PortfolioImage = styled.Image`
   width: 100%;
   height: 100%;
-`;
-
-const FooterLoadingContainer = styled.View`
-  padding: 20px;
-  align-items: center;
 `;
 
 const BottomActionContainer = styled.View`

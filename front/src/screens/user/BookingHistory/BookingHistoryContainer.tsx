@@ -50,10 +50,7 @@ export default function BookingHistoryContainer() {
     console.log('View photos for booking:', bookingId);
   };
 
-  const handlePressWriteReview = (bookingId: string) => {
-    // TODO: Navigate to review writing screen
-    console.log('Write review for booking:', bookingId);
-  };
+  const handlePressWriteReview = (bookingId: string) => navigation.navigate('WriteReview', { id: bookingId })
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

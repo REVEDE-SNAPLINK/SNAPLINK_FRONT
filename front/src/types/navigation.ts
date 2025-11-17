@@ -22,6 +22,7 @@ export type MainStackParamList = {
   Booking: { id: string };
   BookingHistory: undefined;
   BookingDetails: { id: string };
+  WriteReview: { id: string };
 }
 
 // Onboarding Stack

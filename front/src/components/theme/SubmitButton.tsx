@@ -58,7 +58,7 @@ export default function SubmitButton({
     <StyledSubmitButton $width={width} $disabled={disabled} $type={type} $size={size} {...rest}>
       <Typography
         fontWeight="bold"
-        fontSize={16}
+        fontSize={size === "large" ? 16 : 12}
         letterSpacing={-0.4}
         color={type === 'submit' ? '#fff' : '#000'}
       >

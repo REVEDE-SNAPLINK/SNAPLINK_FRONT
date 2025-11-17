@@ -24,10 +24,7 @@ export default function BookingDetailsContainer() {
     // TODO: Navigate to photo gallery screen
   };
 
-  const handlePressWriteReview = () => {
-    console.log('Write review for booking:', bookingId);
-    // TODO: Navigate to review writing screen
-  };
+  const handlePressWriteReview = () => navigation.navigate('WriteReview', { id: bookingId })
 
   if (!bookingDetails) {
     return (

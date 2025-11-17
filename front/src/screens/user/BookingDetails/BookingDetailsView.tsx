@@ -132,8 +132,8 @@ const DescriptionValueWrapper = styled.View`
   flex: 1;
 `
 
-const Description = ({ name, value, marginBottom }: {name: string, value: string, marginBottom?: number}) => (
-  <DescriptionWrapper marginBottom={marginBottom}>
+const Description = ({ name, value }: {name: string, value: string}) => (
+  <DescriptionWrapper>
     <DescriptionNameWrapper>
       <Typography
         fontSize={12}

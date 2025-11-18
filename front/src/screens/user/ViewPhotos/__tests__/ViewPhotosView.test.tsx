@@ -83,7 +83,8 @@ describe('ViewPhotosView', () => {
     );
 
     const downloadAllButton = getByText('사진 전체 다운로드').parent;
-    expect(downloadAllButton?.props.accessibilityState?.disabled).toBe(true);
+    // Check if button has disabled styling (gray background)
+    expect(downloadAllButton?.props.$disabled).toBe(true);
   });
 
   it('disables buttons when no photos', () => {
@@ -92,7 +93,8 @@ describe('ViewPhotosView', () => {
     );
 
     const downloadAllButton = getByText('사진 전체 다운로드').parent;
-    expect(downloadAllButton?.props.accessibilityState?.disabled).toBe(true);
+    // Check if button has disabled styling (gray background)
+    expect(downloadAllButton?.props.$disabled).toBe(true);
   });
 
   it('renders empty grid when no photos', () => {

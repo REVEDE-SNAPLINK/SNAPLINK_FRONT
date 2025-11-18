@@ -140,7 +140,7 @@ const PhotographerLabelContainer = styled.View<{ special: boolean }>`
   justify-content: center;
   box-sizing: border-box;
   margin-right: 5px;
-  background-color: ${({ special }) => special ? "#EAFFFA" : "#EAEAEA"};
+  background-color: ${({ special }) => special ? "#EAFFFA" : theme.colors.bgSecondary};
   ${({ special }) => special && `border: 1px solid ${theme.colors.primary};`}
 `
 

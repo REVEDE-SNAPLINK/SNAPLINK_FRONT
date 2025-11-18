@@ -40,7 +40,7 @@ export default function BookingDetailsView ({
       <ScreenContainer
         onPressBack={onPressBack}
         headerTitle="예약 상세"
-        backgroundColor="#EAEAEA"
+        backgroundColor={theme.colors.bgSecondary}
       >
         <Loading size="large" variant="fullscreen" />
       </ScreenContainer>
@@ -50,7 +50,7 @@ export default function BookingDetailsView ({
     <ScreenContainer
       onPressBack={onPressBack}
       headerTitle={nickname+"과 함께한 추억이에요"}
-      backgroundColor="#EAEAEA"
+      backgroundColor={theme.colors.bgSecondary}
     >
       <InfoContainer>
         <Typography

@@ -238,7 +238,7 @@ const TermsWrapper = styled.View`
   padding: 18.5px 22px;
   margin-top: 55.5px;
   width: 100%;
-  background-color: #EAEAEA;
+  background-color: ${theme.colors.bgSecondary};
 `
 
 const TermLinkButton = styled.TouchableOpacity`

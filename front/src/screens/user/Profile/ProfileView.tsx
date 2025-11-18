@@ -316,7 +316,7 @@ const IconNavigationButtonWrapper = styled.View`
   height: 93px;
   margin-bottom: 20px;
   border-radius: 8px;
-  border: 1px solid #EAEAEA;
+  border: 1px solid ${theme.colors.bgSecondary};
   padding-horizontal: 23px;
   flex-direction: row;
   justify-content: space-between;

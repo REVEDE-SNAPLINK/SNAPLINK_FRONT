@@ -57,13 +57,13 @@ describe('HistoryCard Component', () => {
   });
 
   it('displays action buttons for COMPLETED status', () => {
-    const onPressShowPhoto = jest.fn();
+    const onPressViewPhotos = jest.fn();
     const onPressWriteReview = jest.fn();
 
     const props = {
       ...defaultProps,
       status: 'COMPLETED' as const,
-      onPressShowPhoto,
+      onPressViewPhotos,
       onPressWriteReview,
     };
 
@@ -73,13 +73,13 @@ describe('HistoryCard Component', () => {
     expect(getByText('후기 작성')).toBeTruthy();
   });
 
-  it('calls onPressShowPhoto when photo button is pressed', () => {
-    const onPressShowPhoto = jest.fn();
+  it('calls onPressViewPhotos when photo button is pressed', () => {
+    const onPressViewPhotos = jest.fn();
 
     const props = {
       ...defaultProps,
       status: 'COMPLETED' as const,
-      onPressShowPhoto,
+      onPressViewPhotos,
     };
 
     const { getByText } = render(<HistoryCard {...props} />);
@@ -87,7 +87,7 @@ describe('HistoryCard Component', () => {
     const photoButton = getByText('사진 보기');
     fireEvent.press(photoButton);
 
-    expect(onPressShowPhoto).toHaveBeenCalledTimes(1);
+    expect(onPressViewPhotos).toHaveBeenCalledTimes(1);
   });
 
   it('calls onPressWriteReview when review button is pressed', () => {
@@ -165,12 +165,12 @@ describe('HistoryCard Component', () => {
   });
 
   it('shows only photo button when onPressWriteReview is undefined', () => {
-    const onPressShowPhoto = jest.fn();
+    const onPressViewPhotos = jest.fn();
 
     const props = {
       ...defaultProps,
       status: 'COMPLETED' as const,
-      onPressShowPhoto,
+      onPressViewPhotos,
     };
 
     const { queryByText, getByText } = render(<HistoryCard {...props} />);

@@ -4,7 +4,7 @@ import styled from '@/utils/scale/CustomStyled.ts';
 
 interface HistoryCardProps {
   onPress: () => void;
-  onPressShowPhoto?: () => void;
+  onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED';
   nickname: string;
@@ -15,7 +15,7 @@ interface HistoryCardProps {
 
 export default function HistoryCard({
   onPress,
-  onPressShowPhoto,
+  onPressViewPhotos,
   onPressWriteReview,
   status,
   nickname,
@@ -41,8 +41,8 @@ export default function HistoryCard({
         />
       ) : (
         <ActionButtonWrapper>
-          {onPressShowPhoto && (
-            <ShowPhotoButton onPress={onPressShowPhoto}>
+          {onPressViewPhotos && (
+            <ViewPhotosButton onPress={onPressViewPhotos}>
               <Typography
                 fontSize={12}
                 fontWeight="bold"
@@ -52,7 +52,7 @@ export default function HistoryCard({
               >
                 사진 보기
               </Typography>
-            </ShowPhotoButton>
+            </ViewPhotosButton>
           )}
           {onPressWriteReview && (
             <WriteReviewButton onPress={onPressWriteReview}>
@@ -97,8 +97,7 @@ const HeaderContainer = styled.View`
 `
 
 const ViewDetailButton = styled.TouchableOpacity`
-  width: 48px;
-  height: 21px;
+  padding: 3px 5px;
   border-radius: 100px;
   border: 1px solid ${theme.colors.disabled};
   justify-content: center;
@@ -137,15 +136,15 @@ const DescriptionWrapper = styled.View<{ marginBottom?: number }>`
 `
 
 const DescriptionNameWrapper = styled.View`
-  width: 40px;
-  margin-right: 40px; 
+  width: 45px;
+  margin-right: 20px;
 `
 
 const Description = ({ name, value, marginBottom }: {name: string, value: string, marginBottom?: number}) => (
   <DescriptionWrapper marginBottom={marginBottom}>
     <DescriptionNameWrapper>
       <Typography
-        fontSize="11"
+        fontSize={11}
         lineHeight="140%"
         letterSpacing="-2.5%"
         color={theme.colors.disabled}
@@ -154,7 +153,7 @@ const Description = ({ name, value, marginBottom }: {name: string, value: string
       </Typography>
     </DescriptionNameWrapper>
     <Typography
-      fontSize="11"
+      fontSize={11}
       lineHeight="140%"
       letterSpacing="-2.5%"
       color={theme.colors.textSecondary}
@@ -202,7 +201,7 @@ const ActionButton = styled.TouchableOpacity`
   align-items: center;
 `
 
-const ShowPhotoButton = styled(ActionButton)`
+const ViewPhotosButton = styled(ActionButton)`
   background-color: ${theme.colors.primary};
   margin-right: 7px;
 `

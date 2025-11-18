@@ -4,8 +4,8 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPhotographerDetails, getReservationData } from '@/api/photographer.ts';
-import { ActivityIndicator, View } from 'react-native';
-import { theme } from '@/theme';
+import Loading from '@/components/Loading.tsx';
+import ScreenContainer from '@/components/ScreenContainer.tsx';
 
 type BookingRouteProp = RouteProp<MainStackParamList, 'Booking'>;
 
@@ -111,9 +111,13 @@ export default function BookingContainer () {
 
   if (isLoadingPhotographer || isLoadingReservation) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <ScreenContainer
+        headerShown={true}
+        headerTitle="예약하기"
+        onPressBack={handlePressBack}
+      >
+        <Loading size="large" variant="fullscreen" />
+      </ScreenContainer>
     );
   }
 

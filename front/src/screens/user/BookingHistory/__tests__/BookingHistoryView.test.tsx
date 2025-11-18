@@ -82,9 +82,9 @@ describe('BookingHistoryView Component', () => {
     onLoadMore: jest.fn(),
     isFetchingNextPage: false,
     hasNextPage: true,
-    onPressPhotographerDetail: jest.fn(),
+    onPressBookingDetail: jest.fn(),
     onRefresh: jest.fn(),
-    onPressShowPhoto: jest.fn(),
+    onPressViewPhotos: jest.fn(),
     onPressWriteReview: jest.fn(),
   };
 
@@ -116,13 +116,13 @@ describe('BookingHistoryView Component', () => {
     expect(onPressBack).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onPressPhotographerDetail when detail button is pressed', () => {
+  it('calls onPressBookingDetail when detail button is pressed', () => {
     const { getAllByText } = render(<BookingHistoryView {...defaultProps} />);
 
     const detailButtons = getAllByText('상세보기');
     fireEvent.press(detailButtons[0]);
 
-    expect(defaultProps.onPressPhotographerDetail).toHaveBeenCalledWith('1');
+    expect(defaultProps.onPressBookingDetail).toHaveBeenCalledWith('booking-1');
   });
 
   it('displays loading indicator when isLoading is true', () => {
@@ -298,13 +298,13 @@ describe('BookingHistoryView Component', () => {
     expect(reviewButtons.length).toBeGreaterThan(0);
   });
 
-  it('calls onPressShowPhoto with booking id when photo button is pressed', () => {
-    const onPressShowPhoto = jest.fn();
+  it('calls onPressViewPhotos with booking id when photo button is pressed', () => {
+    const onPressViewPhotos = jest.fn();
     const completedBooking = mockBookings.find((b) => b.status === 'completed');
     const props = {
       ...defaultProps,
       bookings: completedBooking ? [completedBooking] : [],
-      onPressShowPhoto,
+      onPressViewPhotos,
     };
 
     const { getByText } = render(<BookingHistoryView {...props} />);
@@ -312,7 +312,7 @@ describe('BookingHistoryView Component', () => {
     const photoButton = getByText('사진 보기');
     fireEvent.press(photoButton);
 
-    expect(onPressShowPhoto).toHaveBeenCalledWith(completedBooking?.id);
+    expect(onPressViewPhotos).toHaveBeenCalledWith(completedBooking?.id);
   });
 
   it('calls onPressWriteReview with booking id when review button is pressed', () => {

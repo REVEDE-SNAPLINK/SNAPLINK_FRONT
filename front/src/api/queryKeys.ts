@@ -98,6 +98,13 @@ export const userQueryKeys = {
    */
   bookingHistory: (userId: string) =>
     [...userQueryKeys.all, 'bookingHistory', userId] as const,
+
+  /**
+   * Booking details
+   * @param bookingId - Booking ID
+   */
+  bookingDetails: (bookingId: string) =>
+    [...userQueryKeys.all, 'bookingDetails', bookingId] as const,
 };
 
 /**

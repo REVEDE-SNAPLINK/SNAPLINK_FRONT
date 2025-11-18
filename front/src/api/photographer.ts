@@ -577,6 +577,63 @@ export interface BookingHistoryResponse {
 }
 
 /**
+ * Booking Details Type
+ */
+export interface BookingDetails extends UserBooking {
+  requiredOption: string;
+  requiredOptionPrice: number;
+  optionalOptions: Array<{
+    id: string;
+    title: string;
+    price: number;
+    quantity: number;
+  }>;
+  additionalRequest: string;
+  photographerPhone?: string;
+}
+
+/**
+ * Get booking details by ID
+ * TODO: Replace with actual API call when backend is ready
+ *
+ * API endpoint will be: GET /api/bookings/:bookingId
+ */
+export async function getBookingDetails(bookingId: string): Promise<BookingDetails> {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Find booking from dummy data
+  const dummyBookings: UserBooking[] = await getUserBookingHistory({
+    userId: 'user-1',
+    page: 1,
+    pageSize: 100,
+  }).then(res => res.bookings);
+
+  const booking = dummyBookings.find((b) => b.id === bookingId);
+
+  if (!booking) {
+    throw new Error('Booking not found');
+  }
+
+  // Extend with additional details
+  return {
+    ...booking,
+    requiredOption: booking.shootingDuration + ' 기본 촬영',
+    requiredOptionPrice: booking.totalPrice,
+    optionalOptions: [
+      {
+        id: 'opt-1',
+        title: '촬영 인원 추가',
+        price: 10000,
+        quantity: 1,
+      },
+    ],
+    additionalRequest: '자연스러운 분위기로 촬영해주세요. 밝고 따뜻한 느낌의 사진을 원합니다.',
+    photographerPhone: '010-1234-5678',
+  };
+}
+
+/**
  * Get user's booking history
  * TODO: Replace with actual API call when backend is ready
  *

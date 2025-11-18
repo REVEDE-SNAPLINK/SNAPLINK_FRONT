@@ -3,7 +3,8 @@ import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 import { Photographer } from '@/types/photographer';
-import { FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
+import { FlatList, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
+import Loading from '@/components/Loading.tsx';
 
 interface SearchPhotographerListProps {
   photographers: Photographer[];
@@ -35,9 +36,7 @@ export default function SearchPhotographerList({
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       ListFooterComponent={
         isFetchingNextPage ? (
-          <LoadingWrapper>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-          </LoadingWrapper>
+          <Loading size="small" variant="inline" />
         ) : (
           <ScrollSpacer />
         )
@@ -141,7 +140,7 @@ const PhotographerLabelContainer = styled.View<{ special: boolean }>`
   justify-content: center;
   box-sizing: border-box;
   margin-right: 5px;
-  background-color: ${({ special }) => special ? "#EAFFFA" : "#EAEAEA"};
+  background-color: ${({ special }) => special ? "#EAFFFA" : theme.colors.bgSecondary};
   ${({ special }) => special && `border: 1px solid ${theme.colors.primary};`}
 `
 
@@ -161,12 +160,6 @@ const PhotographerLabel = ({
     </PhotographerLabelContainer>
   );
 };
-
-const LoadingWrapper = styled.View`
-  padding-vertical: 20px;
-  align-items: center;
-  justify-content: center;
-`;
 
 const ScrollSpacer = styled.View`
   height: 50px;

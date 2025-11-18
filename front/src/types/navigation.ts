@@ -21,6 +21,9 @@ export type MainStackParamList = {
   PhotographerDetails: { id: string };
   Booking: { id: string };
   BookingHistory: undefined;
+  BookingDetails: { id: string };
+  WriteReview: { id: string };
+  ViewPhotos: { id: string };
 }
 
 // Onboarding Stack

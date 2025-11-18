@@ -1,8 +1,9 @@
-import { FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import HistoryCard from '@/components/HistoryCard.tsx';
 import Typography from '@/components/theme/Typography.tsx';
+import Loading from '@/components/Loading.tsx';
 import { UserBooking } from '@/api/photographer';
 import { theme } from '@/theme';
 import { formatDateTime } from '@/utils/format';
@@ -15,9 +16,10 @@ interface BookingHistoryViewProps {
   onLoadMore: () => void;
   isFetchingNextPage: boolean;
   hasNextPage?: boolean;
-  onPressPhotographerDetail: (photographerId: string) => void;
+  onPressBookingDetail: (bookingId: string) => void;
   onRefresh: () => void;
-  onPressShowPhoto?: (bookingId: string) => void;
+  isRefreshing: boolean;
+  onPressViewPhotos?: (bookingId: string) => void;
   onPressWriteReview?: (bookingId: string) => void;
 }
 
@@ -29,9 +31,10 @@ export default function BookingHistoryView({
   onLoadMore,
   isFetchingNextPage,
   hasNextPage: _hasNextPage,
-  onPressPhotographerDetail,
+  onPressBookingDetail,
   onRefresh,
-  onPressShowPhoto,
+  isRefreshing,
+  onPressViewPhotos,
   onPressWriteReview,
 }: BookingHistoryViewProps) {
   const mapStatusToHistoryCardStatus = (
@@ -56,15 +59,15 @@ export default function BookingHistoryView({
 
     return (
       <HistoryCard
-        onPress={() => onPressPhotographerDetail(item.photographerId)}
+        onPress={() => onPressBookingDetail(item.id)}
         status={mapStatusToHistoryCardStatus(item.status)}
         nickname={item.photographerNickname}
         name={item.photographerName}
         type={item.shootingType}
         datetime={formatDateTime(item.bookingDate, item.bookingTime)}
-        onPressShowPhoto={
-          isCompleted && onPressShowPhoto
-            ? () => onPressShowPhoto(item.id)
+        onPressViewPhotos={
+          isCompleted && onPressViewPhotos
+            ? () => onPressViewPhotos(item.id)
             : undefined
         }
         onPressWriteReview={
@@ -77,21 +80,14 @@ export default function BookingHistoryView({
   };
 
   const renderFooter = () => {
-    if (!isFetchingNextPage) return null;
-    return (
-      <LoadingContainer>
-        <ActivityIndicator size="small" color={theme.colors.primary} />
-      </LoadingContainer>
-    );
+    // Don't show footer loading on initial load, only for pagination
+    if (!isFetchingNextPage || isLoading) return null;
+    return <Loading size="small" variant="inline" />;
   };
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <EmptyContainer>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </EmptyContainer>
-      );
+      return <Loading size="large" variant="fullscreen" />;
     }
 
     if (isError) {
@@ -137,7 +133,7 @@ export default function BookingHistoryView({
           ListEmptyComponent={renderEmpty}
           refreshControl={
             <RefreshControl
-              refreshing={isLoading}
+              refreshing={isRefreshing}
               onRefresh={onRefresh}
               colors={[theme.colors.primary]}
             />
@@ -152,12 +148,6 @@ const ContentContainer = styled.View`
   flex: 1;
   width: 100%;
   background-color: #eaeaea;
-`;
-
-const LoadingContainer = styled.View`
-  padding: 20px;
-  align-items: center;
-  justify-content: center;
 `;
 
 const EmptyContainer = styled.View`

@@ -9,6 +9,7 @@ import BookingContainer from '@/screens/user/Booking/BookingContainer.tsx';
 import BookingHistoryContainer from '@/screens/user/BookingHistory/BookingHistoryContainer.tsx';
 import BookingDetailsContainer from '@/screens/user/BookingDetails/BookingDetailsContainer.tsx';
 import WriteReviewContainer from '@/screens/user/WriteReview/WriteReviewContainer.tsx';
+import ViewPhotosContainer from '@/screens/user/ViewPhotos/ViewPhotosContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -30,6 +31,7 @@ export default function MainStack() {
       <Stack.Screen name="BookingHistory" component={BookingHistoryContainer} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsContainer} />
       <Stack.Screen name="WriteReview" component={WriteReviewContainer} />
+      <Stack.Screen name="ViewPhotos" component={ViewPhotosContainer} />
     </Stack.Navigator>
   )
 }

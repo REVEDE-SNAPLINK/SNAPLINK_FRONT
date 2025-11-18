@@ -13,4 +13,7 @@ export const colors = {
 
   textPrimary: '#2F2C2B', /** #2F2C2B */
   textSecondary: '#3C3C3C', /** #3C3C3C */
+
+  bgPrimary: '#FFFFFF',
+  bgSecondary: '#EAEAEA',
 };

@@ -19,10 +19,7 @@ export default function BookingDetailsContainer() {
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressViewPhotos = () => {
-    console.log('View photos for booking:', bookingId);
-    // TODO: Navigate to photo gallery screen
-  };
+  const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { id: bookingId })
 
   const handlePressWriteReview = () => navigation.navigate('WriteReview', { id: bookingId })
 

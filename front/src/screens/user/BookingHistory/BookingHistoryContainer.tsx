@@ -45,10 +45,7 @@ export default function BookingHistoryContainer() {
     }
   };
 
-  const handlePressViewPhotos = (bookingId: string) => {
-    // TODO: Navigate to photo gallery screen
-    console.log('View photos for booking:', bookingId);
-  };
+  const handlePressViewPhotos = (bookingId: string) => navigation.navigate('ViewPhotos', { id: bookingId })
 
   const handlePressWriteReview = (bookingId: string) => navigation.navigate('WriteReview', { id: bookingId })
 

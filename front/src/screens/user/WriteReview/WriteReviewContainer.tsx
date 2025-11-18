@@ -8,21 +8,21 @@ import { launchImageLibrary } from 'react-native-image-picker';
 /**
  * Request payload for writing a review
  */
-interface WriteReviewRequest {
-  bookingId: string;
-  rating: number;
-  images: string[]; // array of image URIs
-  shootingType: string;
-  content: string;
-}
+// interface WriteReviewRequest {
+//   bookingId: string;
+//   rating: number;
+//   images: string[]; // array of image URIs
+//   shootingType: string;
+//   content: string;
+// }
 
 /**
  * Response type for writing a review
  */
-interface WriteReviewResponse {
-  reviewId: string;
-  createdAt: string;
-}
+// interface WriteReviewResponse {
+//   reviewId: string;
+//   createdAt: string;
+// }
 
 /**
  * Submit review to API

@@ -107,5 +107,5 @@ jobs:
             -scheme snaplink \
             -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' \
             build CODE_SIGNING_ALLOWED=NO

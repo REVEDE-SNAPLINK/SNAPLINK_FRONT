@@ -96,37 +96,14 @@ jobs:
       - name: Pod install
         run: cd ios && pod install
 
-      - name: Check and Download iOS 18.2 Runtime
-        run: |
-          echo "Checking available runtimes..."
-          xcrun simctl runtime list
-
-          echo "Downloading iOS 18.2 runtime..."
-          # This will download the iOS runtime matching Xcode 16.2
-          sudo xcodebuild -runFirstLaunch
-
-          echo "Available simulators after download:"
-          xcrun simctl list devices available
-
-      - name: List Available Simulators
-        run: xcrun simctl list devices available
-
       - name: Build iOS Simulator App
         run: |
           cd ios
-          # Get first available iOS Simulator with its OS version
-          SIMULATOR_INFO=$(xcrun simctl list devices available | grep "iPhone" | head -n 1)
-          DEVICE_ID=$(echo "$SIMULATOR_INFO" | grep -o '[A-F0-9]\{8\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{12\}')
-          OS_VERSION=$(echo "$SIMULATOR_INFO" | grep -o 'iOS [0-9.]*' | awk '{print $2}')
-
-          echo "Using simulator ID: $DEVICE_ID with iOS $OS_VERSION"
-
-          # Build for the specific simulator (no -sdk needed, will use runtime)
           xcodebuild \
             -workspace snaplink.xcworkspace \
             -scheme snaplink \
             -configuration Debug \
-            -destination "id=$DEVICE_ID" \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             build

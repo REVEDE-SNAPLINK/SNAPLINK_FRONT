@@ -20,13 +20,13 @@ platform :ios do
   lane :beta do
     # Increment build number (use timestamp or CI build number in GitHub Actions)
     increment_build_number(
-      xcodeproj: "snaplink.xcodeproj",
+      xcodeproj: "ios/snaplink.xcodeproj",
       build_number: latest_testflight_build_number + 1
     )
 
     # Build the app
     build_app(
-      workspace: "snaplink.xcworkspace",
+      workspace: "ios/snaplink.xcworkspace",
       scheme: "snaplink",
       export_method: "app-store",
       export_options: {
@@ -55,12 +55,12 @@ platform :ios do
   lane :release do
     # Increment build number
     increment_build_number(
-      xcodeproj: "snaplink.xcodeproj"
+      xcodeproj: "ios/snaplink.xcodeproj"
     )
 
     # Build the app
     build_app(
-      workspace: "snaplink.xcworkspace",
+      workspace: "ios/snaplink.xcworkspace",
       scheme: "snaplink",
       export_method: "app-store"
     )

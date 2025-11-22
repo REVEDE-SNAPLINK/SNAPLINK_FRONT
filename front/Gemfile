@@ -16,4 +16,4 @@ gem 'benchmark'
 gem 'mutex_m'
 
 # Fastlane for automation
-gem 'fastlane', '~> 2.217'
+gem 'fastlane', '~> 2.228'

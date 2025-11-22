@@ -17,7 +17,7 @@ bundle exec fastlane --version
    ```bash
    cd front/ios
    pod install
-   # Xcode로 snaplinkapp.xcworkspace 열기
+   # Xcode로 snaplink.xcworkspace 열기
    # Product > Archive 실행하여 정상 작동 확인
    ```
 

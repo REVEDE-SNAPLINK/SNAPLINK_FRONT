@@ -1,0 +1,74 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Increment build number (use timestamp or CI build number in GitHub Actions)
+    increment_build_number(
+      xcodeproj: "snaplink.xcodeproj",
+      build_number: latest_testflight_build_number + 1
+    )
+
+    # Build the app
+    build_app(
+      workspace: "snaplink.xcworkspace",
+      scheme: "snaplink",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.gunlee.snaplink" => "match AppStore com.gunlee.snaplink"
+        }
+      }
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Download certificates and provisioning profiles"
+  lane :certificates do
+    match(
+      type: "appstore",
+      readonly: true
+    )
+  end
+
+  desc "Push a new release build to the App Store"
+  lane :release do
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "snaplink.xcodeproj"
+    )
+
+    # Build the app
+    build_app(
+      workspace: "snaplink.xcworkspace",
+      scheme: "snaplink",
+      export_method: "app-store"
+    )
+
+    # Upload to App Store
+    upload_to_app_store(
+      skip_metadata: false,
+      skip_screenshots: true,
+      submit_for_review: false
+    )
+  end
+end

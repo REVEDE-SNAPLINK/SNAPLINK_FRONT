@@ -17,17 +17,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: front/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run lint/test
-        run: |
-          npm run lint --if-present
-          npm test --if-present
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -41,7 +45,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('front/android/**/*.gradle*', 'front/android/gradle-wrapper.properties') }}
 
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
@@ -50,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: front/android/app/build/outputs/apk/debug/app-debug.apk
 
   ios:
     name: SnapLink iOS Build
@@ -61,9 +65,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: front/package-lock.json
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -75,34 +82,27 @@ jobs:
         with:
           ruby-version: '3.2'
           bundler-cache: true
+          working-directory: front
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods -v 1.15.2 --no-document
-
-      - name: Install xcpretty
-        run: sudo gem install xcpretty --no-document
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: front/ios/Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('front/ios/Podfile.lock') }}
 
       - name: Pod install
-        env:
-          RUBYOPT: "-rlogger"
-        run: |
-          cd ios
-          pod repo update
-          pod install --repo-update
-
-      - name: List Xcode schemes
-        run: |
-          xcodebuild -list -workspace ios/snaplinkapp.xcworkspace
+        run: cd ios && pod install
 
       - name: Build iOS Simulator App
         run: |
+          cd ios
           xcodebuild \
-            -workspace ios/snaplinkapp.xcworkspace \
-            -scheme snaplinkapp \
+            -workspace snaplink.xcworkspace \
+            -scheme snaplink \
             -sdk iphonesimulator \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 15' \
-            build | xcpretty
+            build CODE_SIGNING_ALLOWED=NO

@@ -102,14 +102,14 @@ jobs:
       - name: Build iOS Simulator App
         run: |
           cd ios
-          # Get first available iOS Simulator ID
-          DEVICE_ID=$(xcrun simctl list devices available | \
-            grep "iPhone" | \
-            head -n 1 | \
-            grep -o '[A-F0-9]\{8\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{12\}')
+          # Get first available iOS Simulator with its OS version
+          SIMULATOR_INFO=$(xcrun simctl list devices available | grep "iPhone" | head -n 1)
+          DEVICE_ID=$(echo "$SIMULATOR_INFO" | grep -o '[A-F0-9]\{8\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{12\}')
+          OS_VERSION=$(echo "$SIMULATOR_INFO" | grep -o 'iOS [0-9.]*' | awk '{print $2}')
 
-          echo "Using simulator ID: $DEVICE_ID"
+          echo "Using simulator ID: $DEVICE_ID with iOS $OS_VERSION"
 
+          # Build for the specific simulator (no -sdk needed, will use runtime)
           xcodebuild \
             -workspace snaplink.xcworkspace \
             -scheme snaplink \

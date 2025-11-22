@@ -102,10 +102,12 @@ jobs:
       - name: Build iOS Simulator App
         run: |
           cd ios
+          # Use the first available iPhone 16 Pro simulator by UUID
+          SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone 16 Pro" | head -n 1 | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}')
           xcodebuild \
             -workspace snaplink.xcworkspace \
             -scheme snaplink \
             -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -destination "id=$SIMULATOR_ID" \
             build CODE_SIGNING_ALLOWED=NO

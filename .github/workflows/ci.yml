@@ -105,7 +105,8 @@ jobs:
           xcodebuild \
             -workspace snaplink.xcworkspace \
             -scheme snaplink \
-            -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
-            build CODE_SIGNING_ALLOWED=NO
+            -sdk iphonesimulator \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build

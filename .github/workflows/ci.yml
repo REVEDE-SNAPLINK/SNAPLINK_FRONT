@@ -76,12 +76,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.2"
-          bundler-cache: true
-          working-directory: front
+      - name: Set Ruby PATH
+        run: |
+          echo "/usr/local/opt/ruby@3.2/bin" >> $GITHUB_PATH
 
       - name: Cache CocoaPods & DerivedData
         uses: actions/cache@v4

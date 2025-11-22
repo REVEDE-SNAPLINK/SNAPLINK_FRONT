@@ -102,11 +102,23 @@ jobs:
       - name: Build iOS Simulator App
         run: |
           cd ios
+          # Get first available iOS Simulator destination from showdestinations
+          DESTINATION=$(xcodebuild -showdestinations -workspace snaplink.xcworkspace -scheme snaplink 2>/dev/null | \
+            grep "platform:iOS Simulator" | \
+            grep -v "placeholder" | \
+            head -n 1 | \
+            sed 's/^[[:space:]]*//' | \
+            sed 's/{ //' | \
+            sed 's/ }$//')
+
+          echo "Using destination: $DESTINATION"
+
           xcodebuild \
             -workspace snaplink.xcworkspace \
             -scheme snaplink \
             -configuration Debug \
             -sdk iphonesimulator \
+            -destination "$DESTINATION" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             build

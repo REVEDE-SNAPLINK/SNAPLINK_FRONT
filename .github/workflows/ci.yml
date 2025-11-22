@@ -96,6 +96,18 @@ jobs:
       - name: Pod install
         run: cd ios && pod install
 
+      - name: Check and Download iOS 18.2 Runtime
+        run: |
+          echo "Checking available runtimes..."
+          xcrun simctl runtime list
+
+          echo "Downloading iOS 18.2 runtime..."
+          # This will download the iOS runtime matching Xcode 16.2
+          sudo xcodebuild -runFirstLaunch
+
+          echo "Available simulators after download:"
+          xcrun simctl list devices available
+
       - name: List Available Simulators
         run: xcrun simctl list devices available
 

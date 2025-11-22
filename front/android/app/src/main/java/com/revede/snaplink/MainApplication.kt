@@ -1,4 +1,4 @@
-package com.snaplinkapp
+package com.revede.snaplink
 
 import android.app.Application
 import com.facebook.react.PackageList

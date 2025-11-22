@@ -46,7 +46,8 @@ platform :ios do
   lane :certificates do
     match(
       type: "appstore",
-      readonly: true
+      readonly: true,
+      app_identifier: "com.gunlee.snaplink"
     )
   end
 

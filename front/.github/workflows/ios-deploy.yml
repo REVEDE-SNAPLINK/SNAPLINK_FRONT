@@ -47,6 +47,7 @@ jobs:
         run: |
           cd ios
           pod install
+          ls -la *.xcworkspace
 
       - name: Import Code-Signing Certificates
         uses: Apple-Actions/import-codesign-certs@v2

@@ -102,23 +102,19 @@ jobs:
       - name: Build iOS Simulator App
         run: |
           cd ios
-          # Get first available iOS Simulator destination from showdestinations
-          DESTINATION=$(xcodebuild -showdestinations -workspace snaplink.xcworkspace -scheme snaplink 2>/dev/null | \
-            grep "platform:iOS Simulator" | \
-            grep -v "placeholder" | \
+          # Get first available iOS Simulator ID
+          DEVICE_ID=$(xcrun simctl list devices available | \
+            grep "iPhone" | \
             head -n 1 | \
-            sed 's/^[[:space:]]*//' | \
-            sed 's/{ //' | \
-            sed 's/ }$//')
+            grep -o '[A-F0-9]\{8\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{12\}')
 
-          echo "Using destination: $DESTINATION"
+          echo "Using simulator ID: $DEVICE_ID"
 
           xcodebuild \
             -workspace snaplink.xcworkspace \
             -scheme snaplink \
             -configuration Debug \
-            -sdk iphonesimulator \
-            -destination "$DESTINATION" \
+            -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             build

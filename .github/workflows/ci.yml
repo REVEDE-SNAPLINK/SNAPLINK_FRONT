@@ -96,6 +96,9 @@ jobs:
       - name: Pod install
         run: cd ios && pod install
 
+      - name: List Available Simulators
+        run: xcrun simctl list devices available
+
       - name: Build iOS Simulator App
         run: |
           cd ios
@@ -104,5 +107,5 @@ jobs:
             -scheme snaplink \
             -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             build CODE_SIGNING_ALLOWED=NO

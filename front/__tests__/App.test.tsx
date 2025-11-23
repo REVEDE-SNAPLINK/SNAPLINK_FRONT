@@ -2,6 +2,32 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import App from '../App';
 
+// Mock react-native-permissions
+jest.mock('react-native-permissions', () => ({
+  PERMISSIONS: {
+    IOS: {
+      CAMERA: 'ios.permission.CAMERA',
+      PHOTO_LIBRARY: 'ios.permission.PHOTO_LIBRARY',
+    },
+    ANDROID: {
+      CAMERA: 'android.permission.CAMERA',
+      READ_MEDIA_IMAGES: 'android.permission.READ_MEDIA_IMAGES',
+    },
+  },
+  RESULTS: {
+    GRANTED: 'granted',
+    DENIED: 'denied',
+    BLOCKED: 'blocked',
+    UNAVAILABLE: 'unavailable',
+    LIMITED: 'limited',
+  },
+  check: jest.fn(),
+  request: jest.fn(),
+  checkNotifications: jest.fn(),
+  requestNotifications: jest.fn(),
+  openSettings: jest.fn(),
+}));
+
 // Mock SafeAreaProvider to render children directly
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,

@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from '@/navigation';
 import { AuthProvider } from '@/context/AuthContext.tsx';
 import { queryClient } from '@/config/queryClient';
+import { AlertProvider } from '@/components/theme';
 
 export default function App() {
   return (
@@ -11,7 +12,9 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <AppNavigator />
+            <AlertProvider>
+              <AppNavigator />
+            </AlertProvider>
           </AuthProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>

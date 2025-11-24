@@ -9,15 +9,10 @@ import ActiveStarIcon from '@/assets/icons/star.svg'
 import CrossIcon from '@/assets/icons/cross.svg'
 import TextInput from '@/components/theme/TextInput.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
-import Alert from '@/components/Alert.tsx';
 
 interface WriteReviewViewProps {
   onPressBack: () => void;
   onSubmit: () => void;
-  isAlertOpen: boolean;
-  onAlertClose: () => void;
-  onAlertCancel: () => void;
-  onAlertConfirm: () => void;
   isSubmitting?: boolean;
   // Form values
   rating: number;
@@ -39,10 +34,6 @@ const STAR_RATINGS = [1, 2, 3, 4, 5] as const;
 export default function WriteReviewView({
   onPressBack,
   onSubmit,
-  isAlertOpen,
-  onAlertClose,
-  onAlertCancel,
-  onAlertConfirm,
   isSubmitting = false,
   rating,
   onRatingChange,
@@ -59,8 +50,7 @@ export default function WriteReviewView({
 }: WriteReviewViewProps) {
 
   return (
-    <>
-      <ScreenContainer
+    <ScreenContainer
         headerTitle="후기 작성"
         headerShown={true}
         onPressBack={onPressBack}
@@ -162,17 +152,6 @@ export default function WriteReviewView({
           </SubmitButtonWrapper>
         </ScrollContainer>
       </ScreenContainer>
-      <Alert
-        onClose={onAlertClose}
-        onCancel={onAlertCancel}
-        onConfirm={onAlertConfirm}
-        isOpen={isAlertOpen}
-        title="후기 작성을 그만둘까요?"
-        description="작성중이던 내용은 저장되지 않아요."
-        cancelText="그만두기"
-        confirmText="계속 작성"
-        />
-    </>
   )
 }
 

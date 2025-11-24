@@ -30,7 +30,6 @@ const StyledSubmitButton = styled.TouchableOpacity<{
   marginLeft?: number,
   marginRight?: number
 }>`
-  flex: 1;
   width: ${({ $width }) => typeof $width === 'string' ? $width : $width+'px'};
   height: ${({ $size }) => $size !== undefined && $size === 'small' ? 40 : 49}px;
   justify-content: center;

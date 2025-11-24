@@ -3,6 +3,8 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import WriteReviewView from '@/screens/user/WriteReview/WriteReviewView.tsx';
 import { useState } from 'react';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { Alert } from '@/components/theme/Alert';
+import { requestPermission } from '@/utils/permissions';
 // import { useMutation } from '@tanstack/react-query';
 
 /**
@@ -51,7 +53,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 // }
 
 // Form validation constants
-const MAX_IMAGES = 10;
+const MAX_IMAGES = 3;
 const SHOOTING_TYPE_MIN_LENGTH = 2;
 const CONTENT_MIN_LENGTH = 15;
 const CONTENT_MAX_LENGTH = 1000;
@@ -66,9 +68,6 @@ export default function WriteReviewContainer() {
   const [images, setImages] = useState<string[]>([]);
   const [shootingType, setShootingType] = useState('');
   const [content, setContent] = useState('');
-
-  // Alert state
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   // Check if form has any changes
   const isDirty = rating > 0 || images.length > 0 || shootingType.length > 0 || content.length > 0;
@@ -90,7 +89,25 @@ export default function WriteReviewContainer() {
   const handlePressBack = () => {
     // If user has made changes, show alert
     if (isDirty) {
-      setIsAlertOpen(true);
+      Alert.show({
+        title: '후기 작성을 그만둘까요?',
+        message: '작성중이던 내용은 저장되지 않아요.',
+        buttons: [
+          {
+            text: '그만두기',
+            type: 'cancel',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+          {
+            text: '계속 작성',
+            onPress: () => {
+              // Alert가 자동으로 닫힘
+            },
+          },
+        ],
+      });
     } else {
       navigation.goBack();
     }
@@ -111,45 +128,34 @@ export default function WriteReviewContainer() {
     navigation.navigate('BookingHistory');
   };
 
-  const handleAlertClose = () => {
-    setIsAlertOpen(false);
-  };
+  const handleImageSelect = () => {
+    // 사진 권한 요청 후 갤러리 열기
+    requestPermission(
+      'photo',
+      async () => {
+        // 권한 허용됨 - 갤러리 열기
+        const result = await launchImageLibrary({
+          mediaType: 'photo',
+          selectionLimit: MAX_IMAGES - images.length,
+          quality: 0.8,
+        });
 
-  const handleAlertCancel = () => {
-    // User chose to quit writing review
-    setIsAlertOpen(false);
-    navigation.goBack();
-  };
+        if (result.assets && !result.didCancel) {
+          const newImages = result.assets
+            .filter((asset) => asset.uri)
+            .map((asset) => asset.uri as string);
 
-  const handleAlertConfirm = () => {
-    // User chose to continue writing review
-    setIsAlertOpen(false);
-  };
-
-  const handleImageSelect = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: MAX_IMAGES - images.length, // 최대 MAX_IMAGES개까지만 선택 가능
-      quality: 0.8,
-    });
-
-    if (result.assets && !result.didCancel) {
-      const newImages = result.assets
-        .filter((asset) => asset.uri)
-        .map((asset) => asset.uri as string);
-
-      setImages([...images, ...newImages].slice(0, MAX_IMAGES)); // 최대 MAX_IMAGES개 제한
-    }
+          setImages([...images, ...newImages].slice(0, MAX_IMAGES));
+        }
+      }
+      // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
+    );
   };
 
   return (
     <WriteReviewView
       onPressBack={handlePressBack}
       onSubmit={handleSubmit}
-      isAlertOpen={isAlertOpen}
-      onAlertClose={handleAlertClose}
-      onAlertCancel={handleAlertCancel}
-      onAlertConfirm={handleAlertConfirm}
       rating={rating}
       onRatingChange={setRating}
       images={images}

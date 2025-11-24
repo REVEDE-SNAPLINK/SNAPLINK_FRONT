@@ -87,6 +87,7 @@ const OnboardingContent1 = () => {
           fontWeight="bold"
           lineHeight={40}
           letterSpacing={-1}
+          color="#000"
         >
           '인생샷' 한 장에 <Typography fontSize={25} fontWeight="bold" color="primary">10만 원</Typography>,{'\n'}
           정말 이게 최선일까요?
@@ -105,6 +106,7 @@ const OnboardingContent2 = () => {
         fontWeight="bold"
         lineHeight={40}
         letterSpacing={-1}
+        color="#000"
       >
         <Typography fontSize={25} fontWeight="bold" color="primary">스냅 작가</Typography>님 예약,{'\n'}
         아직도 인스에서 헤매고 있나요?
@@ -123,6 +125,7 @@ const OnboardingContent3 = () => {
         fontWeight="bold"
         lineHeight={40}
         letterSpacing={-0.92}
+        color="#000"
       >
         이 모든 고민,{'\n'}
         <Typography fontSize={23} fontWeight="bold" color="primary">스냅링크</Typography>가 단번에 해결해 드릴게요.
@@ -145,6 +148,7 @@ const OnboardingComplete = ({ onComplete }: OnboardingScreenProps) => {
           fontWeight="semiBold"
           lineHeight={40}
           letterSpacing={-1}
+          color="#000"
         >
           당신의 가장 빛나는 순간,{'\n'}더 이상 미루지 마세요.
         </Typography>

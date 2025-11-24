@@ -1,4 +1,3 @@
-import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -11,6 +10,8 @@ import {
 import ProfileView from '@/screens/user/Profile/ProfileView.tsx';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { getUserProfile, toggleExpertMode, uploadProfileImage } from '@/api/profile';
+import { Alert } from '@/components/theme';
+import { requestPermission } from '@/utils/permissions';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -31,13 +32,16 @@ export default function ProfileContainer () {
     onSuccess: (data) => {
       // Update cache
       queryClient.setQueryData(['userProfile', userId], data);
-      Alert.alert(
-        '모드 전환',
-        data.isExpertMode ? '전문가 모드로 전환되었습니다.' : '일반 사용자 모드로 전환되었습니다.'
-      );
+      Alert.show({
+        title: '모드 전환',
+        message: data.isExpertMode ? '전문가 모드로 전환되었습니다.' : '일반 사용자 모드로 전환되었습니다.',
+      });
     },
     onError: () => {
-      Alert.alert('오류', '모드 전환에 실패했습니다.');
+      Alert.show({
+        title: '오류',
+        message: '모드 전환에 실패했습니다.',
+      });
     },
   });
 
@@ -50,10 +54,16 @@ export default function ProfileContainer () {
         ...old,
         profileImage: imageUrl,
       }));
-      Alert.alert('성공', '프로필 사진이 업데이트되었습니다.');
+      Alert.show({
+        title: '성공',
+        message: '프로필 사진이 업데이트되었습니다.',
+      });
     },
     onError: () => {
-      Alert.alert('오류', '프로필 사진 업데이트에 실패했습니다.');
+      Alert.show({
+        title: '오류',
+        message: '프로필 사진 업데이트에 실패했습니다.',
+      });
     },
   });
 
@@ -64,93 +74,156 @@ export default function ProfileContainer () {
   };
 
   const handleCamera = async () => {
-    const options: CameraOptions = {
-      mediaType: 'photo',
-      saveToPhotos: true,
-      quality: 0.8,
-    };
+    requestPermission(
+      'camera',
+      async () => {
+        // 권한 허용됨 - 카메라 열기
+        const options: CameraOptions = {
+          mediaType: 'photo',
+          saveToPhotos: true,
+          quality: 0.8,
+        };
 
-    const response: ImagePickerResponse = await launchCamera(options);
+        const response: ImagePickerResponse = await launchCamera(options);
 
-    if (response.didCancel) return;
-    if (response.errorCode) {
-      Alert.alert('카메라 오류', response.errorMessage || '알 수 없는 오류');
-      return;
-    }
-    if (response.assets && response.assets[0].uri) {
-      uploadProfileImageMutation.mutate(response.assets[0].uri);
-    }
+        console.log('Camera response:', {
+          didCancel: response.didCancel,
+          errorCode: response.errorCode,
+          errorMessage: response.errorMessage,
+          assetsLength: response.assets?.length,
+          firstAssetUri: response.assets?.[0]?.uri,
+        });
+
+        if (response.didCancel) {
+          console.log('User cancelled camera');
+          return;
+        }
+        if (response.errorCode) {
+          console.log('Camera error:', response.errorCode, response.errorMessage);
+          Alert.show({
+            title: '카메라 오류',
+            message: response.errorMessage || '알 수 없는 오류',
+          });
+          return;
+        }
+        if (response.assets && response.assets[0]?.uri) {
+          console.log('Uploading image:', response.assets[0].uri);
+          uploadProfileImageMutation.mutate(response.assets[0].uri);
+        } else {
+          console.log('No image URI found in response');
+        }
+      }
+      // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
+    );
   };
 
   const handleGallery = async () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'photo',
-      selectionLimit: 1,
-      quality: 0.8,
-    };
+    requestPermission(
+      'photo',
+      async () => {
+        // 권한 허용됨 - 갤러리 열기
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo',
+          selectionLimit: 1,
+          quality: 0.8,
+        };
 
-    const response: ImagePickerResponse = await launchImageLibrary(options);
+        const response: ImagePickerResponse = await launchImageLibrary(options);
 
-    if (response.didCancel) return;
-    if (response.errorCode) {
-      Alert.alert('갤러리 오류', response.errorMessage || '알 수 없는 오류');
-      return;
-    }
-    if (response.assets && response.assets[0].uri) {
-      uploadProfileImageMutation.mutate(response.assets[0].uri);
-    }
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.show({
+            title: '갤러리 오류',
+            message: response.errorMessage || '알 수 없는 오류',
+          });
+          return;
+        }
+        if (response.assets && response.assets[0].uri) {
+          uploadProfileImageMutation.mutate(response.assets[0].uri);
+        }
+      }
+      // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
+    );
   };
 
   const handlePressProfile = () => {
-    Alert.alert('프로필 사진 변경', '프로필 사진을 어떻게 업로드하시겠습니까?', [
-      {
-        text: '카메라로 촬영',
-        onPress: handleCamera,
-      },
-      {
-        text: '갤러리에서 선택',
-        onPress: handleGallery,
-      },
-      {
-        text: '취소',
-        style: 'cancel',
-      },
-    ]);
+    Alert.show({
+      title: '프로필 사진 변경',
+      message: '프로필 사진을 어떻게 업로드하시겠습니까?',
+      buttons: [
+        {
+          text: '카메라로 촬영',
+          onPress: handleCamera,
+          type: 'destructive',
+        },
+        {
+          text: '갤러리에서 선택',
+          onPress: handleGallery,
+          type: 'destructive',
+        },
+        {
+          text: '취소',
+          onPress: () => console.log('취소됨'),
+          type: 'cancel',
+        },
+      ],
+    });
   };
 
   const handlePressMyReviews = () => {
     // TODO: Navigate to MyReviews screen
-    Alert.alert('준비중', '내가 쓴 리뷰 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '내가 쓴 리뷰 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressLikedPhotographers = () => {
     // TODO: Navigate to LikedPhotographers screen
-    Alert.alert('준비중', '찜한 작가 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '찜한 작가 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressNotificationSettings = () => {
     // TODO: Navigate to NotificationSettings screen
-    Alert.alert('준비중', '알림 설정 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '알림 설정 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressEditNickname = () => {
     // TODO: Navigate to EditNickname screen
-    Alert.alert('준비중', '닉네임 수정 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '닉네임 수정 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressEditName = () => {
     // TODO: Navigate to EditName screen
-    Alert.alert('준비중', '이름 수정 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '이름 수정 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressEditEmail = () => {
     // TODO: Navigate to EditEmail screen
-    Alert.alert('준비중', '이메일 수정 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '이메일 수정 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressEditPassword = () => {
     // TODO: Navigate to EditPassword screen
-    Alert.alert('준비중', '비밀번호 변경 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '비밀번호 변경 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressBookingHistory = () => {
@@ -160,32 +233,50 @@ export default function ProfileContainer () {
 
   const handlePressRecentPhotographers = () => {
     // TODO: Navigate to RecentPhotographers screen
-    Alert.alert('준비중', '최근 본 작가 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '최근 본 작가 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressSnaplinkGuide = () => {
     // TODO: Navigate to SnaplinkGuide screen
-    Alert.alert('준비중', '스냅링크 의뢰 가이드 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressCustomerCenter = () => {
     // TODO: Navigate to CustomerCenter screen
-    Alert.alert('준비중', '고객센터 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '고객센터 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressNotice = () => {
     // TODO: Navigate to Notice screen
-    Alert.alert('준비중', '공지사항 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '공지사항 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressFAQ = () => {
     // TODO: Navigate to FAQ screen
-    Alert.alert('준비중', 'FAQ 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: 'FAQ 페이지를 준비중입니다.',
+    });
   };
 
   const handlePressTerms = () => {
     // TODO: Navigate to Terms screen
-    Alert.alert('준비중', '약관 및 정책 페이지를 준비중입니다.');
+    Alert.show({
+      title: '준비중',
+      message: '약관 및 정책 페이지를 준비중입니다.',
+    });
   };
 
   // Show loading state or return null while loading

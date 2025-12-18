@@ -3,6 +3,7 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
@@ -46,6 +47,8 @@ export default function PhotographerDetailsView({
   onPressReservation,
   onEndReached,
 }: PhotographerDetailsViewProps) {
+  const insets = useSafeAreaInsets();
+
   const renderPortfolioItem = ({ item }: { item: PortfolioImage }) => (
     <PortfolioImageWrapper>
       <PortfolioImage source={{ uri: item.url }} />
@@ -159,19 +162,19 @@ export default function PhotographerDetailsView({
           onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
           columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: 17 }}
-          contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 100 }}
+          contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
         />
       </ContentContainer>
 
       {/* Bottom Action Buttons */}
-      <BottomActionContainer>
+      <BottomActionContainer style={{ paddingBottom: 22 + insets.bottom }}>
         <ActionButton onPress={onPressFavorite}>
           <Icon width={24} height={24} Svg={HeartIcon} />
         </ActionButton>
         <ActionButton onPress={onPressInquiry}>
           <Icon width={24} height={24} Svg={ChatIcon} />
         </ActionButton>
-        <SubmitButton text="예약하기" onPress={onPressReservation} width="100%" />
+        <SubmitButton text="예약하기" onPress={onPressReservation} />
       </BottomActionContainer>
     </ScreenContainer>
   );
@@ -230,7 +233,7 @@ const BottomActionContainer = styled.View`
   background-color: #fff;
   width: 100%;
   padding-horizontal: 17px;
-  padding-vertical: 22px;
+  padding-top: 22px;
   justify-content: space-between;
 `;
 

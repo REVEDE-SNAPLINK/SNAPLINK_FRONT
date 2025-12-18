@@ -67,8 +67,8 @@ export default function BookingView({
   }, [timeSlots]);
 
   return (
-    <ScreenContainer onPressBack={onPressBack} headerTitle={nickname} paddingHorizontal={20} alignItemsCenter={false}>
-      <ScrollContainer showsVerticalScrollIndicator={false}>
+    <ScreenContainer onPressBack={onPressBack} headerTitle={nickname} alignItemsCenter={false}>
+      <ScrollContainer showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
         <CalendarWrapper>
           <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" marginBottom={32}>
             날짜와 시간을 선택해 주세요

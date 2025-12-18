@@ -30,7 +30,7 @@ const StyledSubmitButton = styled.TouchableOpacity<{
   marginLeft?: number,
   marginRight?: number
 }>`
-  width: ${({ $width }) => typeof $width === 'string' ? $width : $width+'px'};
+  ${({ $width }) => $width === 'auto' ? 'flex: 1' : `width: ${typeof $width === 'string' ? $width : $width+'px'};`};
   height: ${({ $size }) => $size !== undefined && $size === 'small' ? 40 : 49}px;
   justify-content: center;
   align-items: center;
@@ -47,7 +47,7 @@ const StyledSubmitButton = styled.TouchableOpacity<{
 
 export default function SubmitButton({
   text,
-  width = '100%',
+  width = 'auto',
   disabled = false,
   type = 'submit',
   size = 'large',

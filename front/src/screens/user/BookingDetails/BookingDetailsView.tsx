@@ -110,7 +110,6 @@ export default function BookingDetailsView ({
 
 const InfoContainer = styled.View`
   width: 100%;
-  height: 218px;
   background-color: #fff;
   padding-top: 22px;
   padding-horizontal: 25px;
@@ -124,7 +123,7 @@ const DescriptionWrapper = styled.View`
 `
 
 const DescriptionNameWrapper = styled.View`
-  width: 45px;
+  width: 50px;
   margin-right: 16px;
 `
 

@@ -6,14 +6,12 @@ import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import FolderIcon from '@/assets/icons/folder.svg'
 import DownloadIcon from '@/assets/icons/download.svg'
 import Icon from '@/components/Icon.tsx';
-import { Image, Dimensions } from 'react-native';
+import { Image } from 'react-native';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GRID_PADDING = 12;
 const GRID_COLUMNS = 2;
 const PHOTO_PADDING = 2;
 const CONTAINER_WIDTH = 332;
-const PHOTO_SIZE = (CONTAINER_WIDTH - (PHOTO_PADDING * 2 * GRID_COLUMNS)) / GRID_COLUMNS;
+const PHOTO_SIZE = (CONTAINER_WIDTH - (PHOTO_PADDING * 3)) / GRID_COLUMNS;
 
 export interface Photo {
   id: string;
@@ -146,12 +144,14 @@ const DownloadButtonTextWrapper = styled.View`
 `
 
 const PhotoScrollContainer = styled.ScrollView`
-  width: 332px;
+  width: ${CONTAINER_WIDTH}px;
 `
 
 const PhotoGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: space-around;
+  align-content: space-between;
   width: 100%;
   background-color: ${theme.colors.bgPrimary};
 `
@@ -159,7 +159,7 @@ const PhotoGrid = styled.View`
 const PhotoWrapper = styled.View`
   width: ${PHOTO_SIZE}px;
   height: ${PHOTO_SIZE}px;
-  padding: ${PHOTO_PADDING}px;
+  padding: ${PHOTO_PADDING}px 0;
 `
 
 const PhotoImage = styled(Image)`

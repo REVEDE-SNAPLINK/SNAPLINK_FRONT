@@ -1,11 +1,25 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import PhotographerDetailsView from '../PhotographerDetailsView';
 import type { PhotographerDetails, PortfolioImage } from '@/types/photographer';
 
 jest.mock('@/assets/icons/heart.svg', () => 'HeartIcon');
 jest.mock('@/assets/icons/chat.svg', () => 'ChatIcon');
 jest.mock('@/assets/icons/upload.svg', () => 'UploadIcon');
+
+const renderWithProvider = (component: React.ReactElement) => {
+  return render(
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 0, height: 0 },
+        insets: { top: 0, left: 0, right: 0, bottom: 0 },
+      }}
+    >
+      {component}
+    </SafeAreaProvider>
+  );
+};
 
 describe('PhotographerDetailsView Component', () => {
   const mockPhotographer: PhotographerDetails = {
@@ -56,32 +70,32 @@ describe('PhotographerDetailsView Component', () => {
 
   describe('Rendering', () => {
     it('should render photographer nickname as header title', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('유앤미스냅')).toBeTruthy();
     });
 
     it('should render photographer name', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('유앤미스냅 작가')).toBeTruthy();
     });
 
     it('should render photographer introduction', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('안녕하세요, 유앤미스냅입니다. 자연스러운 순간을 담습니다.')).toBeTruthy();
     });
 
     it('should render "작가 한줄 소개" section title', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('작가 한줄 소개')).toBeTruthy();
     });
 
     it('should render "포트폴리오" section title', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('포트폴리오')).toBeTruthy();
     });
 
     it('should render profile image when available', () => {
-      const { UNSAFE_getAllByType } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { UNSAFE_getAllByType } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       // Profile image should be rendered
     });
 
@@ -90,7 +104,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         profileImage: undefined,
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={photographerWithoutImage}
@@ -102,18 +116,18 @@ describe('PhotographerDetailsView Component', () => {
 
   describe('Portfolio Grid', () => {
     it('should render portfolio images', () => {
-      const { UNSAFE_getAllByType } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { UNSAFE_getAllByType } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       // FlatList should render portfolio images
     });
 
     it('should render exactly 6 portfolio images', () => {
-      render(<PhotographerDetailsView {...defaultProps} />);
+      renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       // Portfolio images should be displayed in grid
       expect(mockPortfolioImages).toHaveLength(6);
     });
 
     it('should render empty portfolio grid', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} portfolioImages={[]} />
       );
       expect(getByText('포트폴리오')).toBeTruthy();
@@ -123,7 +137,7 @@ describe('PhotographerDetailsView Component', () => {
       const singleImage: PortfolioImage[] = [
         { id: '1', url: 'https://example.com/single.jpg', createdAt: '2024-01-01' },
       ];
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} portfolioImages={singleImage} />
       );
       expect(getByText('포트폴리오')).toBeTruthy();
@@ -132,17 +146,17 @@ describe('PhotographerDetailsView Component', () => {
 
   describe('Action Buttons', () => {
     it('should render favorite button', () => {
-      const { UNSAFE_getAllByType } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { UNSAFE_getAllByType } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       // Favorite button (heart icon) should exist
     });
 
     it('should render inquiry button', () => {
-      const { UNSAFE_getAllByType } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { UNSAFE_getAllByType } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       // Inquiry button (chat icon) should exist
     });
 
     it('should render reservation button', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('예약하기')).toBeTruthy();
     });
 
@@ -157,7 +171,7 @@ describe('PhotographerDetailsView Component', () => {
     });
 
     it('should call onPressReservation when reservation button is pressed', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       const button = getByText('예약하기');
       fireEvent.press(button);
       expect(defaultProps.onPressReservation).toHaveBeenCalled();
@@ -166,14 +180,14 @@ describe('PhotographerDetailsView Component', () => {
 
   describe('Loading States', () => {
     it('should render loading indicator when photographer is loading', () => {
-      const { UNSAFE_getByType } = render(
+      const { UNSAFE_getByType } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} isLoadingPhotographer={true} />
       );
       expect(UNSAFE_getByType('ActivityIndicator')).toBeTruthy();
     });
 
     it('should not render photographer details while loading', () => {
-      const { queryByText } = render(
+      const { queryByText } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} isLoadingPhotographer={true} />
       );
       expect(queryByText('유앤미스냅')).toBeFalsy();
@@ -181,14 +195,14 @@ describe('PhotographerDetailsView Component', () => {
     });
 
     it('should render footer loading indicator when fetching next page', () => {
-      const { UNSAFE_getAllByType } = render(
+      const { UNSAFE_getAllByType } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} isFetchingNextPage={true} />
       );
       // Footer loading indicator should exist
     });
 
     it('should not render footer loading when not fetching', () => {
-      const { UNSAFE_getAllByType } = render(
+      const { UNSAFE_getAllByType } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} isFetchingNextPage={false} />
       );
       // Only one ActivityIndicator (not loading)
@@ -197,21 +211,21 @@ describe('PhotographerDetailsView Component', () => {
 
   describe('Error States', () => {
     it('should render error message when photographer is null', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} photographer={null} />
       );
       expect(getByText('작가 정보를 불러울 수 없습니다.')).toBeTruthy();
     });
 
     it('should not render action buttons when photographer is null', () => {
-      const { queryByText } = render(
+      const { queryByText } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} photographer={null} />
       );
       expect(queryByText('예약하기')).toBeFalsy();
     });
 
     it('should still render header when photographer is null', () => {
-      const { queryByText } = render(
+      const { queryByText } = renderWithProvider(
         <PhotographerDetailsView {...defaultProps} photographer={null} />
       );
       // Header should exist but with empty title
@@ -226,7 +240,7 @@ describe('PhotographerDetailsView Component', () => {
 
     it('should have onEndReachedThreshold set', () => {
       // This ensures infinite scroll triggers appropriately
-      render(<PhotographerDetailsView {...defaultProps} />);
+      renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
     });
   });
 
@@ -249,7 +263,7 @@ describe('PhotographerDetailsView Component', () => {
         name: '다른작가',
         nickname: '다른닉네임',
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={differentPhotographer}
@@ -264,7 +278,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         introduction: '새로운 소개글입니다.',
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={differentPhotographer}
@@ -280,7 +294,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         introduction: longIntroduction,
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={differentPhotographer}
@@ -294,7 +308,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         introduction: '',
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={differentPhotographer}
@@ -311,7 +325,7 @@ describe('PhotographerDetailsView Component', () => {
         url: `https://example.com/img${i + 1}.jpg`,
         createdAt: '2024-01-01',
       }));
-      render(
+      renderWithProvider(
         <PhotographerDetailsView {...defaultProps} portfolioImages={manyImages} />
       );
       expect(manyImages).toHaveLength(50);
@@ -323,7 +337,7 @@ describe('PhotographerDetailsView Component', () => {
         { id: 'def', url: 'https://example.com/2.jpg', createdAt: '2024-01-02' },
         { id: 'ghi', url: 'https://example.com/3.jpg', createdAt: '2024-01-03' },
       ];
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           portfolioImages={imagesWithDifferentIds}
@@ -335,20 +349,20 @@ describe('PhotographerDetailsView Component', () => {
 
   describe('Layout Structure', () => {
     it('should render header, content, and action buttons sections', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('유앤미스냅')).toBeTruthy(); // Header
       expect(getByText('포트폴리오')).toBeTruthy(); // Content
       expect(getByText('예약하기')).toBeTruthy(); // Action buttons
     });
 
     it('should render profile section at top', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('유앤미스냅 작가')).toBeTruthy();
       expect(getByText('작가 한줄 소개')).toBeTruthy();
     });
 
     it('should render bottom action container', () => {
-      const { getByText } = render(<PhotographerDetailsView {...defaultProps} />);
+      const { getByText } = renderWithProvider(<PhotographerDetailsView {...defaultProps} />);
       expect(getByText('예약하기')).toBeTruthy();
     });
   });
@@ -359,7 +373,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         introduction: '',
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={photographerNoIntro}
@@ -373,7 +387,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         nickname: 'A',
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={photographerShortName}
@@ -387,7 +401,7 @@ describe('PhotographerDetailsView Component', () => {
         ...mockPhotographer,
         nickname: '매우긴닉네임입니다정말로긴닉네임',
       };
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           photographer={photographerLongName}
@@ -397,7 +411,7 @@ describe('PhotographerDetailsView Component', () => {
     });
 
     it('should render when both loading states are false', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithProvider(
         <PhotographerDetailsView
           {...defaultProps}
           isLoadingPhotographer={false}

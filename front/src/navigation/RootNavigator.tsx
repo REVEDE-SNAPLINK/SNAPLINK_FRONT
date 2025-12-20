@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { useEffect, useState } from 'react';
-import SplashScreen from '@/screens/SplashScreen.tsx';
+import SplashScreen from 'react-native-splash-screen';
 import MainStack from '@/navigation/stacks/MainStack.tsx';
 import AuthStack from '@/navigation/stacks/AuthStack.tsx';
 import OnboardingStack from '@/navigation/stacks/OnboardingStack.tsx';
@@ -21,10 +21,11 @@ export default function RootNavigator() {
     return () => clearTimeout(t);
   }, []);
 
-  const shouldShowSplash = !minDelayDone || status === 'checking';
-  if (shouldShowSplash) {
-    return <SplashScreen/>;
-  }
+  useEffect(() => {
+    if (minDelayDone && status !== 'checking') {
+      SplashScreen.hide();
+    }
+  }, [minDelayDone, status]);
 
   return (
     <Stack.Navigator screenOptions={{headerShown: false}} >

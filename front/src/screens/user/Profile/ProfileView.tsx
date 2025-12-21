@@ -63,7 +63,6 @@ export default function ProfileView({
     <ScreenContainer
       headerShown={true}
       headerTitle="마이페이지"
-      onPressBack={onPressBack}
     >
       <ChangeModeWrapper>
         <Typography

@@ -11,8 +11,8 @@ import Icon from '@/components/Icon';
 import Loading from '@/components/Loading';
 import { theme } from '@/theme';
 import type { PhotographerDetails, PortfolioImage } from '@/types/photographer';
-import HeartIcon from '@/assets/icons/heart.svg';
-import ChatIcon from '@/assets/icons/chat.svg';
+import BookmarkIcon from '@/assets/icons/bookmark-white.svg'
+import ChatIcon from '@/assets/icons/chat-white.svg';
 import UploadIcon from '@/assets/icons/upload.svg';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 
@@ -169,7 +169,7 @@ export default function PhotographerDetailsView({
       {/* Bottom Action Buttons */}
       <BottomActionContainer style={{ paddingBottom: 22 + insets.bottom }}>
         <ActionButton onPress={onPressFavorite}>
-          <Icon width={24} height={24} Svg={HeartIcon} />
+          <Icon width={24} height={24} Svg={BookmarkIcon} />
         </ActionButton>
         <ActionButton onPress={onPressInquiry}>
           <Icon width={24} height={24} Svg={ChatIcon} />

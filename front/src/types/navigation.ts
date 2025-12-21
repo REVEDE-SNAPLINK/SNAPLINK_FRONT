@@ -1,8 +1,9 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { UserMainStackParamList } from '@/types/userNavigation';
+import { PhotographerMainStackParamList } from '@/types/photographerNavigation';
 
 // Root Stack
 export type RootStackParamList = {
-  Onboarding: undefined;
   Auth: undefined;
   Main: undefined;
 }
@@ -11,28 +12,14 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   Login: undefined;
   SelectType: undefined;
+  UserOnboarding: { type: 'user' | 'photographer' };
   ApplyPhotographer: undefined;
 }
 
 // Main Stack
-export type MainStackParamList = {
-  Home: undefined;
-  SearchPhotographer: { searchKey: string };
-  PhotographerDetails: { id: string };
-  Booking: { id: string };
-  BookingHistory: undefined;
-  BookingDetails: { id: string };
-  WriteReview: { id: string };
-  ViewPhotos: { id: string };
-}
-
-// Onboarding Stack
-export type OnboardingStackParamList = {
-  OnboardingMain: undefined;
-}
+export type MainStackParamList = UserMainStackParamList & PhotographerMainStackParamList;
 
 // Navigation Props
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 export type MainNavigationProp = NativeStackNavigationProp<MainStackParamList>;
-export type OnboardingNavigationProp = NativeStackNavigationProp<OnboardingStackParamList>;

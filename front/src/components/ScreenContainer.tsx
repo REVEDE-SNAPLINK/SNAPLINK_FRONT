@@ -39,7 +39,7 @@ export default function ScreenContainer({
       alignItemsCenter={alignItemsCenter}
     >
       <StatusBar barStyle="dark-content" backgroundColor={barBackgroundColor} />
-      {headerShown && onPressBack && (
+      {headerShown && (
         <HeaderWithBackButton
           onPressBack={onPressBack}
           onPressTool={onPressTool}

@@ -16,12 +16,8 @@ front/src/
 │   ├── RootNavigator.tsx   # 루트 네비게이터 (인증 상태 기반 분기)
 │   └── stacks/
 │       ├── AuthStack.tsx      # 인증 관련 화면 스택
-│       ├── MainStack.tsx      # 메인 앱 화면 스택
-│       └── OnboardingStack.tsx # 온보딩 화면 스택
+│       └── MainStack.tsx      # 메인 앱 화면 스택
 ├── screens/           # 화면 컴포넌트
-│   ├── SplashScreen.tsx
-│   ├── OnboardingScreen.tsx
-│   ├── HomeScreen.tsx
 │   └── auth/
 │       ├── Login/
 │       │   ├── LoginContainer.tsx    # 로직 레이어

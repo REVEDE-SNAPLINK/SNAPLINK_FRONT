@@ -8,18 +8,19 @@ type SocialLoginButtonProps = TouchableOpacityProps & {
   backgroundColor: string;
   Icon: React.FC<SvgProps>;
   text: string;
+  textColor?: string;
 }
 
 const StyledButton = styled.TouchableOpacity<{ $backgroundColor: string }>`
-  width: 335px;
-  height: 55px;
-  border-radius: 10px;
+  width: 340px;
+  height: 50px;
+  border-radius: 8px;
   margin-bottom: 15px;
   background-color: ${({ $backgroundColor }) => $backgroundColor};
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  flex-shrink: 0;
+  border: 0.5px solid #D6D6D6;
 `;
 
 /**
@@ -39,15 +40,18 @@ export default function SocialLoginButton({
   backgroundColor,
   Icon,
   text,
+  textColor = "#000",
   ...rest
 }: SocialLoginButtonProps) {
   return (
     <StyledButton $backgroundColor={backgroundColor} {...rest}>
       <Icon width={16} height={16} />
       <Typography
-        fontSize={16}
+        color={textColor}
+        fontSize={14}
         fontWeight="medium"
         lineHeight={20}
+        marginLeft={27}
       >
         {' '}{text} 계정으로 로그인
       </Typography>

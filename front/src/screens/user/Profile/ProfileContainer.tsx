@@ -8,7 +8,7 @@ import {
   ImagePickerResponse,
 } from 'react-native-image-picker';
 import ProfileView from '@/screens/user/Profile/ProfileView.tsx';
-import { MainNavigationProp } from '@/types/navigation.ts';
+import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import { getUserProfile, toggleExpertMode, uploadProfileImage } from '@/api/profile';
 import { Alert } from '@/components/theme';
 import { requestPermission } from '@/utils/permissions';

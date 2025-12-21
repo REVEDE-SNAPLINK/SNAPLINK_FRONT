@@ -1,6 +1,6 @@
 import ViewPhotosView, { Photo } from '@/screens/user/ViewPhotos/ViewPhotosView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
 import { useQuery } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 // import RNFetchBlob from 'rn-fetch-blob';

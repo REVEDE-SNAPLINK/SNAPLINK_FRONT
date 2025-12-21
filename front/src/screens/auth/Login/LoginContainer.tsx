@@ -11,7 +11,7 @@ export default function LoginContainer() {
 
   const onLogin = async (apiUrl: string) => {
     console.log(apiUrl);
-    const response = { isAllowed: true };
+    const response = { isAllowed: false };
     let token = "asdf";
     const user: User = {
       id: '1',

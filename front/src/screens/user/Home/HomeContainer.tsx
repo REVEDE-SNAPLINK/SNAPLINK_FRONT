@@ -3,7 +3,8 @@ import HomeView from '@/screens/user/Home/HomeView.tsx';
 import { BannerItem } from '@/components/user/Banner.tsx';
 import { PhotographerInfo } from '@/types/photographer.ts';
 import { useNavigation } from '@react-navigation/native';
-import { MainNavigationProp } from '@/types/navigation.ts';
+import { UserMainNavigationProp } from '@/types/userNavigation.ts';
+import SignupCompletionModal from '@/components/auth/SignupCompletionModal.tsx';
 
 const dummyBannerItems: BannerItem[] = [
   {
@@ -75,7 +76,7 @@ const dummyPopularPhotographerItems: PhotographerInfo[] = [
 ]
 
 export default function HomeContainer() {
-  const navigation = useNavigation<MainNavigationProp>();
+  const navigation = useNavigation<UserMainNavigationProp>();
 
   const [searchKey, setSearchKey] = useState('');
 
@@ -91,18 +92,21 @@ export default function HomeContainer() {
   const handlePressPopularPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
 
   return (
-    <HomeView
-      onPressNotification={handlePressNotification}
-      onPressAI={handlePressAI}
-      onPressAllPhotographer={handlePressAllPhotographer}
-      onPressAllPhotographerItem={handlePressAllPhotographerItem}
-      onPressPopularPhotographerItem={handlePressPopularPhotographerItem}
-      searchKey={searchKey}
-      onChangeSearchKey={setSearchKey}
-      onSubmitSearchKey={handleSubmitSearchKey}
-      bannerItems={dummyBannerItems}
-      allPhotographerItems={dummyAllPhotographerItems}
-      popularPhotographerItems={dummyPopularPhotographerItems}
-    />
+    <>
+      <HomeView
+        onPressNotification={handlePressNotification}
+        onPressAI={handlePressAI}
+        onPressAllPhotographer={handlePressAllPhotographer}
+        onPressAllPhotographerItem={handlePressAllPhotographerItem}
+        onPressPopularPhotographerItem={handlePressPopularPhotographerItem}
+        searchKey={searchKey}
+        onChangeSearchKey={setSearchKey}
+        onSubmitSearchKey={handleSubmitSearchKey}
+        bannerItems={dummyBannerItems}
+        allPhotographerItems={dummyAllPhotographerItems}
+        popularPhotographerItems={dummyPopularPhotographerItems}
+      />
+      <SignupCompletionModal />
+    </>
   );
 }

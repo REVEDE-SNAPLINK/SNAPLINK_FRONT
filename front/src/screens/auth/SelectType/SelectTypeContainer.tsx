@@ -5,15 +5,13 @@ import { AuthNavigationProp } from '@/types/navigation.ts';
 export default function SelectTypeContainer() {
   const navigation = useNavigation<AuthNavigationProp>();
 
-  const handleBackButton = () => navigation.goBack();
-  const handleUserButton = () => navigation.navigate('ApplyPhotographer');
-  const handlePhotographerButton = () => navigation.navigate('ApplyPhotographer');
+  const handlePressUser = () => navigation.navigate('UserOnboarding', { type: 'user' });
+  const handlePressPhotographer = () => navigation.navigate('UserOnboarding', { type: 'photographer' });
 
   return (
     <SelectTypeView
-      onPressBackButton={handleBackButton}
-      onPressUser={handleUserButton}
-      onPressPhotographer={handlePhotographerButton}
+      onPressUser={handlePressUser}
+      onPressPhotographer={handlePressPhotographer}
     />
   );
 }

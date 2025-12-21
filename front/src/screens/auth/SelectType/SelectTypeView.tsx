@@ -1,102 +1,135 @@
-import { useMemo } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from 'react';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
-import SelectButton from '@/components/SelectButton';
-import BackButton from '@/components/BackButton';
-import Type1 from '@/assets/imgs/type1.svg';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
+import Icon from '@/components/Icon.tsx';
+import Logo from '@/assets/imgs/logo.svg';
+import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
+import TypeUserImg from '@/assets/imgs/type-user.svg';
+import TypePhotographerImg from '@/assets/imgs/type-photographer.svg';
 
 interface SelectTypeViewProps {
-  onPressBackButton: () => void;
   onPressUser: () => void;
   onPressPhotographer: () => void;
 }
 
 export default function SelectTypeView({
-  onPressBackButton,
   onPressUser,
   onPressPhotographer
 }: SelectTypeViewProps) {
-  const UserImg = useMemo(() =>
-    <Type1 width={100} height={100} />,
-    []);
-  const PhotographerImg = useMemo(() =>
-    <StyledImage source={require('@/assets/imgs/type2.png')} />, []);
-
   return (
     <ScreenContainer>
-      <Container>
-        <Header>
-          <StyledBackButton onPress={onPressBackButton} />
-          <Typography
-            color="primary"
-            fontWeight="extraBold"
-            fontSize={27}
-            lineHeight={40}
-            letterSpacing={-1.08}
-          >
-            Snaplink
-          </Typography>
-        </Header>
+      <LogoContainer>
+        <Icon width={220} height={40} Svg={Logo} />
+        <Typography
+          fontSize={11}
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          color="#9D9D9D"
+          marginTop={12}
+        >
+          스냅사진을 더욱 간편하게 경험하세요!
+        </Typography>
+      </LogoContainer>
 
-        <TitleWrapper>
-          <Typography
-            fontSize={18}
-            fontWeight="bold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-          >스냅링크를 어떻게 이용하고 싶으신가요?</Typography>
-        </TitleWrapper>
-
+      <SelectButtonContainer>
         <SelectButton
-          Img={UserImg}
-          title="촬영 모델"
-          description={'내가 원하는 작가님을 찾아서\n사진 촬영을 하고 싶어요.'}
           onPress={onPressUser}
-        />
-
-        <Spacer />
+        >
+          <SelectButtonImageWrapper>
+            <Icon width={89} height={101} Svg={TypeUserImg} />
+          </SelectButtonImageWrapper>
+          <SelectButtonTextWrapper>
+            <SelectButtonTitleWrapper>
+              <Typography
+                fontSize={16}
+                fontWeight="semiBold"
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+              >
+                고객으로 시작
+              </Typography>
+              <Icon width={24} height={24} Svg={ArrowRightIcon} />
+            </SelectButtonTitleWrapper>
+            <Typography
+              fontSize={12}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#767676"
+            >
+              내가 원하는 작가님을 찾아서{'\n'}사진을 촬영해 보세요.
+            </Typography>
+          </SelectButtonTextWrapper>
+        </SelectButton>
 
         <SelectButton
-          Img={PhotographerImg}
-          title="사진 작가"
-          description={'스냅 사진작가로 활동하고\n사진 촬영을 하고 싶어요.'}
           onPress={onPressPhotographer}
-        />
-      </Container>
+        >
+          <SelectButtonImageWrapper>
+            <Icon width={87} height={73} Svg={TypePhotographerImg} />
+          </SelectButtonImageWrapper>
+          <SelectButtonTextWrapper>
+            <SelectButtonTitleWrapper>
+              <Typography
+                fontSize={16}
+                fontWeight="semiBold"
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+              >
+                사진 작가로 시작
+              </Typography>
+              <Icon width={24} height={24} Svg={ArrowRightIcon} />
+            </SelectButtonTitleWrapper>
+            <Typography
+              fontSize={12}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#767676"
+            >
+              스냅 사진작가로 활동하고{'\n'}수익을 창출해 보세요.
+            </Typography>
+          </SelectButtonTextWrapper>
+        </SelectButton>
+      </SelectButtonContainer>
     </ScreenContainer>
   );
 }
 
-const Container = styled(SafeAreaView)`
+const LogoContainer = styled.View`
   flex: 1;
-  padding: 0px 20px;
-`;
-
-const Header = styled.View`
-  margin-top: 11.98px;
-  flex-direction: row;
   justify-content: center;
   align-items: center;
-`;
+`
 
-const StyledBackButton = styled(BackButton)`
-  position: absolute;
-  left: 0;
-`;
+const SelectButtonContainer = styled.View`
+  flex: 1;
+`
 
-const TitleWrapper = styled.View`
-  margin-top: 50px;
-  margin-bottom: 57px;
+const SelectButton = styled.TouchableOpacity`
+  width: 318px;
+  height: 123px;
+  border-radius: 16px;
+  background: #F4F4F4;
+  margin-bottom: 13px;
+  flex-direction: row;
+  justify-content: space-between;
+`
+
+const SelectButtonImageWrapper = styled.View`
+  flex: 0.46;
+  justify-content: center;
   align-items: center;
-`;
+`
 
-const StyledImage = styled.Image`
-  width: 79px;
-  height: 58px;
-`;
+const SelectButtonTextWrapper = styled.View`
+  flex: 0.54;
+  justify-content: center;
+`
 
-const Spacer = styled.View`
-  height: 20px;
-`;
+const SelectButtonTitleWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  width: 135px;
+  justify-content: space-between;
+  margin-bottom: 7px;
+`

@@ -4,6 +4,7 @@ import Typography from '@/components/theme/Typography';
 import Icon from '@/components/Icon';
 import { ComponentType } from 'react';
 import { SvgProps } from 'react-native-svg';
+import { theme } from '@/theme';
 
 export type TabItem = {
   key: string;
@@ -46,11 +47,10 @@ export default function BottomNavigation({
               fontSize={10}
               lineHeight="140%"
               letterSpacing="-2.5%"
-              color={isActive ? '#00A980' : '#AAAAAA'}
+              color={isActive ? theme.colors.primary : '#AAAAAA'}
             >
               {tab.label}
             </Typography>
-            {isActive && <Highlight />}
           </TabButton>
         );
       })}
@@ -61,8 +61,6 @@ export default function BottomNavigation({
 const Container = styled.View`
   height: 80px;
   background: #fff;
-  border-top-left-radius: 25px;
-  border-top-right-radius: 25px;
   padding-top: 11px;
   padding-horizontal: 27px;
   flex-direction: row;
@@ -79,13 +77,4 @@ const TabButton = styled.TouchableOpacity`
 
 const IconWrapper = styled.View`
   margin-bottom: 4px;
-`;
-
-const Highlight = styled.View`
-  position: absolute;
-  bottom: -11px;
-  width: 40px;
-  height: 3px;
-  background-color: #00A980;
-  border-radius: 2px;
 `;

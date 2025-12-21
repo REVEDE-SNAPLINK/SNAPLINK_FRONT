@@ -49,13 +49,13 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-    <string>프로필 사진 촬영 및 포트폴리오 등록을 위해 카메라 접근 권한이 필요합니다. 촬영한 이미지는 해당 기능에만 사용되며 외부로 공유되지 않습니다.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>프로필 사진 및 후기 사진 업로드를 위해 기기 사진에 접근합니다. 선택된 사진은 서비스 이용 목적에만 사용되며 외부로 공유되지 않습니다.</string>
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>촬영한 사진을 기기에 저장하기 위해 사진 라이브러리 저장 권한이 필요합니다. 저장된 사진은 사용자 기기에만 보관됩니다.</string>
+	<string>프로필 사진 촬영 및 포트폴리오 등록을 위해 카메라 접근 권한이 필요합니다. 촬영한 이미지는 해당 기능에만 사용되며 외부로 공유되지 않습니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>촬영한 사진을 기기에 저장하기 위해 사진 라이브러리 저장 권한이 필요합니다. 저장된 사진은 사용자 기기에만 보관됩니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>프로필 사진 및 후기 사진 업로드를 위해 기기 사진에 접근합니다. 선택된 사진은 서비스 이용 목적에만 사용되며 외부로 공유되지 않습니다.</string>
 	<key>RCTNewArchEnabled</key>
-	<true/>
+	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Pretendard-Black.otf</string>

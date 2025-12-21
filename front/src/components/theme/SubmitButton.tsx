@@ -16,6 +16,9 @@ type Props = TouchableOpacityProps & {
   marginBottom?: number;
   marginLeft?: number;
   marginRight?: number;
+
+  position?: 'absolute' | 'relative';
+  bottom?: number;
 }
 
 const StyledSubmitButton = styled.TouchableOpacity<{
@@ -28,7 +31,7 @@ const StyledSubmitButton = styled.TouchableOpacity<{
   marginTop?: number,
   marginBottom?: number,
   marginLeft?: number,
-  marginRight?: number
+  marginRight?: number,
 }>`
   ${({ $width }) => $width === 'auto' ? 'flex: 1' : `width: ${typeof $width === 'string' ? $width : $width+'px'};`};
   height: ${({ $size }) => $size !== undefined && $size === 'small' ? 40 : 49}px;
@@ -45,15 +48,25 @@ const StyledSubmitButton = styled.TouchableOpacity<{
   ${({ marginRight }) => marginRight !== undefined ? `margin-right: ${marginRight}px;` : ''}
 `
 
+const SubmitButtonWrapper = styled.View<{ bottom?: number }>`
+  align-items: center;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  bottom: ${({ bottom }) => bottom !== undefined && `${bottom}px;`};
+`
+
 export default function SubmitButton({
   text,
   width = 'auto',
   disabled = false,
   type = 'submit',
   size = 'large',
+  position = 'relative',
+  bottom,
   ...rest
 }: Props) {
-  return (
+  const SubmitButtonElement = (
     <StyledSubmitButton $width={width} $disabled={disabled} $type={type} $size={size} {...rest}>
       <Typography
         fontWeight="bold"
@@ -65,4 +78,14 @@ export default function SubmitButton({
       </Typography>
     </StyledSubmitButton>
   );
+
+  if (position === 'absolute') {
+    return (
+      <SubmitButtonWrapper bottom={bottom}>
+        {SubmitButtonElement}
+      </SubmitButtonWrapper>
+    )
+  }
+
+  return SubmitButtonElement;
 }

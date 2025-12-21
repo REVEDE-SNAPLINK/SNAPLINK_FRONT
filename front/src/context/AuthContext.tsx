@@ -11,16 +11,18 @@ import { User } from '@/types/auth.ts';
  */
 type AuthStatus = 'checking' | 'signedOut' | 'signedIn' | 'needsSignup';
 
+type SignupCompletionModalType = 'user' | 'photographer' | null;
+
 type AuthContextValue = {
   status: AuthStatus;
   user: User | null;
   autoLogin: boolean;
   setAutoLogin: (on: boolean) => Promise<void>;
-  onboardingSeen: boolean;
-  setOnboardingSeen: () => Promise<void>;
   signIn: (token: string, user: User, isNew?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   completeSignup: (user: User) => Promise<void>;
+  signupCompletionModalType: SignupCompletionModalType;
+  setSignupCompletionModalType: (type: SignupCompletionModalType) => void;
 }
 
 const AuthContext = createContext<AuthContextValue>(null as any);
@@ -29,13 +31,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [status, setStatus] = useState<AuthStatus>('checking');
   const [user, setUser] = useState<User | null>(null);
   const [autoLogin, setAutoLoginState] = useState<boolean>(true);
-  const [onboardingSeen, setOnboardingSeenState] = useState(false);
+  const [signupCompletionModalType, setSignupCompletionModalType] = useState<SignupCompletionModalType>(null);
 
   useEffect(() => {
     (async () => {
-      const ob = await AsyncStorage.getItem('onboarding.v1');
-      setOnboardingSeenState(ob === 'done');
-
       const storedAuto = await AsyncStorage.getItem('autoLogin');
       setAutoLoginState(storedAuto !== 'false'); // default: ON
 
@@ -49,11 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     })();
   }, []);
-
-  const setOnboardingSeen = async () => {
-    await AsyncStorage.setItem('onboarding.v1', 'done');
-    setOnboardingSeenState(true);
-  }
 
   // 자동 로그인 설정
   const setAutoLogin = async (on: boolean) => {
@@ -77,10 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeSignup = async (u: User) => {
     setUser(u);
     setStatus('signedIn');
+    setSignupCompletionModalType(u.userType);
   };
 
   return (
-    <AuthContext.Provider value={{ status, user, autoLogin, setAutoLogin, onboardingSeen, setOnboardingSeen, signIn, signOut, completeSignup }}>
+    <AuthContext.Provider value={{ status, user, autoLogin, setAutoLogin, signIn, signOut, completeSignup, signupCompletionModalType, setSignupCompletionModalType }}>
       {children}
     </AuthContext.Provider>
   );

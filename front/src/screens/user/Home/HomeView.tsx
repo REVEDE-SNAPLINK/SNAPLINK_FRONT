@@ -39,7 +39,7 @@ export default function HomeView({
   onSubmitSearchKey,
 }: HomeViewProps) {
   return (
-    <ScreenContainer paddingHorizontal={26}>
+    <ScreenContainer headerShown={false} paddingHorizontal={26}>
       <Header>
         <LogoWrapper>
           <Icon

@@ -1,209 +1,127 @@
-import { useState, useRef, useEffect } from 'react';
-import { ScrollView, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { useState } from 'react';
+import { Modal, Platform, TouchableOpacity } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import styled from '@/utils/scale/CustomStyled';
-import BottomModal from '@/components/BottomModal';
-import Typography from '@/components/theme/Typography';
+import { SubmitButton } from '@/components/theme';
 
-type DatePickerProps = {
+type DatePickerModalProps = {
   visible: boolean;
   onClose: () => void;
   onConfirm: (date: Date) => void;
   initialDate?: Date;
 };
 
-const ITEM_HEIGHT = 31;
-
-export default function DatePicker({
-                                     visible,
-                                     onClose,
-                                     onConfirm,
-                                     initialDate = new Date(),
-                                   }: DatePickerProps) {
-  const [currentDate, setCurrentDate] = useState(initialDate);
-
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1;
-  const currentDay = currentDate.getDate();
-
-  const years = Array.from({ length: 100 }, (_, i) => String(new Date().getFullYear() - i));
-  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
-  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
-
-  const handleDateChange = (type: 'year' | 'month' | 'day', value: string) => {
-    setCurrentDate((prevDate) => {
-      const newDate = new Date(prevDate);
-      switch (type) {
-        case 'year':
-          newDate.setFullYear(parseInt(value, 10));
-          break;
-        case 'month':
-          newDate.setMonth(parseInt(value, 10) - 1);
-          break;
-        case 'day':
-          newDate.setDate(parseInt(value, 10));
-          break;
-      }
-      return newDate;
-    });
-  };
+export default function DatePickerModal({
+  visible,
+  onClose,
+  onConfirm,
+  initialDate,
+}: DatePickerModalProps) {
+  const maxYear = new Date().getFullYear() - 14;
+  const maximumDate = new Date(maxYear, 11, 31);
+  const effectiveInitialDate = initialDate || maximumDate;
+  const [selectedDate, setSelectedDate] = useState(effectiveInitialDate);
 
   const handleConfirm = () => {
-    onConfirm(currentDate);
+    onConfirm(selectedDate);
     onClose();
   };
 
+  if (!visible) return null;
+
+  // Android uses modal natively
+  if (Platform.OS === 'android') {
+    return (
+      <DateTimePicker
+        value={selectedDate}
+        mode="date"
+        display="default"
+        maximumDate={maximumDate}
+        onChange={(event, date) => {
+          if (event.type === 'set' && date) {
+            onConfirm(date);
+          }
+          onClose();
+        }}
+      />
+    );
+  }
+
+  // iOS uses custom modal
   return (
-    <BottomModal
+    <Modal
       visible={visible}
-      onClose={onClose}
-      onConfirm={handleConfirm}
-      title="생년월일">
-      <PickerContainer>
-        <DateElementPicker
-          items={years}
-          value={String(currentYear)}
-          setValue={(value) => handleDateChange('year', value)}
-          suffix="년"
-        />
-        <DateElementPicker
-          items={months}
-          value={String(currentMonth).padStart(2, '0')}
-          setValue={(value) => handleDateChange('month', value)}
-          suffix="월"
-        />
-        <DateElementPicker
-          items={days}
-          value={String(currentDay).padStart(2, '0')}
-          setValue={(value) => handleDateChange('day', value)}
-          suffix="일"
-        />
-      </PickerContainer>
-    </BottomModal>
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Container>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <PickerContainer>
+              <Header>
+                <HeaderText>생년월일 선택</HeaderText>
+              </Header>
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="spinner"
+                maximumDate={maximumDate}
+                onChange={(event, date) => {
+                  if (date) setSelectedDate(date);
+                }}
+                locale="ko"
+                textColor="#000"
+              />
+              <ButtonWrapper>
+                <SubmitButton
+                  text="확인"
+                  onPress={handleConfirm}
+                  width="100%"
+                />
+              </ButtonWrapper>
+            </PickerContainer>
+          </TouchableOpacity>
+        </Container>
+      </TouchableOpacity>
+    </Modal>
   );
 }
+
+const Container = styled.View`
+  flex: 1;
+  justify-content: flex-end;
+  background-color: rgba(0, 0, 0, 0.3);
+`;
 
 const PickerContainer = styled.View`
-  flex-direction: row;
-  justify-content: space-around;
+  background-color: #FFFFFF;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 20px;
+`;
+
+const Header = styled.View`
   align-items: center;
-  height: ${ITEM_HEIGHT * 4}px;
+  padding-bottom: 10px;
+  border-bottom-width: 1px;
+  border-bottom-color: #E9E9E9;
+  margin-bottom: 10px;
 `;
 
-const PickerWrapper = styled.View`
-  flex: 1;
-  height: ${ITEM_HEIGHT * 4}px;
-  position: relative;
+const HeaderText = styled.Text`
+  font-size: 16px;
+  font-family: Pretendard-SemiBold;
+  color: #000;
 `;
 
-const HighlightBox = styled.View`
-  position: absolute;
-  top: ${ITEM_HEIGHT * 1.5}px;
-  left: 50%;
-  margin-left: -40px;
-  background-color: #F0F0F0;
-  border-radius: 10px;
-  width: 80px;
-  height: ${ITEM_HEIGHT}px;
-  pointer-events: none;
+const ButtonWrapper = styled.View`
+  margin-top: 20px;
 `;
-
-const PickerItem = styled.View`
-  height: ${ITEM_HEIGHT}px;
-  justify-content: center;
-  align-items: center;
-  flex-direction: row;
-`;
-
-const SuffixText = styled.View`
-  margin-left: 4px;
-`;
-
-interface DateElementPickerProps {
-  items: string[];
-  value: string;
-  setValue: (value: string) => void;
-  suffix?: string;
-}
-
-const DateElementPicker = ({ items, value, setValue, suffix }: DateElementPickerProps) => {
-  const scrollViewRef = useRef<ScrollView>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    const index = items.findIndex((item) => item === value);
-    if (index !== -1 && scrollViewRef.current) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({
-          y: index * ITEM_HEIGHT,
-          animated: false,
-        });
-      }, 100);
-    }
-  }, [items, value]);
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    // Extract the value immediately before the synthetic event is reused
-    const offsetY = event.nativeEvent.contentOffset.y;
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      const index = Math.round(offsetY / ITEM_HEIGHT);
-      if (items[index] && items[index] !== value) {
-        setValue(items[index]);
-      }
-    }, 100);
-  };
-
-  return (
-    <PickerWrapper>
-      <HighlightBox />
-      <ScrollView
-        ref={scrollViewRef}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 1.5 }}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={ITEM_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        scrollEventThrottle={16}
-        bounces={false}
-        onScroll={handleScroll}
-        onMomentumScrollEnd={handleScroll}
-        onScrollEndDrag={handleScroll}>
-        {items.map((item: string, index: number) => (
-          <PickerItem key={`${item}-${index}`}>
-            <Typography
-              color={item === value ? '#000000' : '#C8C8C8'}
-              fontSize={16}
-              fontWeight="medium"
-              lineHeight={20}>
-              {item}
-            </Typography>
-            {suffix && (
-              <SuffixText>
-                <Typography
-                  color={item === value ? '#000000' : '#C8C8C8'}
-                  fontSize={16}
-                  fontWeight="medium"
-                  lineHeight={20}>
-                  {suffix}
-                </Typography>
-              </SuffixText>
-            )}
-          </PickerItem>
-        ))}
-      </ScrollView>
-    </PickerWrapper>
-  );
-};

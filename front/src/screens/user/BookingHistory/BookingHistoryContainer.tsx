@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { MainNavigationProp } from '@/types/navigation.ts';
+import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
 import { getUserBookingHistory } from '@/api/photographer';
 import { userQueryKeys } from '@/api/queryKeys';

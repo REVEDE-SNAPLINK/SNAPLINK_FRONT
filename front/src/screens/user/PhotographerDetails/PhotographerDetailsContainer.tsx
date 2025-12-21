@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
+import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation';
 import PhotographerDetailsView from './PhotographerDetailsView';
 import {
   getPhotographerDetails,

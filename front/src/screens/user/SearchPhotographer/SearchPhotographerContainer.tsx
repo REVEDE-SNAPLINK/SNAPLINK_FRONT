@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import SearchPhotographerView from '@/screens/user/SearchPhotographer/SearchPhotographerView.tsx';
-import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
+import { UserMainStackParamList, UserMainNavigationProp } from '@/types/userNavigation.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter';
 import { searchPhotographers } from '@/api/photographer';
 import { Photographer } from '@/types/photographer';

@@ -1,6 +1,6 @@
 import BookingView from '@/screens/user/Booking/BookingView.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPhotographerDetails, getReservationData } from '@/api/photographer.ts';

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Modal, Pressable } from 'react-native';
+import { Modal, TouchableOpacity } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SubmitButton from '@/components/theme/SubmitButton';
@@ -28,32 +28,37 @@ export default function BottomModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Overlay>
-        <StyledPressable
-          onPress={onClose}
-        />
-        <ModalContainer>
-          <TitleWrapper>
-            <Typography
-              fontSize={16}
-              fontWeight="semiBold"
-              lineHeight={22.4}
-              letterSpacing={-0.4}
-            >{title}</Typography>
-          </TitleWrapper>
-          {children}
-          <ButtonWrapper>
-            <SubmitButton
-              text="완료"
-              disabled={confirmDisabled}
-              onPress={onConfirm}
-            />
-          </ButtonWrapper>
-        </ModalContainer>
-        <StyledPressable
-          onPress={onClose}
-        />
-      </Overlay>
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Overlay>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <ModalContainer>
+              <TitleWrapper>
+                <Typography
+                  fontSize={16}
+                  fontWeight="semiBold"
+                  lineHeight={22.4}
+                  letterSpacing={-0.4}
+                >{title}</Typography>
+              </TitleWrapper>
+              {children}
+              <ButtonWrapper>
+                <SubmitButton
+                  text="완료"
+                  disabled={confirmDisabled}
+                  onPress={onConfirm}
+                />
+              </ButtonWrapper>
+            </ModalContainer>
+          </TouchableOpacity>
+        </Overlay>
+      </TouchableOpacity>
     </Modal>
   );
 }
@@ -67,14 +72,9 @@ const Overlay = styled.View`
 
 const ModalContainer = styled.View`
   width: 333px;
-  min-height: 400px;
   border-radius: 10px;
   background-color: #FFFFFF;
-  padding-top: 41px;
-  padding-bottom: 38.98px;
-  padding-left: 16px;
-  padding-right: 16px;
-  justify-content: space-between;
+  padding: 41px 16px 38.98px 16px;
 `;
 
 const TitleWrapper = styled.View`
@@ -85,7 +85,3 @@ const TitleWrapper = styled.View`
 const ButtonWrapper = styled.View`
   margin-top: 60px;
 `;
-
-const StyledPressable = styled(Pressable)`
-  flex: 1
-`

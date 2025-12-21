@@ -5,7 +5,7 @@ import PhotographerDetailsView from '../PhotographerDetailsView';
 import type { PhotographerDetails, PortfolioImage } from '@/types/photographer';
 
 jest.mock('@/assets/icons/heart.svg', () => 'HeartIcon');
-jest.mock('@/assets/icons/chat.svg', () => 'ChatIcon');
+jest.mock('@/assets/icons/chat-white.svg', () => 'ChatIcon');
 jest.mock('@/assets/icons/upload.svg', () => 'UploadIcon');
 
 const renderWithProvider = (component: React.ReactElement) => {

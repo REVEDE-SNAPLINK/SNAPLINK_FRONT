@@ -1,5 +1,5 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
 import WriteReviewView from '@/screens/user/WriteReview/WriteReviewView.tsx';
 import { useState } from 'react';
 import { launchImageLibrary } from 'react-native-image-picker';

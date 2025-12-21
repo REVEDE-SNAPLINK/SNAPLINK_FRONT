@@ -6,6 +6,8 @@ import Kakao from '@/assets/icons/kakao.svg';
 import Naver from '@/assets/icons/naver.svg';
 import Google from '@/assets/icons/google.svg';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
+import Icon from '@/components/Icon.tsx';
+import Logo from '@/assets/imgs/logo.svg'
 
 type LoginViewProps = {
   onKakaoLogin: () => void;
@@ -21,23 +23,19 @@ export default function LoginView({
   return (
     <ScreenContainer>
       <LogoContainer>
-        <LogoImageWrapper>
-          <LogoImage source={require('@/assets/imgs/logo.png')} />
-        </LogoImageWrapper>
+        <Icon width={220} height={40} Svg={Logo} />
+        <Typography
+          fontSize={11}
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          color="#9D9D9D"
+          marginTop={12}
+        >
+          스냅사진을 더욱 간편하게 경험하세요!
+        </Typography>
       </LogoContainer>
 
       <SocialLoginContainer>
-        <DescriptionWrapper>
-          <Typography
-            color="#545454"
-            fontSize={14}
-            fontWeight="medium"
-            lineHeight={20}
-          >
-            간편하게 로그인하고 서비스를 이용해보세요.
-          </Typography>
-        </DescriptionWrapper>
-
         <SocialLoginButton
           backgroundColor='#FEE500'
           Icon={Kakao}
@@ -46,6 +44,7 @@ export default function LoginView({
         />
         <SocialLoginButton
           backgroundColor='#03C75A'
+          textColor="#fff"
           Icon={Naver}
           text='네이버'
           onPress={onNaverLogin}
@@ -62,27 +61,12 @@ export default function LoginView({
 }
 
 const LogoContainer = styled.View`
-  flex: 0.8;
-  justify-content: flex-end;
-`
-
-const LogoImageWrapper = styled.View`
-  width: 223px;
-  height: 40px;
-`;
-
-const LogoImage = styled.Image`
-  max-width: 100%;
-  max-height: 100%;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 `
 
 const SocialLoginContainer = styled.View`
   flex: 1;
   justify-content: center;
 `
-
-const DescriptionWrapper = styled.View`
-  margin-top: 14px;
-  margin-bottom: 30px;
-  align-items: center;
-`;

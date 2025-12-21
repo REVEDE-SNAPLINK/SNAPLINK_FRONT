@@ -84,7 +84,8 @@ export default function DatePickerModal({
                 <SubmitButton
                   text="확인"
                   onPress={handleConfirm}
-                  width="100%"
+                  width="80%"
+                  size="small"
                 />
               </ButtonWrapper>
             </PickerContainer>
@@ -124,4 +125,6 @@ const HeaderText = styled.Text`
 
 const ButtonWrapper = styled.View`
   margin-top: 20px;
+  margin-bottom: 10px;
+  align-items: center;
 `;

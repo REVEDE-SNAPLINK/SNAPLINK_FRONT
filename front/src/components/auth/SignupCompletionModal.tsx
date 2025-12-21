@@ -4,11 +4,11 @@ import styled from '@/utils/scale/CustomStyled';
 import { useAuth } from '@/context/AuthContext';
 import CommonModal from '@/components/CommonModal';
 import Typography from '@/components/theme/Typography';
-import { UserMainNavigationProp } from '@/types/userNavigation';
+import { AuthNavigationProp } from '@/types/navigation.ts';
 import SubmitButton from '@/components/theme/SubmitButton'
 
 export default function SignupCompletionModal() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<AuthNavigationProp>();
   const { signupCompletionModalType, setSignupCompletionModalType } = useAuth();
 
   const handleClose = () => {
@@ -17,7 +17,7 @@ export default function SignupCompletionModal() {
 
   const handleNavigateToPortfolio = () => {
     handleClose();
-    // navigation.navigate('CreatePortfolio'); // TODO: 포트폴리오 작성 화면으로 이동
+    navigation.replace('PortfolioOnboarding', { id: 1 }); // TODO: user id로 수정
   };
 
   const renderPhotographerContent = () => (

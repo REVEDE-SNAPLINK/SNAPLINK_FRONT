@@ -14,10 +14,13 @@ export type AuthStackParamList = {
   SelectType: undefined;
   UserOnboarding: { type: 'user' | 'photographer' };
   ApplyPhotographer: undefined;
+  PortfolioOnboarding: { id: number }
 }
 
 // Main Stack
-export type MainStackParamList = UserMainStackParamList & PhotographerMainStackParamList;
+export type MainStackParamList = UserMainStackParamList & PhotographerMainStackParamList & {
+  Home: undefined;
+};
 
 // Navigation Props
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;

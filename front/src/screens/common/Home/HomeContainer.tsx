@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import HomeView from '@/screens/user/Home/HomeView.tsx';
+import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/user/Banner.tsx';
 import { PhotographerInfo } from '@/types/photographer.ts';
 import { useNavigation } from '@react-navigation/native';

@@ -1,4 +1,4 @@
-export type UserType = 'user' | 'photographer' | 'admin';
+export type UserType = 'user' | 'photographer' | null;
 
 // TODO: API 설계 후 수정
 export type User = {

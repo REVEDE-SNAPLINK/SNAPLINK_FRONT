@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import BottomNavigation, { TabItem } from '@/components/navigation/BottomNavigation';
-import HomeContainer from '@/screens/user/Home/HomeContainer';
+import HomeContainer from '@/screens/common/Home/HomeContainer';
 import CommunityScreen from '@/screens/CommunityScreen';
 import ChatScreen from '@/screens/ChatScreen';
 import ScrapScreen from '@/screens/ScrapScreen';

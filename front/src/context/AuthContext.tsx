@@ -21,6 +21,7 @@ type AuthContextValue = {
   signIn: (token: string, user: User, isNew?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   completeSignup: (user: User) => Promise<void>;
+  completePortfolioRegistration: () => void;
   signupCompletionModalType: SignupCompletionModalType;
   setSignupCompletionModalType: (type: SignupCompletionModalType) => void;
 }
@@ -74,8 +75,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSignupCompletionModalType(u.userType);
   };
 
+  // 포트폴리오 등록 완료 (작가 전용)
+  const completePortfolioRegistration = () => {
+    // 포트폴리오 등록은 별도 로직
+    // 이미 user는 설정되어 있고, status도 signedIn 상태
+    // 추가 작업이 필요하면 여기서 처리
+    console.log('포트폴리오 등록 완료');
+  };
+
   return (
-    <AuthContext.Provider value={{ status, user, autoLogin, setAutoLogin, signIn, signOut, completeSignup, signupCompletionModalType, setSignupCompletionModalType }}>
+    <AuthContext.Provider value={{ status, user, autoLogin, setAutoLogin, signIn, signOut, completeSignup, completePortfolioRegistration, signupCompletionModalType, setSignupCompletionModalType }}>
       {children}
     </AuthContext.Provider>
   );

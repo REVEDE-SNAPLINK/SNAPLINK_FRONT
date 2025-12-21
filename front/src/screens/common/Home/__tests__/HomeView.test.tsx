@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import HomeView from '../HomeView';
-import { BannerItem } from '@/components/user/Banner';
-import { PhotographerInfo } from '@/types/photographer';
+import HomeView from '../HomeView.tsx';
+import { BannerItem } from '@/components/user/Banner.tsx';
+import { PhotographerInfo } from '@/types/photographer.ts';
 
 jest.mock('@/assets/icons/logo-icon.png', () => 'LogoIcon');
 jest.mock('@/assets/icons/notification.png', () => 'NotificationIcon');

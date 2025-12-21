@@ -10,8 +10,8 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import { SubmitButton, Typography } from '@/components/theme';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import FormErrorMessage from '@/components/FormErrorMessage.tsx';
-import InputField from '@/components/InputField.tsx';
-import DateInputField from '@/components/DateInputField.tsx';
+import FormInput from '@/components/form/FormInput.tsx';
+import DateInput from '@/components/form/DateInput.tsx';
 import RadioGroup, { RadioOption } from '@/components/RadioGroup.tsx';
 import TermsAgreement, { TermItem } from '@/components/TermsAgreement.tsx';
 
@@ -169,7 +169,7 @@ const UserOnboardingStep2 = ({ control, errors }: UserOnboardingStep2Props) => {
           validate: (value) => value.trim() !== '' || '이름을 입력해주세요.',
         }}
         render={({ field: { onChange, onBlur, value } }) => (
-          <InputField
+          <FormInput
             placeholder="이름 *"
             value={value}
             onChangeText={onChange}
@@ -206,7 +206,7 @@ const UserOnboardingStep3 = ({ control, errors, nicknameError }: UserOnboardingS
           validate: (value) => value.trim() !== '' || '닉네임을 입력해주세요.',
         }}
         render={({ field: { onChange, onBlur, value } }) => (
-          <InputField
+          <FormInput
             placeholder="닉네임 *"
             value={value}
             onChangeText={onChange}
@@ -244,7 +244,7 @@ const UserOnboardingStep4 = ({ control, errors }: UserOnboardingStep4Props) => {
           required: '생년월일을 입력해주세요.',
         }}
         render={({ field: { onChange, value } }) => (
-          <DateInputField
+          <DateInput
             placeholder="YYYY.MM.DD *"
             value={value || undefined}
             onChange={onChange}

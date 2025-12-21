@@ -12,13 +12,16 @@ import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import { getUserProfile, toggleExpertMode, uploadProfileImage } from '@/api/profile';
 import { Alert } from '@/components/theme';
 import { requestPermission } from '@/utils/permissions';
+import { useAuth } from '@/context/AuthContext.tsx';
 
 export default function ProfileContainer () {
-  const navigation = useNavigation<MainNavigationProp>();
+  const navigation = useNavigation<UserMainNavigationProp>();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // TODO: Get actual user ID from auth context
-  const userId = '1';
+  const userId = user?.id || '1';
+  const isPhotographer = user?.userType === 'photographer';
 
   // Fetch user profile data
   const { data: userProfile, isLoading } = useQuery({
@@ -66,8 +69,6 @@ export default function ProfileContainer () {
       });
     },
   });
-
-  const handlePressBack = () => navigation.goBack();
 
   const handleToggleExpertMode = () => {
     toggleExpertModeMutation.mutate(!userProfile?.isExpertMode);
@@ -287,7 +288,6 @@ export default function ProfileContainer () {
 
   return (
     <ProfileView
-      onPressBack={handlePressBack}
       onToggleExpertMode={handleToggleExpertMode}
       onPressProfile={handlePressProfile}
       onPressMyReviews={handlePressMyReviews}
@@ -305,6 +305,7 @@ export default function ProfileContainer () {
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}
       isExpertMode={userProfile.isExpertMode}
+      isPhotographer={isPhotographer}
       profileImageURI={userProfile.profileImage || ''}
       nickname={userProfile.nickname}
       name={userProfile.name}

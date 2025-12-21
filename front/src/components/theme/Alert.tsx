@@ -132,6 +132,7 @@ export function AlertComponent({
               >
                 <SubmitButton
                   type={button.type === 'cancel' ? 'cancel' : 'submit'}
+                  width="100%"
                   size="small"
                   text={button.text}
                   onPress={async () => {

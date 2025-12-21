@@ -27,7 +27,7 @@ const TABS_CONFIG = [
   { key: 'more', label: '더보기', Icon: MoreIcon, ColorIcon: MoreColorIcon, component: ProfileContainer },
 ];
 
-export default function UserTab() {
+export default function MainTab() {
   const [activeIndex, setActiveIndex] = useState(2); // 홈을 기본값으로
 
   const tabs: TabItem[] = TABS_CONFIG.map((tab, index) => ({

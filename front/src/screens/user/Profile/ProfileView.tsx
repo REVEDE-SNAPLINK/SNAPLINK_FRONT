@@ -4,14 +4,13 @@ import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
 import ToggleButton from '@/components/theme/ToggleButton.tsx';
 import Icon from '@/components/Icon.tsx';
-import CameraIcon from '@/assets/icons/camera-white.svg'
+import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
 import ChatIcon from '@/assets/icons/chat-black.svg'
 import HeartIcon from '@/assets/icons/heart-black.svg'
 import NotificationIcon from '@/assets/icons/notification.svg'
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg'
 
 interface ProfileViewProps {
-  onPressBack: () => void;
   onToggleExpertMode: () => void;
   onPressProfile: () => void;
   onPressMyReviews: () => void;
@@ -29,6 +28,7 @@ interface ProfileViewProps {
   onPressFAQ: () => void;
   onPressTerms: () => void;
   isExpertMode: boolean;
+  isPhotographer: boolean;
   profileImageURI: string;
   nickname: string;
   name: string;
@@ -36,7 +36,6 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({
-  onPressBack,
   onToggleExpertMode,
   onPressProfile,
   onPressMyReviews,
@@ -54,6 +53,7 @@ export default function ProfileView({
   onPressFAQ,
   onPressTerms,
   isExpertMode,
+  isPhotographer,
   profileImageURI,
   nickname,
   name,
@@ -64,32 +64,30 @@ export default function ProfileView({
       headerShown={true}
       headerTitle="마이페이지"
     >
-      <ChangeModeWrapper>
-        <Typography
-          fontSize={14}
-          fontWeight="semiBold"
-          lineHeight="100%"
-          letterSpacing="-2.5%"
-          color="#fff"
-        >
-          전문가로 전환
-        </Typography>
-        <ToggleButton
-          value={isExpertMode}
-          onToggle={onToggleExpertMode}
-        />
-      </ChangeModeWrapper>
+      {isPhotographer && (
+        <ChangeModeWrapper>
+          <Typography
+            fontSize={14}
+            fontWeight="semiBold"
+            lineHeight="100%"
+            letterSpacing="-2.5%"
+            color="#fff"
+          >
+            {isExpertMode ? '고객으로 전환' : '전문가로 전환'}
+          </Typography>
+          <ToggleButton
+            value={isExpertMode}
+            onToggle={onToggleExpertMode}
+          />
+        </ChangeModeWrapper>
+      )}
       <ContentContainer>
-        <UploadProfileButtonWrapper>
-          <UploadProfileButton onPress={onPressProfile}>
-            <ProfileImageWrapper>
-              {profileImageURI && <ProfileImage source={{ uri: profileImageURI }} />}
-            </ProfileImageWrapper>
-            <UploadProfileIconWrapper>
-              <Icon width={18} height={18} Svg={CameraIcon} />
-            </UploadProfileIconWrapper>
-          </UploadProfileButton>
-        </UploadProfileButtonWrapper>
+        <ProfileImageUpload
+          imageURI={profileImageURI}
+          onPress={onPressProfile}
+          marginTop={27}
+          marginBottom={32}
+        />
         <IconNavigationButtonWrapper>
           <IconNavigationButton
             onPress={onPressMyReviews}
@@ -264,45 +262,6 @@ const ChangeModeWrapper = styled.View`
   justify-content: space-between;
   align-items: center;
   flex-direction: row;
-`
-
-const UploadProfileButtonWrapper = styled.View`
-  width: 100%;
-  align-items: center;
-`
-
-const UploadProfileButton = styled.TouchableOpacity`
-  width: 110px;
-  height: 110px;
-  margin-top: 27px;
-  margin-bottom: 32px;
-`
-
-const ProfileImageWrapper = styled.View`
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: ${theme.colors.disabled};
-`
-
-const ProfileImage = styled.Image`
-  max-width: 100%;
-  max-height: 100%;
-  resize-mode: cover;
-`
-
-const UploadProfileIconWrapper = styled.View`
-  width: 30px;
-  height: 30px;
-  background-color: ${theme.colors.disabled};
-  border-radius: 50%;
-  border: 2px solid #fff;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  bottom: -1px;
-  right: 4px;
 `
 
 const ContentContainer = styled.ScrollView`

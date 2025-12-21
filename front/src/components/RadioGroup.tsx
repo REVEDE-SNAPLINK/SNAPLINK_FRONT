@@ -23,7 +23,7 @@ const RadioOptionWrapper = styled.Pressable`
 const RadioIndicator = styled.View`
   width: 25px;
   height: 25px;
-  border-radius: 50%;
+  border-radius: 25px;
   border: 1px solid #E9E9E9;
   justify-content: center;
   align-items: center;
@@ -32,7 +32,7 @@ const RadioIndicator = styled.View`
 const RadioDot = styled.View`
   width: 15px;
   height: 15px;
-  border-radius: 50%;
+  border-radius: 15px;
   background-color: ${theme.colors.primary};
 `;
 

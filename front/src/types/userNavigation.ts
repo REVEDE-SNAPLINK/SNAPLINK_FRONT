@@ -1,7 +1,6 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type UserMainStackParamList = {
-  Home: undefined;
   SearchPhotographer: { searchKey: string };
   PhotographerDetails: { id: string };
   Booking: { id: string };

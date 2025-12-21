@@ -1,10 +1,10 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import UserOnboardingView, {
   UserOnboardingFormData,
 } from '@/screens/auth/UserOnboarding/UserOnboardingView.tsx';
-import { AuthStackParamList } from '@/types/navigation.ts';
+import { AuthStackParamList, RootNavigationProp } from '@/types/navigation.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
 
 type UserOnboardingRouteProp = RouteProp<AuthStackParamList, 'UserOnboarding'>;
@@ -14,6 +14,7 @@ const TOTAL_STEPS = 5;
 
 export default function UserOnboardingContainer() {
   const route = useRoute<UserOnboardingRouteProp>();
+  const navigation = useNavigation<RootNavigationProp>();
   const { completeSignup } = useAuth();
   const type = route.params.type;
 
@@ -175,17 +176,22 @@ export default function UserOnboardingContainer() {
       //   const response = await signupAPI(signupData);
       //   if (response.success) {
       //     // 회원가입 성공
-      //     completeSignup({ id: '123', userType: type, name: data.name });
+      //     if (type === 'photographer') {
+      //       navigation.replace('PortfolioOnboarding', { id: 'new_photographer_id' }); // Pass a dummy ID for now
+      //     } else {
+      //       completeSignup({ id: '123', userType: type, name: data.name });
+      //     }
       //   }
       // } catch (error) {
       //   console.error('회원가입 실패:', error);
       //   // 에러 처리
       // }
 
-      // 임시: 회원가입 성공으로 가정하고 Main으로 이동
+      // 임시: 회원가입 성공으로 가정하고 다음 단계로 이동
       completeSignup({ id: '123', userType: type, name: data.name });
+      navigation.replace('Main');
     },
-    [agreedTerms, type, completeSignup]
+    [agreedTerms, type, completeSignup, navigation],
   );
 
   const submitButtonText = currentStep === TOTAL_STEPS - 1 ? '완료' : '다음';

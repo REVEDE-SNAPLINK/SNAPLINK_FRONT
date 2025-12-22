@@ -20,7 +20,7 @@ export interface UserOnboardingFormData {
   name: string;
   nickname: string;
   birthDate: Date | null;
-  gender: 'female' | 'male' | null;
+  gender: 'FEMALE' | 'MALE' | null;
 }
 
 interface UserOnboardingViewProps {
@@ -46,9 +46,9 @@ const TERMS_DATA: TermItem[] = [
   { id: 'notification', label: '마케팅 알림 수신 동의', required: false, link: '#' },
 ];
 
-const GENDER_OPTIONS: RadioOption<'female' | 'male'>[] = [
-  { label: '여성', value: 'female' },
-  { label: '남성', value: 'male' },
+const GENDER_OPTIONS: RadioOption<'FEMALE' | 'MALE'>[] = [
+  { label: '여성', value: 'FEMALE' },
+  { label: '남성', value: 'MALE' },
 ];
 
 export default function UserOnboardingView({

@@ -5,7 +5,8 @@ import UserOnboardingView, {
   UserOnboardingFormData,
 } from '@/screens/auth/UserOnboarding/UserOnboardingView.tsx';
 import { AuthStackParamList, RootNavigationProp } from '@/types/navigation.ts';
-import { useAuth } from '@/context/AuthContext.tsx';
+import { useAuthStore } from '@/store/authStore.ts';
+import { SignUpFormData } from '@/api/auth.ts';
 
 type UserOnboardingRouteProp = RouteProp<AuthStackParamList, 'UserOnboarding'>;
 
@@ -15,7 +16,7 @@ const TOTAL_STEPS = 5;
 export default function UserOnboardingContainer() {
   const route = useRoute<UserOnboardingRouteProp>();
   const navigation = useNavigation<RootNavigationProp>();
-  const { completeSignup } = useAuth();
+  const { userId, signUp } = useAuthStore();
   const type = route.params.type;
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -163,35 +164,24 @@ export default function UserOnboardingContainer() {
 
   const onSubmit = useCallback(
     async (data: UserOnboardingFormData) => {
-      const signupData = {
-        ...data,
-        agreedTerms,
-        type,
+      const YYYY = data.birthDate?.getFullYear();
+      const MM = data.birthDate?.getMonth();
+      const DD = data.birthDate?.getDate();
+
+      const signUpData: SignUpFormData = {
+        name: data.name,
+        nickname: data.nickname,
+        email: '',
+        birthDate: `${YYYY}-${MM}-${DD}`,
+        gender: data.gender,
+        consentMarketing: data.agreedTerms.includes('marketing'),
+        id: userId as string
       };
 
-      console.log('회원가입 데이터:', signupData);
-
-      // TODO: API 연결
-      // try {
-      //   const response = await signupAPI(signupData);
-      //   if (response.success) {
-      //     // 회원가입 성공
-      //     if (type === 'photographer') {
-      //       navigation.replace('PortfolioOnboarding', { id: 'new_photographer_id' }); // Pass a dummy ID for now
-      //     } else {
-      //       completeSignup({ id: '123', userType: type, name: data.name });
-      //     }
-      //   }
-      // } catch (error) {
-      //   console.error('회원가입 실패:', error);
-      //   // 에러 처리
-      // }
-
-      // 임시: 회원가입 성공으로 가정하고 다음 단계로 이동
-      completeSignup({ id: '123', userType: type, name: data.name });
+      await signUp(signUpData);
       navigation.replace('Main');
     },
-    [agreedTerms, type, completeSignup, navigation],
+    [signUp, userId, navigation],
   );
 
   const submitButtonText = currentStep === TOTAL_STEPS - 1 ? '완료' : '다음';

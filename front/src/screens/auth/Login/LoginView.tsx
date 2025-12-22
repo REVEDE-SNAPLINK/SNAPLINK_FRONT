@@ -2,23 +2,23 @@ import React from 'react';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SocialLoginButton from '@/components/SocialLoginButton';
-import Kakao from '@/assets/icons/kakao.svg';
-import Naver from '@/assets/icons/naver.svg';
-import Google from '@/assets/icons/google.svg';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import Icon from '@/components/Icon.tsx';
 import Logo from '@/assets/imgs/logo.svg'
+import Kakao from '@/assets/icons/kakao.svg';
+// import Naver from '@/assets/icons/naver.svg';
+// import Google from '@/assets/icons/google.svg';
 
 type LoginViewProps = {
   onKakaoLogin: () => void;
-  onNaverLogin: () => void;
-  onGoogleLogin: () => void;
+  // onNaverLogin: () => void;
+  // onGoogleLogin: () => void;
 }
 
 export default function LoginView({
   onKakaoLogin,
-  onNaverLogin,
-  onGoogleLogin,
+  // onNaverLogin,
+  // onGoogleLogin,
 }: LoginViewProps) {
   return (
     <ScreenContainer>
@@ -42,19 +42,20 @@ export default function LoginView({
           text='카카오'
           onPress={onKakaoLogin}
         />
-        <SocialLoginButton
-          backgroundColor='#03C75A'
-          textColor="#fff"
-          Icon={Naver}
-          text='네이버'
-          onPress={onNaverLogin}
-        />
-        <SocialLoginButton
-          backgroundColor='#EAEAEA'
-          Icon={Google}
-          text='구글'
-          onPress={onGoogleLogin}
-        />
+        {/* TODO: 비즈니스 문제로 추후 추가 */}
+        {/*<SocialLoginButton*/}
+        {/*  backgroundColor='#03C75A'*/}
+        {/*  textColor="#fff"*/}
+        {/*  Icon={Naver}*/}
+        {/*  text='네이버'*/}
+        {/*  onPress={onNaverLogin}*/}
+        {/*/>*/}
+        {/*<SocialLoginButton*/}
+        {/*  backgroundColor='#EAEAEA'*/}
+        {/*  Icon={Google}*/}
+        {/*  text='구글'*/}
+        {/*  onPress={onGoogleLogin}*/}
+        {/*/>*/}
       </SocialLoginContainer>
     </ScreenContainer>
   );

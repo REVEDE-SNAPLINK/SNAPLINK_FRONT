@@ -5,7 +5,6 @@ import PortfolioOnboardingView, {
   PortfolioOnboardingFormData,
 } from '@/screens/photographer/PortfolioOnboarding/PortfolioOnboardingView.tsx';
 import { AuthStackParamList, MainNavigationProp } from '@/types/navigation.ts';
-import { useAuth } from '@/context/AuthContext.tsx';
 
 type PortfolioOnboardingRouteProp = RouteProp<AuthStackParamList, 'PortfolioOnboarding'>;
 
@@ -14,7 +13,6 @@ const TOTAL_STEPS = 7;
 export default function PortfolioOnboardingContainer() {
   const route = useRoute<PortfolioOnboardingRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
-  const { completePortfolioRegistration } = useAuth();
   const portfolioId = route.params?.id;
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -228,11 +226,10 @@ export default function PortfolioOnboardingContainer() {
       //   console.error('포트폴리오 등록 실패:', error);
       // }
 
-      // 임시: 포트폴리오 등록 성공으로 가정하고 Home으로 이동
-      completePortfolioRegistration();
+      // TODO: 포토폴리오 등록 API 연결
       navigation.replace('Home');
     },
-    [profileImageURI, photoURIs, portfolioId, completePortfolioRegistration, navigation]
+    [profileImageURI, photoURIs, portfolioId, navigation]
   );
 
   const handleProfileImageUpload = useCallback(() => {

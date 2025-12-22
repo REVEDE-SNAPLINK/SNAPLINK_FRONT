@@ -7,31 +7,30 @@ import {
   CameraOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-import ProfileView from '@/screens/user/Profile/ProfileView.tsx';
 import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import { getUserProfile, toggleExpertMode, uploadProfileImage } from '@/api/profile';
-import { Alert } from '@/components/theme';
+import ProfileView from '@/screens/user/Profile/ProfileView.tsx';
+import { useAuthStore } from '@/store/authStore.ts';
 import { requestPermission } from '@/utils/permissions';
-import { useAuth } from '@/context/AuthContext.tsx';
+import { Alert } from '@/components/theme';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<UserMainNavigationProp>();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { userId, userType } = useAuthStore();
 
   // TODO: Get actual user ID from auth context
-  const userId = user?.id || '1';
-  const isPhotographer = user?.userType === 'photographer';
+  const isPhotographer = userType === 'photographer';
 
   // Fetch user profile data
   const { data: userProfile, isLoading } = useQuery({
     queryKey: ['userProfile', userId],
-    queryFn: () => getUserProfile(userId),
+    queryFn: () => getUserProfile(userId as string),
   });
 
   // Toggle expert mode mutation
   const toggleExpertModeMutation = useMutation({
-    mutationFn: (isExpertMode: boolean) => toggleExpertMode(userId, isExpertMode),
+    mutationFn: (isExpertMode: boolean) => toggleExpertMode(userId as string, isExpertMode),
     onSuccess: (data) => {
       // Update cache
       queryClient.setQueryData(['userProfile', userId], data);
@@ -50,7 +49,7 @@ export default function ProfileContainer () {
 
   // Upload profile image mutation
   const uploadProfileImageMutation = useMutation({
-    mutationFn: (imageUri: string) => uploadProfileImage(userId, imageUri),
+    mutationFn: (imageUri: string) => uploadProfileImage(userId as string, imageUri),
     onSuccess: (imageUrl) => {
       // Update cache
       queryClient.setQueryData(['userProfile', userId], (old: any) => ({

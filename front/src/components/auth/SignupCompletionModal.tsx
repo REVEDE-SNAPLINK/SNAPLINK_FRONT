@@ -1,23 +1,23 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import styled from '@/utils/scale/CustomStyled';
-import { useAuth } from '@/context/AuthContext';
 import CommonModal from '@/components/CommonModal';
 import Typography from '@/components/theme/Typography';
 import { AuthNavigationProp } from '@/types/navigation.ts';
 import SubmitButton from '@/components/theme/SubmitButton'
+import { useAuthStore } from '@/store/authStore.ts';
 
 export default function SignupCompletionModal() {
   const navigation = useNavigation<AuthNavigationProp>();
-  const { signupCompletionModalType, setSignupCompletionModalType } = useAuth();
+  const { userType, userId, signUpCompletionModalType, setSignUpCompletionModalType } = useAuthStore();
 
   const handleClose = () => {
-    setSignupCompletionModalType(null);
+    setSignUpCompletionModalType();
   };
 
   const handleNavigateToPortfolio = () => {
     handleClose();
-    navigation.replace('PortfolioOnboarding', { id: 1 }); // TODO: user id로 수정
+    navigation.replace('PortfolioOnboarding', { id: userId as string });
   };
 
   const renderPhotographerContent = () => (
@@ -94,8 +94,8 @@ export default function SignupCompletionModal() {
   );
 
   return (
-    <CommonModal visible={!!signupCompletionModalType} onClose={handleClose}>
-      {signupCompletionModalType === 'photographer'
+    <CommonModal visible={!signUpCompletionModalType} onClose={handleClose}>
+      {userType === 'photographer'
         ? renderPhotographerContent()
         : renderUserContent()}
     </CommonModal>

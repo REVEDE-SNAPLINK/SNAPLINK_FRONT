@@ -14,7 +14,7 @@ export type AuthStackParamList = {
   SelectType: undefined;
   UserOnboarding: { type: 'user' | 'photographer' };
   ApplyPhotographer: undefined;
-  PortfolioOnboarding: { id: number }
+  PortfolioOnboarding: { id: string }
 }
 
 // Main Stack

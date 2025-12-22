@@ -89,3 +89,7 @@ android/app/release.keystore
 # Build logs
 build.log
 ios/xcodebuild.log
+
+# Environment Variables
+.env
+.env.*

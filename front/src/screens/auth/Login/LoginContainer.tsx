@@ -1,50 +1,24 @@
-import React, { useState, useEffect } from 'react';
 import LoginView from './LoginView';
-import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp, RootNavigationProp } from '@/types/navigation';
 import { useAuthStore } from '@/store/authStore';
-import KakaoLoginWebView from '@/components/auth/KakaoLoginWebView';
+import { useNavigation } from '@react-navigation/native';
 
 export default function LoginContainer() {
-  const authNavigation = useNavigation<AuthNavigationProp>();
-  const rootNavigation = useNavigation<RootNavigationProp>();
-  const { status, signInWithKakaoCode } = useAuthStore();
-  const [showKakaoWebView, setShowKakaoWebView] = useState(false);
+  const { signInWithKakao, signInWithProviderToken } = useAuthStore();
 
-  useEffect(() => {
-    if (status === 'needs_signup') {
-      authNavigation.navigate('SelectType');
-    } else if (status === 'authed') {
-      rootNavigation.replace('Main');
-    }
-  }, [status, authNavigation, rootNavigation]);
-
-  const handleKakaoLogin = () => {
-    setShowKakaoWebView(true);
-  };
-
-  const handleKakaoSuccess = async (code: string, codeVerifier: string) => {
-    setShowKakaoWebView(false);
-
+  const handleKakaoLogin = async () => {
     try {
-      await signInWithKakaoCode(code, codeVerifier);
+      const token = await signInWithKakao();
+      if (token !== null && token !== '') {
+        signInWithProviderToken("KAKAO", token).then(() => {
+          useNavigation()
+        });
+      }
     } catch (error) {
       console.error('Kakao login failed:', error);
     }
   };
 
-  const handleKakaoClose = () => {
-    setShowKakaoWebView(false);
-  };
-
   return (
-    <>
-      <LoginView onKakaoLogin={handleKakaoLogin} />
-      <KakaoLoginWebView
-        visible={showKakaoWebView}
-        onClose={handleKakaoClose}
-        onSuccess={handleKakaoSuccess}
-      />
-    </>
+    <LoginView onKakaoLogin={handleKakaoLogin} />
   );
 }

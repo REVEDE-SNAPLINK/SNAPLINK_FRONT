@@ -40,5 +40,17 @@
                 <data android:scheme="https" android:host="snap.lnk" />
             </intent-filter>
         </activity>
+        <activity
+                android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:host="oauth"
+                      android:scheme="kakaofa46338c23ef208df3620a7eef81f6a6" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

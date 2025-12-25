@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 /**
  * 숫자를 comma로 포맷팅합니다.
  *
@@ -112,3 +114,59 @@ export function formatDateTime(date: string, time: string): string {
   const day = String(dateObj.getDate()).padStart(2, '0');
   return `${year}.${month}.${day} ${time}`;
 }
+
+const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+
+export const formatReservationDateTime = (
+  reservedDate: string,
+  startTime: { hour: number; minute: number },
+): string => {
+  const date = dayjs(reservedDate);
+  const day = DAY_KO[date.day()]; // 0(Sun) ~ 6(Sat)
+
+  const hh = String(startTime.hour).padStart(2, '0');
+  const mm = String(startTime.minute).padStart(2, '0');
+
+  return `${date.format('YYYY.MM.DD')}(${day}) ${hh}:${mm}`;
+};
+
+
+export const generateImageFilename = (
+  mimeType?: string,
+  prefix = 'img',
+) => {
+  const ext = mimeType?.split('/')[1] ?? 'jpg';
+  return `${prefix}_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2)}.${ext}`;
+};
+
+type QueryValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | undefined
+  | null
+  | Array<string | number | boolean>;
+
+export const buildQuery = <T extends { [K in keyof T]?: QueryValue }>(
+  query?: T,
+): string => {
+  const params = new URLSearchParams();
+  if (!query) return '';
+
+  Object.entries(query as Record<string, QueryValue>).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+
+    if (Array.isArray(value)) {
+      value.forEach(v => params.append(key, String(v)));
+    } else if (value instanceof Date) {
+      params.set(key, value.toISOString());
+    } else {
+      params.set(key, String(value));
+    }
+  });
+
+  return params.toString();
+};

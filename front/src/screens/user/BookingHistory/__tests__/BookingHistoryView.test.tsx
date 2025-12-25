@@ -22,7 +22,7 @@ jest.mock('@/components/HeaderWithBackButton', () => {
   };
 });
 
-describe('BookingHistoryView Component', () => {
+describe('BookingManageView Component', () => {
   const mockBookings: UserBooking[] = [
     {
       id: 'booking-1',

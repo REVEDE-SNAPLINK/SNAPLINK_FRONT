@@ -217,8 +217,8 @@ describe('ScreenContainer Component', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should render with no children', () => {
-      const { UNSAFE_getByType } = render(<ScreenContainer />);
+    it('should render with empty children', () => {
+      const { UNSAFE_getByType } = render(<ScreenContainer>{null}</ScreenContainer>);
       // Should render without errors
     });
 

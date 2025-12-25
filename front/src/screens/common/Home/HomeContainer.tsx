@@ -3,8 +3,9 @@ import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/user/Banner.tsx';
 import { PhotographerInfo } from '@/types/photographer.ts';
 import { useNavigation } from '@react-navigation/native';
-import { UserMainNavigationProp } from '@/types/userNavigation.ts';
+import { MainNavigationProp } from '@/types/navigation.ts';
 import SignupCompletionModal from '@/components/auth/SignupCompletionModal.tsx';
+import { useAuthStore } from '@/store/authStore.ts';
 
 const dummyBannerItems: BannerItem[] = [
   {
@@ -76,11 +77,12 @@ const dummyPopularPhotographerItems: PhotographerInfo[] = [
 ]
 
 export default function HomeContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
+  const { isFirst } = useAuthStore();
 
   const [searchKey, setSearchKey] = useState('');
 
-  const handlePressNotification = () => {};
+  const handlePressNotification = () => navigation.navigate('Notification');
   const handlePressAI = () => {};
   const handleSubmitSearchKey = () => {
     navigation.navigate('SearchPhotographer', { searchKey });
@@ -106,7 +108,7 @@ export default function HomeContainer() {
         allPhotographerItems={dummyAllPhotographerItems}
         popularPhotographerItems={dummyPopularPhotographerItems}
       />
-      <SignupCompletionModal />
+      {isFirst && <SignupCompletionModal />}
     </>
   );
 }

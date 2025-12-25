@@ -5,7 +5,7 @@ import Typography from '@/components/theme/Typography.tsx';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
-import ActiveStarIcon from '@/assets/icons/star.svg'
+import ActiveStarIcon from '@/assets/icons/star-color.svg'
 import CrossIcon from '@/assets/icons/cross.svg'
 import TextInput from '@/components/theme/TextInput.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';

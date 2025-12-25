@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TouchableOpacityProps, Animated } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
-import { theme } from '@/theme';
 
 interface ToggleButtonProps extends Omit<TouchableOpacityProps, 'onPress'> {
   value: boolean;
@@ -15,12 +14,11 @@ const CIRCLE_SIZE = 27;
 const CIRCLE_PADDING = 2;
 const BORDER_RADIUS = 15.5;
 
-const ToggleContainer = styled.TouchableOpacity<{ $isActive: boolean; $disabled?: boolean }>`
+const ToggleContainer = styled.TouchableOpacity<{ $disabled?: boolean }>`
   width: ${TOGGLE_WIDTH}px;
   height: ${TOGGLE_HEIGHT}px;
   border-radius: ${BORDER_RADIUS}px;
-  background-color: ${({ $isActive, $disabled }) =>
-    $disabled ? '#E0E0E1' : $isActive ? theme.colors.primary : '#E0E0E1'}; /* #2B9E1E -> theme.colors.primary (임시) */
+  background-color: #E0E0E1;
   justify-content: center;
   padding: ${CIRCLE_PADDING}px;
   opacity: ${({ $disabled }) => $disabled ? 0.5 : 1};
@@ -37,7 +35,6 @@ const ToggleCircle = styled.View`
   shadow-offset: 0px 2px;
   shadow-opacity: 0.15;
   shadow-radius: 3px;
-  elevation: 3;
 `;
 
 export default function ToggleButton({
@@ -71,7 +68,6 @@ export default function ToggleButton({
   return (
     <ToggleContainer
       testID="toggle-button"
-      $isActive={value}
       $disabled={disabled}
       onPress={handlePress}
       activeOpacity={0.7}

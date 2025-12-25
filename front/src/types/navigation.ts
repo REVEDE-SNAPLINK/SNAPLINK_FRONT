@@ -12,14 +12,26 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   Login: undefined;
   SelectType: undefined;
-  UserOnboarding: { type: 'user' | 'photographer' };
-  ApplyPhotographer: undefined;
-  PortfolioOnboarding: { id: string }
+  UserOnboarding: undefined;
 }
 
 // Main Stack
 export type MainStackParamList = UserMainStackParamList & PhotographerMainStackParamList & {
   Home: undefined;
+  NicknameEdit: undefined;
+  NameEdit: undefined;
+  EmailEdit: undefined;
+  AccountManage: undefined;
+  SearchPhotographer: { searchKey: string };
+  PhotographerDetails: { id: string };
+  PostDetail: { postId: string };
+  ChatDetails: { chatRoomId: string };
+  MyPosts: undefined;
+  Reviews: { photographerId: string };
+  ReviewDetails: { reviewId: string };
+  ReviewPhotos: { photographerId: string };
+  CommunityDetails: { postId: string };
+  Notification: undefined;
 };
 
 // Navigation Props

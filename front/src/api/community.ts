@@ -1,0 +1,209 @@
+import { API_BASE_URL } from '@/config/api.ts';
+import { UploadImageParams } from '@/types/image.ts';
+import { buildQuery, generateImageFilename } from '@/utils/format.ts';
+import { authFetch } from '@/api/utils.ts';
+
+const COMMUNITY_BASE = `${API_BASE_URL}/api/community`;
+
+export const COMMUNITY_CATEGORIES = {
+  'DAILY': '스냅일상',
+  'TIPS': '촬영꿀팁',
+  'NEWS': '스냅소식'
+} as const;
+
+export type COMMUNITY_CATEGORY_ENUM = keyof typeof COMMUNITY_CATEGORIES;
+
+export const CATEGORY_KEYS = Object.keys(
+  COMMUNITY_CATEGORIES,
+) as COMMUNITY_CATEGORY_ENUM[];
+
+
+export interface CreateCommunityPostParams {
+  category: COMMUNITY_CATEGORY_ENUM;
+  title: string;
+  content: string;
+  images: UploadImageParams[];
+}
+
+export const createCommunityPost = async (data: CreateCommunityPostParams) => {
+  const formData = new FormData();
+
+  formData.append('category', data.category);
+  formData.append('title', data.title);
+  formData.append('content', data.content);
+  data.images.forEach((img) => {
+    formData.append('images', {
+      uri: img.uri,
+      name: generateImageFilename(img.type, 'community_post'),
+      type: img.type ?? 'image/jpeg',
+    } as any);
+  });
+
+  console.log(formData);
+
+  const response = await authFetch(`${COMMUNITY_BASE}/posts`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  console.log(response);
+
+  if (!response.ok) throw new Error(`Failed to create post ${response.status}`);
+}
+
+export interface CommunityPost {
+  id: string;
+  categoryLabel: COMMUNITY_CATEGORY_ENUM;
+  title: string;
+  content: string;
+  imageUrls: string[];
+  author: {
+    userId: string;
+    nickname: string;
+    profileImageUrl: string;
+  }
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+  createdAt: string;
+}
+
+export interface Sort {
+  direction: 'ASC' | 'DESC' | string;
+  nullHandling: string;
+  ascending: boolean;
+  property: string;
+  ignoreCase: boolean;
+}
+
+export interface Pageable {
+  pageNumber: number;
+  pageSize: number;
+  offset: number;
+  paged: boolean;
+  unpaged: boolean;
+  sort: Sort[];
+}
+
+export interface CommunityPostAuthor {
+  userId: string;
+  nickname: string;
+  profileImageUrl: string;
+}
+
+export interface GetPageable {
+  page?: number;
+  size?: number;
+  sort?: string[];
+}
+
+export interface GetCommunityPostsResponse {
+  totalPages: number;
+  totalElements: number;
+
+  pageable: Pageable;
+
+  numberOfElements: number;
+  size: number;
+  number: number;
+
+  sort: Sort[];
+
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+
+  content: CommunityPost[];
+}
+
+export const getCommunityPosts = async (pageable: GetPageable): Promise<GetCommunityPostsResponse> => {
+  const qs = buildQuery(pageable);
+
+  const response = await authFetch(`${COMMUNITY_BASE}/posts${qs}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get posts ${response.status}`);
+
+  return response.json();
+}
+
+export const getCommunityPost = async (postId: string): Promise<CommunityPost> => {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {
+    method: 'GET',
+  })
+
+  if (!response.ok) throw new Error(`Failed to get post ${response.status}`);
+
+  return response.json();
+}
+
+export const getMyPosts = async (): Promise<CommunityPost[]> => {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/me`, {
+    method: 'GET',
+  })
+
+  if (!response.ok) throw new Error(`Failed to get my posts ${response.status}`);
+
+  const data: GetCommunityPostsResponse = await response.json();
+  return data.content;
+}
+
+export const deletePost = async (postId: string) => {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) throw new Error(`Failed to delete post ${response.status}`);
+}
+
+export const getComments = async (postId: string, pageable: GetPageable) => {
+  const qs = buildQuery(pageable);
+
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments${qs}`, {
+    method: 'GET',
+  })
+
+  if (!response.ok) throw new Error(`Failed to get post ${response.status}`);
+
+  return response.json();
+}
+
+export const createComment = async (postId: string, content: string, parentId: number) => {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments`, {
+    method: 'POST',
+    json: {
+      content,
+      parentId,
+    }
+  });
+
+  if (!response.ok) throw new Error(`Failed to create comment ${response.status}`);
+}
+
+export const updateComment = async (commentId: string, content: string) => {
+  const response = await authFetch(`${COMMUNITY_BASE}/comments/${commentId}`, {
+    method: 'PATCH',
+    json: {
+      content,
+    }
+  });
+
+  if (!response.ok) throw new Error(`Failed to update comment ${response.status}`);
+}
+
+export const deleteComment = async (commentId: string) => {
+  const response = await authFetch(`${COMMUNITY_BASE}/comments/${commentId}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) throw new Error(`Failed to delete comment ${response.status}`);
+}
+
+export const toggleLike = async (postId: string) => {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/like`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) throw new Error(`Failed to update post ${response.status}`);
+}

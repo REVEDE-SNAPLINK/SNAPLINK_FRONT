@@ -1,10 +1,12 @@
 import { API_BASE_URL } from '@/config/api.ts';
+import { authFetch } from '@/api/utils.ts';
 
-const AUTH_BASE = `${API_BASE_URL}/api/v1/auth`;
+const AUTH_BASE = `${API_BASE_URL}/api/auth`;
 
 type LoginSuccessResponse = {
   status: 'LOGIN_SUCCESS';
   userId: string;
+  role: "USER" | "PHOTOGRAPHER"
   tokens: {
     accessToken: string;
     refreshToken: string;
@@ -16,29 +18,32 @@ type SignupRequiredResponse = {
   userId: string;
 };
 
-export async function authorize () {
-
-}
-
 export type SignInResponse =
   | LoginSuccessResponse
   | SignupRequiredResponse;
 
+// 로그인
 export async function signInApi (provider: string, token: string): Promise<SignInResponse> {
+  console.log({
+    provider,
+    token,
+  })
+
   const response = await fetch(`${AUTH_BASE}/signin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider, token: token }),
   });
 
-  if (!response.ok) throw new Error(`signin failed: ${response.status}`);
+  if (!response.ok) throw new Error(`Failed to sign in: ${response.status} ${response.statusText}`);
 
   const data = await response.json();
 
   if (data.status === 'LOGIN_SUCCESS') {
     return {
-      status: 'LOGIN_SUCCESS',
+      status: data.status,
       userId: data.userId,
+      role: data.role,
       tokens: {
         accessToken: data.tokens.accessToken,
         refreshToken: data.tokens.refreshToken,
@@ -47,11 +52,12 @@ export async function signInApi (provider: string, token: string): Promise<SignI
   }
 
   return {
-    status: 'NEED_SIGNUP',
+    status: data.status,
     userId: data.userId,
   }
 }
 
+// 토큰 갱신
 export async function refreshApi(refreshToken: string): Promise<{ accessToken: string; refreshToken?: string }> {
   const response = await fetch(`${AUTH_BASE}/refresh`, {
     method: 'POST',
@@ -59,7 +65,7 @@ export async function refreshApi(refreshToken: string): Promise<{ accessToken: s
     body: JSON.stringify({ refreshToken }),
   });
 
-  if (!response.ok) throw new Error(`refresh failed: ${response.status}`);
+  if (!response.ok) throw new Error(`Failed to refresh tokens: ${response.status} ${response.statusText}`);
 
   const data = await response.json();
   return {
@@ -74,10 +80,12 @@ export interface SignUpFormData {
   email: string;
   birthDate: string;
   gender: "MALE" | "FEMALE" | null;
+  role: "USER" | "PHOTOGRAPHER";
   consentMarketing: boolean;
   id: string;
 }
 
+// 회원가입
 export async function signUpApi (formData: SignUpFormData): Promise<LoginSuccessResponse> {
   const response = await fetch(`${AUTH_BASE}/signup`, {
     method: 'POST',
@@ -85,16 +93,35 @@ export async function signUpApi (formData: SignUpFormData): Promise<LoginSuccess
     body: JSON.stringify(formData)
   });
 
-  if (!response.ok) throw new Error(`signup failed: ${response.status}`);
+  if (!response.ok) throw new Error(`Failed to sign up: ${response.status}`);
 
   const data = await response.json();
 
   return {
     status: 'LOGIN_SUCCESS',
     userId: data.userId,
+    role: data.role,
     tokens: {
       accessToken: data.tokens.accessToken,
       refreshToken: data.tokens.refreshToken,
-    }
+    },
   }
+}
+
+// 로그아웃
+export async function logoutApi(): Promise<void> {
+  const response = await authFetch(`${AUTH_BASE}/logout`, {
+    method: 'POST',
+  })
+
+  if (!response.ok) throw new Error(`Failed to logout: ${response.status}`);
+}
+
+// 회원 탈퇴
+export async function withdrawApi(): Promise<void> {
+  const response = await authFetch(`${AUTH_BASE}/withdraw`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) throw new Error(`Failed to logout: ${response.status}`);
 }

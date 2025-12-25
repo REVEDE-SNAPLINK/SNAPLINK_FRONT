@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1047056492778",
+    "project_id": "snaplink-bae99",
+    "storage_bucket": "snaplink-bae99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1047056492778:android:cc09b0c4c0bacc300a4f93",
+        "android_client_info": {
+          "package_name": "com.revede.snaplink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjdWNKhfqCr4O6-cEMTlVW1C8CDAoeALo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

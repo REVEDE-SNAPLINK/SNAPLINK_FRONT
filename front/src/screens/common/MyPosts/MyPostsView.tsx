@@ -1,0 +1,95 @@
+import styled from '@/utils/scale/CustomStyled.ts';
+import ScreenContainer from '@/components/ScreenContainer.tsx';
+import { Typography } from '@/components/theme';
+import { CommunityPost } from '@/api/community.ts';
+import { ScrollView } from 'react-native';
+
+interface MyPostsViewProps {
+  posts: CommunityPost[];
+  onPressBack: () => void;
+  onPressPost: (postId: string) => void;
+}
+
+export default function MyPostsView({
+  posts,
+  onPressBack,
+  onPressPost,
+}: MyPostsViewProps) {
+  return (
+    <ScreenContainer
+      headerShown={true}
+      headerTitle="내 게시글"
+      onPressBack={onPressBack}
+    >
+      <PostContainer showsVerticalScrollIndicator={false}>
+        {posts.map((post) => {
+          const postDate = new Date(post.createdAt);
+          const formattedDate = `${postDate.getFullYear().toString().slice(2)}.${String(
+            postDate.getMonth() + 1
+          ).padStart(2, '0')}.${String(postDate.getDate()).padStart(2, '0')}`;
+
+          return (
+            <PostItem key={post.id} onPress={() => onPressPost(post.id)}>
+              <PostInfoWrapper>
+                <Typography fontSize={12} letterSpacing="-2.5%" color="#C8C8C8" marginRight={9.13}>
+                  {post.categoryLabel}
+                </Typography>
+                <Typography fontSize={12} letterSpacing="-2.5%" color="#C8C8C8">
+                  {formattedDate}
+                </Typography>
+              </PostInfoWrapper>
+              {post.imageUrls.length > 0 && (
+                <PostImageWrapper>
+                  {post.imageUrls.slice(0, 3).map((img, index) => (
+                    <PostImage key={index} source={{ uri: img }} />
+                  ))}
+                </PostImageWrapper>
+              )}
+              <Typography fontSize={16} fontWeight="bold" letterSpacing="-2.5%" marginBottom={10}>
+                {post.title}
+              </Typography>
+              <Typography fontSize={14} fontWeight="bold" lineHeight="140%" letterSpacing="-2.5%">
+                {post.content}
+              </Typography>
+            </PostItem>
+          );
+        })}
+      </PostContainer>
+    </ScreenContainer>
+  )
+}
+
+const PostContainer = styled(ScrollView)`
+  flex: 1;
+  width: 100%;
+  border-top-width: 1px;
+  border-top-color: #C8C8C8;
+  border-top-style: solid;
+`
+
+const PostItem = styled.Pressable`
+  width: 100%;
+  padding-horizontal: 20px;
+  padding-top: 10px;
+  padding-bottom: 30px;
+  border-bottom-width: 1px;
+  border-bottom-color: #C8C8C8;
+  border-bottom-style: solid;
+`
+
+const PostInfoWrapper = styled.View`
+  margin-bottom: 10px;
+  flex-direction: row;
+`
+
+const PostImageWrapper = styled.View`
+  flex-direction: row;
+  height: 100px;
+  margin-bottom: 10px;
+`
+
+const PostImage = styled.Image`
+  width: 100px;
+  height: 100px;
+  margin-right: 10px;
+`

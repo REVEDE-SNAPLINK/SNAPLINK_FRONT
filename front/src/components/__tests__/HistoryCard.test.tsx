@@ -6,8 +6,8 @@ describe('HistoryCard Component', () => {
   const defaultProps = {
     onPress: jest.fn(),
     status: 'PENDING' as const,
-    nickname: '유앤미스냅',
-    name: '유앤미스냅 작가',
+    photographerNickname: '유앤미스냅',
+    photographerName: '유앤미스냅 작가',
     type: '커플',
     datetime: '2025.11.20 14:00',
   };

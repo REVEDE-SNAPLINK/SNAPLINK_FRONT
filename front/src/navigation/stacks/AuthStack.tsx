@@ -3,17 +3,25 @@ import LoginContainer from '@/screens/auth/Login/LoginContainer';
 import SelectTypeContainer from '@/screens/auth/SelectType/SelectTypeContainer';
 import { AuthStackParamList } from '@/types/navigation';
 import UserOnboardingContainer from '@/screens/auth/UserOnboarding/UserOnboardingContainer.tsx';
+import { useAuthStore } from '@/store/authStore.ts';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthStack() {
+  const { status } = useAuthStore();
+
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName={status === "needs_signup" ? 'SelectType' : 'Login'}
       screenOptions={{headerShown: false}}
     >
-      <Stack.Screen name="Login" component={LoginContainer} />
-      <Stack.Screen name="SelectType" component={SelectTypeContainer} />
+      {status === 'needs_signup' ? (
+        <>
+          <Stack.Screen name="SelectType" component={SelectTypeContainer} />
+        </>
+      ): (
+        <Stack.Screen name="Login" component={LoginContainer} />
+      )}
       <Stack.Screen name="UserOnboarding" component={UserOnboardingContainer} />
     </Stack.Navigator>
   )

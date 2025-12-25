@@ -28,6 +28,7 @@ interface BookingViewProps {
   onOptionalQuantityChange: (optionId: string, quantity: number) => void;
   totalPrice: number;
   onSubmit: () => void;
+  isSubmitDisabled: boolean;
 }
 
 export default function BookingView({
@@ -48,6 +49,7 @@ export default function BookingView({
   onOptionalQuantityChange,
   totalPrice,
   onSubmit,
+  isSubmitDisabled,
 }: BookingViewProps) {
   // Split time slots into morning (오전) and afternoon (오후)
   const { morningSlots, afternoonSlots } = useMemo(() => {
@@ -138,7 +140,7 @@ export default function BookingView({
           </Typography>
         </TotalPriceWrapper>
 
-        <SubmitButton text="예약하기" onPress={onSubmit} marginBottom={22} marginTop={22} />
+        <SubmitButton disabled={isSubmitDisabled} text="다음" onPress={onSubmit} marginBottom={22} marginTop={22} />
       </ScrollContainer>
     </ScreenContainer>
   );

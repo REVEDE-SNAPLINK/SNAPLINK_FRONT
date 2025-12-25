@@ -14,10 +14,12 @@ import FormInput from '@/components/form/FormInput.tsx';
 import DateInput from '@/components/form/DateInput.tsx';
 import RadioGroup, { RadioOption } from '@/components/RadioGroup.tsx';
 import TermsAgreement, { TermItem } from '@/components/TermsAgreement.tsx';
+import { Platform } from 'react-native';
 
 export interface UserOnboardingFormData {
   agreedTerms: string[];
   name: string;
+  email: string;
   nickname: string;
   birthDate: Date | null;
   gender: 'FEMALE' | 'MALE' | null;
@@ -32,6 +34,7 @@ interface UserOnboardingViewProps {
   onToggleAllTerms: () => void;
   agreedTerms: string[];
   showTermsError: boolean;
+  emailError: string | null;
   nicknameError: string | null;
   isSubmitDisabled: boolean;
   submitButtonText: string;
@@ -60,6 +63,7 @@ export default function UserOnboardingView({
   onToggleAllTerms,
   agreedTerms,
   showTermsError,
+  emailError,
   nicknameError,
   isSubmitDisabled,
   submitButtonText,
@@ -85,11 +89,13 @@ export default function UserOnboardingView({
       case 1:
         return <UserOnboardingStep2 control={control} errors={errors} />;
       case 2:
-        return <UserOnboardingStep3 control={control} errors={errors} nicknameError={nicknameError} />;
+        return <UserOnboardingStep3 control={control} errors={errors} emailError={emailError} />;
       case 3:
-        return <UserOnboardingStep4 control={control} errors={errors} />;
+        return <UserOnboardingStep4 control={control} errors={errors}  nicknameError={nicknameError} />;
       case 4:
         return <UserOnboardingStep5 control={control} errors={errors} />;
+      case 5:
+        return <UserOnboardingStep6 control={control} errors={errors} />;
       default:
         return null;
     }
@@ -97,17 +103,22 @@ export default function UserOnboardingView({
 
   return (
     <ScreenContainer headerShown={false}>
-      <AnimatedFormContainer style={animatedStyle}>
-        {renderStep()}
-      </AnimatedFormContainer>
-      <SubmitButton
-        onPress={onPressSubmit}
-        width={327}
-        disabled={isSubmitDisabled}
-        text={submitButtonText}
-        position="absolute"
-        bottom={33}
-      />
+      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollContainer>
+          <AnimatedFormContainer style={animatedStyle}>
+            {renderStep()}
+          </AnimatedFormContainer>
+        </ScrollContainer>
+      </KeyboardFormView>
+      <Footer>
+        <SubmitButton
+          onPress={onPressSubmit}
+          width={327}
+          disabled={isSubmitDisabled}
+          text={submitButtonText}
+          bottom={33}
+        />
+      </Footer>
     </ScreenContainer>
   );
 }
@@ -186,10 +197,47 @@ UserOnboardingStep2.displayName = 'UserOnboardingStep2';
 interface UserOnboardingStep3Props {
   control: Control<UserOnboardingFormData>;
   errors: FieldErrors<UserOnboardingFormData>;
+  emailError: string | null;
+}
+
+const UserOnboardingStep3 = ({ control, errors, emailError }: UserOnboardingStep3Props) => {
+  return (
+    <>
+      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+          이메일
+        </Typography>
+        을 입력해 주세요.
+      </Typography>
+      <Controller
+        control={control}
+        name="email"
+        rules={{
+          required: '이메일을 입력해주세요.',
+          validate: (value) => value.trim() !== '' || '이름을 입력해주세요.',
+        }}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <FormInput
+            placeholder="이메일 *"
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            errorMessage={emailError || errors.name?.message}
+          />
+        )}
+      />
+    </>
+  );
+};
+UserOnboardingStep3.displayName = 'UserOnboardingStep3';
+
+interface UserOnboardingStep4Props {
+  control: Control<UserOnboardingFormData>;
+  errors: FieldErrors<UserOnboardingFormData>;
   nicknameError: string | null;
 }
 
-const UserOnboardingStep3 = ({ control, errors, nicknameError }: UserOnboardingStep3Props) => {
+const UserOnboardingStep4 = ({ control, errors, nicknameError }: UserOnboardingStep4Props) => {
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -218,14 +266,14 @@ const UserOnboardingStep3 = ({ control, errors, nicknameError }: UserOnboardingS
     </>
   );
 };
-UserOnboardingStep3.displayName = 'UserOnboardingStep3';
+UserOnboardingStep4.displayName = 'UserOnboardingStep4';
 
-interface UserOnboardingStep4Props {
+interface UserOnboardingStep5Props {
   control: Control<UserOnboardingFormData>;
   errors: FieldErrors<UserOnboardingFormData>;
 }
 
-const UserOnboardingStep4 = ({ control, errors }: UserOnboardingStep4Props) => {
+const UserOnboardingStep5 = ({ control, errors }: UserOnboardingStep5Props) => {
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -255,14 +303,14 @@ const UserOnboardingStep4 = ({ control, errors }: UserOnboardingStep4Props) => {
     </>
   );
 };
-UserOnboardingStep4.displayName = 'UserOnboardingStep4';
+UserOnboardingStep5.displayName = 'UserOnboardingStep5';
 
-interface UserOnboardingStep5Props {
+interface UserOnboardingStep6Props {
   control: Control<UserOnboardingFormData>;
   errors: FieldErrors<UserOnboardingFormData>;
 }
 
-const UserOnboardingStep5 = ({ control, errors }: UserOnboardingStep5Props) => {
+const UserOnboardingStep6 = ({ control, errors }: UserOnboardingStep6Props) => {
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -289,7 +337,18 @@ const UserOnboardingStep5 = ({ control, errors }: UserOnboardingStep5Props) => {
     </>
   );
 };
-UserOnboardingStep5.displayName = 'UserOnboardingStep5';
+UserOnboardingStep6.displayName = 'UserOnboardingStep6';
+
+const KeyboardFormView = styled.KeyboardAvoidingView`
+  flex: 1;
+  width: 100%;
+`
+
+const ScrollContainer = styled.ScrollView`
+  flex: 1;
+  width: 100%;
+  padding-bottom: 82px;
+`
 
 const AnimatedFormContainer = styled(Animated.View)`
   flex: 1;
@@ -297,3 +356,10 @@ const AnimatedFormContainer = styled(Animated.View)`
   padding: 0 40px;
   margin-top: 40px;
 `;
+
+const Footer = styled.View`
+  width: 100%;
+  height: 82px;
+  align-items: center;
+  justify-content: flex-end;
+`

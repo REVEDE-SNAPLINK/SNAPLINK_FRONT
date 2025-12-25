@@ -72,7 +72,7 @@ export default function SubmitButton({
         fontWeight="bold"
         fontSize={size === "large" ? 16 : 12}
         letterSpacing={-0.4}
-        color={type === 'submit' ? '#fff' : '#000'}
+        color={type === 'submit' && !disabled ? '#fff' : '#000'}
       >
         {text}
       </Typography>

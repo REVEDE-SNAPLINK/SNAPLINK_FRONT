@@ -12,18 +12,20 @@ import ScreenContainer from '@/components/ScreenContainer.tsx';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross.svg';
-import { ScrollView } from 'react-native';
+import { Platform, ScrollView } from 'react-native';
 import Checkbox from '@/components/Checkbox.tsx';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import TimeInput from '@/components/form/TimeInput.tsx';
 import TextInput from '@/components/theme/TextInput.tsx';
 import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
+import { GetRegionsResponse } from '@/api/regions.ts';
+import { GetConceptsResponse } from '@/api/concepts.ts';
 
 export interface PortfolioOnboardingFormData {
   introduction: string;
-  shootingLocations: string[];
-  shootingCategories: string[];
+  shootingRegions: number[];
+  shootingConcepts: number[];
   basePrice: string;
   shootingDuration: string | null;
   shootingPeople: string | null;
@@ -48,15 +50,16 @@ interface PortfolioOnboardingViewProps {
   onProfileImageUpload: () => void;
   photoURIs: string[];
   onPhotoUpload: () => void;
-  onToggleLocation: (location: string) => void;
-  onToggleCategory: (category: string) => void;
+  regions: GetRegionsResponse[];
+  concepts: GetConceptsResponse[];
+  onToggleRegion: (id: number) => void;
+  onToggleConcept: (id: number) => void;
   onToggleDay: (day: string) => void;
 }
 
 export default function PortfolioOnboardingView({
   currentStep,
   control,
-  errors,
   onPressSubmit,
   isSubmitDisabled,
   submitButtonText,
@@ -65,8 +68,10 @@ export default function PortfolioOnboardingView({
   onProfileImageUpload,
   photoURIs,
   onPhotoUpload,
-  onToggleLocation,
-  onToggleCategory,
+  regions,
+  concepts,
+  onToggleRegion,
+  onToggleConcept,
   onToggleDay,
 }: PortfolioOnboardingViewProps) {
   const opacity = useSharedValue(1);
@@ -115,15 +120,17 @@ export default function PortfolioOnboardingView({
       case 2:
         return (
           <PortfolioOnboardingStep3
+            regions={regions}
             control={control}
-            onToggleLocation={onToggleLocation}
+            onToggleRegion={onToggleRegion}
           />
         );
       case 3:
         return (
           <PortfolioOnboardingStep4
+            concepts={concepts}
             control={control}
-            onToggleCategory={onToggleCategory}
+            onToggleConcept={onToggleConcept}
           />
         );
       case 4:
@@ -139,28 +146,34 @@ export default function PortfolioOnboardingView({
 
   return (
     <ScreenContainer headerShown={false} paddingHorizontal={40}>
-      <AnimatedFormContainer style={animatedStyle}>
-        {renderStep()}
-      </AnimatedFormContainer>
-      <ProgressBarContainer>
-        <Typography
-          fontSize={12}
-          color="#767676"
-          marginBottom={11}
-        >
-          {progress}% 작성했어요!
-        </Typography>
-        <ProgressBar>
-          <ProgressBarFill style={progressBarStyle} />
-        </ProgressBar>
-      </ProgressBarContainer>
-      <SubmitButton
-        onPress={onPressSubmit}
-        width="100%"
-        disabled={isSubmitDisabled}
-        text={submitButtonText}
-        marginBottom={33}
-      />
+      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollContainer>
+          <AnimatedFormContainer style={animatedStyle}>
+            {renderStep()}
+          </AnimatedFormContainer>
+        </ScrollContainer>
+      </KeyboardFormView>
+      <Footer>
+        <ProgressBarContainer>
+          <Typography
+            fontSize={12}
+            color="#767676"
+            marginBottom={11}
+          >
+            {progress}% 작성했어요!
+          </Typography>
+          <ProgressBar>
+            <ProgressBarFill style={progressBarStyle} />
+          </ProgressBar>
+        </ProgressBarContainer>
+        <SubmitButton
+          onPress={onPressSubmit}
+          width="100%"
+          disabled={isSubmitDisabled}
+          text={submitButtonText}
+          marginBottom={33}
+        />
+      </Footer>
     </ScreenContainer>
   );
 }
@@ -267,34 +280,16 @@ const PortfolioOnboardingStep2 = ({
   );
 };
 
-const locations = [
-  '서울',
-  '경기',
-  '인천',
-  '대전',
-  '세종',
-  '충남',
-  '충북',
-  '강원',
-  '부산',
-  '울산',
-  '경남',
-  '경북',
-  '대구',
-  '광주',
-  '전남',
-  '전북',
-  '제주',
-];
-
 interface PortfolioOnboardingStep3Props {
+  regions: GetRegionsResponse[],
   control: Control<PortfolioOnboardingFormData>;
-  onToggleLocation: (location: string) => void;
+  onToggleRegion: (id: number) => void;
 }
 
 const PortfolioOnboardingStep3 = ({
+  regions,
   control,
-  onToggleLocation,
+  onToggleRegion,
 }: PortfolioOnboardingStep3Props) => {
   return (
     <>
@@ -314,21 +309,21 @@ const PortfolioOnboardingStep3 = ({
       <ScrollView>
         <Controller
           control={control}
-          name="shootingLocations"
+          name="shootingRegions"
           render={({ field: { value } }) => (
             <>
-              {locations.map((location, i) => (
-                <CheckOptionWrapper key={i}>
+              {regions.map((region) => (
+                <CheckOptionWrapper key={region.id}>
                   <Checkbox
-                    isChecked={value.includes(location)}
-                    onPress={() => onToggleLocation(location)}
+                    isChecked={value.includes(region.id)}
+                    onPress={() => onToggleRegion(region.id)}
                   />
                   <Typography
                     fontSize={12}
                     color="#767676"
                     marginLeft={12}
                   >
-                    {location}
+                    {region.city}
                   </Typography>
                 </CheckOptionWrapper>
               ))}
@@ -341,22 +336,16 @@ const PortfolioOnboardingStep3 = ({
   );
 };
 
-const categories = [
-  '인물',
-  '사물',
-  '반려동물',
-  '웨딩',
-  '단체/행사',
-];
-
 interface PortfolioOnboardingStep4Props {
+  concepts: GetConceptsResponse[],
   control: Control<PortfolioOnboardingFormData>;
-  onToggleCategory: (category: string) => void;
+  onToggleConcept: (id: number) => void;
 }
 
 const PortfolioOnboardingStep4 = ({
+  concepts,
   control,
-  onToggleCategory,
+  onToggleConcept,
 }: PortfolioOnboardingStep4Props) => {
   return (
     <>
@@ -376,21 +365,21 @@ const PortfolioOnboardingStep4 = ({
       <ScrollView>
         <Controller
           control={control}
-          name="shootingCategories"
+          name="shootingConcepts"
           render={({ field: { value } }) => (
             <>
-              {categories.map((category, i) => (
-                <CheckOptionWrapper key={i}>
+              {concepts.map((concept) => (
+                <CheckOptionWrapper key={concept.id}>
                   <Checkbox
-                    isChecked={value.includes(category)}
-                    onPress={() => onToggleCategory(category)}
+                    isChecked={value.includes(concept.id)}
+                    onPress={() => onToggleConcept(concept.id)}
                   />
                   <Typography
                     fontSize={12}
                     color="#767676"
                     marginLeft={12}
                   >
-                    {category}
+                    {concept.conceptName}
                   </Typography>
                 </CheckOptionWrapper>
               ))}
@@ -683,6 +672,17 @@ const PortfolioOnboardingStep7 = ({
   );
 };
 
+const KeyboardFormView = styled.KeyboardAvoidingView`
+  flex: 1;
+  width: 100%;
+`
+
+const ScrollContainer = styled.ScrollView`
+  flex: 1;
+  width: 100%;
+  padding-bottom: 152px;
+`
+
 const AnimatedFormContainer = styled(Animated.View)`
   flex: 1;
   width: 100%;
@@ -710,6 +710,12 @@ const ProgressBarFill = styled(Animated.View)`
   left: 0;
   top: 0;
 `;
+
+const Footer = styled.View`
+  width: 100%;
+  height: 152px;
+  align-items: center;
+`
 
 const PhotoScrollContainerWrapper = styled.View`
   width: 100%;

@@ -4,28 +4,28 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import HistoryCard from '@/components/HistoryCard.tsx';
 import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
-import { UserBooking } from '@/api/photographer';
 import { theme } from '@/theme';
-import { formatDateTime } from '@/utils/format';
+import { formatReservationDateTime } from '@/utils/format';
+import { ReservationListItem } from '@/api/reservations.ts';
 
 interface BookingHistoryViewProps {
   onPressBack: () => void;
-  bookings: UserBooking[];
+  reservations: ReservationListItem[];
   isLoading: boolean;
   isError: boolean;
   onLoadMore: () => void;
   isFetchingNextPage: boolean;
   hasNextPage?: boolean;
-  onPressBookingDetail: (bookingId: string) => void;
+  onPressBookingDetail: (reservationId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  onPressViewPhotos?: (bookingId: string) => void;
-  onPressWriteReview?: (bookingId: string) => void;
+  onPressViewPhotos?: (reservationId: number) => void;
+  onPressWriteReview?: (reservationId: number) => void;
 }
 
 export default function BookingHistoryView({
   onPressBack,
-  bookings,
+  reservations,
   isLoading,
   isError,
   onLoadMore,
@@ -38,41 +38,42 @@ export default function BookingHistoryView({
   onPressWriteReview,
 }: BookingHistoryViewProps) {
   const mapStatusToHistoryCardStatus = (
-    status: UserBooking['status']
+    status: ReservationListItem['status']
   ): 'PENDING' | 'CONFIRMED' | 'COMPLETED' => {
     switch (status) {
-      case 'pending':
+      case 'REQUESTED':
+      case 'REJECTED':
         return 'PENDING';
-      case 'confirmed':
+      case 'CONFIRMED':
         return 'CONFIRMED';
-      case 'completed':
+      case 'COMPLETED':
+      case 'DELIVERED':
+      case 'REVIEWED':
         return 'COMPLETED';
-      case 'cancelled':
-        return 'PENDING'; // Default to PENDING for cancelled
       default:
         return 'PENDING';
     }
   };
 
-  const renderItem = ({ item }: { item: UserBooking }) => {
+  const renderItem = ({ item }: { item: ReservationListItem }) => {
     const isCompleted = mapStatusToHistoryCardStatus(item.status) === 'COMPLETED';
 
     return (
       <HistoryCard
-        onPress={() => onPressBookingDetail(item.id)}
+        onPress={() => onPressBookingDetail(item.reservationId)}
         status={mapStatusToHistoryCardStatus(item.status)}
-        nickname={item.photographerNickname}
-        name={item.photographerName}
-        type={item.shootingType}
-        datetime={formatDateTime(item.bookingDate, item.bookingTime)}
+        photographerNickname={item.counterpartName}
+        photographerName={item.counterpartName}
+        type="" // TODO: api 추가되면 추가
+        datetime={formatReservationDateTime(item.reservedDate, { hour: item.startTime.hour, minute: item.startTime.minute })}
         onPressViewPhotos={
           isCompleted && onPressViewPhotos
-            ? () => onPressViewPhotos(item.id)
+            ? () => onPressViewPhotos(item.reservationId)
             : undefined
         }
         onPressWriteReview={
           isCompleted && onPressWriteReview
-            ? () => onPressWriteReview(item.id)
+            ? () => onPressWriteReview(item.reservationId)
             : undefined
         }
       />
@@ -118,9 +119,9 @@ export default function BookingHistoryView({
       <ContentContainer>
         <FlatList
           testID="booking-history-list"
-          data={bookings}
+          data={reservations}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.reservationId.toString()}
           contentContainerStyle={{
             paddingTop: 24,
             paddingHorizontal: 27,

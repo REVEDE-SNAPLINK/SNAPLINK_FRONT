@@ -1,13 +1,24 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+export interface BookingFormData {
+  photographerId: string;
+  photographerNickname: string;
+  date: string;
+  time: string;
+  requiredOptionId: string;
+  requiredOptionChecked: boolean;
+  optionalOptions: Record<string, number>;
+  totalPrice: number;
+}
+
 export type UserMainStackParamList = {
-  SearchPhotographer: { searchKey: string };
-  PhotographerDetails: { id: string };
-  Booking: { id: string };
+  Booking: { photographerId: string };
   BookingHistory: undefined;
-  BookingDetails: { id: string };
-  WriteReview: { id: string };
-  ViewPhotos: { id: string };
+  BookingDetails: { reservationId: number };
+  BookingRequest: BookingFormData;
+  WriteReview: { reservationId: number };
+  ViewPhotos: { reservationId: number };
+  MyReviews: undefined;
 };
 
 export type UserMainNavigationProp = NativeStackNavigationProp<UserMainStackParamList>;

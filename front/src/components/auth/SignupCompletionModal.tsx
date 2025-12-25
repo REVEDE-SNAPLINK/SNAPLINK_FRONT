@@ -3,21 +3,23 @@ import { useNavigation } from '@react-navigation/native';
 import styled from '@/utils/scale/CustomStyled';
 import CommonModal from '@/components/CommonModal';
 import Typography from '@/components/theme/Typography';
-import { AuthNavigationProp } from '@/types/navigation.ts';
+import { MainNavigationProp } from '@/types/navigation.ts';
 import SubmitButton from '@/components/theme/SubmitButton'
 import { useAuthStore } from '@/store/authStore.ts';
 
 export default function SignupCompletionModal() {
-  const navigation = useNavigation<AuthNavigationProp>();
-  const { userType, userId, signUpCompletionModalType, setSignUpCompletionModalType } = useAuthStore();
+  const navigation = useNavigation<MainNavigationProp>();
+  const { userType, signUpCompletionModalType, setSignUpCompletionModalType, setIsFirst } = useAuthStore();
 
   const handleClose = () => {
     setSignUpCompletionModalType();
+    setIsFirst(false);
   };
 
   const handleNavigateToPortfolio = () => {
     handleClose();
-    navigation.replace('PortfolioOnboarding', { id: userId as string });
+    navigation.replace('PortfolioOnboarding');
+    setIsFirst(false);
   };
 
   const renderPhotographerContent = () => (

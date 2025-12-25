@@ -1,14 +1,19 @@
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
+import { useAuthStore } from '@/store/authStore.ts';
+import { useMemo } from 'react';
 
 interface HistoryCardProps {
   onPress: () => void;
   onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
+  onPressRejectBooking?: () => void;
+  onPressConfirmBooking?: () => void;
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED';
-  nickname: string;
-  name: string;
+  userName?: string;
+  photographerName: string;
+  photographerNickname: string;
   type: string;
   datetime: string;
 }
@@ -17,21 +22,29 @@ export default function HistoryCard({
   onPress,
   onPressViewPhotos,
   onPressWriteReview,
+  onPressRejectBooking,
+  onPressConfirmBooking,
   status,
-  nickname,
-  name,
+  userName,
+  photographerName,
+  photographerNickname,
   type,
   datetime,
 }: HistoryCardProps) {
-  return (
-    <HistoryContainer>
-      <InfoWrapper>
-        <Header title={nickname + '과 함께한 추억이에요'} onPress={onPress} />
-        <Description name="작가명" value={name} marginBottom={12} />
-        <Description name="촬영 항목" value={type} marginBottom={12} />
-        <Description name="촬영 일시" value={datetime} />
-      </InfoWrapper>
-      {status !== 'COMPLETED' ? (
+  const { userType } = useAuthStore();
+
+  const headerTitle = (() => {
+    if (userType === 'user') {
+      if (status === 'PENDING') return photographerNickname + '과 인생샷 건질 준비 중이에요'
+      return photographerNickname + '과 함께 한 추억이에요'
+    }
+    if (status !== 'PENDING' && userName) return userName + '님에게 추억을 선물했어요!'
+    return photographerNickname + '님, 예약이 접수되었어요!'
+  })();
+
+  const renderUserActionButtons = useMemo(() => {
+    if (status !== 'COMPLETED') {
+      return (
         <Status
           text={
             status === 'PENDING'
@@ -39,36 +52,96 @@ export default function HistoryCard({
               : '작가님이 작업 중이에요'
           }
         />
-      ) : (
-        <ActionButtonWrapper>
-          {onPressViewPhotos && (
-            <ViewPhotosButton onPress={onPressViewPhotos}>
-              <Typography
-                fontSize={12}
-                fontWeight="bold"
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                color="#fff"
-              >
-                사진 보기
-              </Typography>
-            </ViewPhotosButton>
-          )}
-          {onPressWriteReview && (
-            <WriteReviewButton onPress={onPressWriteReview}>
-              <Typography
-                fontSize={12}
-                fontWeight="bold"
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                color={theme.colors.primary}
-              >
-                후기 작성
-              </Typography>
-            </WriteReviewButton>
-          )}
-        </ActionButtonWrapper>
-      )}
+      )
+    }
+    return (
+      <ActionButtonWrapper>
+        {onPressViewPhotos && (
+          <ConfirmButton onPress={onPressViewPhotos}>
+            <Typography
+              fontSize={12}
+              fontWeight="bold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#fff"
+            >
+              사진 보기
+            </Typography>
+          </ConfirmButton>
+        )}
+        {onPressWriteReview && (
+          <CancelButton onPress={onPressWriteReview}>
+            <Typography
+              fontSize={12}
+              fontWeight="bold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color={theme.colors.primary}
+            >
+              후기 작성
+            </Typography>
+          </CancelButton>
+        )}
+      </ActionButtonWrapper>
+    );
+  }, [status, onPressWriteReview, onPressViewPhotos]);
+
+  const renderPhotographerActionButtons = useMemo(() => {
+    if (status !== 'PENDING') {
+      if (status === 'COMPLETED') {
+        return (
+          <Status
+            disabled={false}
+            onPress={onPressViewPhotos || (() => {})}
+            text='사진 업로드'
+          />
+        )
+      }
+      return (
+        <Status text='아직 촬영 전이에요' />
+      )
+    }
+    return (
+      <ActionButtonWrapper>
+        {onPressConfirmBooking && (
+          <ConfirmButton onPress={onPressConfirmBooking}>
+            <Typography
+              fontSize={12}
+              fontWeight="bold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#fff"
+            >
+              예약 수락
+            </Typography>
+          </ConfirmButton>
+        )}
+        {onPressRejectBooking && (
+          <CancelButton onPress={onPressRejectBooking}>
+            <Typography
+              fontSize={12}
+              fontWeight="bold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color={theme.colors.primary}
+            >
+              예약 거절
+            </Typography>
+          </CancelButton>
+        )}
+      </ActionButtonWrapper>
+    );
+  }, [status, onPressConfirmBooking, onPressRejectBooking, onPressViewPhotos]);
+
+  return (
+    <HistoryContainer>
+      <InfoWrapper>
+        <Header title={headerTitle} onPress={onPress} />
+        <Description name={userType === 'user' ? "작가명" : "고객명"} value={userType === "photographer" && userName ? userName : photographerName} marginBottom={12} />
+        <Description name="촬영 항목" value={type} marginBottom={12} />
+        <Description name="촬영 일시" value={datetime} />
+      </InfoWrapper>
+      {userType === 'user' ? renderUserActionButtons : renderPhotographerActionButtons}
     </HistoryContainer>
   );
 }
@@ -163,7 +236,7 @@ const Description = ({ name, value, marginBottom }: {name: string, value: string
   </DescriptionWrapper>
 )
 
-const StatusWrapper = styled.View`
+const StatusWrapper = styled.TouchableOpacity`
   width: 100%;
   height: 40px;
   border-radius: 8px;
@@ -172,8 +245,8 @@ const StatusWrapper = styled.View`
   align-items: center;
 `
 
-const Status = ({ text }: { text: string }) => (
-  <StatusWrapper>
+const Status = ({ text, disabled = true, onPress = () => {} }: { text: string, disabled?: boolean, onPress?: () => void }) => (
+  <StatusWrapper disabled={disabled} onPress={onPress}>
     <Typography
       fontSize={12}
       fontWeight="bold"
@@ -201,11 +274,11 @@ const ActionButton = styled.TouchableOpacity`
   align-items: center;
 `
 
-const ViewPhotosButton = styled(ActionButton)`
+const ConfirmButton = styled(ActionButton)`
   background-color: ${theme.colors.primary};
   margin-right: 7px;
 `
 
-const WriteReviewButton = styled(ActionButton)`
+const CancelButton = styled(ActionButton)`
   border: 1px solid ${theme.colors.primary};
 `

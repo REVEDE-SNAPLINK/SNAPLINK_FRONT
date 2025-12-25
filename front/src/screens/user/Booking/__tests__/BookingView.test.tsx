@@ -26,7 +26,7 @@ jest.mock('@/components/Calendar.tsx', () => {
   };
 });
 
-describe('BookingView', () => {
+describe('BookingRequestView', () => {
   const mockTimeSlots: TimeSlot[] = [
     { time: '09:00', isReserved: false },
     { time: '10:00', isReserved: false },

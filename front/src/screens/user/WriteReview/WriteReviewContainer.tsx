@@ -59,8 +59,8 @@ const CONTENT_MIN_LENGTH = 15;
 const CONTENT_MAX_LENGTH = 1000;
 
 export default function WriteReviewContainer() {
-  const navigation = useNavigation<MainNavigationProp>();
-  const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
+  const navigation = useNavigation<UserMainNavigationProp>();
+  const route = useRoute<RouteProp<UserMainStackParamList, 'WriteReview'>>();
   const { id: bookingId } = route.params;
 
   // Form state
@@ -77,7 +77,7 @@ export default function WriteReviewContainer() {
   //   mutationFn: submitReview,
   //   onSuccess: (data) => {
   //     // Navigate back to booking history or booking details
-  //     navigation.navigate('BookingHistory');
+  //     navigation.navigate('BookingManage');
   //     // Optionally show success toast
   //   },
   //   onError: (error) => {

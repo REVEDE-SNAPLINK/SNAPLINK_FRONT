@@ -191,6 +191,8 @@ const Container = styled.View`
   flex: 1;
   justify-content: center;
   align-items: center;
+  position: relative;
+  z-index: 1001;
 `;
 
 const Overlay = styled.TouchableOpacity`
@@ -199,6 +201,7 @@ const Overlay = styled.TouchableOpacity`
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 1002;
 `;
 
 const AnimatedOverlayBackground = styled(Animated.View)`
@@ -210,12 +213,14 @@ const AnimatedOverlayBackground = styled(Animated.View)`
 const AnimatedModalContainer = styled(Animated.View)`
   width: 317px;
   min-height: 153px;
-  padding: 19px 16px;
+  padding: 26px 39px;
   background-color: white;
   border-radius: 10px;
   justify-content: space-between;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   elevation: 5;
+  position: relative;
+  z-index: 1003;
 `;
 
 const ContentWrapper = styled.View`

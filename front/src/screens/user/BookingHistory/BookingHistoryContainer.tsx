@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
-import { getUserBookingHistory } from '@/api/photographer';
-import { userQueryKeys } from '@/api/queryKeys';
+import { useUserReservationsInfiniteQuery } from '@/queries/reservations'
 
 const PAGE_SIZE = 10;
-const DUMMY_USER_ID = 'user-1'; // TODO: Replace with actual user ID from auth context
 
 export default function BookingHistoryContainer() {
-  const navigation = useNavigation<MainNavigationProp>();
+  const navigation = useNavigation<UserMainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
@@ -21,22 +18,15 @@ export default function BookingHistoryContainer() {
     isLoading,
     isError,
     refetch,
-  } = useInfiniteQuery({
-    queryKey: userQueryKeys.bookingHistory(DUMMY_USER_ID),
-    queryFn: ({ pageParam = 1 }) =>
-      getUserBookingHistory({
-        userId: DUMMY_USER_ID,
-        page: pageParam,
-        pageSize: PAGE_SIZE,
-      }),
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    initialPageParam: 1,
-  });
+  } = useUserReservationsInfiniteQuery({
+    size: PAGE_SIZE,
+    sort: ['reservedDate,desc'],
+  })
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressBookingDetail = (bookingId: string) => {
-    navigation.navigate('BookingDetails', { id: bookingId });
+  const handlePressBookingDetail = (reservationId: number) => {
+    navigation.navigate('BookingDetails', { reservationId });
   };
 
   const handleLoadMore = () => {
@@ -45,9 +35,9 @@ export default function BookingHistoryContainer() {
     }
   };
 
-  const handlePressViewPhotos = (bookingId: string) => navigation.navigate('ViewPhotos', { id: bookingId })
+  const handlePressViewPhotos = (reservationId: number) => navigation.navigate('ViewPhotos', { reservationId })
 
-  const handlePressWriteReview = (bookingId: string) => navigation.navigate('WriteReview', { id: bookingId })
+  const handlePressWriteReview = (reservationId: number) => navigation.navigate('WriteReview', { reservationId })
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -55,12 +45,12 @@ export default function BookingHistoryContainer() {
     setIsRefreshing(false);
   };
 
-  const bookings = data?.pages.flatMap((page) => page.bookings) ?? [];
+  const reservations = data?.pages.flatMap((page) => page.content) ?? [];
 
   return (
     <BookingHistoryView
       onPressBack={handlePressBack}
-      bookings={bookings}
+      reservations={reservations}
       isLoading={isLoading}
       isError={isError}
       onLoadMore={handleLoadMore}

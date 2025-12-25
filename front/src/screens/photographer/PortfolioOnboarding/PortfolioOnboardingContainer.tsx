@@ -1,23 +1,39 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation} from '@react-navigation/native';
 import PortfolioOnboardingView, {
   PortfolioOnboardingFormData,
 } from '@/screens/photographer/PortfolioOnboarding/PortfolioOnboardingView.tsx';
-import { AuthStackParamList, MainNavigationProp } from '@/types/navigation.ts';
-
-type PortfolioOnboardingRouteProp = RouteProp<AuthStackParamList, 'PortfolioOnboarding'>;
+import { MainNavigationProp } from '@/types/navigation.ts';
+import { useAuthStore } from '@/store/authStore.ts';
+import { useConceptsQuery, useRegionsQuery } from '@/queries/meta.ts';
+import { usePatchPhotographerProfileImageMutation, useSignPhotographerMutation } from '@/mutations/photographers.ts';
+import { Alert, requestPermission } from '@/components/theme';
+import {
+  CameraOptions,
+  ImageLibraryOptions,
+  ImagePickerResponse,
+  launchCamera,
+  launchImageLibrary,
+} from 'react-native-image-picker';
+import { generateImageFilename } from '@/utils/format.ts';
 
 const TOTAL_STEPS = 7;
 
 export default function PortfolioOnboardingContainer() {
-  const route = useRoute<PortfolioOnboardingRouteProp>();
+  const { userId } = useAuthStore();
+  const { data: regions, isLoading: isLoadingRegions } = useRegionsQuery();
+  const { data: concepts, isLoading: isLoadingConcepts } = useConceptsQuery();
+
   const navigation = useNavigation<MainNavigationProp>();
-  const portfolioId = route.params?.id;
+
+  const { mutate: uploadProfileMutate } = usePatchPhotographerProfileImageMutation();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [profileImageURI, setProfileImageURI] = useState<string | undefined>(undefined);
   const [photoURIs, setPhotoURIs] = useState<string[]>([]);
+  const [completeSelectedRegions, setCompleteSelectedRegions] = useState<boolean>(false);
+  const [completeSelectedConcepts, setCompleteSelectedConcepts] = useState<boolean>(false);
 
   const {
     control,
@@ -28,8 +44,8 @@ export default function PortfolioOnboardingContainer() {
   } = useForm<PortfolioOnboardingFormData>({
     defaultValues: {
       introduction: '',
-      shootingLocations: [],
-      shootingCategories: [],
+      shootingRegions: [],
+      shootingConcepts: [],
       basePrice: '',
       shootingDuration: null,
       shootingPeople: null,
@@ -45,8 +61,8 @@ export default function PortfolioOnboardingContainer() {
   });
 
   const watchedIntroduction = watch('introduction');
-  const watchedShootingLocations = watch('shootingLocations');
-  const watchedShootingCategories = watch('shootingCategories');
+  const watchedShootingRegions = watch('shootingRegions');
+  const watchedShootingConcepts = watch('shootingConcepts');
   const watchedBasePrice = watch('basePrice');
   const watchedShootingDuration = watch('shootingDuration');
   const watchedShootingPeople = watch('shootingPeople');
@@ -71,10 +87,10 @@ export default function PortfolioOnboardingContainer() {
           return photoURIs.length >= 1;
         case 2:
           // Step3: 활동 지역 (최소 1개)
-          return watchedShootingLocations.length >= 1;
+          return watchedShootingRegions.length >= 1;
         case 3:
           // Step4: 활동 컨셉 (최소 1개)
-          return watchedShootingCategories.length >= 1;
+          return watchedShootingConcepts.length >= 1;
         case 4:
           // Step5: 촬영 정보
           return (
@@ -105,8 +121,8 @@ export default function PortfolioOnboardingContainer() {
       profileImageURI,
       photoURIs,
       watchedIntroduction,
-      watchedShootingLocations,
-      watchedShootingCategories,
+      watchedShootingRegions,
+      watchedShootingConcepts,
       watchedBasePrice,
       watchedShootingDuration,
       watchedShootingPeople,
@@ -127,9 +143,9 @@ export default function PortfolioOnboardingContainer() {
       case 1:
         return photoURIs.length >= 1;
       case 2:
-        return watchedShootingLocations.length >= 1;
+        return watchedShootingRegions.length >= 1;
       case 3:
-        return watchedShootingCategories.length >= 1;
+        return watchedShootingConcepts.length >= 1;
       case 4:
         return (
           watchedBasePrice.trim() !== '' &&
@@ -157,8 +173,8 @@ export default function PortfolioOnboardingContainer() {
     profileImageURI,
     photoURIs,
     watchedIntroduction,
-    watchedShootingLocations,
-    watchedShootingCategories,
+    watchedShootingRegions,
+    watchedShootingConcepts,
     watchedBasePrice,
     watchedShootingDuration,
     watchedShootingPeople,
@@ -195,13 +211,34 @@ export default function PortfolioOnboardingContainer() {
       // Step5에서 Step6로 넘어갈 때, '제공하지 않음' 선택 시 Step6 건너뛰기
       if (currentStep === 4 && shouldSkipStep6) {
         setCurrentStep(6);
-      } else {
-        setCurrentStep((prev) => prev + 1);
       }
+
+      if (currentStep === 2 && !isLoadingRegions) {
+        setCompleteSelectedRegions(true);
+        return;
+      }
+      if (currentStep === 3 && !isLoadingConcepts) {
+        setCompleteSelectedConcepts(true);
+        return;
+      }
+      setCurrentStep((prev) => prev + 1);
+
     } else {
       await handleSubmit(onSubmit)();
     }
   };
+
+  useEffect(() => {
+    if (isLoadingRegions && completeSelectedRegions && currentStep === 2) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  }, [isLoadingRegions, completeSelectedRegions, currentStep]);
+
+  useEffect(() => {
+    if (isLoadingConcepts && completeSelectedConcepts && currentStep === 3) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  }, [isLoadingConcepts, completeSelectedConcepts, currentStep]);
 
   const onSubmit = useCallback(
     async (data: PortfolioOnboardingFormData) => {
@@ -209,7 +246,7 @@ export default function PortfolioOnboardingContainer() {
         ...data,
         profileImageURI,
         photoURIs,
-        portfolioId,
+        userId,
       };
 
       console.log('포트폴리오 등록 데이터:', portfolioData);
@@ -229,7 +266,7 @@ export default function PortfolioOnboardingContainer() {
       // TODO: 포토폴리오 등록 API 연결
       navigation.replace('Home');
     },
-    [profileImageURI, photoURIs, portfolioId, navigation]
+    [profileImageURI, photoURIs, userId, navigation]
   );
 
   const handleProfileImageUpload = useCallback(() => {
@@ -243,34 +280,158 @@ export default function PortfolioOnboardingContainer() {
     setProfileImageURI('https://picsum.photos/200');
   }, []);
 
+  const handleCamera = useCallback(async () => {
+    requestPermission(
+      'camera',
+      async () => {
+        // 권한 허용됨 - 카메라 열기
+        const options: CameraOptions = {
+          mediaType: 'photo',
+          saveToPhotos: true,
+          quality: 0.8,
+        };
+
+        const response: ImagePickerResponse = await launchCamera(options);
+
+        console.log('Camera response:', {
+          didCancel: response.didCancel,
+          errorCode: response.errorCode,
+          errorMessage: response.errorMessage,
+          assetsLength: response.assets?.length,
+          firstAssetUri: response.assets?.[0]?.uri,
+        });
+
+        if (response.didCancel) {
+          console.log('User cancelled camera');
+          return;
+        }
+        if (response.errorCode) {
+          console.log('Camera error:', response.errorCode, response.errorMessage);
+          Alert.show({
+            title: '카메라 오류',
+            message: response.errorMessage || '알 수 없는 오류',
+          });
+          return;
+        }
+        if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
+          uploadProfileMutate({
+            image: {
+              uri: response.assets[0].uri,
+              name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
+              type: response.assets[0].type || 'image/jpeg',
+            }
+          }, {
+            onSuccess: () => {
+              Alert.show({
+                title: '성공',
+                message: '프로필 사진이 업데이트되었습니다.',
+              });
+            },
+            onError: () => {
+              Alert.show({
+                title: '오류',
+                message: '프로필 사진 업데이트에 실패했습니다.',
+              });
+            },
+          });
+          setProfileImageURI(response.assets[0].uri);
+        } else {
+          console.log('No image URI found in response');
+        }
+      }
+    );
+  }, [uploadProfileMutate]);
+
+  const handleGalleryForProfile = useCallback(async () => {
+    requestPermission(
+      'photo',
+      async () => {
+        // 권한 허용됨 - 갤러리 열기
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo',
+          selectionLimit: 1,
+          quality: 0.8,
+        };
+
+        const response: ImagePickerResponse = await launchImageLibrary(options);
+
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.show({
+            title: '갤러리 오류',
+            message: response.errorMessage || '알 수 없는 오류',
+          });
+          return;
+        }
+        if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
+          uploadProfileMutate({
+            image: {
+              uri: response.assets[0].uri,
+              name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
+              type: response.assets[0].type || 'image/jpeg',
+            }
+          }, {
+            onSuccess: () => {
+              Alert.show({
+                title: '성공',
+                message: '프로필 사진이 업데이트되었습니다.',
+              });
+            },
+            onError: () => {
+              Alert.show({
+                title: '오류',
+                message: '프로필 사진 업데이트에 실패했습니다.',
+              });
+            },
+          });
+          setProfileImageURI(response.assets[0].uri);
+        }
+      }
+      // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
+    );
+  }, [uploadProfileMutate]);
+
   const handlePhotoUpload = useCallback(() => {
-    // TODO: 이미지 업로드 로직
-    // const result = await ImagePicker.launchImageLibrary({ selectionLimit: 10 });
-    // if (result.assets) {
-    //   setPhotoURIs(result.assets.map(asset => asset.uri));
-    // }
+    Alert.show({
+      title: '프로필 사진 변경',
+      message: '프로필 사진을 어떻게 업로드하시겠습니까?',
+      buttons: [
+        {
+          text: '카메라',
+          onPress: handleCamera,
+          type: 'destructive',
+        },
+        {
+          text: '갤러리',
+          onPress: handleGalleryForProfile,
+          type: 'destructive',
+        },
+        {
+          text: '취소',
+          onPress: () => console.log('취소됨'),
+          type: 'cancel',
+        },
+      ],
+    });
+  }, [handleCamera, handleGalleryForProfile]);
 
-    // 임시: 더미 이미지 URI 추가
-    setPhotoURIs((prev) => [...prev, `https://picsum.photos/200?random=${Date.now()}`]);
-  }, []);
-
-  const handleToggleLocation = useCallback((location: string) => {
+  const handleToggleRegion = useCallback((id: number) => {
     setValue(
-      'shootingLocations',
-      watchedShootingLocations.includes(location)
-        ? watchedShootingLocations.filter((l) => l !== location)
-        : [...watchedShootingLocations, location]
+      'shootingRegions',
+      watchedShootingRegions.includes(id)
+        ? watchedShootingRegions.filter((l) => l !== id)
+        : [...watchedShootingRegions, id]
     );
-  }, [setValue, watchedShootingLocations]);
+  }, [setValue, watchedShootingRegions]);
 
-  const handleToggleCategory = useCallback((category: string) => {
+  const handleToggleConcept = useCallback((id: number) => {
     setValue(
-      'shootingCategories',
-      watchedShootingCategories.includes(category)
-        ? watchedShootingCategories.filter((c) => c !== category)
-        : [...watchedShootingCategories, category]
+      'shootingConcepts',
+      watchedShootingConcepts.includes(id)
+        ? watchedShootingConcepts.filter((c) => c !== id)
+        : [...watchedShootingConcepts, id]
     );
-  }, [setValue, watchedShootingCategories]);
+  }, [setValue, watchedShootingConcepts]);
 
   const handleToggleDay = useCallback((day: string) => {
     setValue(
@@ -296,8 +457,10 @@ export default function PortfolioOnboardingContainer() {
       onProfileImageUpload={handleProfileImageUpload}
       photoURIs={photoURIs}
       onPhotoUpload={handlePhotoUpload}
-      onToggleLocation={handleToggleLocation}
-      onToggleCategory={handleToggleCategory}
+      regions={regions ?? []}
+      concepts={concepts ?? []}
+      onToggleRegion={handleToggleRegion}
+      onToggleConcept={handleToggleConcept}
       onToggleDay={handleToggleDay}
     />
   );

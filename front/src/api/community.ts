@@ -1,7 +1,9 @@
 import { API_BASE_URL } from '@/config/api.ts';
 import { UploadImageParams } from '@/types/image.ts';
-import { buildQuery, generateImageFilename } from '@/utils/format.ts';
-import { authFetch } from '@/api/utils.ts';
+import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
+import { api, authFetch, authMultipartFetch, MultipartPart } from '@/api/utils.ts';
+import { useAuthStore } from '@/store/authStore.ts';
+import RNBlobUtil from 'react-native-blob-util';
 
 const COMMUNITY_BASE = `${API_BASE_URL}/api/community`;
 
@@ -26,29 +28,34 @@ export interface CreateCommunityPostParams {
 }
 
 export const createCommunityPost = async (data: CreateCommunityPostParams) => {
-  const formData = new FormData();
+  const url = `${COMMUNITY_BASE}/posts`;
 
-  formData.append('category', data.category);
-  formData.append('title', data.title);
-  formData.append('content', data.content);
-  data.images.forEach((img) => {
-    formData.append('images', {
-      uri: img.uri,
-      name: generateImageFilename(img.type, 'community_post'),
-      type: img.type ?? 'image/jpeg',
-    } as any);
-  });
+  const parts: MultipartPart[] = [
+    // request는 JSON 파트
+    {
+      name: 'request',
+      type: 'application/json',
+      data: JSON.stringify({
+        category: data.category,
+        title: data.title,
+        content: data.content,
+      }),
+    },
 
-  console.log(formData);
+    // images는 file 파트들
+    ...data.images.map((img) => ({
+      name: 'images',
+      filename: img.name ?? 'image.jpg',
+      type: img.type,
+      data: RNBlobUtil.wrap(img.uri.replace('file://', '')),
+    })),
+  ];
 
-  const response = await authFetch(`${COMMUNITY_BASE}/posts`, {
-    method: 'POST',
-    body: formData,
-  });
+  const res = await authMultipartFetch(url, parts, 'POST');
 
-  console.log(response);
-
-  if (!response.ok) throw new Error(`Failed to create post ${response.status}`);
+  if (res.info().status < 200 || res.info().status >= 300) {
+    throw new Error(`Failed to create post ${res.info().status}`);
+  }
 }
 
 export interface CommunityPost {
@@ -116,10 +123,10 @@ export interface GetCommunityPostsResponse {
   content: CommunityPost[];
 }
 
-export const getCommunityPosts = async (pageable: GetPageable): Promise<GetCommunityPostsResponse> => {
-  const qs = buildQuery(pageable);
+export const getCommunityPosts = async (params: GetPageable): Promise<GetCommunityPostsResponse> => {
+  const qs = buildQuery(params);
 
-  const response = await authFetch(`${COMMUNITY_BASE}/posts${qs}`, {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts?${qs}`, {
     method: 'GET',
   });
 
@@ -138,16 +145,14 @@ export const getCommunityPost = async (postId: string): Promise<CommunityPost> =
   return response.json();
 }
 
-export const getMyPosts = async (): Promise<CommunityPost[]> => {
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/me`, {
-    method: 'GET',
-  })
+export const getMyPosts = async (pageable: GetPageable): Promise<GetCommunityPostsResponse> => {
+  const qs = buildQuery(pageable ?? {});
+  const url = qs ? `${COMMUNITY_BASE}/posts/me?${qs}` : `${COMMUNITY_BASE}/posts/me`;
 
+  const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error(`Failed to get my posts ${response.status}`);
-
-  const data: GetCommunityPostsResponse = await response.json();
-  return data.content;
-}
+  return response.json();
+};
 
 export const deletePost = async (postId: string) => {
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {

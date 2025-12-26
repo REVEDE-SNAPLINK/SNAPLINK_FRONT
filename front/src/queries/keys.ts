@@ -16,17 +16,22 @@ export const communityKeys = {
   postsList: (params: Omit<GetPageable, 'page'>) =>
     [...communityKeys.posts(), 'infinite', params] as const,
   post: (postId: string) => [...communityKeys.posts(), 'detail', postId] as const,
-  myPosts: () => [...communityKeys.posts(), 'my'] as const,
   comments: (postId: string, params?: GetPageable) =>
     [...communityKeys.post(postId), 'comments', params] as const,
+  myPosts: () => [...communityKeys.all, 'posts', 'me'] as const,
+  myPostsInfinite: (pageableWithoutPage: Omit<GetPageable, 'page'>) =>
+    [...communityKeys.myPosts(), 'infinite', pageableWithoutPage] as const,
 };
 
 // User
 export const userQueryKeys = {
   all: ['user'] as const,
 
-  // 내 프로필(= /api/user/profile 같은 게 있다면 여기로)
+  // (너 기존 코드 호환용) 유저 프로필(확장 프로필 같은 걸로 쓰는 자리)
   profile: () => [...userQueryKeys.all, 'profile'] as const,
+
+  // /api/user/me
+  me: () => [...userQueryKeys.all, 'me'] as const,
 };
 
 // Photographer
@@ -41,8 +46,20 @@ export const photographersQueryKeys = {
   profilePageable: (photographerId: string, pageable: GetPageable) =>
     [...photographersQueryKeys.profile(photographerId), 'pageable', pageable] as const,
 
+  profileInfinite: (
+    photographerId: string,
+    pageableWithoutPage: Omit<GetPageable, 'page'>,
+  ) => [...photographersQueryKeys.profile(photographerId), 'infinite', pageableWithoutPage] as const,
+
   // -------- search (infinite) --------
   search: () => [...photographersQueryKeys.all, 'search'] as const,
+
+  searchMainTop3: (sort: 'createdAt,DESC' | 'averageRating,DESC') =>
+    [
+      ...photographersQueryKeys.search(),
+      'mainTop3',
+      { page: 0, size: 3, sort: [sort] } as const,
+    ] as const,
 
   searchInfinite: (
     pageableWithoutPage: Omit<GetPageable, 'page'>,
@@ -58,6 +75,13 @@ export const photographersQueryKeys = {
 
   reviewSummary: (photographerId: string) =>
     [...photographersQueryKeys.reviews(photographerId), 'summary'] as const,
+
+  scrappedMe: () => [...photographersQueryKeys.all, 'me', 'scrapped'] as const,
+  scrappedMeInfinite: (pageableWithoutPage: Omit<GetPageable, 'page'>) =>
+    [...photographersQueryKeys.scrappedMe(), 'infinite', pageableWithoutPage] as const,
+
+  scrapStatus: (photographerId: string) =>
+    [...photographersQueryKeys.all, 'scrap', 'status', photographerId] as const,
 };
 
 // Reservation
@@ -92,6 +116,8 @@ export const reservationsQueryKeys = {
 export const reviewsQueryKeys = {
   all: ['reviews'] as const,
   myReviews: () => [...reviewsQueryKeys.all, 'my'] as const,
+  myReviewsInfinite: (pageableWithoutPage: Omit<GetPageable, 'page'>) =>
+    [...reviewsQueryKeys.myReviews(), 'infinite', pageableWithoutPage] as const,
   // 특정 작가의 리뷰 목록/요약은 photographers 쪽 키를 이미 쓰고 있다면 그쪽 invalidate도 가능
   review: (reviewId: number) => [...reviewsQueryKeys.all, 'detail', reviewId] as const,
 };

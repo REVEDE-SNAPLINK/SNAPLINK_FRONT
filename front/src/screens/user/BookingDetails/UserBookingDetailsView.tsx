@@ -3,7 +3,6 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
-import { formatDateTime } from '@/utils/format.ts';
 import Icon from '@/components/Icon.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
@@ -11,11 +10,9 @@ import { ReservationStatus } from '@/api/reservations';
 
 interface UserBookingDetailsViewProps {
   onPressBack: () => void;
-  nickname: string;
   name: string;
   bookingOption: string;
-  date: string;
-  time: string;
+  datetime: string;
   additionalRequest: string;
   status: ReservationStatus;
   onPressViewPhotos?: () => void;
@@ -25,11 +22,9 @@ interface UserBookingDetailsViewProps {
 
 export default function UserBookingDetailsView({
   onPressBack,
-  nickname,
   name,
   bookingOption,
-  date,
-  time,
+  datetime,
   additionalRequest,
   status,
   onPressViewPhotos,
@@ -53,7 +48,7 @@ export default function UserBookingDetailsView({
   return (
     <ScreenContainer
       onPressBack={onPressBack}
-      headerTitle={nickname + "과 함께한 추억이에요"}
+      headerTitle="촬영 상세 내역"
       backgroundColor={theme.colors.bgSecondary}
     >
       <InfoContainer>
@@ -68,7 +63,7 @@ export default function UserBookingDetailsView({
         </Typography>
         <Description name="작가명" value={name} />
         <Description name="촬영 항목" value={bookingOption} />
-        <Description name="촬영 일시" value={formatDateTime(date, time)} />
+        <Description name="촬영 일시" value={datetime} />
         <Description name="요청 사항" value={additionalRequest} />
       </InfoContainer>
       {isCompleted && onPressViewPhotos && (

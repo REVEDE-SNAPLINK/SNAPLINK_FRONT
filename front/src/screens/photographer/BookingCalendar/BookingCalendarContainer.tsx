@@ -9,8 +9,9 @@ export default function BookingCalendarContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const userId = useAuthStore((state) => state.userId);
 
+  const today = useMemo(() => new Date(), []);
+
   // Current date and selected date state
-  const today = new Date();
   const [selectedDate, setSelectedDate] = useState<string>(
     today.toISOString().split('T')[0]
   );
@@ -66,8 +67,8 @@ export default function BookingCalendarContainer() {
     if (diffDays === 0) return '오늘';
     if (diffDays === 1) return '내일';
     if (diffDays === -1) return '어제';
-    if (diffDays > 0) return `D-${diffDays}`;
-    return `D+${Math.abs(diffDays)}`;
+    if (diffDays > 0) return `D+${diffDays}`;
+    return `D-${Math.abs(diffDays)}`;
   }, [selectedDate, today]);
 
   return (

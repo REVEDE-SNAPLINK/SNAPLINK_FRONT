@@ -31,10 +31,10 @@ export default function HistoryCard({
   type,
   datetime,
 }: HistoryCardProps) {
-  const { userType } = useAuthStore();
+  const { userType, isExpertMode } = useAuthStore();
 
   const headerTitle = (() => {
-    if (userType === 'user') {
+    if (userType === 'user' || !isExpertMode) {
       if (status === 'PENDING') return photographerNickname + '과 인생샷 건질 준비 중이에요'
       return photographerNickname + '과 함께 한 추억이에요'
     }
@@ -141,7 +141,7 @@ export default function HistoryCard({
         <Description name="촬영 항목" value={type} marginBottom={12} />
         <Description name="촬영 일시" value={datetime} />
       </InfoWrapper>
-      {userType === 'user' ? renderUserActionButtons : renderPhotographerActionButtons}
+      {userType === 'user' || !isExpertMode ? renderUserActionButtons : renderPhotographerActionButtons}
     </HistoryContainer>
   );
 }

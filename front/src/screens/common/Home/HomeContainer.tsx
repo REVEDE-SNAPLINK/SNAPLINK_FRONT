@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/user/Banner.tsx';
-import { PhotographerInfo } from '@/types/photographer.ts';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import SignupCompletionModal from '@/components/auth/SignupCompletionModal.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
+import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Query } from '@/queries/photographers.ts';
 
 const dummyBannerItems: BannerItem[] = [
   {
@@ -40,47 +40,17 @@ const dummyBannerItems: BannerItem[] = [
   },
 ];
 
-const dummyAllPhotographerItems: PhotographerInfo[] = [
-  {
-    id: '1',
-    info: '업이픽 | 인물 | 서울',
-    price: 40000
-  },
-  {
-    id: '2',
-    info: '알파 | 인물 | 경기',
-    price: 80000
-  },
-  {
-    id: '3',
-    info: '시나모 | 인물 | 서울',
-    price: 50000
-  },
-]
-
-const dummyPopularPhotographerItems: PhotographerInfo[] = [
-  {
-    id: '1',
-    info: '시나모 | 인물 | 서울',
-    price: 50000
-  },
-  {
-    id: '2',
-    info: '유시 | 인물 | 서울',
-    price: 100000
-  },
-  {
-    id: '3',
-    info: '업이픽 | 인물 | 서울',
-    price: 40000
-  },
-]
-
 export default function HomeContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const { isFirst } = useAuthStore();
 
   const [searchKey, setSearchKey] = useState('');
+
+  const { data: latest3 } = useMainPhotographersLatestTop3Query();
+  const { data: topRated3 } = useMainPhotographersTopRatedTop3Query();
+
+  const latestList = latest3?.content ?? [];
+  const topRatedList = topRated3?.content ?? [];
 
   const handlePressNotification = () => navigation.navigate('Notification');
   const handlePressAI = () => {};
@@ -90,8 +60,8 @@ export default function HomeContainer() {
   const handlePressAllPhotographer = () => {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
-  const handlePressAllPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
-  const handlePressPopularPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
+  const handlePressAllPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { photographerId });
+  const handlePressPopularPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { photographerId });
 
   return (
     <>
@@ -105,8 +75,8 @@ export default function HomeContainer() {
         onChangeSearchKey={setSearchKey}
         onSubmitSearchKey={handleSubmitSearchKey}
         bannerItems={dummyBannerItems}
-        allPhotographerItems={dummyAllPhotographerItems}
-        popularPhotographerItems={dummyPopularPhotographerItems}
+        allPhotographerItems={latestList}
+        popularPhotographerItems={topRatedList}
       />
       {isFirst && <SignupCompletionModal />}
     </>

@@ -13,7 +13,7 @@ interface BookingCalendarViewProps {
   eventDates: string[];
   dDayText: string;
   onPressBack: () => void;
-  onPressBookingItem: (bookingId: string) => void;
+  onPressBookingItem: (reservationId: number) => void;
   onSelectDate: (date: string) => void;
   onPressAddSchedule: () => void;
 }

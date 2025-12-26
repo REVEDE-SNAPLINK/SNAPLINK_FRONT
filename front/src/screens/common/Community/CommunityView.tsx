@@ -7,12 +7,13 @@ import SwapIcon from '@/assets/icons/swap.svg';
 import SearchIcon from '@/assets/icons/search.svg';
 import NotificationIcon from '@/assets/icons/notification.svg';
 import IconButton from '@/components/IconButton.tsx';
-import { Dimensions, FlatList } from 'react-native';
+import { Dimensions, FlatList, RefreshControl } from 'react-native';
 import HeartRedIcon from '@/assets/icons/heart-red.svg';
 import HeartIcon from '@/assets/icons/heart-black.svg';
 import ChatIcon from '@/assets/icons/chat-blank-black.svg';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { CommunityPost, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
+import ServerImage from '@/components/ServerImage.tsx';
 
 interface CommunityViewProps {
   posts: CommunityPost[];
@@ -22,6 +23,7 @@ interface CommunityViewProps {
   searchKey: string;
   isLoading?: boolean;
   isLoadingMore?: boolean;
+  isRefreshing?: boolean;
   onChangeSearchKey: (key: string) => void;
   onSubmitSearch: () => void;
   onPressNotification: () => void;
@@ -31,6 +33,7 @@ interface CommunityViewProps {
   onPressLike: (postId: string) => void;
   onPressWritePost: () => void;
   onLoadMore?: () => void;
+  onRefresh?: () => void;
 }
 
 const CATEGORIES = Object.entries(COMMUNITY_CATEGORIES).map(([key, value]) => ({
@@ -46,6 +49,7 @@ export default function CommunityView({
   searchKey,
   isLoading = false,
   isLoadingMore = false,
+  isRefreshing = false,
   onChangeSearchKey,
   onSubmitSearch,
   onPressNotification,
@@ -55,6 +59,7 @@ export default function CommunityView({
   onPressLike,
   onPressWritePost,
   onLoadMore,
+  onRefresh,
 }: CommunityViewProps) {
   // Add empty item if posts count is odd to align items to left
   const displayPosts = posts.length % 2 === 1
@@ -120,14 +125,19 @@ export default function CommunityView({
 
           return (
             <PostItem onPress={() => onPressPost(item.id)}>
-              <PostImage source={item.imageUrls.length > 0 ? { uri: item.imageUrls[0] } : undefined} />
+              {item.imageUrls.length > 0 ? (
+                <PostImage uri={item.imageUrls[0]} />
+              ) : (
+                <PostImage />
+              )}
               <PostContent>
                 <PostHeader>
-                  <PostWriterProfileImage
-                    source={
-                      item.author.profileImageUrl ? { uri: item.author.profileImageUrl } : undefined
-                    }
-                  />
+                  {item.author.profileImageUrl ? (
+                    <PostWriterProfileImage uri={item.author.profileImageUrl} />
+                  ) : (
+                    <PostWriterProfileImage />
+                  )
+                  }
                   <Typography fontSize={10} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
                     {item.author.nickname}
                   </Typography>
@@ -164,6 +174,15 @@ export default function CommunityView({
         contentContainerStyle={{ paddingHorizontal: 0 }}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+            />
+          ) : undefined
+        }
         ListFooterComponent={
           isLoadingMore ? (
             <LoadingIndicator>
@@ -273,7 +292,7 @@ const EmptyPostItem = styled.View`
   opacity: 0;
 `;
 
-const PostImage = styled.Image`
+const PostImage = styled(ServerImage)`
   width: ${ITEM_WIDTH}px;
   height: ${ITEM_WIDTH}px;
   background-color: #ccc;
@@ -291,7 +310,7 @@ const PostHeader = styled.View`
   margin-bottom: 5px;
 `;
 
-const PostWriterProfileImage = styled.Image`
+const PostWriterProfileImage = styled(ServerImage)`
   width: 20px;
   height: 20px;
   border-radius: 20px;

@@ -156,7 +156,7 @@ export default function FilterModal({
               />
             )}
           </ModalContent>
-          <SubmitButton text="적용하기" onPress={handleApply} marginTop={37} />
+          <SubmitButton text="적용하기" width="100%" onPress={handleApply} marginTop={37} />
         </ModalBody>
       </ModalContainer>
       </GestureDetector>

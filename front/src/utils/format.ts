@@ -1,4 +1,7 @@
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
 
 /**
  * 숫자를 comma로 포맷팅합니다.
@@ -119,26 +122,40 @@ const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 
 export const formatReservationDateTime = (
   reservedDate: string,
-  startTime: { hour: number; minute: number },
+  startTime: string,
 ): string => {
   const date = dayjs(reservedDate);
   const day = DAY_KO[date.day()]; // 0(Sun) ~ 6(Sat)
 
-  const hh = String(startTime.hour).padStart(2, '0');
-  const mm = String(startTime.minute).padStart(2, '0');
-
-  return `${date.format('YYYY.MM.DD')}(${day}) ${hh}:${mm}`;
+  return `${date.format('YYYY.MM.DD')}(${day}) ${startTime}`;
 };
 
+export const normalizeImageMime = (t?: string) => {
+  if (!t) return 'image/jpeg';
+  const lower = t.toLowerCase();
+  if (lower === 'image/jpg') return 'image/jpeg';
+  if (lower.includes('/')) return lower;
 
-export const generateImageFilename = (
-  mimeType?: string,
-  prefix = 'img',
-) => {
-  const ext = mimeType?.split('/')[1] ?? 'jpg';
-  return `${prefix}_${Date.now()}_${Math.random()
-    .toString(36)
-    .slice(2)}.${ext}`;
+  if (lower === 'jpg' || lower === 'jpeg') return 'image/jpeg';
+  if (lower === 'png') return 'image/png';
+  if (lower === 'heic') return 'image/heic';
+  return 'image/jpeg';
+};
+
+const mimeToExt = (mime: string) => {
+  switch (mime) {
+    case 'image/jpeg': return 'jpg';
+    case 'image/png': return 'png';
+    case 'image/heic': return 'heic';
+    default: return 'jpg';
+  }
+};
+
+export const generateImageFilename = (mimeType?: string, prefix = 'img') => {
+  const normalized = normalizeImageMime(mimeType);
+  const ext = mimeToExt(normalized);
+
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 };
 
 type QueryValue =
@@ -170,3 +187,11 @@ export const buildQuery = <T extends { [K in keyof T]?: QueryValue }>(
 
   return params.toString();
 };
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+export const formatChatDayjs = (iso: string) =>
+  dayjs(iso).tz('Asia/Seoul').format('A hh:mm')  // "오전 10:24"
+    .replace('AM', '오전')
+    .replace('PM', '오후');

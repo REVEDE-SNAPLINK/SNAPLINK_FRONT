@@ -1,11 +1,11 @@
 import BookingRequestView from '@/screens/user/BookingRequest/BookingRequestView.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
+import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
 import { Alert } from '@/components/theme';
 import { useCreateReservationMutation } from '@/mutations/reservations.ts';
 
-type BookingRequestRouteProp = RouteProp<UserMainStackParamList, 'BookingRequest'>;
+type BookingRequestRouteProp = RouteProp<MainStackParamList, 'BookingRequest'>;
 
 interface BookingRequestFormInputs {
   additionalRequest: string;
@@ -13,7 +13,7 @@ interface BookingRequestFormInputs {
 
 export default function BookingRequestContainer() {
   const route = useRoute<BookingRequestRouteProp>();
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
   const bookingData = route.params;
 
   const { control, handleSubmit, watch, formState: { isValid } } = useForm<BookingRequestFormInputs>({
@@ -28,15 +28,24 @@ export default function BookingRequestContainer() {
   const createReservationMutation = useCreateReservationMutation();
 
   const onSubmit = (data: BookingRequestFormInputs) => {
-    // Parse time string "HH:mm" to hour and minute
-    const [hour, minute] = bookingData.time.split(':').map(Number);
+    // Combine date and time to create ISO shootingDate
+    const shootingDate = new Date(`${bookingData.date}T${bookingData.time}:00`).toISOString();
+
+    // Only include required option in API transmission
+    // optionalOptions are used for display and price calculation only
+    const options: number[] = [];
+
+    // Add required option if checked
+    if (bookingData.requiredOptionChecked && bookingData.requiredOptionId) {
+      options.push(bookingData.requiredOptionId);
+    }
 
     createReservationMutation.mutate({
       photographerId: bookingData.photographerId,
-      reservationDate: bookingData.date,
-      startTime: { hour, minute, second: 0, nano: 0 },
-      service: bookingData.requiredOptionId, // TODO: 서비스 이름이 맞는지 확인
-      details: data.additionalRequest,
+      shootingDate,
+      options,
+      requirement: data.additionalRequest,
+      totalAmount: bookingData.totalPrice,
     }, {
       onSuccess: () => {
         Alert.show({

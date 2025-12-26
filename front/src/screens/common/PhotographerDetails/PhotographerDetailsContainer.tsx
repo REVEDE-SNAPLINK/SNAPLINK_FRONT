@@ -2,46 +2,45 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
-import { usePhotographerProfileQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
+import { usePhotographerProfileInfiniteQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
+import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
+import { LatestReviewSummaryItem } from '@/api/photographers.ts';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
 export default function PhotographerDetailsContainer() {
   const route = useRoute<PhotographerDetailsRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
-  const { id: photographerId } = route.params;
+  const { photographerId } = route.params;
 
-  const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews'>('portfolio');
 
   // Fetch photographer profile (includes portfolio thumbnails)
   const {
-    data: profileData,
+    data: profilePages,
     isLoading: isLoadingPhotographer,
-  } = usePhotographerProfileQuery(photographerId, { page: 0, size: 18 });
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePhotographerProfileInfiniteQuery(photographerId, { size: 18 });
 
   // Fetch review summary
   const { data: reviewSummary } = usePhotographerReviewSummaryQuery(photographerId);
 
-  // Portfolio images from profile response
-  const portfolioImages = useMemo(() => {
-    if (!profileData?.portfolios) return [];
-    return profileData.portfolios.map((p) => ({
-      id: String(p.id),
-      url: p.thumbnailUrl,
-    }));
-  }, [profileData]);
+  // Scrap mutation
+  const scrapMutation = useTogglePhotographerScrapMutation();
 
-  // Transform profile data to photographer object
-  const photographer = profileData
-    ? {
-        id: photographerId,
-        name: profileData.nickname,
-        profileImageUrl: profileData.profileImageUrl,
-        description: profileData.description,
-        // TODO: basePrice, baseTime 등 추가 정보는 별도 API에서 가져와야 할 수 있음
-      }
-    : null;
+  // Get photographer data from first page (profile info is same across all pages)
+  const profileData = useMemo(() => {
+    if (!profilePages?.pages?.[0]) return null;
+    return profilePages.pages[0];
+  }, [profilePages]);
+
+  // Flatten all portfolios from all pages
+  const allPortfolios = useMemo(() => {
+    if (!profilePages?.pages) return [];
+    return profilePages.pages.flatMap((page) => page.portfolios || []);
+  }, [profilePages]);
 
   // Handlers
   const handlePressBack = useCallback(() => {
@@ -54,11 +53,8 @@ export default function PhotographerDetailsContainer() {
   }, [navigation]);
 
   const handlePressFavorite = useCallback(() => {
-    setIsFavorite((prev) => !prev);
-    // TODO: API call to toggle favorite
-    // POST /api/user/favorites/{photographerId}
-    console.log('Toggle favorite:', isFavorite ? 'remove' : 'add');
-  }, [isFavorite]);
+    scrapMutation.mutate(photographerId);
+  }, [scrapMutation, photographerId]);
 
   const handlePressInquiry = useCallback(() => {
     // TODO: Open chat with photographer
@@ -67,21 +63,20 @@ export default function PhotographerDetailsContainer() {
   }, []);
 
   const handlePressReservation = useCallback(() => {
-    navigation.navigate('Booking', { id: photographerId });
+    navigation.navigate('Booking', { photographerId });
   }, [navigation, photographerId]);
 
-  // TODO: Portfolio infinite scroll - need separate API endpoint
-  // const handleEndReached = useCallback(() => {
-  //   if (hasNextPage && !isFetchingNextPage) {
-  //     fetchNextPage();
-  //   }
-  // }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleTabChange = useCallback((tab: 'portfolio' | 'reviews') => {
     setActiveTab(tab);
   }, []);
 
-  const handlePressPortfolioImage = useCallback((imageId: string) => {
+  const handlePressPortfolioImage = useCallback((imageId: number) => {
     navigation.navigate('PostDetail', { postId: imageId });
   }, [navigation]);
 
@@ -94,33 +89,35 @@ export default function PhotographerDetailsContainer() {
   }, [navigation, photographerId]);
 
   // Transform review summary to view model
-  const reviews = reviewSummary?.latestReviews.map((r) => ({
-    id: String(r.createdAt), // Temporary ID (review summary doesn't have reviewId)
-    content: r.content,
-    date: r.createdAt,
-    imageUrl: r.photoKey,
-  })) || [];
+  const reviews =
+    Array.isArray(reviewSummary?.latestReviews)
+      ? reviewSummary.latestReviews.map((r: LatestReviewSummaryItem) => ({
+        id: r.createdAt,
+        content: r.content,
+        date: r.createdAt,
+        imageUrl: r.photoKey,
+      }))
+      : [];
 
   return (
     <PhotographerDetailsView
-      photographer={photographer}
-      portfolioImages={portfolioImages}
+      photographer={profileData}
+      portfolioImages={allPortfolios}
       isLoadingPhotographer={isLoadingPhotographer}
-      isFetchingNextPage={false}
+      isFetchingNextPage={isFetchingNextPage}
       activeTab={activeTab}
-      responseRate={profileData?.responseRate || 0}
-      avgResponseTime={profileData?.responseTime || '-'}
       portfolioCount={profileData?.portfolioCount || 0}
       reviewCount={reviewSummary?.totalReviewCount || profileData?.reviewCount || 0}
       avgRating={reviewSummary?.averageRating || 0}
       reviewPreviewImages={reviewSummary?.topPhotoKeys || []}
       reviews={reviews}
+      isScrapped={profileData?.scrapped || false}
       onPressBack={handlePressBack}
       onPressUpload={handlePressUpload}
       onPressFavorite={handlePressFavorite}
       onPressInquiry={handlePressInquiry}
       onPressReservation={handlePressReservation}
-      // onEndReached={handleEndReached}
+      onEndReached={handleEndReached}
       onTabChange={handleTabChange}
       onPressPortfolioImage={handlePressPortfolioImage}
       onPressShowAllReviews={handlePressShowAllReviews}

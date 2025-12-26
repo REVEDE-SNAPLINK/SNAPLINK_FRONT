@@ -4,8 +4,8 @@ import SearchPhotographerView from '@/screens/common/SearchPhotographer/SearchPh
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
 import { useSearchPhotographersInfiniteQuery } from '@/queries/photographers.ts';
-import { SearchPhotographersBody, Gender } from '@/api/photographers.ts';
-import { Photographer } from '@/types/photographer.ts';
+import { SearchPhotographersBody, PhotographerSearchItem } from '@/api/photographers.ts';
+import { useRegionsQuery, useConceptsQuery } from '@/queries/meta.ts';
 
 import CameraIcon from '@/assets/icons/camera.svg';
 import SendIcon from '@/assets/icons/send.svg';
@@ -18,69 +18,56 @@ import ActiveProfileIcon from '@/assets/icons/profile-white.svg';
 
 type SearchPhotographerRouteProp = RouteProp<MainStackParamList, 'SearchPhotographer'>;
 
-/**
- * Filter categories configuration
- * In production, ENUM items should be fetched from DB
- */
-const FILTER_CATEGORIES: FilterCategory[] = [
-  {
-    id: 'shooting-type',
-    name: '촬영 유형',
-    type: 'ENUM',
-    icon: CameraIcon,
-    activeIcon: ActiveCameraIcon,
-    items: ['인물', '웨딩', '사물', '반려동물'], // TODO: Fetch from DB
-  },
-  {
-    id: 'region',
-    name: '지역',
-    type: 'ENUM',
-    icon: SendIcon,
-    activeIcon: ActiveSendIcon,
-    items: [
-      '서울',
-      '경기',
-      '인천',
-      '부산',
-      '울산',
-      '경남',
-      '대구',
-      '경북',
-      '충청',
-      '대전',
-      '세종',
-      '전남',
-      '전북',
-      '광주',
-      '강원',
-      '제주',
-    ], // TODO: Fetch from DB
-  },
-  {
-    id: 'price',
-    name: '가격',
-    type: 'NUMBER',
-    icon: DiscountIcon,
-    activeIcon: ActiveDiscountIcon,
-    min: 5000,
-    max: 1000000,
-    unit: '원',
-  },
-  {
-    id: 'gender',
-    name: '성별',
-    type: 'ENUM',
-    icon: ProfileIcon,
-    activeIcon: ActiveProfileIcon,
-    items: ['여성작가', '남성작가'], // TODO: Fetch from DB
-  },
-];
-
 const PAGE_SIZE = 10;
 
 export default function SearchPhotographerContainer() {
   const route = useRoute<SearchPhotographerRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
+
+  // Fetch meta data for filters
+  const { data: regions = [] } = useRegionsQuery();
+  const { data: concepts = [] } = useConceptsQuery();
+
+  /**
+   * Filter categories configuration
+   * Dynamically populated from meta APIs
+   */
+  const FILTER_CATEGORIES = useMemo<FilterCategory[]>(() => [
+    {
+      id: 'shooting-type',
+      name: '촬영 유형',
+      type: 'ENUM',
+      icon: CameraIcon,
+      activeIcon: ActiveCameraIcon,
+      items: concepts.map((concept: { id: number; conceptName: string }) => concept.conceptName),
+    },
+    {
+      id: 'region',
+      name: '지역',
+      type: 'ENUM',
+      icon: SendIcon,
+      activeIcon: ActiveSendIcon,
+      items: regions.map((region: { id: number; city: string }) => region.city),
+    },
+    {
+      id: 'price',
+      name: '가격',
+      type: 'NUMBER',
+      icon: DiscountIcon,
+      activeIcon: ActiveDiscountIcon,
+      min: 5000,
+      max: 1000000,
+      unit: '원',
+    },
+    {
+      id: 'gender',
+      name: '성별',
+      type: 'ENUM',
+      icon: ProfileIcon,
+      activeIcon: ActiveProfileIcon,
+      items: ['여성작가', '남성작가'],
+    },
+  ], [regions, concepts]);
 
   const [searchKey, setSearchKey] = useState(route.params.searchKey);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -129,7 +116,7 @@ export default function SearchPhotographerContainer() {
     });
 
     return chips;
-  }, [selectedFilters]);
+  }, [selectedFilters, FILTER_CATEGORIES]);
 
   /**
    * Get list of category IDs that have active filters
@@ -153,12 +140,29 @@ export default function SearchPhotographerContainer() {
         if (genderValue === '여성작가') body.gender = 'WOMAN';
         else if (genderValue === '남성작가') body.gender = 'MAN';
       } else if (filter.categoryId === 'region' && filter.type === 'ENUM') {
-        // TODO: region name -> regionId 매핑 필요
-        // 지금은 지역 필터를 무시 (regionIds 없음)
-        // body.regionIds = filter.values.map(region => getRegionId(region));
+        // Map region names to regionIds
+        const regionIds = filter.values
+          .map((regionName) => {
+            const region = regions.find((r) => r.city === regionName);
+            return region ? region.id : null;
+          })
+          .filter((id): id is number => id !== null);
+
+        if (regionIds.length > 0) {
+          body.regionIds = regionIds;
+        }
       } else if (filter.categoryId === 'shooting-type' && filter.type === 'ENUM') {
-        // TODO: shooting-type -> conceptIds 매핑 필요
-        // body.conceptIds = filter.values.map(concept => getConceptId(concept));
+        // Map concept names to conceptIds
+        const conceptIds = filter.values
+          .map((conceptName) => {
+            const concept = concepts.find((c: { id: number; conceptName: string }) => c.conceptName === conceptName);
+            return concept ? concept.id : null;
+          })
+          .filter((id): id is number => id !== null);
+
+        if (conceptIds.length > 0) {
+          body.conceptIds = conceptIds;
+        }
       } else if (filter.categoryId === 'price' && filter.type === 'NUMBER') {
         body.minPrice = filter.min;
         body.maxPrice = filter.max;
@@ -166,7 +170,7 @@ export default function SearchPhotographerContainer() {
     });
 
     return body;
-  }, [searchKey, selectedFilters]);
+  }, [searchKey, selectedFilters, regions, concepts]);
 
   /**
    * Infinite query for photographer search
@@ -186,7 +190,7 @@ export default function SearchPhotographerContainer() {
   /**
    * Flatten paginated data into single array
    */
-  const photographers = useMemo<Photographer[]>(() => {
+  const photographers = useMemo<PhotographerSearchItem[]>(() => {
     if (!data) return [];
     return data.pages.flatMap((page) => page.content);
   }, [data]);
@@ -229,7 +233,7 @@ export default function SearchPhotographerContainer() {
     refetch();
   };
 
-  const handlePressPhotographer = (photographerId: string) => navigation.navigate('PhotographerDetails', { id: photographerId });
+  const handlePressPhotographer = (photographerId: string) => navigation.navigate('PhotographerDetails', { photographerId });
 
   /**
    * Remove all filters for a category when category chip is clicked

@@ -9,9 +9,16 @@ export default function ChatContainer() {
   // Fetch chat rooms
   const { data: chatRooms = [] } = useChatRoomsQuery();
 
-  const handlePressChatRoom = (chatRoomId: string) => {
-    navigation.navigate('ChatDetails', { chatRoomId });
+  const handlePressChatRoom = (chatRoomId: number, opponentId: string) => {
+    const room = chatRooms.find((r) => r.roomId === chatRoomId);
+    const profileImageURI = room?.opponentProfileImageUrl || '';
+    navigation.navigate('ChatDetails', { chatRoomId, opponentProfileImageURI: profileImageURI, opponentId });
   };
 
-  return <ChatView chatRooms={chatRooms} onPressChatRoom={handlePressChatRoom} />;
+  return (
+    <ChatView
+      chatRooms={chatRooms}
+      onPressChatRoom={handlePressChatRoom}
+    />
+  )
 }

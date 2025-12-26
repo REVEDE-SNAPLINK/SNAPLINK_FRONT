@@ -3,32 +3,49 @@ import { authFetch } from '@/api/utils';
 
 const USER_BASE = `${API_BASE_URL}/api/user`;
 
-// TODO: 백엔드 API 추가 필요
-// /** 사용자 프로필 정보 */
-// export interface UserProfile {
-//   userId: string;
-//   email: string;
-//   name: string;
-//   nickname: string;
-//   profileImage?: string;
-//   phoneNumber?: string;
-// }
+/** GET /api/user/me 응답 */
+export interface GetMeResponse {
+  nickname: string;
+  name: string;
+  email: string;
+}
 
-// /**
-//  * GET /api/user/profile
-//  * 사용자 프로필 조회
-//  */
-// export const getUserProfile = async (): Promise<UserProfile> => {
-//   const response = await authFetch(`${USER_BASE}/profile`, {
-//     method: 'GET',
-//   });
-//
-//   if (!response.ok) {
-//     throw new Error(`Failed to get user profile ${response.status}`);
-//   }
-//
-//   return response.json();
-// };
+/** PATCH /api/user/me body */
+export interface PatchMeRequest {
+  nickname?: string;
+  email?: string;
+}
+
+/**
+ * GET /api/user/me
+ * 내 기본 프로필 조회 (nickname, name, email)
+ */
+export const getMe = async (): Promise<GetMeResponse> => {
+  const response = await authFetch(`${USER_BASE}/me`, { method: 'GET' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get me ${response.status}`);
+  }
+
+  return response.json();
+};
+
+/**
+ * PATCH /api/user/me
+ * 내 기본 프로필 수정 (nickname/email 부분 업데이트 가능)
+ */
+export const patchMe = async (body: PatchMeRequest): Promise<GetMeResponse> => {
+  const response = await authFetch(`${USER_BASE}/me`, {
+    method: 'PATCH',
+    json: body, // authFetch가 stringify + Content-Type 처리
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to patch me ${response.status}`);
+  }
+
+  return response.json();
+};
 
 /** 프로필 이미지 업로드/변경 (multipart/form-data) */
 export interface PatchUserProfileImageParams {

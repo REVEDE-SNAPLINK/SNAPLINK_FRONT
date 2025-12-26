@@ -1,16 +1,16 @@
 import UserBookingDetailsView from '@/screens/user/BookingDetails/UserBookingDetailsView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
 import { useReservationDetailQuery } from '@/queries/reservations.ts';
+import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
-type BookingDetailsRouteProp = RouteProp<UserMainStackParamList, 'BookingDetails'>;
+type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
 export default function UserBookingDetailsContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingDetailsRouteProp>();
   const { reservationId } = route.params;
 
-  const { data: bookingDetails, isLoading } = useReservationDetailQuery(reservationId);
+  const { data: reservationDetails, isLoading } = useReservationDetailQuery(reservationId);
 
   const handlePressBack = () => navigation.goBack();
 
@@ -18,15 +18,13 @@ export default function UserBookingDetailsContainer() {
 
   const handlePressWriteReview = () => navigation.navigate('WriteReview', { reservationId });
 
-  if (!bookingDetails) {
+  if (!reservationDetails) {
     return (
       <UserBookingDetailsView
         onPressBack={handlePressBack}
-        nickname=""
         name=""
         bookingOption=""
-        date=""
-        time=""
+        datetime=""
         additionalRequest=""
         status="REQUESTED"
         isLoading={isLoading}
@@ -34,26 +32,21 @@ export default function UserBookingDetailsContainer() {
     );
   }
 
-  const canViewPhotos = bookingDetails.status === 'DELIVERED' || bookingDetails.status === 'REVIEWED';
-  const canWriteReview = bookingDetails.status === 'DELIVERED';
-
-  // Format time from LocalTime
-  const formatTime = (time: { hour: number; minute: number }) => {
-    const hour = String(time.hour).padStart(2, '0');
-    const minute = String(time.minute).padStart(2, '0');
-    return `${hour}:${minute}`;
-  };
+  const canViewPhotos = reservationDetails.status === 'DELIVERED' || reservationDetails.status === 'REVIEWED';
+  const canWriteReview = reservationDetails.status === 'DELIVERED';
+  const shootingOptions =
+    Array.isArray(reservationDetails.shootingOptions)
+      ? reservationDetails.shootingOptions.join(', ')
+      : '';
 
   return (
     <UserBookingDetailsView
       onPressBack={handlePressBack}
-      nickname={bookingDetails.counterpartNickname}
-      name={bookingDetails.counterpartName || ''}
-      bookingOption={bookingDetails.service}
-      date={bookingDetails.reservationDate}
-      time={formatTime(bookingDetails.startTime)}
-      additionalRequest={bookingDetails.details || ''}
-      status={bookingDetails.status}
+      name={reservationDetails.photographerName}
+      bookingOption={shootingOptions}
+      datetime={reservationDetails.shootingDateTime}
+      additionalRequest={reservationDetails.requirement}
+      status={reservationDetails.status}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       onPressWriteReview={canWriteReview ? handlePressWriteReview : undefined}
       isLoading={isLoading}

@@ -6,11 +6,11 @@ import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
 import { formatReservationDateTime } from '@/utils/format';
-import { ReservationListItem } from '@/api/reservations.ts';
+import { UserReservationListItem } from '@/api/reservations.ts';
 
 interface BookingHistoryViewProps {
   onPressBack: () => void;
-  reservations: ReservationListItem[];
+  reservations: UserReservationListItem[];
   isLoading: boolean;
   isError: boolean;
   onLoadMore: () => void;
@@ -38,7 +38,7 @@ export default function BookingHistoryView({
   onPressWriteReview,
 }: BookingHistoryViewProps) {
   const mapStatusToHistoryCardStatus = (
-    status: ReservationListItem['status']
+    status: UserReservationListItem['status']
   ): 'PENDING' | 'CONFIRMED' | 'COMPLETED' => {
     switch (status) {
       case 'REQUESTED':
@@ -55,17 +55,17 @@ export default function BookingHistoryView({
     }
   };
 
-  const renderItem = ({ item }: { item: ReservationListItem }) => {
+  const renderItem = ({ item }: { item: UserReservationListItem }) => {
     const isCompleted = mapStatusToHistoryCardStatus(item.status) === 'COMPLETED';
 
     return (
       <HistoryCard
         onPress={() => onPressBookingDetail(item.reservationId)}
         status={mapStatusToHistoryCardStatus(item.status)}
-        photographerNickname={item.counterpartName}
-        photographerName={item.counterpartName}
-        type="" // TODO: api 추가되면 추가
-        datetime={formatReservationDateTime(item.reservedDate, { hour: item.startTime.hour, minute: item.startTime.minute })}
+        photographerNickname={item.photographerNickname}
+        photographerName={item.photographerName}
+        type={item.type} // TODO: api 추가되면 추가
+        datetime={formatReservationDateTime(item.reservedDate, item.startTime)}
         onPressViewPhotos={
           isCompleted && onPressViewPhotos
             ? () => onPressViewPhotos(item.reservationId)

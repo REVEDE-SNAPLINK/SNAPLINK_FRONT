@@ -1,14 +1,10 @@
-// TODO: 백엔드 API 추가 후 활성화
-// import { useQuery } from '@tanstack/react-query';
-// import { getUserProfile } from '@/api/user';
-// import { userQueryKeys } from '@/queries/keys';
+import { useQuery } from '@tanstack/react-query';
+import { userQueryKeys } from '@/queries/keys';
+import { getMe } from '@/api/user';
 
-// /**
-//  * 사용자 프로필 조회
-//  */
-// export const useUserProfileQuery = () =>
-//   useQuery({
-//     queryKey: userQueryKeys.profile(),
-//     queryFn: getUserProfile,
-//     staleTime: 1000 * 60 * 5, // 5분 정도 캐시
-//   });
+export const useMeQuery = () =>
+  useQuery({
+    queryKey: userQueryKeys.me(),
+    queryFn: getMe,
+    staleTime: 1000 * 30,
+  });

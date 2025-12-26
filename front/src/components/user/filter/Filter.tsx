@@ -156,8 +156,8 @@ const SelectedFilterChip = ({ label, onRemove }: SelectedFilterChipProps) => {
         {label}
       </Typography>
       <Icon
-        width={14}
-        height={14}
+        width={8}
+        height={8}
         Svg={CancelIcon} />
     </SelectedFilterChipButton>
   );

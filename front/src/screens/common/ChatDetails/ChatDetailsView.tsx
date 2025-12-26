@@ -11,20 +11,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import IconButton from '@/components/IconButton.tsx';
 import ImageIcon from '@/assets/icons/image.svg'
 import PaperPlusIcon from '@/assets/icons/paper-plus.svg'
-
-interface Message {
-  id: string;
-  senderId: string;
-  senderNickname: string;
-  senderProfileImage: string;
-  content: string;
-  timestamp: string; // "오후 1:10"
-  isMine: boolean;
-}
+import { ChatMessage } from '@/api/chat.ts';
+import { formatChatDayjs } from '@/utils/format.ts';
 
 interface ChatDetailsViewProps {
   partnerNickname: string;
-  messages: Message[];
+  opponentId: string;
+  opponentProfileImageURI: string;
+  messages: ChatMessage[];
   messageInput: string;
   onChangeMessageInput: (text: string) => void;
   onPressSend: () => void;
@@ -33,10 +27,14 @@ interface ChatDetailsViewProps {
   onPressRecommendedMessage: (message: string) => void;
   onPressAlbum?: () => void;
   onPressFile?: () => void;
+  onLoadMore?: () => void;
+  isFetchingNextPage?: boolean;
 }
 
 export default function ChatDetailsView({
   partnerNickname,
+  opponentId,
+  opponentProfileImageURI,
   messages,
   messageInput,
   onChangeMessageInput,
@@ -46,6 +44,8 @@ export default function ChatDetailsView({
   onPressRecommendedMessage,
   onPressAlbum,
   onPressFile,
+  onLoadMore,
+  isFetchingNextPage,
 }: ChatDetailsViewProps) {
   const insets = useSafeAreaInsets();
   const [showExtraButtons, setShowExtraButtons] = useState(false);
@@ -57,13 +57,13 @@ export default function ChatDetailsView({
     setShowExtraButtons(!showExtraButtons);
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
-    if (item.isMine) {
+  const renderMessage = ({ item }: { item: ChatMessage }) => {
+    if (opponentId !== item.senderId) {
       // 내 메시지
       return (
         <MyMessageContainer>
           <MessageTime fontSize={10} color="#AAAAAA">
-            {item.timestamp}
+            {formatChatDayjs(item.sentAt)}
           </MessageTime>
           <MyMessageBubble>
             <MessageText fontSize={14} color="#fff">
@@ -76,7 +76,7 @@ export default function ChatDetailsView({
       // 상대방 메시지
       return (
         <PartnerMessageContainer>
-          <PartnerProfileImage source={{ uri: item.senderProfileImage }} />
+          <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
           <PartnerMessageContent>
             <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
               {item.senderNickname}
@@ -88,7 +88,7 @@ export default function ChatDetailsView({
                 </MessageText>
               </PartnerMessageBubble>
               <MessageTime fontSize={10} color="#AAAAAA">
-                {item.timestamp}
+                {formatChatDayjs(item.sentAt)}
               </MessageTime>
             </PartnerMessageRow>
           </PartnerMessageContent>
@@ -106,16 +106,26 @@ export default function ChatDetailsView({
       <KeyboardAvoidingView
         style={{ flex: 1, width: "100%" }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
       >
         {/* 채팅 내역 */}
         <MessagesContainer>
           <FlatList
             data={messages}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => `${item.senderId}-${item.sentAt}-${index}`}
             renderItem={renderMessage}
             contentContainerStyle={{ padding: 16 }}
-            inverted
+            onEndReached={onLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <LoadingContainer>
+                  <Typography fontSize={12} color="#AAAAAA">
+                    로딩 중...
+                  </Typography>
+                </LoadingContainer>
+              ) : null
+            }
           />
         </MessagesContainer>
 
@@ -243,6 +253,7 @@ const InputRow = styled.View`
   flex-direction: row;
   align-items: center;
   width: 100%;
+  padding: 15px 18px;
 `;
 
 const CrossButton = styled.TouchableOpacity<{ showExtraButtons: boolean }>`
@@ -261,7 +272,6 @@ const SearchInputWrapper = styled.View<{ hasInputValue: boolean }>`
   border: 1px solid ${({ hasInputValue }) => hasInputValue ? theme.colors.primary : theme.colors.disabled};
   border-radius: 8px;
   height: 41px;
-  margin-left: 13px;
   align-items: center;
 `;
 
@@ -282,7 +292,7 @@ const MyMessageContainer = styled.View`
 `;
 
 const MyMessageBubble = styled.View`
-  background-color: #69DABF;
+  background-color: #00A980;
   border-radius: 12px;
   padding: 10px 15px;
   max-width: 70%;
@@ -325,4 +335,10 @@ const PartnerMessageBubble = styled.View`
   padding: 10px 15px;
   max-width: 70%;
   margin-right: 5px;
+`;
+
+const LoadingContainer = styled.View`
+  padding: 16px;
+  align-items: center;
+  justify-content: center;
 `;

@@ -14,16 +14,18 @@ import { Alert } from '@/components/theme';
 import { usePatchUserProfileImageMutation } from '@/mutations/user.ts';
 import { usePatchPhotographerProfileImageMutation } from '@/mutations/photographers.ts';
 import { generateImageFilename } from '@/utils/format.ts';
+import { useMeQuery } from '@/queries/user.ts';
+import { useState } from 'react';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
   const { userType, isExpertMode, toggleExpertMode: toggleExpertModeAction } = useAuthStore();
 
+  const [ profileImageURI, setProfileImageURI ] = useState<string | null>(null);
+
   const isPhotographer = userType === 'photographer';
 
-  // TODO: 사용자 프로필 조회 API 필요 (GET /api/user/profile)
-  // 현재는 임시로 빈 값 사용
-  // const { data: userProfile, isLoading } = useUserProfileQuery();
+  const { data: userProfile } = useMeQuery();
 
   // Upload profile image mutation
   const updateUserProfileImageMutation = usePatchUserProfileImageMutation();
@@ -34,7 +36,18 @@ export default function ProfileContainer () {
     : updateUserProfileImageMutation;
 
   const handleToggleExpertMode = () => {
-    toggleExpertModeAction();
+    // const title = isExpertMode ? '고객으로 전환' : '전문가로 전환';
+    // const message = isExpertMode ? '고객 모드로 전환하시겠습니까?' : '전문가 모드로 전환하시겠습니까?'
+    //
+    // Alert.show({
+    //   title,
+    //   message,
+    //   buttons: [
+    //     { text: '전환', onPress: () => toggleExpertModeAction() },
+    //     { text: '취소', onPress: () => {}, type: 'cancel' },
+    //   ]
+    // })
+    toggleExpertModeAction()
   };
 
   const handleCamera = async () => {
@@ -91,6 +104,7 @@ export default function ProfileContainer () {
               });
             },
           });
+          setProfileImageURI(response.assets[0].uri);
         } else {
           console.log('No image URI found in response');
         }
@@ -141,6 +155,7 @@ export default function ProfileContainer () {
               });
             },
           });
+          setProfileImageURI(response.assets[0].uri);
         }
       }
       // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
@@ -187,24 +202,20 @@ export default function ProfileContainer () {
 
   const handlePressEditNickname = () => navigation.navigate('NicknameEdit');
 
-  const handlePressEditName = () => navigation.navigate('NameEdit');
-
   const handlePressEditEmail = () => navigation.navigate('EmailEdit');
 
   const handlePressManageAccount = () => navigation.navigate('AccountManage');
 
   const handlePressBookingHistory = () => {
-    // TODO: Navigate to BookingManage screen (already exists)
     navigation.navigate('BookingHistory');
   };
 
-  const handlePressSnaplinkGuide = () => {
-    // TODO: Navigate to SnaplinkGuide screen
-    Alert.show({
-      title: '준비중',
-      message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
-    });
-  };
+  // const handlePressSnaplinkGuide = () => {
+  //   Alert.show({
+  //     title: '준비중',
+  //     message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
+  //   });
+  // };
 
   const handlePressManageBooking = () => {
     if (!isPhotographer) {
@@ -238,13 +249,12 @@ export default function ProfileContainer () {
     }
   }
 
-  const handlePressSnaplinkPhotographerGuide = () => {
-    // TODO: Navigate to SnaplinkGuide screen
-    Alert.show({
-      title: '준비중',
-      message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
-    });
-  };
+  // const handlePressSnaplinkPhotographerGuide = () => {
+  //   Alert.show({
+  //     title: '준비중',
+  //     message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
+  //   });
+  // };
 
 
   const handlePressCustomerCenter = () => {
@@ -287,25 +297,24 @@ export default function ProfileContainer () {
       onPressMyPosts={handlePressMyPosts}
       onPressNotificationSettings={handlePressNotificationSettings}
       onPressEditNickname={handlePressEditNickname}
-      onPressEditName={handlePressEditName}
       onPressEditEmail={handlePressEditEmail}
       onPressManageAccount={handlePressManageAccount}
       onPressBookingHistory={handlePressBookingHistory}
-      onPressSnaplinkGuide={handlePressSnaplinkGuide}
+      // onPressSnaplinkGuide={handlePressSnaplinkGuide}
       onPressCustomerCenter={handlePressCustomerCenter}
       onPressManageBooking={handlePressManageBooking}
       onPressManageShootService={handlePressShootService}
       onPressManagePortfolio={handlePressManagePortfolio}
-      onPressSnaplinkPhotographerGuide={handlePressSnaplinkPhotographerGuide}
+      // onPressSnaplinkPhotographerGuide={handlePressSnaplinkPhotographerGuide}
       onPressNotice={handlePressNotice}
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}
       isExpertMode={isExpertMode}
       isPhotographer={isPhotographer}
-      profileImageURI={''}
-      nickname={'사용자'}
-      name={'이름 없음'}
-      email={'이메일 없음'}
+      profileImageURI={profileImageURI !== null ? profileImageURI : ''}
+      nickname={userProfile?.nickname || ''}
+      name={userProfile?.name || ''}
+      email={userProfile?.email || ''}
     />
   );
 }

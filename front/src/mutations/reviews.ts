@@ -12,6 +12,9 @@ import {
 import { reviewsQueryKeys } from '@/queries/keys';
 import { photographersQueryKeys } from '@/queries/keys';
 import { reservationsQueryKeys } from '@/queries/keys'; // reservations 키가 keys.ts에 있으면
+import { deleteMockReview, updateMockReview } from '@/__dev__/mockReviews';
+
+const USE_MOCK_DATA = __DEV__;
 
 /** 리뷰 답글 작성(작가 전용) */
 export const useCreateReviewReplyMutation = (photographerId?: string) => {
@@ -63,7 +66,27 @@ export const useUpdateReviewMutation = (photographerId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: UpdateReviewParams) => updateReview(params),
+    mutationFn: async (params: UpdateReviewParams) => {
+      if (USE_MOCK_DATA) {
+        console.log('🎭 [DEV MODE] Updating mock review:', params.reviewId);
+        return new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+            const success = updateMockReview(params.reviewId, {
+              rating: params.request.rating,
+              shootingTag: params.request.shootingTag,
+              content: params.request.content,
+              // images는 별도 처리 필요 시 추가
+            });
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Mock review not found'));
+            }
+          }, 300);
+        });
+      }
+      return updateReview(params);
+    },
     onSuccess: async (_, vars) => {
       // 리뷰 수정 후 갱신:
       // - 내 리뷰 목록
@@ -88,7 +111,22 @@ export const useDeleteReviewMutation = (photographerId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (reviewId: number) => deleteReview(reviewId),
+    mutationFn: async (reviewId: number) => {
+      if (USE_MOCK_DATA) {
+        console.log('🎭 [DEV MODE] Deleting mock review:', reviewId);
+        return new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+            const success = deleteMockReview(reviewId);
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Mock review not found'));
+            }
+          }, 300);
+        });
+      }
+      return deleteReview(reviewId);
+    },
     onSuccess: async () => {
       // 리뷰 삭제 후 갱신:
       // - 내 리뷰 목록

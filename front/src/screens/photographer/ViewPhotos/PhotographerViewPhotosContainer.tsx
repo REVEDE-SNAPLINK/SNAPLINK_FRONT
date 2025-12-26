@@ -1,46 +1,26 @@
 import { useState } from 'react';
+import { pick, types } from '@react-native-documents/picker';
 import PhotographerViewPhotosView from '@/screens/photographer/ViewPhotos/PhotographerViewPhotosView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { PhotographerMainNavigationProp, PhotographerMainStackParamList } from '@/types/photographerNavigation.ts';
-import { useQuery } from '@tanstack/react-query';
 import { Alert } from '@/components/theme';
-import { Photo, BookingPhotosResponse } from '@/types/booking';
-import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker';
-
-async function getBookingPhotos(bookingId: string): Promise<BookingPhotosResponse> {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  const photos: Photo[] = [];
-  for (let i = 1; i <= 12; i++) {
-    photos.push({
-      id: `photo-${i}`,
-      url: `https://picsum.photos/400/400?random=${i + 100}`,
-      type: i % 2 === 0 ? 'edited' : 'original',
-    });
-  }
-
-  return {
-    bookingId,
-    photos,
-    zipUrl: `https://example.com/bookings/${bookingId}/photos.zip`,
-  };
-}
+import { useReservationPhotosQuery } from '@/queries/reservations.ts';
+import { useUploadReservationZipMutation, useDeleteReservationPhotosMutation } from '@/mutations/reservations.ts';
+import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 export default function PhotographerViewPhotosContainer() {
-  const navigation = useNavigation<PhotographerMainNavigationProp>();
-  const route = useRoute<RouteProp<PhotographerMainStackParamList, 'ViewPhotos'>>();
-  const { id: bookingId } = route.params;
+  const navigation = useNavigation<MainNavigationProp>();
+  const route = useRoute<RouteProp<MainStackParamList, 'ViewPhotos'>>();
+  const { reservationId } = route.params;
 
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<number[]>([]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['bookingPhotos', bookingId],
-    queryFn: () => getBookingPhotos(bookingId),
-  });
+  const { data, isLoading } = useReservationPhotosQuery(reservationId);
+  const { mutateAsync: uploadZip } = useUploadReservationZipMutation();
+  const { mutateAsync: deletePhotos } = useDeleteReservationPhotosMutation();
 
   const handlePressBack = () => navigation.goBack();
 
-  const handleTogglePhotoSelection = (photoId: string) => {
+  const handleTogglePhotoSelection = (photoId: number) => {
     setSelectedPhotoIds((prev) => {
       if (prev.includes(photoId)) {
         return prev.filter((id) => id !== photoId);
@@ -51,29 +31,24 @@ export default function PhotographerViewPhotosContainer() {
   };
 
   const handleUploadPhotos = async () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'photo',
-      selectionLimit: 0, // 0 = unlimited
-      quality: 0.8,
-    };
-
-    const result = await launchImageLibrary(options);
-
-    if (result.didCancel) return;
-    if (result.errorCode) {
-      Alert.show({
-        title: '오류',
-        message: result.errorMessage || '사진 선택에 실패했습니다.',
+    try {
+      const results = await pick({
+        type: [types.zip, 'application/zip'],
+        allowMultiSelection: false,
       });
-      return;
-    }
+      const file = results[0];
 
-    if (result.assets) {
-      // TODO: Implement actual upload functionality
-      Alert.show({
-        title: '업로드 시작',
-        message: `${result.assets.length}개의 사진 업로드를 시작합니다.`,
-      });
+      if (!file || !file.uri || !file.name || !file.type) return;
+
+      const zipFile = {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      };
+
+      await uploadZip({ reservationId, zipFile });
+    } catch (err) {
+      Alert.show({ title: '오류', message: '파일 선택에 실패했습니다.' });
     }
   };
 
@@ -94,7 +69,7 @@ export default function PhotographerViewPhotosContainer() {
         {
           text: '삭제',
           onPress: async () => {
-            // TODO: Implement actual delete functionality
+            await deletePhotos({ reservationId, photoIds: selectedPhotoIds });
             setSelectedPhotoIds([]);
             Alert.show({
               title: '삭제 완료',

@@ -6,13 +6,6 @@ import { buildQuery } from '@/utils/format';
 
 const RESERVATIONS_BASE = `${API_BASE_URL}/api/reservations`;
 
-/** Spring LocalTime 형태 */
-export interface LocalTime {
-  hour: number;
-  minute: number;
-  second: number;
-  nano: number;
-}
 
 /** Spring Page 응답에 포함되는 Sort 요소 */
 export interface SortItem {
@@ -65,18 +58,28 @@ export type ReservationStatus =
 /** 예약 리스트 아이템(현재는 고객/작가 구분 정보 없음) */
 export interface ReservationListItem {
   reservationId: number;
-  counterpartName: string;
   reservedDate: string; // YYYY-MM-DD
-  startTime: LocalTime;
-  endTime: LocalTime;
+  startTime: string;
+  endTime: string;
   status: ReservationStatus;
+  type: string;
+}
+
+export interface UserReservationListItem extends ReservationListItem {
+  photographerName: string;
+  photographerNickname: string;
+}
+
+export interface PhotographerReservationListItem extends ReservationListItem {
+  userName: string;
+  userNickname: string;
 }
 
 /** 고객용 예약 내역 조회 응답 */
-export type GetUserReservationsResponse = PageResponse<ReservationListItem>;
+export type GetUserReservationsResponse = PageResponse<UserReservationListItem>;
 
 /** 작가용 예약 내역 조회 응답 */
-export type GetPhotographerReservationsResponse = PageResponse<ReservationListItem>;
+export type GetPhotographerReservationsResponse = PageResponse<PhotographerReservationListItem>;
 
 /** 예약 리스트 조회 파라미터(페이지네이션) */
 export type GetReservationListParams = GetPageable;
@@ -92,7 +95,7 @@ export interface GetMonthlyScheduleResponse {
 
 /** 특정 날짜의 예약 가능 시간 슬롯 */
 export interface AvailableSlot {
-  time: LocalTime;
+  time: string;
   available: boolean;
 }
 

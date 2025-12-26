@@ -6,6 +6,7 @@ import {
   getPhotographerReservations, getReservationDetail, GetReservationListParams, getReservationPhotos,
   getUserReservations,
 } from '@/api/reservations.ts';
+import { withMockData, getMockUserReservationsPage, getMockPhotographerReservationsPage, getMockReservationDetail, getMockReservationPhotos } from '@/__dev__';
 
 export const useUserReservationsInfiniteQuery = (
   params: Omit<GetReservationListParams, 'page'>,
@@ -13,8 +14,10 @@ export const useUserReservationsInfiniteQuery = (
   useInfiniteQuery({
     queryKey: reservationsQueryKeys.userListInfinite(params),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      getUserReservations({ ...params, page: pageParam }),
+    queryFn: ({ pageParam }) => withMockData(
+      () => getMockUserReservationsPage(pageParam, params.size || 10),
+      () => getUserReservations({ ...params, page: pageParam }),
+    ),
     getNextPageParam: (lastPage) =>
       lastPage.last ? undefined : lastPage.number + 1,
   });
@@ -25,8 +28,10 @@ export const usePhotographerReservationsInfiniteQuery = (
   useInfiniteQuery({
     queryKey: reservationsQueryKeys.photographerListInfinite(params),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      getPhotographerReservations({ ...params, page: pageParam }),
+    queryFn: ({ pageParam }) => withMockData(
+      () => getMockPhotographerReservationsPage(pageParam, params.size || 10),
+      () => getPhotographerReservations({ ...params, page: pageParam }),
+    ),
     getNextPageParam: (lastPage) =>
       lastPage.last ? undefined : lastPage.number + 1,
   });
@@ -56,7 +61,10 @@ export const useReservationPhotosQuery = (reservationId?: number) =>
     queryKey: typeof reservationId === 'number'
       ? reservationsQueryKeys.reservationPhotos(reservationId)
       : [],
-    queryFn: () => getReservationPhotos(reservationId!),
+    queryFn: () => withMockData(
+      () => getMockReservationPhotos(reservationId!) || { zip: null, photos: [], photoConfirmed: false },
+      () => getReservationPhotos(reservationId!),
+    ),
     enabled: typeof reservationId === 'number',
   });
 
@@ -66,6 +74,9 @@ export const useReservationDetailQuery = (reservationId?: number) =>
       typeof reservationId === 'number'
         ? reservationsQueryKeys.reservation(reservationId)
         : [],
-    queryFn: () => getReservationDetail(reservationId!),
+    queryFn: () => withMockData(
+      () => getMockReservationDetail(reservationId!) || {} as any,
+      () => getReservationDetail(reservationId!),
+    ),
     enabled: typeof reservationId === 'number',
   });

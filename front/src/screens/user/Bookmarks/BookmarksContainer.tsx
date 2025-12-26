@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import { UserMainNavigationProp } from '@/types/userNavigation';
 import BookmarksView from './BookmarksView';
 import { useState } from 'react';
+import { MainNavigationProp } from '@/types/navigation.ts';
 
 // TODO: Replace with actual API call
 const DUMMY_BOOKMARKED_PHOTOGRAPHERS = [
@@ -38,7 +38,7 @@ const DUMMY_BOOKMARKED_PHOTOGRAPHERS = [
 ];
 
 export default function BookmarksContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
   const [bookmarkedPhotographers, setBookmarkedPhotographers] = useState(DUMMY_BOOKMARKED_PHOTOGRAPHERS);
 
   const handlePressPhotographer = (photographerId: string) => {

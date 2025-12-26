@@ -22,6 +22,8 @@ import {
 } from 'react-native-image-picker';
 import { UploadImageParams } from '@/types/image.ts';
 import { generateImageFilename } from '@/utils/format.ts';
+import CrossIcon from '@/assets/icons/cross-white.svg';
+import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -30,6 +32,7 @@ interface CommunityPostModalProps {
   onClose: () => void;
   onSubmit: (params: CreateCommunityPostParams) => void;
   initialPost?: CommunityPost;
+  isLoading: boolean;
 }
 
 export default function CommunityPostModal({
@@ -37,6 +40,7 @@ export default function CommunityPostModal({
   onClose,
   onSubmit,
   initialPost,
+  isLoading,
 }: CommunityPostModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<COMMUNITY_CATEGORY_ENUM | null>(initialPost?.categoryLabel || null);
   const [title, setTitle] = useState(initialPost?.title || '');
@@ -48,6 +52,13 @@ export default function CommunityPostModal({
 
   // Sliding animation
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+  const resetModal = () => {
+    setSelectedCategory(null);
+    setTitle('');
+    setContent('');
+    setImages([]);
+  }
 
   useEffect(() => {
     if (visible) {
@@ -78,6 +89,7 @@ export default function CommunityPostModal({
             text: '나가기',
             type: 'cancel',
             onPress: () => {
+              resetModal();
               onClose();
             },
           },
@@ -235,69 +247,94 @@ export default function CommunityPostModal({
   if (!visible) return null;
 
   return (
-    <Overlay>
-      <AnimatedContainer
-        style={{
-          transform: [{ translateY: slideAnim }],
-        }}
-      >
-        <Header>
-          <IconButton width={24} height={24} Svg={CancelIcon} onPress={hanedlePressClose} />
-          <Typography fontSize={18} fontWeight="bold" letterSpacing="-2.5%" color="#000">
-            {initialPost ? '게시글 수정' : '커뮤니티 글쓰기'}
-          </Typography>
-          <ConfirmButton onPress={handleSubmit} disabled={!canSubmit}>
-            <Typography
-              fontSize={18}
-              letterSpacing="-2.5%"
-              color={canSubmit ? theme.colors.primary : '#C8C8C8'}
+    <>
+      <Overlay>
+        <AnimatedContainer
+          style={{
+            transform: [{ translateY: slideAnim }],
+          }}
+        >
+          <KeyboardAvoidingContainer
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <Header>
+              <IconButton width={18} height={18} Svg={CancelIcon} onPress={hanedlePressClose} />
+              <Typography fontSize={18} fontWeight="bold" letterSpacing="-2.5%" color="#000">
+                {initialPost ? '게시글 수정' : '커뮤니티 글쓰기'}
+              </Typography>
+              <ConfirmButton onPress={handleSubmit} disabled={!canSubmit}>
+                <Typography
+                  fontSize={18}
+                  letterSpacing="-2.5%"
+                  color={canSubmit ? theme.colors.primary : '#C8C8C8'}
+                >
+                  완료
+                </Typography>
+              </ConfirmButton>
+            </Header>
+            <ScrollContainer
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
             >
-              완료
-            </Typography>
-          </ConfirmButton>
-        </Header>
-        <TopicSelector>
-          <TopicWrapper onPress={handlePressTopicSelector}>
-            <Typography fontSize={16} letterSpacing="-2.5%">
-              {selectedCategory ? COMMUNITY_CATEGORIES[selectedCategory] : '주제를 선택해주세요.'}
-            </Typography>
-            <Icon width={24} height={24} Svg={ArrowDownIcon} />
-          </TopicWrapper>
-          {isTopicListVisible && (
-            <TopicList length={CATEGORY_KEYS.length}>
-              {CATEGORY_KEYS.map((category) => (
-                <TopicItem key={category} onPress={() => handleSelectCategory(category)}>
+              <TopicSelector>
+                <TopicWrapper onPress={handlePressTopicSelector}>
                   <Typography fontSize={16} letterSpacing="-2.5%">
-                    {COMMUNITY_CATEGORIES[category]}
+                    {selectedCategory ? COMMUNITY_CATEGORIES[selectedCategory] : '주제를 선택해주세요.'}
                   </Typography>
-                </TopicItem>
-              ))}
-            </TopicList>
-          )}
-        </TopicSelector>
-        <TitleInput
-          placeholder="제목을 입력해주세요."
-          placeholderTextColor="#A4A4A4"
-          value={title}
-          onChangeText={setTitle}
-        />
-        <ContentInput
-          placeholder="스냅 사진과 관련된 이야기를 나눠보세요!"
-          placeholderTextColor="#A4A4A4"
-          multiline={true}
-          value={content}
-          onChangeText={setContent}
-        />
-        <ToolWrapper>
-          <ToolButton onPress={handlePressImage}>
-            <Icon width={24} height={24} Svg={ImageIcon} />
-            <Typography fontSize={12} lineHeight={20} marginLeft={3}>
-              사진
-            </Typography>
-          </ToolButton>
-        </ToolWrapper>
-      </AnimatedContainer>
-    </Overlay>
+                  <Icon width={24} height={24} Svg={ArrowDownIcon} />
+                </TopicWrapper>
+                {isTopicListVisible && (
+                  <TopicList length={CATEGORY_KEYS.length}>
+                    {CATEGORY_KEYS.map((category) => (
+                      <TopicItem key={category} onPress={() => handleSelectCategory(category)}>
+                        <Typography fontSize={16} letterSpacing="-2.5%">
+                          {COMMUNITY_CATEGORIES[category]}
+                        </Typography>
+                      </TopicItem>
+                    ))}
+                  </TopicList>
+                )}
+              </TopicSelector>
+              <TitleInput
+                placeholder="제목을 입력해주세요."
+                placeholderTextColor="#A4A4A4"
+                value={title}
+                onChangeText={setTitle}
+              />
+              <ContentInput
+                placeholder="스냅 사진과 관련된 이야기를 나눠보세요!"
+                placeholderTextColor="#A4A4A4"
+                multiline={true}
+                value={content}
+                onChangeText={setContent}
+              />
+              <PostImageList>
+                {images.length > 0 &&
+                  images.map((image, index) => (
+                    <PostImageView
+                      key={index}
+                      uri={image.uri}
+                      onDelete={() => setImages(images.filter((_, i) => i !== index))}
+                    />
+                  ))
+                }
+              </PostImageList>
+            </ScrollContainer>
+            <ToolWrapper>
+              <ToolButton onPress={handlePressImage}>
+                <Icon width={24} height={24} Svg={ImageIcon} />
+                <Typography fontSize={12} lineHeight={20} marginLeft={3}>
+                  사진
+                </Typography>
+              </ToolButton>
+            </ToolWrapper>
+          </KeyboardAvoidingContainer>
+          <KeyboardAvodingSpacer />
+        </AnimatedContainer>
+      </Overlay>
+      <LoadingSpinner visible={isLoading} />
+    </>
   );
 }
 
@@ -320,6 +357,18 @@ const AnimatedContainer = styled(Animated.View)`
   background-color: #fff;
   ${Platform.OS === 'ios' ? `padding-top: 50px;` : ''};
 `;
+
+const KeyboardAvoidingContainer = styled.KeyboardAvoidingView`
+  flex: 1;
+  width: 100%;
+  height: 100%;
+`
+
+const ScrollContainer = styled.ScrollView`
+  flex: 1;
+  width: 100%;
+  height: 100%;
+`
 
 const Header = styled.View`
   width: 100%;
@@ -377,26 +426,27 @@ const TopicItem = styled.TouchableOpacity`
 const TitleInput = styled.TextInput`
   width: 100%;
   margin-top: 9px;
-  height: 42px;
-  font-size: 16px;
-  font-family: Pretendard-Regular;
+  height: 60px;
+  font-size: 20px;
+  font-family: Pretendard-Bold;
+  font-weight: bold;
   color: ${theme.colors.textPrimary};
   padding:0 28px;
 `
 
 const ContentInput = styled.TextInput`
-  flex: 1;
   width: 100%;
   padding: 0 28px;
+  min-height: 100px;
   text-align-vertical: top;
-  font-size: 14px;
+  font-size: 16px;
   font-family: Pretendard-Regular;
   color: ${theme.colors.textPrimary};
 `
 
 const ToolWrapper = styled.View`
-  margin-bottom: 36px;
   width: 100%;
+  height: 60px;
   padding-left: 28px;
   flex-direction: row;
   align-items: center;
@@ -407,3 +457,67 @@ const ToolButton = styled.TouchableOpacity`
   align-items: center;
   margin-right: 20px;
 `
+
+const KeyboardAvodingSpacer = styled.View`
+  height: 20px;
+`
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IMAGE_PADDING = 20;
+const IMAGE_SIZE = SCREEN_WIDTH - IMAGE_PADDING * 2;
+
+const PostImageList = styled.View`
+  padding: 0 ${IMAGE_PADDING}px;
+`
+
+const PostImageContainer = styled.View`
+  width: ${IMAGE_SIZE}px;
+  height: ${IMAGE_SIZE}px;
+  margin-bottom: 10px;
+`
+
+const PostImageWrapper = styled.View`
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+`
+
+const PostImage = styled.Image`
+  width: 100%;
+  height: 100%;
+`
+
+const PostImageDeleteButton = styled.Pressable`
+  width: 30px;
+  height: 30px;
+  background-color: #aaa;
+  border-radius: 30px;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(45deg);
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  z-index: 99;
+`
+
+interface PostImageViewProps {
+  uri: string;
+  onDelete: () => void;
+}
+
+const PostImageView = ({
+  uri,
+  onDelete,
+}: PostImageViewProps) => {
+  return (
+    <PostImageContainer>
+      <PostImageDeleteButton onPress={onDelete}>
+        <Icon width={15} height={15} Svg={CrossIcon} />
+      </PostImageDeleteButton>
+      <PostImageWrapper>
+        <PostImage source={{ uri }} />
+      </PostImageWrapper>
+    </PostImageContainer>
+  )
+}

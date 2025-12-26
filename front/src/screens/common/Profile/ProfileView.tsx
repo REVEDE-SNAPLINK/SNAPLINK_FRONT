@@ -17,15 +17,14 @@ interface ProfileViewProps {
   onPressMyPosts: () => void;
   onPressNotificationSettings: () => void;
   onPressEditNickname: () => void;
-  onPressEditName: () => void;
   onPressEditEmail: () => void;
   onPressManageAccount: () => void;
   onPressBookingHistory: () => void;
-  onPressSnaplinkGuide: () => void;
+  // onPressSnaplinkGuide: () => void;
   onPressManageBooking: () => void;
   onPressManageShootService: () => void;
   onPressManagePortfolio: () => void;
-  onPressSnaplinkPhotographerGuide: () => void;
+  // onPressSnaplinkPhotographerGuide: () => void;
   onPressCustomerCenter: () => void;
   onPressNotice: () => void;
   onPressFAQ: () => void;
@@ -45,15 +44,14 @@ export default function ProfileView({
   onPressMyPosts,
   onPressNotificationSettings,
   onPressEditNickname,
-  onPressEditName,
   onPressEditEmail,
   onPressManageAccount,
   onPressBookingHistory,
-  onPressSnaplinkGuide,
+  // onPressSnaplinkGuide,
   onPressManageBooking,
   onPressManageShootService,
   onPressManagePortfolio,
-  onPressSnaplinkPhotographerGuide,
+  // onPressSnaplinkPhotographerGuide,
   onPressCustomerCenter,
   onPressNotice,
   onPressFAQ,
@@ -135,7 +133,7 @@ export default function ProfileView({
             name="닉네임"
             value={nickname}
           />
-          <InfoButton onPress={onPressEditName} name="이름" value={name} />
+          <InfoButton onPress={() => {}} name="이름" value={name} />
           <InfoButton onPress={onPressEditEmail} name="이메일" value={email} />
           <InfoButton onPress={onPressManageAccount} name="계정 관리" isLast />
         </InfoContainer>
@@ -152,21 +150,22 @@ export default function ProfileView({
             <InfoButton
               onPress={onPressManageShootService}
               name="판매 촬영 서비스 관리"
-            />
-            <InfoButton
-              onPress={onPressSnaplinkPhotographerGuide}
-              name="스냅링크 작가 가이드"
               isLast
             />
+            {/*<InfoButton*/}
+            {/*  onPress={onPressSnaplinkPhotographerGuide}*/}
+            {/*  name="스냅링크 작가 가이드"*/}
+            {/*  isLast*/}
+            {/*/>*/}
           </InfoContainer>
         ) : (
           <InfoContainer>
-            <InfoButton onPress={onPressBookingHistory} name="촬영 내역" />
-            <InfoButton
-              onPress={onPressSnaplinkGuide}
-              name="스냅링크 의뢰 가이드"
-              isLast
-            />
+            <InfoButton onPress={onPressBookingHistory} name="촬영 내역" isLast />
+            {/*<InfoButton*/}
+            {/*  onPress={onPressSnaplinkGuide}*/}
+            {/*  name="스냅링크 의뢰 가이드"*/}
+            {/*  isLast*/}
+            {/*/>*/}
           </InfoContainer>
         )}
         <Typography

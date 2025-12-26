@@ -7,7 +7,7 @@ import CrossIcon from '@/assets/icons/cross.svg';
 import Icon from '@/components/Icon.tsx';
 import { Image } from 'react-native';
 import Checkbox from '@/components/Checkbox.tsx';
-import { Photo } from '@/types/booking';
+import { ReservationPhoto } from '@/api/reservations.ts';
 
 const GRID_COLUMNS = 2;
 const PHOTO_PADDING = 2;
@@ -16,9 +16,9 @@ const PHOTO_SIZE = (CONTAINER_WIDTH - (PHOTO_PADDING * 3)) / GRID_COLUMNS;
 
 interface PhotographerViewPhotosViewProps {
   onPressBack: () => void;
-  photos: Photo[];
-  selectedPhotoIds: string[];
-  onTogglePhotoSelection: (photoId: string) => void;
+  photos: ReservationPhoto[];
+  selectedPhotoIds: number[];
+  onTogglePhotoSelection: (photoId: number) => void;
   onUploadPhotos: () => void;
   onDeletePhotos: () => void;
   isLoading?: boolean;

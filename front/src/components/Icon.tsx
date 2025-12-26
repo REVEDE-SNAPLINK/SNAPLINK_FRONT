@@ -10,44 +10,51 @@ type BaseIconProps = {
   disabled?: boolean;
 };
 
-type IconProps = BaseIconProps & (
-  | { source: ImageSourcePropType }
-  | { Svg: ComponentType<SvgProps>, color?: string; }
-);
+export type IconProps =
+  | (BaseIconProps & {
+  source: ImageSourcePropType;
+})
+  | (BaseIconProps & {
+  Svg: ComponentType<SvgProps>;
+  color?: string;
+});
 
-const IconWrapper = styled.View<{ width: number, height: number }>`
-  ${({ width, height }) => `width: ${width}px; height: ${height}px;`}
+const IconWrapper = styled.View<{ width: number; height: number }>`
+  ${({ width, height }) => `
+    width: ${width}px;
+    height: ${height}px;
+  `}
   align-items: center;
   justify-content: center;
-`
+`;
 
-const IconImage = styled.Image`
-  max-width: 100%;
-  max-height: 100%;
-`
-
-const StyledSvg = (Svg: ComponentType<SvgProps>) => styled(Svg)`
-  width: 100%;
-  height: 100%;
-`
+const IconImage = styled.Image``;
 
 export default function Icon(props: IconProps) {
   const { width, height } = props;
 
+  // ✅ SVG 아이콘
   if ('Svg' in props) {
-    const SvgComponent = StyledSvg(props.Svg);
+    const SvgComponent = props.Svg;
+
     return (
       <IconWrapper width={width} height={height}>
-        <SvgComponent />
+        <SvgComponent
+          width={width}
+          height={height}
+          {...(props.color ? { fill: props.color, stroke: props.color } : {})}
+        />
       </IconWrapper>
     );
   }
 
   return (
     <IconWrapper width={width} height={height}>
-      <IconImage source={props.source} />
+      <IconImage
+        source={props.source}
+        style={{ width, height }}
+        resizeMode="contain"
+      />
     </IconWrapper>
   );
 }
-
-export type { IconProps };

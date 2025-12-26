@@ -218,7 +218,7 @@ const Container = styled.View`
 `;
 
 const SliderContainer = styled.View`
-  height: 70px;
+  height: 40px;
   width: 100%;
   justify-content: center;
   position: relative;
@@ -245,7 +245,7 @@ const ActiveTrack = styled(Animated.View)`
 const ThumbTouchArea = styled(Animated.View)`
   position: absolute;
   width: 44px;
-  height: 70px;
+  height: 40px;
   align-items: center;
   justify-content: center;
   top: 0;
@@ -253,7 +253,7 @@ const ThumbTouchArea = styled(Animated.View)`
 
 const ValueLabel = styled.View`
   position: absolute;
-  top: 0;
+  top: -15px;
   padding-horizontal: 8px;
   padding-vertical: 4px;
   background-color: ${theme.colors.primary};

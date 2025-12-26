@@ -5,11 +5,11 @@ import Typography from '@/components/theme/Typography.tsx';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import IconButton from '@/components/IconButton.tsx';
 import Banner, { BannerItem } from '@/components/user/Banner.tsx';
-import { PhotographerInfo } from '@/types/photographer.ts';
 import PhotographerList from '@/components/user/PhotographerList.tsx';
 import LogoIcon from '@/assets/icons/logo-icon.svg'
 import NotificationIcon from '@/assets/icons/notification.svg';
 import AIButtonIcon from '@/assets/icons/ai-button.svg'
+import { PhotographerSearchItem } from '@/api/photographers.ts';
 
 interface HomeViewProps {
   onPressNotification: () => void;
@@ -21,8 +21,8 @@ interface HomeViewProps {
   onChangeSearchKey: (searchKey: string) => void;
   onSubmitSearchKey: () => void;
   bannerItems: BannerItem[];
-  allPhotographerItems: PhotographerInfo[];
-  popularPhotographerItems: PhotographerInfo[];
+  allPhotographerItems: PhotographerSearchItem[];
+  popularPhotographerItems: PhotographerSearchItem[];
 }
 
 export default function HomeView({

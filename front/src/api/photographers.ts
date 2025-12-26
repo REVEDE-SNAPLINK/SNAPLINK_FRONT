@@ -1,7 +1,8 @@
 // src/api/photographers.ts
 import { API_BASE_URL } from '@/config/api';
-import { authFetch } from '@/api/utils';
+import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
 import { buildQuery } from '@/utils/format';
+import RNBlobUtil from 'react-native-blob-util';
 
 const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
 
@@ -56,13 +57,6 @@ export interface GetPageable {
  * Common: Spring LocalTime
  * -------------------------------------------- */
 
-export interface LocalTime {
-  hour: number;
-  minute: number;
-  second: number;
-  nano: number;
-}
-
 /* ---------------------------------------------
  * 1) GET /{photographerId}/profile
  * 작가 프로필 상세 조회 (+ 포트폴리오 썸네일 목록, paging params 존재)
@@ -82,6 +76,7 @@ export interface GetPhotographerProfileResponse {
   portfolioCount: number;
   reviewCount: number;
   portfolios: PhotographerPortfolioThumb[];
+  scrapped: boolean;
 }
 
 /**
@@ -123,24 +118,28 @@ export interface PatchPhotographerProfileImageParams {
  * 작가 프로필 사진 업로드/변경
  *
  * multipart/form-data: image
- * ⚠️ Content-Type 직접 지정하지 말기(boundary 깨짐)
  */
 export const patchPhotographerProfileImage = async (
   params: PatchPhotographerProfileImageParams,
 ): Promise<void> => {
-  const formData = new FormData();
-  formData.append('image', {
-    uri: params.image.uri,
-    name: params.image.name,
-    type: params.image.type,
-  } as any);
+  const parts: MultipartPart[] = [
+    {
+      name: 'image',
+      filename: params.image.name,
+      type: params.image.type,
+      data: RNBlobUtil.wrap(params.image.uri.replace('file://', '')),
+    },
+  ];
 
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/profile-image`, {
-    method: 'PATCH',
-    body: formData,
-  });
+  const response = await authMultipartFetch(
+    `${PHOTOGRAPHERS_BASE}/profile-image`,
+    parts,
+    'PATCH',
+  );
 
-  if (!response.ok) throw new Error(`Failed to patch profile image ${response.status}`);
+  if (response.info().status < 200 || response.info().status >= 300) {
+    throw new Error(`Failed to patch profile image ${response.info().status}`);
+  }
 };
 
 /* ---------------------------------------------
@@ -159,8 +158,8 @@ export type DayOfWeek =
 
 export interface PhotographerScheduleItem {
   dayOfWeek: DayOfWeek;
-  startTime: LocalTime;
-  endTime: LocalTime;
+  startTime: string;
+  endTime: string;
 }
 
 /**
@@ -282,26 +281,32 @@ export interface CreatePortfolioParams {
 export const createPortfolio = async (
   params: CreatePortfolioParams,
 ): Promise<void> => {
-  const formData = new FormData();
+  const parts: MultipartPart[] = [
+    // request는 JSON 파트
+    {
+      name: 'request',
+      type: 'application/json',
+      data: JSON.stringify(params.request),
+    },
 
-  // request(JSON)
-  formData.append('request', JSON.stringify(params.request));
-
-  // images(files) - 같은 key로 여러 번 append
-  params.images.forEach((img) => {
-    formData.append('images', {
-      uri: img.uri,
-      name: img.name,
+    // images는 file 파트들
+    ...params.images.map((img) => ({
+      name: 'images',
+      filename: img.name,
       type: img.type,
-    } as any);
-  });
+      data: RNBlobUtil.wrap(img.uri.replace('file://', '')),
+    })),
+  ];
 
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/portfolios`, {
-    method: 'POST',
-    body: formData,
-  });
+  const response = await authMultipartFetch(
+    `${PHOTOGRAPHERS_BASE}/portfolios`,
+    parts,
+    'POST',
+  );
 
-  if (!response.ok) throw new Error(`Failed to create portfolio ${response.status}`);
+  if (response.info().status < 200 || response.info().status >= 300) {
+    throw new Error(`Failed to create portfolio ${response.info().status}`);
+  }
 };
 
 /* ---------------------------------------------
@@ -378,5 +383,46 @@ export const getPhotographerReviewSummary = async (
 
   if (!response.ok) throw new Error(`Failed to get photographer review summary ${response.status}`);
 
+  return response.json();
+};
+
+/* ---------------------------------------------
+ * 8) GET /me/scrapped (paging)
+ * 내가 스크랩한 작가 목록 조회
+ * - "검색 결과와 동일한 형식"이라고 했으니 SearchPhotographersResponse 재사용
+ * -------------------------------------------- */
+
+export const getMyScrappedPhotographers = async (
+  pageable: GetPageable,
+): Promise<SearchPhotographersResponse> => {
+  const qs = buildQuery(pageable);
+  const url = qs
+    ? `${PHOTOGRAPHERS_BASE}/me/scrapped?${qs}`
+    : `${PHOTOGRAPHERS_BASE}/me/scrapped`;
+
+  const response = await authFetch(url, { method: 'GET' });
+  if (!response.ok) throw new Error(`Failed to get scrapped photographers ${response.status}`);
+
+  return response.json();
+};
+
+/* ---------------------------------------------
+ * 9) POST /{photographerId}/scrap
+ * 작가 스크랩(토글일 가능성 높음)
+ * response: { isScrapped: boolean }
+ * -------------------------------------------- */
+
+export interface ScrapResponse {
+  isScrapped: boolean;
+}
+
+export const togglePhotographerScrap = async (
+  photographerId: string,
+): Promise<ScrapResponse> => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/${photographerId}/scrap`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) throw new Error(`Failed to toggle photographer scrap ${response.status}`);
   return response.json();
 };

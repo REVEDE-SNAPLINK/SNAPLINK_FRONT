@@ -10,7 +10,6 @@ import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
-import type { PhotographerDetails, PortfolioImage } from '@/types/photographer.ts';
 import BookmarkIcon from '@/assets/icons/bookmark-white.svg'
 import ChatIcon from '@/assets/icons/chat-white.svg';
 import UploadIcon from '@/assets/icons/upload.svg';
@@ -18,6 +17,7 @@ import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
 import ActiveStarIcon from '@/assets/icons/star-color.svg'
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
+import { GetPhotographerProfileResponse, PhotographerPortfolioThumb } from '@/api/photographers.ts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_MARGIN = 2;
@@ -38,18 +38,17 @@ interface Review {
 }
 
 interface PhotographerDetailsViewProps {
-  photographer: PhotographerDetails | null;
-  portfolioImages: PortfolioImage[];
+  photographer: GetPhotographerProfileResponse | null;
+  portfolioImages: PhotographerPortfolioThumb[];
   isLoadingPhotographer: boolean;
   isFetchingNextPage: boolean;
   activeTab: 'portfolio' | 'reviews';
-  responseRate: number;
-  avgResponseTime: string;
   portfolioCount: number;
   reviewCount: number;
   avgRating: number;
   reviewPreviewImages: string[];
   reviews: Review[];
+  isScrapped: boolean;
   onPressBack: () => void;
   onPressUpload: () => void;
   onPressFavorite: () => void;
@@ -57,7 +56,7 @@ interface PhotographerDetailsViewProps {
   onPressReservation: () => void;
   onEndReached: () => void;
   onTabChange: (tab: 'portfolio' | 'reviews') => void;
-  onPressPortfolioImage: (imageId: string) => void;
+  onPressPortfolioImage: (imageId: number) => void;
   onPressShowAllReviews: () => void;
   onPressShowAllReviewPhotos: () => void;
 }
@@ -68,13 +67,12 @@ export default function PhotographerDetailsView({
   isLoadingPhotographer,
   isFetchingNextPage,
   activeTab,
-  responseRate,
-  avgResponseTime,
   portfolioCount,
   reviewCount,
   avgRating,
   reviewPreviewImages,
   reviews,
+  isScrapped,
   onPressBack,
   onPressUpload,
   onPressFavorite,
@@ -88,9 +86,9 @@ export default function PhotographerDetailsView({
 }: PhotographerDetailsViewProps) {
   const insets = useSafeAreaInsets();
 
-  const renderPortfolioItem = ({ item }: { item: PortfolioImage }) => (
+  const renderPortfolioItem = ({ item }: { item: PhotographerPortfolioThumb }) => (
     <PortfolioImageWrapper onPress={() => onPressPortfolioImage(item.id)}>
-      <PortfolioImage source={{ uri: item.url }} />
+      <PortfolioImage source={{ uri: item.thumbnailUrl }} />
     </PortfolioImageWrapper>
   );
 
@@ -101,8 +99,8 @@ export default function PhotographerDetailsView({
       <>
         <DefaultInfoWrapper>
           <ProfileImageWrapper>
-            {photographer.profileImage && (
-              <ProfileImage source={{ uri: photographer.profileImage }} />
+            {photographer.profileImageUrl && (
+              <ProfileImage source={{ uri: photographer.profileImageUrl }} />
             )}
           </ProfileImageWrapper>
           <ProfileInfoWrapper>
@@ -115,7 +113,7 @@ export default function PhotographerDetailsView({
                 letterSpacing="-2.5%"
                 marginLeft={5}
               >
-                {photographer.name}
+                {photographer.nickname}
               </Typography>
             </NameWrapper>
             <IntroductionWrapper>
@@ -124,7 +122,7 @@ export default function PhotographerDetailsView({
                 lineHeight="140%"
                 letterSpacing="-2.5%"
               >
-                {photographer.introduction}
+                {photographer.description}
               </Typography>
             </IntroductionWrapper>
           </ProfileInfoWrapper>
@@ -136,18 +134,18 @@ export default function PhotographerDetailsView({
               lineHeight="140%"
               letterSpacing="-2.5%"
             >
-              메시지 응답률 {responseRate}%
+              메시지 응답률 {photographer.responseTime}%
             </Typography>
             <Typography
               fontSize={11}
               lineHeight="140%"
               letterSpacing="-2.5%"
             >
-              채팅 {avgResponseTime} 응답
+              채팅 {photographer.responseTime}
             </Typography>
           </ResponseRateDescription>
           <ResponseRateProgressBar>
-            <ResponseRateProgressFill width={responseRate} />
+            <ResponseRateProgressFill width={photographer.responseRate} />
           </ResponseRateProgressBar>
         </ResponseRateContainer>
         <TabHeader>
@@ -326,7 +324,7 @@ export default function PhotographerDetailsView({
             key="portfolio-list"
             data={portfolioImages}
             renderItem={renderPortfolioItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             numColumns={GRID_COLUMNS}
             ListHeaderComponent={renderHeader}
             ListFooterComponent={renderFooter}
@@ -355,7 +353,10 @@ export default function PhotographerDetailsView({
       <BottomActionContainer style={{ paddingBottom: 22 + insets.bottom }}>
         {activeTab === 'portfolio' ? (
           <>
-            <ActionButton onPress={onPressFavorite}>
+            <ActionButton
+              onPress={onPressFavorite}
+              backgroundColor={isScrapped ? theme.colors.primary : '#C8C8C8'}
+            >
               <Icon width={24} height={24} Svg={BookmarkIcon} />
             </ActionButton>
             <ActionButton onPress={onPressInquiry}>
@@ -582,11 +583,11 @@ const BottomActionContainer = styled.View`
   justify-content: space-between;
 `;
 
-const ActionButton = styled.TouchableOpacity`
+const ActionButton = styled.TouchableOpacity<{ backgroundColor?: string }>`
   width: 49px;
   height: 49px;
   border-radius: 8px;
-  background-color: ${theme.colors.primary};
+  background-color: ${(props) => props.backgroundColor || theme.colors.primary};
   justify-content: center;
   align-items: center;
   margin-right: 5px;

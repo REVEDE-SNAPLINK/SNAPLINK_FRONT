@@ -211,9 +211,9 @@ const AnimatedOverlayBackground = styled(Animated.View)`
 `;
 
 const AnimatedModalContainer = styled(Animated.View)`
-  width: 317px;
+  width: 330px;
   min-height: 153px;
-  padding: 26px 39px;
+  padding: 16px 19px;
   background-color: white;
   border-radius: 10px;
   justify-content: space-between;

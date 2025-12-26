@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '@/config/api';
-import { authFetch } from '@/api/utils';
+import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
 import { buildQuery } from '@/utils/format';
+import RNBlobUtil from 'react-native-blob-util';
 
 const CHAT_BASE = `${API_BASE_URL}/api/chat`;
 
@@ -9,6 +10,7 @@ export interface ChatRoomItem {
   roomId: number;
   opponentId: string;
   opponentNickname: string;
+  opponentProfileImageUrl?: string;
   unreadCount: number;
   lastMessageTime: string; // ISO
 }
@@ -98,23 +100,29 @@ export interface UploadChatFileParams {
  * POST /api/chat/rooms/{roomId}/upload
  * 파일 업로드 후 S3 URL(string) 반환
  * multipart/form-data: file
- * ⚠️ Content-Type 직접 지정 X
  */
 export const uploadChatFile = async (
   params: UploadChatFileParams,
 ): Promise<string> => {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: params.file.uri,
-    name: params.file.name,
-    type: params.file.type,
-  } as any);
+  const parts: MultipartPart[] = [
+    {
+      name: 'file',
+      filename: params.file.name,
+      type: params.file.type,
+      data: RNBlobUtil.wrap(params.file.uri.replace('file://', '')),
+    },
+  ];
 
-  const response = await authFetch(`${CHAT_BASE}/rooms/${params.roomId}/upload`, {
-    method: 'POST',
-    body: formData,
-  });
+  const response = await authMultipartFetch(
+    `${CHAT_BASE}/rooms/${params.roomId}/upload`,
+    parts,
+    'POST',
+  );
 
-  if (!response.ok) throw new Error(`Failed to upload chat file ${response.status}`);
-  return response.json();
+  if (response.info().status < 200 || response.info().status >= 300) {
+    throw new Error(`Failed to upload chat file ${response.info().status}`);
+  }
+
+  // 응답 데이터는 JSON string으로 반환됨
+  return JSON.parse(response.data);
 };

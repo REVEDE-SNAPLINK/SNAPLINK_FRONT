@@ -7,8 +7,9 @@ import FilterModal from '@/components/user/filter/FilterModal.tsx';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import SearchPhotographerList from '@/components/user/SearchPhotographerList.tsx';
-import { Photographer } from '@/types/photographer.ts';
+import { PhotographerSearchItem } from '@/api/photographers.ts';
 import BackButton from '@/components/BackButton.tsx';
+import SwapIcon from '@/assets/icons/swap.svg'
 
 interface SearchPhotographerViewProps {
   onPressBack: () => void;
@@ -25,7 +26,7 @@ interface SearchPhotographerViewProps {
   onCloseFilterModal: () => void;
   selectedFilters: FilterValue[];
   onApplyFilters: (filters: FilterValue[]) => void;
-  photographers: Photographer[];
+  photographers: PhotographerSearchItem[];
   totalCount: number;
   sortBy: 'recommended' | 'latest';
   onToggleSort: () => void;
@@ -97,7 +98,7 @@ export default function SearchPhotographerView({
             >
               {sortBy === 'recommended' ? '추천순' : '최신순'}
             </Typography>
-            <Icon width={14} height={14} source={require('@/assets/icons/swap.png')} />
+            <Icon width={14} height={14} Svg={SwapIcon} />
           </SortButton>
         </SearchResultHeader>
         <SearchResultWrapper>

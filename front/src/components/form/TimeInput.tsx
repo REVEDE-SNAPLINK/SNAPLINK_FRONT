@@ -179,7 +179,12 @@ export default function TimeInput({
                   display="spinner"
                   is24Hour={true}
                   onChange={(event, time) => {
-                    if (time) setSelectedTime(time);
+                    if (!time) return;
+
+                    const fixed = new Date(time);
+                    fixed.setMinutes(0, 0, 0);
+
+                    setSelectedTime(fixed);
                   }}
                   locale="ko"
                   textColor="#000"

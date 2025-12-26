@@ -5,14 +5,15 @@ import FormErrorMessage from '@/components/FormErrorMessage.tsx';
 interface FormInputProps extends TextInputProps {
   placeholder: string;
   errorMessage?: string;
+  height?: number;
 }
 
-const InputFieldWrapper = styled.View`
+const InputFieldWrapper = styled.View<{ height: number }>`
   width: 100%;
   background-color: #F9F9F9;
   border: 1px solid #E9E9E9;
   border-radius: 5px;
-  height: 50px;
+  height: ${({ height }) => height}px;
   padding: 0 21px;
   align-items: center;
   justify-content: space-between;
@@ -32,10 +33,10 @@ const FormErrorMessageSpacer = styled.View`
   height: 10px;
 `;
 
-export default function FormInput({ placeholder, errorMessage, ...rest }: FormInputProps) {
+export default function FormInput({ placeholder, errorMessage, height = 50, ...rest }: FormInputProps) {
   return (
     <>
-      <InputFieldWrapper>
+      <InputFieldWrapper height={height}>
         <StyledInputField
           placeholder={placeholder}
           placeholderTextColor="#737373"

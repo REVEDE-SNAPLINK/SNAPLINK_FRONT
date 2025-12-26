@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import BookingManageView from '@/screens/photographer/BookingManage/BookingManageView.tsx';
 import { Alert } from '@/components/theme';
 import { usePhotographerReservationsInfiniteQuery } from '@/queries/reservations.ts';
 import { usePatchReservationStatusMutation } from '@/mutations/reservations.ts';
+import { MainNavigationProp } from '@/types/navigation.ts';
+import { useMeQuery } from '@/queries/user.ts';
 
 const PAGE_SIZE = 10;
 
 export default function BookingManageContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { mutate: patchStatusMutate } = usePatchReservationStatusMutation();
+
+  const { data: photographerProfile } = useMeQuery();
 
   const {
     data,
@@ -89,11 +92,12 @@ export default function BookingManageContainer() {
     setIsRefreshing(false);
   };
 
-  const bookings = data?.pages.flatMap((page) => page.content) ?? [];
+  const reservations = data?.pages.flatMap((page) => page.content) ?? [];
 
   return (
     <BookingManageView
-      bookings={bookings}
+      reservations={reservations}
+      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '' }}
       isLoading={isLoading}
       isError={isError}
       onLoadMore={handleLoadMore}

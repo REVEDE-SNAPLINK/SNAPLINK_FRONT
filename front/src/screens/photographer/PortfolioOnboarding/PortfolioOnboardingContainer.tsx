@@ -7,7 +7,11 @@ import PortfolioOnboardingView, {
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useConceptsQuery, useRegionsQuery } from '@/queries/meta.ts';
-import { usePatchPhotographerProfileImageMutation, useSignPhotographerMutation } from '@/mutations/photographers.ts';
+import {
+  useCreatePortfolioMutation,
+  usePatchPhotographerProfileImageMutation,
+  useSignPhotographerMutation,
+} from '@/mutations/photographers.ts';
 import { Alert, requestPermission } from '@/components/theme';
 import {
   CameraOptions,
@@ -17,8 +21,44 @@ import {
   launchImageLibrary,
 } from 'react-native-image-picker';
 import { generateImageFilename } from '@/utils/format.ts';
+import { UploadImageParams } from '@/types/image.ts';
+import { DayOfWeek, PhotographerScheduleItem } from '@/api/photographers.ts';
 
 const TOTAL_STEPS = 7;
+
+const DAY_KO_TO_ENUM = {
+  '월요일': 'MONDAY',
+  '화요일': 'TUESDAY',
+  '수요일': 'WEDNESDAY',
+  '목요일': 'THURSDAY',
+  '금요일': 'FRIDAY',
+  '토요일': 'SATURDAY',
+  '일요일': 'SUNDAY',
+} as const satisfies Record<string, DayOfWeek>;
+
+type DayKo = keyof typeof DAY_KO_TO_ENUM;
+
+const formatToHHmm = (date: Date): string => {
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}:00`;
+};
+
+const buildSchedulesFromForm = (
+  availableDays: string[],
+  startTime: Date | null,
+  endTime: Date | null,
+): PhotographerScheduleItem[] => {
+  if (!startTime || !endTime) return [];
+
+  return availableDays
+    .filter((day): day is DayKo => day in DAY_KO_TO_ENUM)
+    .map((day) => ({
+      dayOfWeek: DAY_KO_TO_ENUM[day],
+      startTime: formatToHHmm(startTime),
+      endTime: formatToHHmm(endTime),
+    }));
+};
 
 export default function PortfolioOnboardingContainer() {
   const { userId } = useAuthStore();
@@ -27,13 +67,14 @@ export default function PortfolioOnboardingContainer() {
 
   const navigation = useNavigation<MainNavigationProp>();
 
-  const { mutate: uploadProfileMutate } = usePatchPhotographerProfileImageMutation();
+  const { mutate: uploadProfile } = usePatchPhotographerProfileImageMutation();
+  const { mutate: uploadPortfolio } = useCreatePortfolioMutation();
+  const { mutate: signPhotographer } = useSignPhotographerMutation();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [profileImageURI, setProfileImageURI] = useState<string | undefined>(undefined);
   const [photoURIs, setPhotoURIs] = useState<string[]>([]);
-  const [completeSelectedRegions, setCompleteSelectedRegions] = useState<boolean>(false);
-  const [completeSelectedConcepts, setCompleteSelectedConcepts] = useState<boolean>(false);
+  const [pendingNextStep, setPendingNextStep] = useState<null | 2 | 3>(null);
 
   const {
     control,
@@ -43,12 +84,13 @@ export default function PortfolioOnboardingContainer() {
     setValue,
   } = useForm<PortfolioOnboardingFormData>({
     defaultValues: {
-      introduction: '',
+      description: '',
       shootingRegions: [],
       shootingConcepts: [],
       basePrice: '',
       shootingDuration: null,
       shootingPeople: null,
+      shootingDescription: '',
       retouchingType: null,
       provideRawFiles: false,
       retouchingDuration: null,
@@ -56,11 +98,12 @@ export default function PortfolioOnboardingContainer() {
       availableDays: [],
       startTime: null,
       endTime: null,
+      additionalOptions: [],
     },
     mode: 'onChange',
   });
 
-  const watchedIntroduction = watch('introduction');
+  const watchedDescription = watch('description');
   const watchedShootingRegions = watch('shootingRegions');
   const watchedShootingConcepts = watch('shootingConcepts');
   const watchedBasePrice = watch('basePrice');
@@ -73,15 +116,12 @@ export default function PortfolioOnboardingContainer() {
   const watchedStartTime = watch('startTime');
   const watchedEndTime = watch('endTime');
 
-  // Step6를 건너뛸지 여부 (보정 작업 제공이 '제공하지 않음'인 경우)
-  const shouldSkipStep6 = watchedRetouchingType === '제공하지 않음';
-
   const validateStep = useCallback(
     async (step: number): Promise<boolean> => {
       switch (step) {
         case 0:
           // Step1: 프로필 사진과 한 줄 소개
-          return profileImageURI !== undefined && watchedIntroduction.trim() !== '';
+          return profileImageURI !== undefined && watchedDescription.trim() !== '';
         case 1:
           // Step2: 포트폴리오 사진 (최소 1장)
           return photoURIs.length >= 1;
@@ -96,13 +136,15 @@ export default function PortfolioOnboardingContainer() {
           return (
             watchedBasePrice.trim() !== '' &&
             watchedShootingDuration !== null &&
-            watchedShootingPeople !== null &&
-            watchedRetouchingType !== null
+            watchedShootingPeople !== null
           );
         case 5:
-          // Step6: 보정 정보 (Step5에서 '제공하지 않음' 선택 시 건너뜀)
-          if (shouldSkipStep6) return true;
+          // Step6: 보정 정보
+          if (watchedRetouchingType === '제공하지 않음') {
+            return true;
+          }
           return (
+            watchedRetouchingType !== null &&
             watchedRetouchingDuration !== null &&
             watchedRetouchingSelectionRight !== null
           );
@@ -120,7 +162,7 @@ export default function PortfolioOnboardingContainer() {
     [
       profileImageURI,
       photoURIs,
-      watchedIntroduction,
+      watchedDescription,
       watchedShootingRegions,
       watchedShootingConcepts,
       watchedBasePrice,
@@ -132,14 +174,13 @@ export default function PortfolioOnboardingContainer() {
       watchedAvailableDays,
       watchedStartTime,
       watchedEndTime,
-      shouldSkipStep6,
     ]
   );
 
   const isStepValid = useMemo(() => {
     switch (currentStep) {
       case 0:
-        return profileImageURI !== undefined && watchedIntroduction.trim() !== '';
+        return profileImageURI !== undefined && watchedDescription.trim() !== '';
       case 1:
         return photoURIs.length >= 1;
       case 2:
@@ -150,12 +191,14 @@ export default function PortfolioOnboardingContainer() {
         return (
           watchedBasePrice.trim() !== '' &&
           watchedShootingDuration !== null &&
-          watchedShootingPeople !== null &&
-          watchedRetouchingType !== null
+          watchedShootingPeople !== null
         );
       case 5:
-        if (shouldSkipStep6) return true;
+        if (watchedRetouchingType === '제공하지 않음') {
+          return true;
+        }
         return (
+          watchedRetouchingType !== null &&
           watchedRetouchingDuration !== null &&
           watchedRetouchingSelectionRight !== null
         );
@@ -172,7 +215,7 @@ export default function PortfolioOnboardingContainer() {
     currentStep,
     profileImageURI,
     photoURIs,
-    watchedIntroduction,
+    watchedDescription,
     watchedShootingRegions,
     watchedShootingConcepts,
     watchedBasePrice,
@@ -184,7 +227,6 @@ export default function PortfolioOnboardingContainer() {
     watchedAvailableDays,
     watchedStartTime,
     watchedEndTime,
-    shouldSkipStep6,
   ]);
 
   // 진행률 계산
@@ -194,12 +236,10 @@ export default function PortfolioOnboardingContainer() {
     if (currentStep === 2) return 20;
     if (currentStep === 3) return 30;
     if (currentStep === 4) return 40;
-    if (currentStep === 5) {
-      return shouldSkipStep6 ? 80 : 60;
-    }
+    if (currentStep === 5) return 60;
     if (currentStep === 6) return 80;
     return 100;
-  }, [currentStep, shouldSkipStep6]);
+  }, [currentStep]);
 
   const handlePressSubmit = async () => {
     if (!isStepValid) return;
@@ -208,17 +248,12 @@ export default function PortfolioOnboardingContainer() {
     if (!isValid) return;
 
     if (currentStep < TOTAL_STEPS - 1) {
-      // Step5에서 Step6로 넘어갈 때, '제공하지 않음' 선택 시 Step6 건너뛰기
-      if (currentStep === 4 && shouldSkipStep6) {
-        setCurrentStep(6);
-      }
-
-      if (currentStep === 2 && !isLoadingRegions) {
-        setCompleteSelectedRegions(true);
+      if (currentStep === 2) {
+        setPendingNextStep(2);
         return;
       }
-      if (currentStep === 3 && !isLoadingConcepts) {
-        setCompleteSelectedConcepts(true);
+      if (currentStep === 3) {
+        setPendingNextStep(3);
         return;
       }
       setCurrentStep((prev) => prev + 1);
@@ -229,16 +264,22 @@ export default function PortfolioOnboardingContainer() {
   };
 
   useEffect(() => {
-    if (isLoadingRegions && completeSelectedRegions && currentStep === 2) {
-      setCurrentStep((prev) => prev + 1);
+    if (pendingNextStep === 2) {
+      if (!isLoadingRegions && regions) {
+        setPendingNextStep(null);
+        setCurrentStep(3);
+      }
     }
-  }, [isLoadingRegions, completeSelectedRegions, currentStep]);
+  }, [pendingNextStep, isLoadingRegions, regions]);
 
   useEffect(() => {
-    if (isLoadingConcepts && completeSelectedConcepts && currentStep === 3) {
-      setCurrentStep((prev) => prev + 1);
+    if (pendingNextStep === 3) {
+      if (!isLoadingConcepts && concepts) {
+        setPendingNextStep(null);
+        setCurrentStep(4);
+      }
     }
-  }, [isLoadingConcepts, completeSelectedConcepts, currentStep]);
+  }, [pendingNextStep, isLoadingConcepts, concepts]);
 
   const onSubmit = useCallback(
     async (data: PortfolioOnboardingFormData) => {
@@ -249,36 +290,66 @@ export default function PortfolioOnboardingContainer() {
         userId,
       };
 
-      console.log('포트폴리오 등록 데이터:', portfolioData);
+      const enhancedTime = (() => {
+        switch (portfolioData.retouchingDuration) {
+          case '당일 보정':
+            return '1일';
+          case '2일 이내':
+            return '2일';
+          case '3일 이내':
+            return '3일';
+          case '4일 이내':
+            return '4일';
+          case '5일 이내':
+            return '5일';
+          case '7일 이내':
+            return '7일';
+          default:
+            return '14일';
+        }
+      })();
 
-      // TODO: API 연결
-      // try {
-      //   const response = await createPortfolioAPI(portfolioData);
-      //   if (response.success) {
-      //     // 포트폴리오 등록 성공
-      //     completePortfolioRegistration();
-      //     navigation.replace('Home');
-      //   }
-      // } catch (error) {
-      //   console.error('포트폴리오 등록 실패:', error);
-      // }
+      const params = {
+        description: portfolioData.description,
+        basePrice: parseInt(portfolioData.basePrice),
+        baseTime: portfolioData.shootingDuration !== null ? parseInt(portfolioData.shootingDuration.slice(0)) : 1,
+        basePeople: portfolioData.shootingPeople !== undefined && portfolioData.shootingPeople !== null ? parseInt(portfolioData.shootingPeople.slice(0)) : 1,
+        regionId: portfolioData.shootingRegions,
+        conceptId: portfolioData.shootingConcepts,
+        schedules: buildSchedulesFromForm(portfolioData.availableDays, portfolioData.startTime, portfolioData.endTime),
+        isPublicHolidays: portfolioData.availableDays.includes("공휴일"),
+        isOriginal: portfolioData.provideRawFiles,
+        isEnhanced: portfolioData.retouchingType !== null ? portfolioData.retouchingType : '제공하지 않음',
+        enhancedTime,
+        enhancedPermission: portfolioData.retouchingSelectionRight !== null ? portfolioData.retouchingSelectionRight : '작가와 고객 함께 선택',
+      }
 
-      // TODO: 포토폴리오 등록 API 연결
-      navigation.replace('Home');
+      signPhotographer(params, {
+        onSuccess: () => {
+          Alert.show({
+            title: '완료',
+            message: '등록이 완료되었습니다.',
+            buttons: [
+              {
+                text: '확인',
+                onPress: () => {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                  });
+                },
+              },
+            ],
+          });
+        },
+        onError: (e) => {
+          Alert.show({ title: '오류', message: '등록에 실패했습니다.' });
+          console.error(e);
+        },
+      });
     },
-    [profileImageURI, photoURIs, userId, navigation]
+    [profileImageURI, photoURIs, userId, navigation, signPhotographer]
   );
-
-  const handleProfileImageUpload = useCallback(() => {
-    // TODO: 이미지 업로드 로직
-    // const result = await ImagePicker.launchImageLibrary();
-    // if (result.assets && result.assets[0]) {
-    //   setProfileImageURI(result.assets[0].uri);
-    // }
-
-    // 임시: 더미 이미지 URI
-    setProfileImageURI('https://picsum.photos/200');
-  }, []);
 
   const handleCamera = useCallback(async () => {
     requestPermission(
@@ -314,7 +385,7 @@ export default function PortfolioOnboardingContainer() {
           return;
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
-          uploadProfileMutate({
+          uploadProfile({
             image: {
               uri: response.assets[0].uri,
               name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
@@ -327,11 +398,12 @@ export default function PortfolioOnboardingContainer() {
                 message: '프로필 사진이 업데이트되었습니다.',
               });
             },
-            onError: () => {
+            onError: (e) => {
               Alert.show({
                 title: '오류',
                 message: '프로필 사진 업데이트에 실패했습니다.',
               });
+              console.error(e);
             },
           });
           setProfileImageURI(response.assets[0].uri);
@@ -340,7 +412,7 @@ export default function PortfolioOnboardingContainer() {
         }
       }
     );
-  }, [uploadProfileMutate]);
+  }, [uploadProfile]);
 
   const handleGalleryForProfile = useCallback(async () => {
     requestPermission(
@@ -364,7 +436,7 @@ export default function PortfolioOnboardingContainer() {
           return;
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
-          uploadProfileMutate({
+          uploadProfile({
             image: {
               uri: response.assets[0].uri,
               name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
@@ -377,21 +449,21 @@ export default function PortfolioOnboardingContainer() {
                 message: '프로필 사진이 업데이트되었습니다.',
               });
             },
-            onError: () => {
+            onError: (e) => {
               Alert.show({
                 title: '오류',
                 message: '프로필 사진 업데이트에 실패했습니다.',
               });
+              console.error(e);
             },
           });
           setProfileImageURI(response.assets[0].uri);
         }
       }
-      // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
     );
-  }, [uploadProfileMutate]);
+  }, [uploadProfile]);
 
-  const handlePhotoUpload = useCallback(() => {
+  const handleProfileImageUpload = useCallback(() => {
     Alert.show({
       title: '프로필 사진 변경',
       message: '프로필 사진을 어떻게 업로드하시겠습니까?',
@@ -414,6 +486,63 @@ export default function PortfolioOnboardingContainer() {
       ],
     });
   }, [handleCamera, handleGalleryForProfile]);
+
+  const handlePhotoUpload = useCallback(async () => {
+    requestPermission(
+      'photo',
+      async () => {
+        // 권한 허용됨 - 갤러리 열기
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo',
+          selectionLimit: 0,
+          quality: 0.8,
+        };
+
+        const response: ImagePickerResponse = await launchImageLibrary(options);
+
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.show({
+            title: '갤러리 오류',
+            message: response.errorMessage || '알 수 없는 오류',
+          });
+          return;
+        }
+        if (response.assets && response.assets.length > 0) {
+          const images = response.assets
+            .filter(
+              (asset): asset is UploadImageParams =>
+                !!asset.uri && !!asset.fileName && !!asset.type,
+            )
+            .map((asset) => ({
+              uri: asset.uri!,
+              name: generateImageFilename(asset.type, 'photographer_portfolio'),
+              type: asset.type!,
+            }));
+
+          uploadPortfolio({
+            request: { content: "" },
+            images
+          }, {
+            onSuccess: () => {
+              Alert.show({
+                title: '성공',
+                message: '포트폴리오 사진이 업로드되었습니다.',
+              });
+            },
+            onError: (e) => {
+              Alert.show({
+                title: '오류',
+                message: '포트폴리오 사진 업로드에 실패했습니다.',
+              });
+              console.error(e);
+            },
+          });
+          setPhotoURIs(images.map(image => image.uri));
+        }
+      }
+    );
+  }, [uploadPortfolio]);
 
   const handleToggleRegion = useCallback((id: number) => {
     setValue(

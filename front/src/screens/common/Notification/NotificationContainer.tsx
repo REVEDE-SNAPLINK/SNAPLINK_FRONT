@@ -1,4 +1,4 @@
-// import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import NotificationView from '@/screens/common/Notification/NotificationView.tsx';
@@ -6,13 +6,13 @@ import { useNotificationsQuery } from '@/queries/notifications.ts';
 import { usePatchNotificationReadMutation } from '@/mutations/notifications.ts';
 
 // TODO: 현재 API에 카테고리 필터 기능이 없습니다. 추후 백엔드 API가 추가되면 활성화하세요.
-// type NotificationCategory = '일정' | '리뷰' | '게시글';
+type NotificationCategory = '일정' | '리뷰' | '게시글';
 
 export default function NotificationContainer() {
   const navigation = useNavigation<MainNavigationProp>();
 
   // TODO: 카테고리 필터 기능 - API 지원 시 활성화
-  // const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>('일정');
+  const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>('일정');
 
   // Fetch notifications (최근 20개)
   const { data: notifications = [] } = useNotificationsQuery();
@@ -32,9 +32,9 @@ export default function NotificationContainer() {
   const handlePressBack = () => navigation.goBack();
 
   // TODO: 카테고리 탭 기능 - API 지원 시 활성화
-  // const handlePressTab = (category: NotificationCategory) => {
-  //   setSelectedCategory(category);
-  // };
+  const handlePressTab = (category: NotificationCategory) => {
+    setSelectedCategory(category);
+  };
 
   const handlePressNotification = (notificationId: string) => {
     // Mark as read
@@ -57,9 +57,10 @@ export default function NotificationContainer() {
   };
 
   // TODO: 삭제 기능 - 백엔드 API 추가 시 구현
-  // const handlePressDelete = (notificationId: string) => {
-  //   deleteMutation.mutate(Number(notificationId));
-  // };
+  const handlePressDelete = (notificationId: string) => {
+    // deleteMutation.mutate(Number(notificationId));
+    console.log(notificationId);
+  };
 
   // Transform API data to view model
   const viewNotifications = notifications.map((n) => ({
@@ -77,11 +78,11 @@ export default function NotificationContainer() {
     <NotificationView
       notifications={viewNotifications}
       // TODO: 카테고리 기능 활성화 시 props 전달
-      // selectedCategory={selectedCategory}
-      // onPressTab={handlePressTab}
+      selectedCategory={selectedCategory}
+      onPressTab={handlePressTab}
       onPressBack={handlePressBack}
       onPressNotification={handlePressNotification}
-      // onPressDelete={handlePressDelete}
+      onPressDelete={handlePressDelete}
     />
   );
 }

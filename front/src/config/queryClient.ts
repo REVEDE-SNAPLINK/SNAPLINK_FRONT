@@ -1,11 +1,36 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
+
+const logError = (
+  scope: 'Query' | 'Mutation',
+  payload: Record<string, unknown>,
+) => {
+  console.error(`[ReactQuery][${scope} Error]`, payload);
+};
 
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      logError('Query', {
+        error,
+        queryKey: query.queryKey,
+        meta: query.meta,
+      });
+    },
+  }),
+
+  mutationCache: new MutationCache({
+    onError: (error, variables, _context, mutation) => {
+      logError('Mutation', {
+        error,
+        variables,
+        mutationKey: mutation.options.mutationKey,
+        meta: mutation.options.meta,
+      });
+    },
+  }),
+
   defaultOptions: {
     queries: {
-      retry: 2,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime in v4)
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },

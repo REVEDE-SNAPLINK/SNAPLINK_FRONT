@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { UserMainNavigationProp } from '@/types/userNavigation.ts';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
 import { useUserReservationsInfiniteQuery } from '@/queries/reservations'
+import { MainNavigationProp } from '@/types/navigation.ts';
 
 const PAGE_SIZE = 10;
 
 export default function BookingHistoryContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {

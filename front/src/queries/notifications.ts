@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getNotifications, getUnreadNotificationStatus } from '@/api/notifications';
 import { notificationsQueryKeys } from '@/queries/keys';
+import { withMockData, getMockNotifications } from '@/__dev__';
 
 /**
  * 최근 알림 목록(최신 20개)
@@ -9,7 +10,10 @@ import { notificationsQueryKeys } from '@/queries/keys';
 export const useNotificationsQuery = () =>
   useQuery({
     queryKey: notificationsQueryKeys.list(),
-    queryFn: getNotifications,
+    queryFn: () => withMockData(
+      () => getMockNotifications(),
+      () => getNotifications(),
+    ),
     staleTime: 1000 * 10, // 10초 정도(원하면 조절)
   });
 

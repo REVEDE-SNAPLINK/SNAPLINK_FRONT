@@ -2,12 +2,12 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
-import { Photographer } from '@/types/photographer';
+import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { FlatList, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
 import Loading from '@/components/Loading.tsx';
 
 interface SearchPhotographerListProps {
-  photographers: Photographer[];
+  photographers: PhotographerSearchItem[];
   onEndReached: () => void;
   onRefresh: () => void;
   isRefreshing: boolean;
@@ -47,7 +47,7 @@ export default function SearchPhotographerList({
 }
 
 interface SearchPhotographerItemProps {
-  photographer: Photographer;
+  photographer: PhotographerSearchItem;
   onPress: () => void;
 }
 
@@ -56,21 +56,22 @@ const SearchPhotographerItem = ({ photographer, onPress }: SearchPhotographerIte
     return price.toLocaleString();
   };
 
+  const genderLabel = photographer.gender === 'MAN' ? '남성작가' : '여성작가';
+
   return (
     <SearchPhotographerItemContainer>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ marginBottom: 5 }}
-      >
-        {photographer.portfolioImages.map((item, index) => (
-          <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
-            {/*<PhotofolioImage source={{ uri: item }} />*/}
-            <PhotofolioImage source={require('@/assets/imgs/snap-sample2.png')} />
-          </PhotofolioImageWrapper>
-        ))}
-      </ScrollView>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 5 }}
+        >
+          {photographer.portfolioImages.map((item, index) => (
+            <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
+              <PhotofolioImage source={{ uri: item }} />
+            </PhotofolioImageWrapper>
+          ))}
+        </ScrollView>
         <PhotographerInfoWrapper>
           <Typography
             fontSize={12}
@@ -83,19 +84,18 @@ const SearchPhotographerItem = ({ photographer, onPress }: SearchPhotographerIte
           </Typography>
           <Icon width={13} height={12} source={require('@/assets/icons/star-review.png')} />
           <Typography fontSize={11} lineHeight="140%" letterSpacing="-2.5%" color="textSecondary">
-            {photographer.rating.toFixed(1)} ({photographer.reviewCount})
+            {photographer.averageRating.toFixed(1)} ({photographer.reviewCount})
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerInfoWrapper>
           <Typography fontSize={11} fontWeight="medium" lineHeight="140%" letterSpacing="-2.5%">
-            {photographer.shootingUnit} {formatPrice(photographer.price)}원
+            기본촬영/{photographer.baseTime}시간 {formatPrice(photographer.basePrice)}원
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerLabelWrapper>
-          {photographer.isPartner && <PhotographerLabel text="파트너 작가" special />}
-          <PhotographerLabel text={photographer.gender} />
-          {photographer.shootingTypes.map((type, index) => (
-            <PhotographerLabel key={index} text={type} />
+          <PhotographerLabel text={genderLabel} />
+          {photographer.concepts.map((concept, index) => (
+            <PhotographerLabel key={index} text={concept} />
           ))}
         </PhotographerLabelWrapper>
       </TouchableOpacity>

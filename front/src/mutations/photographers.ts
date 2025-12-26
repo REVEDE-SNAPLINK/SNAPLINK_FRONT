@@ -5,7 +5,7 @@ import {
   patchPhotographerProfileImage,
   PatchPhotographerProfileImageParams,
   PhotographerSignRequest,
-  signPhotographer,
+  signPhotographer, togglePhotographerScrap,
 } from '@/api/photographers.ts';
 import { photographersQueryKeys } from '@/queries/keys.ts';
 
@@ -56,6 +56,21 @@ export const useCreatePortfolioMutation = (photographerId?: string) => {
           ? [qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) })]
           : []),
       ]);
+    },
+  });
+};
+
+export const useTogglePhotographerScrapMutation = (photographerId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => togglePhotographerScrap(photographerId),
+    onSuccess: () => {
+      // 스크랩 결과가 여러 화면에 영향을 줌 → 넓게 invalidate
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.scrappedMe() });
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.search() });
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) });
+      // 리뷰요약/리뷰목록은 보통 영향 없음. (scrapped 필드가 그쪽에 없으니까)
     },
   });
 };

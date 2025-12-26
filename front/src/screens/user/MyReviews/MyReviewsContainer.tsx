@@ -1,15 +1,16 @@
 import { useNavigation } from '@react-navigation/native';
-import { UserMainNavigationProp } from '@/types/userNavigation';
 import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
-import { useMyReviewsQuery } from '@/queries/reviews';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
 import { Alert } from '@/components/theme';
+import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
+import type { GetMyReviewsResponse } from '@/api/me';
+import { MainNavigationProp } from '@/types/navigation.ts';
 
 export default function MyReviewsContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
 
   // Fetch my reviews
-  const { data } = useMyReviewsQuery();
+  const { data, isLoading, error } = useMyReviewsInfiniteQuery({ size: 10 });
   const deleteReviewMutation = useDeleteReviewMutation();
 
   const handlePressBack = () => navigation.goBack();
@@ -26,7 +27,7 @@ export default function MyReviewsContainer() {
     });
   };
 
-  const handlePressEdit = (reviewId: string) => {
+  const handlePressEdit = (_reviewId: string) => {
     // TODO: Pass reservationId to WriteReview screen for editing
     // For now, just show alert
     Alert.show({
@@ -69,25 +70,48 @@ export default function MyReviewsContainer() {
     });
   };
 
-  // Transform API data to view model
-  const reviews =
-    data?.reviews.map((review) => ({
-      id: String(review.id),
-      photographerId: String(review.photographerId),
-      photographerNickname: review.photographerNickname,
-      photographerProfileImage: review.photographerProfileImage,
-      rating: review.rating,
-      title: review.shootingTag, // API에 title이 없으면 shootingTag 사용
-      content: review.content,
-      bookingType: review.shootingTag,
-      images: review.imageUrls,
-      createdAt: review.createdAt,
-    })) || [];
+  // Transform API data to view model (InfiniteQuery 구조: pages 배열)
+  const pages = (data?.pages || []) as GetMyReviewsResponse[];
+  const allReviews = pages.flatMap((page) => page.content);
+  const totalCount = pages[0]?.totalElements || 0;
+
+  const reviews = allReviews.map((review) => ({
+    id: String(review.id),
+    photographerId: String(review.photographerId),
+    photographerNickname: review.photographerNickname,
+    photographerProfileImage: review.photographerProfileImage,
+    rating: review.rating,
+    title: review.shootingTag, // API에 title이 없으면 shootingTag 사용
+    content: review.content,
+    bookingType: review.shootingTag,
+    images: review.imageUrls,
+    createdAt: review.createdAt,
+  }));
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <MyReviewsView
+        reviews={[]}
+        totalCount={0}
+        onPressBack={handlePressBack}
+        onPressReview={handlePressReview}
+        onPressAllPhotos={handlePressAllPhotos}
+        onPressEdit={handlePressEdit}
+        onPressDelete={handlePressDelete}
+      />
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    console.error('Failed to load reviews:', error);
+  }
 
   return (
     <MyReviewsView
       reviews={reviews}
-      totalCount={data?.totalCount || 0}
+      totalCount={totalCount}
       onPressBack={handlePressBack}
       onPressReview={handlePressReview}
       onPressAllPhotos={handlePressAllPhotos}

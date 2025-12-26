@@ -1,6 +1,5 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { UserMainStackParamList } from '@/types/userNavigation';
-import { PhotographerMainStackParamList } from '@/types/photographerNavigation';
+import { BookingFormData } from '@/screens/user/Booking/BookingContainer.tsx';
 
 // Root Stack
 export type RootStackParamList = {
@@ -16,21 +15,45 @@ export type AuthStackParamList = {
 }
 
 // Main Stack
-export type MainStackParamList = UserMainStackParamList & PhotographerMainStackParamList & {
+export type MainStackParamList = {
   Home: undefined;
+
+  // Home
+  SearchPhotographer: { searchKey: string };
+  PhotographerDetails: { photographerId: string };
+  PostDetail: { postId: number };
+
+  // Community
+  CommunityDetails: { postId: string };
+  MyPosts: undefined;
+
+  // Chat
+  ChatDetails: { chatRoomId: number, opponentId: string, opponentProfileImageURI: string };
+
+  // Reservation
+  BookingHistory: undefined;
+  BookingDetails: { reservationId: number };
+  Booking: { photographerId: string };
+  BookingRequest: BookingFormData;
+
+  // Review
+  Reviews: { photographerId: string };
+  ReviewDetails: { reviewId: number };
+  ReviewPhotos: { photographerId: string };
+  WriteReview: { reservationId: number };
+  ViewPhotos: { reservationId: number };
+  MyReviews: undefined;
+
+  // Profile
   NicknameEdit: undefined;
-  NameEdit: undefined;
   EmailEdit: undefined;
   AccountManage: undefined;
-  SearchPhotographer: { searchKey: string };
-  PhotographerDetails: { id: string };
-  PostDetail: { postId: string };
-  ChatDetails: { chatRoomId: string };
-  MyPosts: undefined;
-  Reviews: { photographerId: string };
-  ReviewDetails: { reviewId: string };
-  ReviewPhotos: { photographerId: string };
-  CommunityDetails: { postId: string };
+
+  // For Photographer
+  PortfolioOnboarding: undefined;
+  BookingCalendar: undefined;
+
+  // etc
   Notification: undefined;
 };
 

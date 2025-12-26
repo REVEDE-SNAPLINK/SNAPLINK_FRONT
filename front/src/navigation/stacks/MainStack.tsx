@@ -21,7 +21,6 @@ import BookingCalendarContainer from '@/screens/photographer/BookingCalendar/Boo
 import NotificationContainer from '@/screens/common/Notification/NotificationContainer.tsx';
 import MyReviewsContainer from '@/screens/user/MyReviews/MyReviewsContainer.tsx';
 import NicknameEditScreen from '@/screens/common/NicknameEditScreen.tsx';
-import NameEditScreen from '@/screens/common/NameEditScreen.tsx';
 import AccountManageScreen from '@/screens/common/AccountManageScreen.tsx';
 import EmailEditScreen from '@/screens/common/EmailEditScreen.tsx';
 
@@ -34,14 +33,21 @@ export default function MainStack() {
       screenOptions={{headerShown: false}}
     >
       <Stack.Screen name="Home" component={MainTab} />
+
+      {/* Home */}
+      <Stack.Screen name="SearchPhotographer" component={SearchPhotographerContainer} />
+      <Stack.Screen name="PhotographerDetails" component={PhotographerDetailsContainer} />
+
+      {/* Community */}
+      <Stack.Screen name="CommunityDetails" component={CommunityDetailsContainer} />
+      <Stack.Screen name="PostDetail" component={PostDetailContainer} />
+      <Stack.Screen name="MyPosts" component={MyPostsContainer} />
+
+      {/* Chat */}
       <Stack.Screen name="NicknameEdit" component={NicknameEditScreen} />
-      <Stack.Screen name="NameEdit" component={NameEditScreen} />
       <Stack.Screen name="EmailEdit" component={EmailEditScreen} />
       <Stack.Screen name="AccountManage" component={AccountManageScreen} />
       <Stack.Screen name="Notification" component={NotificationContainer} />
-      <Stack.Screen name="SearchPhotographer" component={SearchPhotographerContainer} />
-      <Stack.Screen name="PhotographerDetails" component={PhotographerDetailsContainer} />
-      <Stack.Screen name="PostDetail" component={PostDetailContainer} />
       <Stack.Screen name="ChatDetails" component={ChatDetailsContainer} />
       <Stack.Screen name="Booking" component={BookingContainer} />
       <Stack.Screen name="BookingHistory" component={BookingHistoryContainer} />
@@ -49,11 +55,9 @@ export default function MainStack() {
       <Stack.Screen name="BookingDetails" component={BookingDetailsContainer} />
       <Stack.Screen name="WriteReview" component={WriteReviewContainer} />
       <Stack.Screen name="ViewPhotos" component={ViewPhotosContainer} />
-      <Stack.Screen name="MyPosts" component={MyPostsContainer} />
       <Stack.Screen name="Reviews" component={ReviewsContainer} />
       <Stack.Screen name="ReviewDetails" component={ReviewDetailsContainer} />
       <Stack.Screen name="ReviewPhotos" component={ReviewPhotosContainer} />
-      <Stack.Screen name="CommunityDetails" component={CommunityDetailsContainer} />
       <Stack.Screen name="BookingCalendar" component={BookingCalendarContainer} />
       <Stack.Screen name="MyReviews" component={MyReviewsContainer} />
       <Stack.Screen name="PortfolioOnboarding" component={PortfolioOnboardingContainer} />

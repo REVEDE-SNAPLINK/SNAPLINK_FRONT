@@ -48,7 +48,7 @@ export default function MyPostsView({
               <Typography fontSize={16} fontWeight="bold" letterSpacing="-2.5%" marginBottom={10}>
                 {post.title}
               </Typography>
-              <Typography fontSize={14} fontWeight="bold" lineHeight="140%" letterSpacing="-2.5%">
+              <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%">
                 {post.content}
               </Typography>
             </PostItem>

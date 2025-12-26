@@ -1,11 +1,10 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
 import WriteReviewView from '@/screens/user/WriteReview/WriteReviewView.tsx';
 import { useState } from 'react';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Alert } from '@/components/theme/Alert';
 import { requestPermission } from '@/utils/permissions';
-// import { useMutation } from '@tanstack/react-query';
+import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 /**
  * Request payload for writing a review
@@ -59,9 +58,9 @@ const CONTENT_MIN_LENGTH = 15;
 const CONTENT_MAX_LENGTH = 1000;
 
 export default function WriteReviewContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
-  const route = useRoute<RouteProp<UserMainStackParamList, 'WriteReview'>>();
-  const { id: bookingId } = route.params;
+  const navigation = useNavigation<MainNavigationProp>();
+  const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
+  const { reservationId } = route.params;
 
   // Form state
   const [rating, setRating] = useState(0);
@@ -124,7 +123,7 @@ export default function WriteReviewContainer() {
     // });
 
     // Temporary: Just navigate back
-    console.log('Review submitted:', { bookingId, rating, images, shootingType, content });
+    console.log('Review submitted:', { reservationId, rating, images, shootingType, content });
     navigation.navigate('BookingHistory');
   };
 

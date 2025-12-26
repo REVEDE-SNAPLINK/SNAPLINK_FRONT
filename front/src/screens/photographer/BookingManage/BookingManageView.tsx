@@ -4,13 +4,14 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import HistoryCard from '@/components/HistoryCard.tsx';
 import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
-import { UserBooking } from '@/api/photographer';
 import { theme } from '@/theme';
 import { formatReservationDateTime } from '@/utils/format';
-import { ReservationListItem } from '@/api/reservations.ts';
+import { PhotographerReservationListItem } from '@/api/reservations.ts';
+import { GetMeResponse } from '@/api/user.ts';
 
 interface BookingHistoryViewProps {
-  bookings: ReservationListItem[];
+  reservations: PhotographerReservationListItem[];
+  photographerProfile: GetMeResponse;
   isLoading: boolean;
   isError: boolean;
   onLoadMore: () => void;
@@ -26,7 +27,8 @@ interface BookingHistoryViewProps {
 }
 
 export default function BookingManageView({
-  bookings,
+  reservations,
+  photographerProfile,
   isLoading,
   isError,
   onLoadMore,
@@ -41,7 +43,7 @@ export default function BookingManageView({
   onPressRejectBooking,
 }: BookingHistoryViewProps) {
   const mapStatusToHistoryCardStatus = (
-    status: UserBooking['status']
+    status: PhotographerReservationListItem['status']
   ): 'PENDING' | 'CONFIRMED' | 'COMPLETED' => {
     switch (status) {
       case 'REQUESTED':
@@ -58,7 +60,7 @@ export default function BookingManageView({
     }
   };
 
-  const renderItem = ({ item }: { item: ReservationListItem }) => {
+  const renderItem = ({ item }: { item: PhotographerReservationListItem }) => {
     const cardStatus = mapStatusToHistoryCardStatus(item.status);
     const isCompleted = cardStatus === 'COMPLETED';
     const isPending = cardStatus === 'PENDING';
@@ -69,11 +71,11 @@ export default function BookingManageView({
       <HistoryCard
         onPress={() => onPressBookingDetail(item.reservationId)}
         status={cardStatus}
-        userName={item.counterpartName}
-        photographerNickname=""
-        photographerName=""
-        type=""
-        datetime={formatReservationDateTime(item.reservedDate, { hour: item.startTime.hour, minute: item.startTime.minute })}
+        userName={item.userName}
+        photographerNickname={photographerProfile.nickname}
+        photographerName={photographerProfile.name}
+        type={item.type}
+        datetime={formatReservationDateTime(item.reservedDate, item.startTime)}
         onPressViewPhotos={
           canUploadPhotos && onPressViewPhotos
             ? () => onPressViewPhotos(item.reservationId)
@@ -136,7 +138,7 @@ export default function BookingManageView({
       <ContentContainer>
         <FlatList
           testID="booking-history-list"
-          data={bookings}
+          data={reservations}
           renderItem={renderItem}
           keyExtractor={(item) => item.reservationId.toString()}
           contentContainerStyle={{

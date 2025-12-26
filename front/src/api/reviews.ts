@@ -106,20 +106,6 @@ export interface GetMyReviewsResponse {
   totalCount: number;
 }
 
-/**
- * GET /api/reviews/me
- * 내가 작성한 리뷰 목록 조회 (고객 전용)
- */
-export const getMyReviews = async (): Promise<GetMyReviewsResponse> => {
-  const response = await authFetch(`${REVIEWS_BASE}/me`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) throw new Error(`Failed to get my reviews ${response.status}`);
-
-  return response.json();
-};
-
 /** 리뷰 수정 요청 */
 export interface UpdateReviewRequest {
   rating: number;

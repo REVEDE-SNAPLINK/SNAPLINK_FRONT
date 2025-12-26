@@ -4,6 +4,8 @@ import { saveRefreshToken, loadRefreshToken, clearRefreshToken } from '@/auth/to
 import messaging from '@react-native-firebase/messaging';
 import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
 import { login } from '@react-native-kakao/user';
+import { jwtDecode } from 'jwt-decode';
+import { Platform } from 'react-native';
 
 type AuthStatus = 'idle' | 'loading' | 'authed' | 'anon' | 'needs_signup';
 type UserType = 'user' | 'photographer';
@@ -22,6 +24,8 @@ type AuthState = {
   signUpCompletionModalType: boolean;
   setSignUpCompletionModalType: () => void;
 
+  bootstrapped: boolean;
+
   // actions
   bootstrap: () => Promise<void>;
   signInWithKakao: () => Promise<string | null>;
@@ -35,6 +39,7 @@ type AuthState = {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   status: 'idle',
+  bootstrapped: false,
   userId: '',
   userType: 'photographer',
   accessToken: null,
@@ -58,21 +63,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const refreshToken = await loadRefreshToken();
       if (!refreshToken) {
-        set({ status: 'anon', accessToken: null, userId: "" });
+        set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
         return;
       }
 
       const refreshed = await refreshApi(refreshToken);
-
       if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
         await saveRefreshToken(refreshed.refreshToken);
       }
 
-      set({ accessToken: refreshed.accessToken, status: 'authed' });
-
-    } catch (e) {
+      set({ accessToken: refreshed.accessToken, status: 'authed', bootstrapped: true });
+    } catch {
       await clearRefreshToken();
-      set({ status: 'anon', accessToken: null, userId: "" });
+      set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
     }
   },
 
@@ -104,9 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           userType: response.role === 'USER' ? 'user' : 'photographer',
         });
 
-        messaging()
-          .getToken()
-          .then(token => registerFCMdevice(token));
+        await safeRegisterFcmDevice();
       } else {
         set({
           status: 'needs_signup',
@@ -122,12 +123,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async signOut() {
-    logoutApi().then(() => {
-      clearRefreshToken().then(() => {
-        messaging().getToken().then((token) => deleteFCMToken(token));
-        set({ status: 'anon', accessToken: null, userId: '' });
-      });
-    })
+    set({ status: 'anon', accessToken: null, userId: '' });
+
+    // refreshToken은 로컬에서 무조건 제거
+    await clearRefreshToken().catch(() => {});
+
+    // 서버 로그아웃/FCM 정리는 best-effort
+    await Promise.allSettled([
+      logoutApi(),
+      safeDeleteFcmToken(),
+    ]);
   },
 
   async signUp(formData: SignUpFormData) {
@@ -144,9 +149,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           userId: response.userId,
         });
 
-        messaging()
-          .getToken()
-          .then(token => registerFCMdevice(token));
+        await safeRegisterFcmDevice();
       }
     } catch (e) {
       set({ status: 'anon', accessToken: null });
@@ -156,12 +159,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   withdraw: async () => {
-    withdrawApi().then(() => {
-      clearRefreshToken().then(() => {
-        messaging().getToken().then((token) => deleteFCMToken(token));
-        set({ status: 'anon', accessToken: null, userId: '' });
-      });
-    })
+    const result = await withdrawApi().then(
+      () => ({ ok: true as const }),
+      (e) => ({ ok: false as const, e }),
+    );
+
+    // 로컬 정리는 항상 수행
+    await clearRefreshToken().catch(() => {});
+    set({ status: 'anon', accessToken: null, userId: '' });
+
+    // FCM 정리는 best-effort
+    await safeDeleteFcmToken();
+
+    // 필요하면 호출한 쪽에서 에러 핸들링할 수 있게 throw
+    if (!result.ok) throw result.e;
   },
 
   getAccessToken: async () => {
@@ -173,7 +184,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const refreshToken = await loadRefreshToken();
     if (!refreshToken) {
-      set({ status: 'anon', accessToken: null, userId: '' });
+      // refreshToken이 없어도 바로 로그아웃하지 않음
+      // 이미 authed 상태라면 유지 (UI에서 401 발생 시 처리)
+      console.log('[getAccessToken] No refresh token available');
       return null;
     }
 
@@ -191,8 +204,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return refreshed.accessToken;
     } catch (e) {
+      console.error('[getAccessToken] Token refresh failed:', e);
+      // Refresh 실패 시 토큰 정리하지만 status는 유지
+      // authFetch에서 401 처리 후 최종 실패 시에만 로그아웃
       await clearRefreshToken();
-      set({ status: 'anon', accessToken: null, userId: '' });
+      set({ accessToken: null });
       return null;
     }
   }
@@ -200,13 +216,50 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
 const isJwtExpired = (token: string, skewSeconds = 30) => {
   try {
-    const payload = JSON.parse(
-      Buffer.from(token.split('.')[1], 'base64').toString('utf8')
-    );
-    const expMs = (payload.exp ?? 0) * 1000;
-    return Date.now() >= expMs - skewSeconds * 1000; // 30초 여유
+    const { exp } = jwtDecode<{ exp?: number }>(token);
+    const expMs = (exp ?? 0) * 1000;
+    return Date.now() >= expMs - skewSeconds * 1000;
   } catch {
-    // 파싱 실패면 안전하게 만료 취급
     return true;
+  }
+};
+
+const safeDeleteFcmToken = async () => {
+  try {
+    if (Platform.OS === 'ios') {
+      await messaging().registerDeviceForRemoteMessages().catch(() => {});
+      const apnsToken = await messaging().getAPNSToken().catch(() => null);
+      if (!apnsToken) return;
+    }
+
+    const fcmToken = await messaging().getToken();
+    if (!fcmToken) return;
+
+    await deleteFCMToken(fcmToken);
+  } catch (e) {
+    console.log('[Auth] safeDeleteFcmToken failed:', e);
+  }
+};
+
+const safeRegisterFcmDevice = async () => {
+  try {
+    if (Platform.OS === 'ios') {
+      // iOS에서 APNs 준비가 안 되면 getToken이 터질 수 있음
+      await messaging().registerDeviceForRemoteMessages();
+      await messaging().requestPermission();
+
+      const apnsToken = await messaging().getAPNSToken().catch(() => null);
+      if (!apnsToken) {
+        console.log('[Auth] APNs token not ready, skip FCM register');
+        return;
+      }
+    }
+
+    const fcmToken = await messaging().getToken();
+    if (!fcmToken) return;
+
+    await registerFCMdevice(fcmToken);
+  } catch (e) {
+    console.log('[Auth] safeRegisterFcmDevice failed:', e);
   }
 };

@@ -5,27 +5,26 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import { formatNumber } from '@/utils/format.ts';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
-import { TimeSlot, RequiredShootingOption, OptionalShootingOption } from '@/api/photographer.ts';
 import { TimeSelector } from '@/components/TimeSelector.tsx';
 import { RequiredOption, OptionalOption, OptionLabel } from '@/components/ShootingOptions.tsx';
 import { useMemo } from 'react';
+import { ShootingOption } from '@/screens/user/Booking/BookingContainer.tsx';
 
 interface BookingViewProps {
   onPressBack: () => void;
   onChangeDate: (date: string) => void;
-  nickname: string;
   initialDate: string;
   availableDates: string[];
   currentDate: string;
-  timeSlots: TimeSlot[];
+  timeSlots: string[];
   selectedTime: string | null;
   onSelectTime: (time: string) => void;
-  requiredOptions: RequiredShootingOption[];
-  requiredOptionChecked: boolean;
-  onPressRequiredOption: () => void;
-  optionalOptions: OptionalShootingOption[];
-  optionalQuantities: Record<string, number>;
-  onOptionalQuantityChange: (optionId: string, quantity: number) => void;
+  requiredOptions: ShootingOption;
+  optionalOptions: ShootingOption[];
+  optionalQuantities: number[];
+  onOptionalQuantityChange: (quantity: number) => void;
+  concept: number;
+  onPressRequiredOption: (optionId: number) => void;
   totalPrice: number;
   onSubmit: () => void;
   isSubmitDisabled: boolean;
@@ -34,7 +33,6 @@ interface BookingViewProps {
 export default function BookingView({
   onPressBack,
   onChangeDate,
-  nickname,
   initialDate,
   currentDate,
   availableDates,
@@ -42,23 +40,20 @@ export default function BookingView({
   selectedTime,
   onSelectTime,
   requiredOptions,
-  requiredOptionChecked,
+  concept,
   onPressRequiredOption,
-  optionalOptions,
-  optionalQuantities,
-  onOptionalQuantityChange,
   totalPrice,
   onSubmit,
   isSubmitDisabled,
 }: BookingViewProps) {
   // Split time slots into morning (오전) and afternoon (오후)
   const { morningSlots, afternoonSlots } = useMemo(() => {
-    const morning: TimeSlot[] = [];
-    const afternoon: TimeSlot[] = [];
+    const morning: string[] = [];
+    const afternoon: string[] = [];
 
     timeSlots.forEach((slot) => {
-      const hour = parseInt(slot.time.split(':')[0], 10);
-      if (hour <= 12) {
+      const hour = parseInt(slot.split(':')[0], 10);
+      if (hour < 12) {
         morning.push(slot);
       } else {
         afternoon.push(slot);
@@ -69,7 +64,7 @@ export default function BookingView({
   }, [timeSlots]);
 
   return (
-    <ScreenContainer onPressBack={onPressBack} headerTitle={nickname} alignItemsCenter={false}>
+    <ScreenContainer onPressBack={onPressBack} headerTitle="예약" alignItemsCenter={false}>
       <ScrollContainer showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
         <CalendarWrapper>
           <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" marginBottom={32}>
@@ -107,14 +102,12 @@ export default function BookingView({
           </Typography>
         </OptionLabel>
 
-        {requiredOptions.map((option) => (
-          <RequiredOption
-            key={option.id}
-            isChecked={requiredOptionChecked}
-            onPress={onPressRequiredOption}
-            option={option}
-          />
-        ))}
+        <RequiredOption
+          key={requiredOptions.id}
+          isChecked={concept === requiredOptions.id}
+          onPress={() => onPressRequiredOption(requiredOptions.id)}
+          option={requiredOptions}
+        />
 
         <OptionLabel>
           <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#fff">
@@ -122,7 +115,7 @@ export default function BookingView({
           </Typography>
         </OptionLabel>
 
-        {optionalOptions.map((option) => (
+        {optionalOptions.map((option: ShootingOption) => (
           <OptionalOption
             key={option.id}
             option={option}

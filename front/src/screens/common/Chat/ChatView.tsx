@@ -1,19 +1,11 @@
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
-
-interface ChatRoom {
-  id: string;
-  userId: string;
-  userNickname: string;
-  userProfileImage: string;
-  lastMessage: string;
-  lastMessageTime: string;
-}
+import { ChatRoomItem } from '@/api/chat.ts';
 
 interface ChatViewProps {
-  chatRooms: ChatRoom[];
-  onPressChatRoom: (chatRoomId: string) => void;
+  chatRooms: ChatRoomItem[];
+  onPressChatRoom: (chatRoomId: number, opponentId: string) => void;
 }
 
 export default function ChatView({
@@ -28,20 +20,22 @@ export default function ChatView({
     >
       <ScrollContainer showsVerticalScrollIndicator={false}>
         {chatRooms.map((chatRoom) => (
-          <ChatItem key={chatRoom.id} onPress={() => onPressChatRoom(chatRoom.id)}>
+          <ChatItem key={chatRoom.roomId} onPress={() => onPressChatRoom(chatRoom.roomId, chatRoom.opponentId)}>
             <ChatProfileImageWrapper>
-              <ChatProfileImage source={{ uri: chatRoom.userProfileImage }} />
+              <ChatProfileImage
+                source={chatRoom.opponentProfileImageUrl ? { uri: chatRoom.opponentProfileImageUrl } : undefined}
+              />
             </ChatProfileImageWrapper>
             <ChatContentWrapper>
               <ChatContentHeader>
                 <Typography
-                  fontSize={14}
+                  fontSize={16}
                   fontWeight="semiBold"
                   lineHeight="140%"
                   letterSpacing="-2.5%"
                   marginRight={5}
                 >
-                  {chatRoom.userNickname}
+                  {chatRoom.opponentNickname}
                 </Typography>
                 <Typography
                   fontSize={10}
@@ -60,7 +54,7 @@ export default function ChatView({
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {chatRoom.lastMessage}
+                {/*{chatRoom.lastMessage}*/}
               </LastMessageText>
             </ChatContentWrapper>
             <UnreadTextCounter>
@@ -68,7 +62,7 @@ export default function ChatView({
                 fontSize={16}
                 color="#fff"
               >
-                3
+                {chatRoom.unreadCount}
               </Typography>
             </UnreadTextCounter>
           </ChatItem>
@@ -111,6 +105,7 @@ const ChatContentWrapper = styled.View`
   margin-left: 9px;
   flex: 1;
   justify-content: center;
+  height: 100%;
 `
 
 const ChatContentHeader = styled.View`

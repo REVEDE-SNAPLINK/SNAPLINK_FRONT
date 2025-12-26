@@ -63,7 +63,7 @@ export default function SlideModal({
   visible,
   onClose,
   children,
-  minHeight,
+  minHeight = SCREEN_HEIGHT * 0.33,
 
   showHeader = true,
   title,

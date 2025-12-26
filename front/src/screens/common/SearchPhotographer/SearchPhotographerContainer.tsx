@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-import SearchPhotographerView from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
+import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
 import { useSearchPhotographersInfiniteQuery } from '@/queries/photographers.ts';
@@ -72,7 +72,7 @@ export default function SearchPhotographerContainer() {
   const [searchKey, setSearchKey] = useState(route.params.searchKey);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
-  const [sortBy, setSortBy] = useState<'recommended' | 'latest'>('recommended');
+  const [sortBy, setSortBy] = useState<SortByKey>('DEFAULT');
 
   const filterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
@@ -183,7 +183,15 @@ export default function SearchPhotographerContainer() {
     refetch,
     isRefetching,
   } = useSearchPhotographersInfiniteQuery(
-    { size: PAGE_SIZE, sort: sortBy === 'latest' ? ['createdAt,DESC'] : [] },
+    { size: PAGE_SIZE,
+      sort: sortBy === 'REVIEWS'
+        ? ['reviewCount,DESC']
+        : sortBy === 'HIGH_PRICE'
+      ? ['averageRating,DESC']
+          : sortBy === 'LOW_PRICE'
+      ? ['averageRating,ASC']
+            : []
+    },
     searchBody,
   );
 
@@ -206,8 +214,8 @@ export default function SearchPhotographerContainer() {
     refetch();
   };
 
-  const handleToggleSort = () => {
-    setSortBy((prev) => (prev === 'recommended' ? 'latest' : 'recommended'));
+  const handleChangeSortBy = (key: SortByKey) => {
+    setSortBy(key);
   };
 
   const handlePressFilter = () => {
@@ -294,7 +302,7 @@ export default function SearchPhotographerContainer() {
       photographers={photographers}
       totalCount={totalCount}
       sortBy={sortBy}
-      onToggleSort={handleToggleSort}
+      onChangeSortBy={handleChangeSortBy}
       onLoadMore={handleLoadMore}
       onRefresh={handleRefresh}
       isRefreshing={isRefetching}

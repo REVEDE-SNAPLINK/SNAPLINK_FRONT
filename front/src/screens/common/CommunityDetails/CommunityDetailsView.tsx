@@ -1,7 +1,7 @@
 import { RefObject, useState, useRef, useEffect } from 'react';
 import BackButton from '@/components/BackButton.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Dimensions, Modal, Platform, Pressable, TextInput, ScrollView, NativeSyntheticEvent, NativeScrollEvent, Animated } from 'react-native';
+import { Dimensions, Platform, TextInput, ScrollView, NativeSyntheticEvent, NativeScrollEvent, Animated } from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
 import { Typography } from '@/components/theme';
@@ -183,7 +183,9 @@ export default function CommunityDetailsView({
         decelerationRate="fast"
       >
         <ContentWrapper>
-          {Platform.OS === 'ios' && <StatusBarSpacer height={statusBarHeight} />}
+          {Platform.OS === 'ios' && (
+            <StatusBarSpacer height={statusBarHeight} />
+          )}
           <PostImageWrapper>
             <TopGradient
               colors={[
@@ -203,119 +205,159 @@ export default function CommunityDetailsView({
               onPress={onPressBack}
             />
             <PostHeaderRightWrapper>
-              <IconButton width={24} height={24} Svg={UploadIcon} onPress={onPressShare} color="#fff" />
+              <IconButton
+                width={24}
+                height={24}
+                Svg={UploadIcon}
+                onPress={onPressShare}
+                color="#fff"
+              />
               {isMyPost && (
                 <>
                   <PostHeaderRightSpacer />
-                  <IconButton width={24} height={24} Svg={MoreCircleIcon} onPress={onPressMore} />
+                  <IconButton
+                    width={24}
+                    height={24}
+                    Svg={MoreCircleIcon}
+                    onPress={onPressMore}
+                  />
                 </>
               )}
             </PostHeaderRightWrapper>
           </PostHeader>
-        <ContentHeader>
-          {post.author.profileImageUrl ? (
-            <WriterProfileImage uri={post.author.profileImageUrl} />
-          ) : (
-            <WriterProfileImage />
-          )}
-          <Typography fontSize={14} fontWeight="semiBold" letterSpacing="-2.5%" marginLeft={8}>
-            {post.author.nickname}
-          </Typography>
-        </ContentHeader>
-        <ContentContainer>
-          <Typography
-            fontSize={16}
-            fontWeight="bold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            marginBottom={10}
-          >
-            {post.title}
-          </Typography>
-          <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%" marginBottom={10}>
-            {post.content}
-          </Typography>
-          <ActionWrapper>
-            <ActionButton onPress={onPressLike}>
-              <IconButton
-                width={24}
-                height={24}
-                Svg={post.isLiked ? HeartRedIcon : HeartIcon}
-                onPress={onPressLike}
-              />
-              <Typography
-                fontSize={14}
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                marginLeft={6}
-                marginRight={20}
-              >
-                {post.likeCount}
-              </Typography>
-            </ActionButton>
-            <ActionButton onPress={onPressChat}>
-              <IconButton width={24} height={24} Svg={ChatIcon} onPress={onPressChat} />
-              <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%" marginLeft={6}>
-                {post.commentCount}
-              </Typography>
-            </ActionButton>
-          </ActionWrapper>
-          <CommentSectionWrapper>
+          <ContentHeader>
+            {post.author.profileImageUrl ? (
+              <WriterProfileImage uri={post.author.profileImageUrl} />
+            ) : (
+              <WriterProfileImage />
+            )}
             <Typography
               fontSize={14}
+              fontWeight="semiBold"
+              letterSpacing="-2.5%"
+              marginLeft={8}
+            >
+              {post.author.nickname}
+            </Typography>
+          </ContentHeader>
+          <ContentContainer>
+            <Typography
+              fontSize={16}
               fontWeight="bold"
               lineHeight="140%"
               letterSpacing="-2.5%"
-              marginBottom={9}
+              marginBottom={10}
             >
-              댓글 {post.commentCount}
+              {post.title}
             </Typography>
-            {comments.slice(0, 3).map((comment) => (
-              <CommentItem key={comment.id}>
-                <CommentAuthorProfileImage
-                  source={
-                    comment.author?.profileImageUrl
-                      ? { uri: comment.author.profileImageUrl }
-                      : comment.authorProfileImage
-                      ? { uri: comment.authorProfileImage }
-                      : undefined
-                  }
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              marginBottom={10}
+            >
+              {post.content}
+            </Typography>
+            <ActionWrapper>
+              <ActionButton onPress={onPressLike}>
+                <IconButton
+                  width={24}
+                  height={24}
+                  Svg={post.isLiked ? HeartRedIcon : HeartIcon}
+                  onPress={onPressLike}
                 />
-                <CommentContent>
+                <Typography
+                  fontSize={14}
+                  lineHeight="140%"
+                  letterSpacing="-2.5%"
+                  marginLeft={6}
+                  marginRight={20}
+                >
+                  {post.likeCount}
+                </Typography>
+              </ActionButton>
+              <ActionButton onPress={onPressChat}>
+                <IconButton
+                  width={24}
+                  height={24}
+                  Svg={ChatIcon}
+                  onPress={onPressChat}
+                />
+                <Typography
+                  fontSize={14}
+                  lineHeight="140%"
+                  letterSpacing="-2.5%"
+                  marginLeft={6}
+                >
+                  {post.commentCount}
+                </Typography>
+              </ActionButton>
+            </ActionWrapper>
+            <CommentSectionWrapper>
+              <Typography
+                fontSize={14}
+                fontWeight="bold"
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginBottom={9}
+              >
+                댓글 {post.commentCount}
+              </Typography>
+              {comments.slice(0, 3).map(comment => (
+                <CommentItem key={comment.id}>
+                  <CommentAuthorProfileImage
+                    source={
+                      comment.author?.profileImageUrl
+                        ? { uri: comment.author.profileImageUrl }
+                        : comment.authorProfileImage
+                        ? { uri: comment.authorProfileImage }
+                        : undefined
+                    }
+                  />
+                  <CommentContent>
+                    <Typography
+                      fontSize={12}
+                      fontWeight="semiBold"
+                      lineHeight="140%"
+                      letterSpacing="-2.5%"
+                    >
+                      {comment.author?.nickname || comment.authorNickname}
+                    </Typography>
+                    <Typography
+                      fontSize={12}
+                      lineHeight="140%"
+                      letterSpacing="-2.5%"
+                    >
+                      {comment.content}
+                    </Typography>
+                  </CommentContent>
+                </CommentItem>
+              ))}
+              {post.commentCount > 3 && (
+                <MoreCommentsButton onPress={onPressMoreComments}>
                   <Typography
                     fontSize={12}
-                    fontWeight="semiBold"
                     lineHeight="140%"
                     letterSpacing="-2.5%"
+                    color="#A4A4A4"
+                    style={{ textDecorationLine: 'underline' }}
                   >
-                    {comment.author?.nickname || comment.authorNickname}
+                    댓글 더보기
                   </Typography>
-                  <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%">
-                    {comment.content}
-                  </Typography>
-                </CommentContent>
-              </CommentItem>
-            ))}
-            {post.commentCount > 3 && (
-              <MoreCommentsButton onPress={onPressMoreComments}>
+                </MoreCommentsButton>
+              )}
+              <WriteCommentButton onPress={onPressWriteComment}>
                 <Typography
-                  fontSize={12}
+                  fontSize={14}
                   lineHeight="140%"
                   letterSpacing="-2.5%"
                   color="#A4A4A4"
-                  style={{ textDecorationLine: "underline" }}
                 >
-                  댓글 더보기
+                  댓글을 남겨주세요.
                 </Typography>
-              </MoreCommentsButton>
-            )}
-            <WriteCommentButton onPress={onPressWriteComment}>
-              <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%" color="#A4A4A4">
-                댓글을 남겨주세요.
-              </Typography>
-            </WriteCommentButton>
-          </CommentSectionWrapper>
-        </ContentContainer>
+              </WriteCommentButton>
+            </CommentSectionWrapper>
+          </ContentContainer>
         </ContentWrapper>
       </Container>
 
@@ -327,46 +369,45 @@ export default function CommunityDetailsView({
         title={`댓글 ${post.commentCount}`}
         headerAlign="left"
         scrollable
-        minHeight={SCREEN_HEIGHT * 0.33}
-        maxHeight={SCREEN_HEIGHT * 0.80}
+        maxHeight={SCREEN_HEIGHT * 0.8}
         footerHeight={75}
         keyboardAvoid
         footer={
-        <CommentInputWrapper hasInput={hasInput}>
-          <TextInput
-            ref={commentInputRef}
-            value={commentInput}
-            onChangeText={onChangeCommentInput}
-            placeholder="댓글을 입력하세요"
-            placeholderTextColor="#A4A4A4"
-            multiline
-            style={{
-              flex: 1,
-              color: '#000',
-              fontSize: 14,
-              fontFamily: 'Pretendard-Regular',
-              marginRight: 10,
-            }}
-          />
-          <IconButton
-            width={24}
-            height={24}
-            Svg={SendIcon}
-            onPress={onSubmitComment}
-            disabled={!hasInput}
-          />
-        </CommentInputWrapper>
+          <CommentInputWrapper hasInput={hasInput}>
+            <TextInput
+              ref={commentInputRef}
+              value={commentInput}
+              onChangeText={onChangeCommentInput}
+              placeholder="댓글을 입력하세요"
+              placeholderTextColor="#A4A4A4"
+              multiline
+              style={{
+                flex: 1,
+                color: '#000',
+                fontSize: 14,
+                fontFamily: 'Pretendard-Regular',
+                marginRight: 10,
+              }}
+            />
+            <IconButton
+              width={24}
+              height={24}
+              Svg={SendIcon}
+              onPress={onSubmitComment}
+              disabled={!hasInput}
+            />
+          </CommentInputWrapper>
         }
       >
-        {comments.map((comment) => (
+        {comments.map(comment => (
           <CommentItem key={comment.id}>
             <CommentAuthorProfileImage
               source={
                 comment.author?.profileImageUrl
                   ? { uri: comment.author.profileImageUrl }
                   : comment.authorProfileImage
-                    ? { uri: comment.authorProfileImage }
-                    : undefined
+                  ? { uri: comment.authorProfileImage }
+                  : undefined
               }
             />
             <CommentContent>
@@ -385,105 +426,30 @@ export default function CommunityDetailsView({
           </CommentItem>
         ))}
       </SlideModal>
-      {/*<Modal visible={isCommentModalVisible} animationType="slide" transparent>*/}
-      {/*  <CommentModalOverlay>*/}
-      {/*    <CommentModalContainer behavior={Platform.OS === 'ios' ? 'padding' : undefined}>*/}
-      {/*      <CommentModalHeader>*/}
-      {/*        <Typography fontSize={18} fontWeight="bold" letterSpacing="-2.5%">*/}
-      {/*          댓글 {post.commentCount}*/}
-      {/*        </Typography>*/}
-      {/*        <CloseButton onPress={onCloseCommentModal}>*/}
-      {/*          <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">*/}
-      {/*            닫기*/}
-      {/*          </Typography>*/}
-      {/*        </CloseButton>*/}
-      {/*      </CommentModalHeader>*/}
-      {/*      <CommentContentWrapper>*/}
-      {/*        <CommentListWrapper>*/}
-      {/*          <ScrollView showsVerticalScrollIndicator={false}>*/}
-      {/*            {comments.map((comment) => (*/}
-      {/*              <CommentItem key={comment.id}>*/}
-      {/*                <CommentAuthorProfileImage*/}
-      {/*                  source={*/}
-      {/*                    comment.author?.profileImageUrl*/}
-      {/*                      ? { uri: comment.author.profileImageUrl }*/}
-      {/*                      : comment.authorProfileImage*/}
-      {/*                      ? { uri: comment.authorProfileImage }*/}
-      {/*                      : undefined*/}
-      {/*                  }*/}
-      {/*                />*/}
-      {/*                <CommentContent>*/}
-      {/*                  <Typography*/}
-      {/*                    fontSize={12}*/}
-      {/*                    fontWeight="semiBold"*/}
-      {/*                    lineHeight="140%"*/}
-      {/*                    letterSpacing="-2.5%"*/}
-      {/*                  >*/}
-      {/*                    {comment.author?.nickname || comment.authorNickname}*/}
-      {/*                  </Typography>*/}
-      {/*                  <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%">*/}
-      {/*                    {comment.content}*/}
-      {/*                  </Typography>*/}
-      {/*                </CommentContent>*/}
-      {/*              </CommentItem>*/}
-      {/*            ))}*/}
-      {/*          </ScrollView>*/}
-      {/*        </CommentListWrapper>*/}
-      {/*        <CommentInputWrapper hasInput={hasInput}>*/}
-      {/*          <TextInput*/}
-      {/*            ref={commentInputRef}*/}
-      {/*            value={commentInput}*/}
-      {/*            onChangeText={onChangeCommentInput}*/}
-      {/*            placeholder="댓글을 입력하세요"*/}
-      {/*            placeholderTextColor="#A4A4A4"*/}
-      {/*            multiline*/}
-      {/*            style={{*/}
-      {/*              flex: 1,*/}
-      {/*              color: '#000',*/}
-      {/*              fontSize: 14,*/}
-      {/*              fontFamily: 'Pretendard-Regular',*/}
-      {/*              marginRight: 10,*/}
-      {/*            }}*/}
-      {/*          />*/}
-      {/*          <IconButton*/}
-      {/*            width={24}*/}
-      {/*            height={24}*/}
-      {/*            Svg={SendIcon}*/}
-      {/*            onPress={onSubmitComment}*/}
-      {/*            disabled={!hasInput}*/}
-      {/*          />*/}
-      {/*        </CommentInputWrapper>*/}
-      {/*      </CommentContentWrapper>*/}
-      {/*    </CommentModalContainer>*/}
-      {/*  </CommentModalOverlay>*/}
-      {/*</Modal>*/}
 
       {/* Edit Modal */}
-      <Modal visible={isEditModalVisible} animationType="fade" transparent>
-        <EditModalOverlay onPress={onCloseEditModal}>
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <EditModalContainer>
-              <EditModalButton onPress={onPressEdit}>
-                <Typography fontSize={16} letterSpacing="-2.5%">
-                  수정
-                </Typography>
-              </EditModalButton>
-              <EditModalDivider />
-              <EditModalButton onPress={onPressDelete}>
-                <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
-                  삭제
-                </Typography>
-              </EditModalButton>
-              <EditModalDivider />
-              <EditModalButton onPress={onCloseEditModal}>
-                <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
-                  닫기
-                </Typography>
-              </EditModalButton>
-            </EditModalContainer>
-          </Pressable>
-        </EditModalOverlay>
-      </Modal>
+      <SlideModal
+        visible={isEditModalVisible}
+        onClose={onCloseEditModal}
+      >
+        <EditModalButton onPress={onPressEdit}>
+          <Typography fontSize={16} letterSpacing="-2.5%">
+            수정
+          </Typography>
+        </EditModalButton>
+        <EditModalDivider />
+        <EditModalButton onPress={onPressDelete}>
+          <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
+            삭제
+          </Typography>
+        </EditModalButton>
+        <EditModalDivider />
+        <EditModalButton onPress={onCloseEditModal}>
+          <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
+            닫기
+          </Typography>
+        </EditModalButton>
+      </SlideModal>
     </>
   );
 }
@@ -638,43 +604,6 @@ const WriteCommentButton = styled.TouchableOpacity`
   margin-top: 10px;
 `;
 
-// Comment Modal Styles
-const CommentModalOverlay = styled.Pressable`
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-`;
-
-const CommentModalContainer = styled.KeyboardAvoidingView`
-  background-color: #fff;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  min-height: 300px;
-  position: absolute;
-  width: 100%;
-  left: 0;
-  bottom: 0;
-  flex: 1;
-`;
-
-const CommentModalHeader = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: #e0e0e0;
-`;
-
-const CommentContentWrapper = styled.View`
-  padding: 0 24px;
-  flex: 1;
-  padding-bottom: 20px;
-`
-
 const CommentInputWrapper = styled.View<{ hasInput: boolean }>`
   flex-direction: row;
   padding-horizontal: 12px;
@@ -682,31 +611,6 @@ const CommentInputWrapper = styled.View<{ hasInput: boolean }>`
   border-radius: 8px;
   height: 41px;
   align-items: center;
-`;
-
-const CloseButton = styled.TouchableOpacity`
-  padding: 5px;
-`;
-
-const CommentListWrapper = styled.View`
-  flex: 1;
-  padding: 20px;
-`;
-
-
-// Edit Modal Styles
-const EditModalOverlay = styled.Pressable`
-  flex: 1;
-  background-color: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-`;
-
-const EditModalContainer = styled.View`
-  background-color: #fff;
-  border-radius: 12px;
-  width: 280px;
-  overflow: hidden;
 `;
 
 const EditModalButton = styled.TouchableOpacity`

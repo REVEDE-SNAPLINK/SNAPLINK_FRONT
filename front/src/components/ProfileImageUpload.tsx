@@ -2,6 +2,7 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CameraIcon from '@/assets/icons/camera-white.svg';
+import ServerImage from '@/components/ServerImage.tsx';
 
 interface ProfileImageUploadProps {
   imageURI?: string;
@@ -34,7 +35,7 @@ const ProfileImageWrapper = styled.View<{ size: number }>`
   background-color: ${theme.colors.disabled};
 `;
 
-const ProfileImage = styled.Image`
+const ProfileImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
   resize-mode: cover;

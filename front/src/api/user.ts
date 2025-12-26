@@ -8,6 +8,7 @@ export interface GetMeResponse {
   nickname: string;
   name: string;
   email: string;
+  profileImageURI: string;
 }
 
 /** PATCH /api/user/me body */

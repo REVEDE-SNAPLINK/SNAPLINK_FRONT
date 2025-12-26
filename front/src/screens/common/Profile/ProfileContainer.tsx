@@ -15,7 +15,7 @@ import { usePatchUserProfileImageMutation } from '@/mutations/user.ts';
 import { usePatchPhotographerProfileImageMutation } from '@/mutations/photographers.ts';
 import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -25,7 +25,13 @@ export default function ProfileContainer () {
 
   const isPhotographer = userType === 'photographer';
 
-  const { data: userProfile } = useMeQuery();
+  const { data: userProfile, isSuccess } = useMeQuery();
+
+  useEffect(() => {
+    if (isSuccess && userProfile?.profileImageURI) {
+      setProfileImageURI(userProfile.profileImageURI);
+    }
+  }, [isSuccess, userProfile?.profileImageURI]);
 
   // Upload profile image mutation
   const updateUserProfileImageMutation = usePatchUserProfileImageMutation();
@@ -35,20 +41,7 @@ export default function ProfileContainer () {
     ? updatePhotographerProfileMutation
     : updateUserProfileImageMutation;
 
-  const handleToggleExpertMode = () => {
-    // const title = isExpertMode ? '고객으로 전환' : '전문가로 전환';
-    // const message = isExpertMode ? '고객 모드로 전환하시겠습니까?' : '전문가 모드로 전환하시겠습니까?'
-    //
-    // Alert.show({
-    //   title,
-    //   message,
-    //   buttons: [
-    //     { text: '전환', onPress: () => toggleExpertModeAction() },
-    //     { text: '취소', onPress: () => {}, type: 'cancel' },
-    //   ]
-    // })
-    toggleExpertModeAction()
-  };
+  const handleToggleExpertMode = () => toggleExpertModeAction()
 
   const handleCamera = async () => {
     requestPermission(
@@ -93,13 +86,13 @@ export default function ProfileContainer () {
           }, {
             onSuccess: () => {
               Alert.show({
-                title: '성공',
+                title: '업데이트 완료',
                 message: '프로필 사진이 업데이트되었습니다.',
               });
             },
             onError: () => {
               Alert.show({
-                title: '오류',
+                title: '업데이트 실패',
                 message: '프로필 사진 업데이트에 실패했습니다.',
               });
             },
@@ -144,13 +137,13 @@ export default function ProfileContainer () {
           }, {
             onSuccess: () => {
               Alert.show({
-                title: '성공',
+                title: '업데이트 완료',
                 message: '프로필 사진이 업데이트되었습니다.',
               });
             },
             onError: () => {
               Alert.show({
-                title: '오류',
+                title: '업데이터 실패',
                 message: '프로필 사진 업데이트에 실패했습니다.',
               });
             },
@@ -300,12 +293,10 @@ export default function ProfileContainer () {
       onPressEditEmail={handlePressEditEmail}
       onPressManageAccount={handlePressManageAccount}
       onPressBookingHistory={handlePressBookingHistory}
-      // onPressSnaplinkGuide={handlePressSnaplinkGuide}
       onPressCustomerCenter={handlePressCustomerCenter}
       onPressManageBooking={handlePressManageBooking}
       onPressManageShootService={handlePressShootService}
       onPressManagePortfolio={handlePressManagePortfolio}
-      // onPressSnaplinkPhotographerGuide={handlePressSnaplinkPhotographerGuide}
       onPressNotice={handlePressNotice}
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}

@@ -7,7 +7,7 @@ import {
 } from '@/api/photographers.ts';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { photographersQueryKeys } from '@/queries/keys.ts';
-import { withMockData, getMockPhotographersPage, getMockPhotographerProfile, getMockPhotographerProfilePage, getMockPhotographerReviewSummary } from '@/__dev__';
+import { withMockData, getMockPhotographerProfile, getMockPhotographerProfilePage, getMockPhotographerReviewSummary } from '@/__dev__';
 
 /** 작가 프로필 상세 조회 */
 export const usePhotographerProfileQuery = (
@@ -79,10 +79,11 @@ export const useSearchPhotographersInfiniteQuery = (
   useInfiniteQuery({
     queryKey: photographersQueryKeys.searchInfinite(pageableWithoutPage, body),
     initialPageParam: 0, // Spring 기본 0-base
-    queryFn: ({ pageParam }) => withMockData(
-      () => getMockPhotographersPage(pageParam, pageableWithoutPage.size || 10, body),
-      () => searchPhotographers({ ...pageableWithoutPage, page: pageParam }, body),
-    ),
+    queryFn: ({ pageParam }) => searchPhotographers({ ...pageableWithoutPage, page: pageParam }, body),
+    // queryFn: ({ pageParam }) => withMockData(
+    //   () => getMockPhotographersPage(pageParam, pageableWithoutPage.size || 10, body),
+    //   () => searchPhotographers({ ...pageableWithoutPage, page: pageParam }, body),
+    // ),
     getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.number + 1),
   });
 

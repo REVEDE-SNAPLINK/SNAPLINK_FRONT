@@ -20,11 +20,9 @@ interface ProfileViewProps {
   onPressEditEmail: () => void;
   onPressManageAccount: () => void;
   onPressBookingHistory: () => void;
-  // onPressSnaplinkGuide: () => void;
   onPressManageBooking: () => void;
   onPressManageShootService: () => void;
   onPressManagePortfolio: () => void;
-  // onPressSnaplinkPhotographerGuide: () => void;
   onPressCustomerCenter: () => void;
   onPressNotice: () => void;
   onPressFAQ: () => void;
@@ -47,11 +45,9 @@ export default function ProfileView({
   onPressEditEmail,
   onPressManageAccount,
   onPressBookingHistory,
-  // onPressSnaplinkGuide,
   onPressManageBooking,
   onPressManageShootService,
   onPressManagePortfolio,
-  // onPressSnaplinkPhotographerGuide,
   onPressCustomerCenter,
   onPressNotice,
   onPressFAQ,

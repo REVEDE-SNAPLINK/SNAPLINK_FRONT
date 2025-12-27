@@ -9,16 +9,17 @@ import {
   type UploadChatFileParams,
 } from '@/api/chat';
 import { chatQueryKeys } from '@/queries/keys';
-import { withMockData, withMockMutation, getMockChatRooms } from '@/__dev__';
+import { withMockData, withMockMutation } from '@/__dev__';
 
 /** 채팅방 목록 */
 export const useChatRoomsQuery = () =>
   useQuery({
     queryKey: chatQueryKeys.rooms(),
-    queryFn: () => withMockData(
-      () => getMockChatRooms(),
-      () => getChatRooms(),
-    ),
+    // queryFn: () => withMockData(
+    //   () => getMockChatRooms(),
+    //   () => getChatRooms(),
+    // ),
+    queryFn: () => getChatRooms(),
     staleTime: 1000 * 10,
   });
 

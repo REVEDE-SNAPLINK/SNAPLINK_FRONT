@@ -195,3 +195,28 @@ export const formatChatDayjs = (iso: string) =>
   dayjs(iso).tz('Asia/Seoul').format('A hh:mm')  // "오전 10:24"
     .replace('AM', '오전')
     .replace('PM', '오후');
+
+export const formatTimeAgo = (dateString: string): string => {
+  const now = new Date();
+  const past = new Date(dateString);
+  const diff = now.getTime() - past.getTime();
+
+  const second = 1000;
+  const minute = 60 * second;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diff < minute) {
+    const secs = Math.floor(diff / second);
+    return `${secs}초 전`;
+  } else if (diff < hour) {
+    const mins = Math.floor(diff / minute);
+    return `${mins}분 전`;
+  } else if (diff < day) {
+    const hours = Math.floor(diff / hour);
+    return `${hours}시간 전`;
+  } else {
+    const days = Math.floor(diff / day);
+    return `${days}일 전`;
+  }
+}

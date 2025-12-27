@@ -3,6 +3,7 @@ import ScreenContainer from '@/components/ScreenContainer.tsx';
 import { Typography } from '@/components/theme';
 import { CommunityPost } from '@/api/community.ts';
 import { ScrollView } from 'react-native';
+import ServerImage from '@/components/ServerImage.tsx';
 
 interface MyPostsViewProps {
   posts: CommunityPost[];
@@ -41,7 +42,7 @@ export default function MyPostsView({
               {post.imageUrls.length > 0 && (
                 <PostImageWrapper>
                   {post.imageUrls.slice(0, 3).map((img, index) => (
-                    <PostImage key={index} source={{ uri: img }} />
+                    <PostImage key={index} uri={img} />
                   ))}
                 </PostImageWrapper>
               )}
@@ -88,7 +89,7 @@ const PostImageWrapper = styled.View`
   margin-bottom: 10px;
 `
 
-const PostImage = styled.Image`
+const PostImage = styled(ServerImage)`
   width: 100px;
   height: 100px;
   margin-right: 10px;

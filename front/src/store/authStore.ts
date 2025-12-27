@@ -61,19 +61,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   async bootstrap() {
     try {
+      console.log('[AuthStore] Bootstrap starting...');
       const refreshToken = await loadRefreshToken();
+
       if (!refreshToken) {
+        console.log('[AuthStore] No refresh token found, setting anon status');
         set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
         return;
       }
 
-      const refreshed = await refreshApi(refreshToken);
+      console.log('[AuthStore] Refresh token found, attempting to refresh...');
+      const startTime = Date.now();
+
+      // 5초 타임아웃 추가
+      const refreshPromise = refreshApi(refreshToken);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Refresh timeout')), 5000)
+      );
+
+      const refreshed = await Promise.race([refreshPromise, timeoutPromise]) as any;
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[AuthStore] Token refreshed successfully in ${elapsed}ms`);
+
       if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
+        console.log('[AuthStore] New refresh token received, saving...');
         await saveRefreshToken(refreshed.refreshToken);
       }
 
       set({ accessToken: refreshed.accessToken, status: 'authed', bootstrapped: true });
-    } catch {
+      console.log('[AuthStore] Bootstrap completed successfully');
+    } catch (e) {
+      console.error('[AuthStore] Bootstrap failed:', e);
       await clearRefreshToken();
       set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
     }

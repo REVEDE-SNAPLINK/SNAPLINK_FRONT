@@ -9,7 +9,7 @@ import { formatReservationDateTime } from '@/utils/format';
 import { PhotographerReservationListItem } from '@/api/reservations.ts';
 import { GetMeResponse } from '@/api/user.ts';
 
-interface BookingHistoryViewProps {
+interface BookingManageViewProps {
   reservations: PhotographerReservationListItem[];
   photographerProfile: GetMeResponse;
   isLoading: boolean;
@@ -17,13 +17,12 @@ interface BookingHistoryViewProps {
   onLoadMore: () => void;
   isFetchingNextPage: boolean;
   hasNextPage?: boolean;
-  onPressBookingDetail: (bookingId: number) => void;
+  onPressBookingDetail: (reservationId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  onPressViewPhotos?: (bookingId: number) => void;
-  onPressWriteReview?: (bookingId: number) => void;
-  onPressConfirmBooking?: (bookingId: number) => void;
-  onPressRejectBooking?: (bookingId: number) => void;
+  onPressViewPhotos?: (reservationId: number) => void;
+  onPressConfirmBooking?: (reservationId: number) => void;
+  onPressRejectBooking?: (reservationId: number) => void;
 }
 
 export default function BookingManageView({
@@ -38,61 +37,32 @@ export default function BookingManageView({
   onRefresh,
   isRefreshing,
   onPressViewPhotos,
-  onPressWriteReview,
   onPressConfirmBooking,
   onPressRejectBooking,
-}: BookingHistoryViewProps) {
-  const mapStatusToHistoryCardStatus = (
-    status: PhotographerReservationListItem['status']
-  ): 'PENDING' | 'CONFIRMED' | 'COMPLETED' => {
-    switch (status) {
-      case 'REQUESTED':
-      case 'REJECTED':
-        return 'PENDING';
-      case 'CONFIRMED':
-        return 'CONFIRMED';
-      case 'COMPLETED':
-      case 'DELIVERED':
-      case 'REVIEWED':
-        return 'COMPLETED';
-      default:
-        return 'PENDING';
-    }
-  };
-
+}: BookingManageViewProps) {
   const renderItem = ({ item }: { item: PhotographerReservationListItem }) => {
-    const cardStatus = mapStatusToHistoryCardStatus(item.status);
-    const isCompleted = cardStatus === 'COMPLETED';
-    const isPending = cardStatus === 'PENDING';
-    // For photographer: show upload button when COMPLETED (to upload photos)
-    const canUploadPhotos = item.status === 'COMPLETED';
 
     return (
       <HistoryCard
         onPress={() => onPressBookingDetail(item.reservationId)}
-        status={cardStatus}
-        userName={item.userName}
-        photographerNickname={photographerProfile.nickname}
-        photographerName={photographerProfile.name}
+        status={item.status}
+        userName={item.userName || '고객'}
+        photographerNickname={photographerProfile.nickname || '작가'}
+        photographerName={photographerProfile.name || '작가'}
         type={item.type}
         datetime={formatReservationDateTime(item.reservedDate, item.startTime)}
         onPressViewPhotos={
-          canUploadPhotos && onPressViewPhotos
+          (item.status === 'COMPLETED' || item.status === 'DELIVERED' || item.status === 'REVIEWED') && onPressViewPhotos
             ? () => onPressViewPhotos(item.reservationId)
             : undefined
         }
-        onPressWriteReview={
-          isCompleted && onPressWriteReview
-            ? () => onPressWriteReview(item.reservationId)
-            : undefined
-        }
         onPressConfirmBooking={
-          isPending && onPressConfirmBooking
+          item.status === 'REQUESTED' && onPressConfirmBooking
             ? () => onPressConfirmBooking(item.reservationId)
             : undefined
         }
         onPressRejectBooking={
-          isPending && onPressRejectBooking
+          item.status === 'REQUESTED' && onPressRejectBooking
             ? () => onPressRejectBooking(item.reservationId)
             : undefined
         }

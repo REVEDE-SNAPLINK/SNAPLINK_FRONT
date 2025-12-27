@@ -155,6 +155,7 @@ export interface UploadReservationZipRequest {
 export interface ReservationDetail {
   reservationId: number;
   photographerName: string;
+  custommerName: string;
   shootingOptions: string[];
   shootingDateTime: string; // "2025.11.03(월) 18:00"
   requirement: string;

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   Pressable,
@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   View,
+  LayoutChangeEvent,
   StyleProp,
   ViewStyle,
 } from 'react-native';
@@ -16,7 +17,7 @@ import Animated, {
   withSpring,
   runOnJS,
   useAnimatedGestureHandler,
-  Easing
+  Easing,
 } from 'react-native-reanimated';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import styled from '@/utils/scale/CustomStyled';
@@ -24,7 +25,12 @@ import Typography from '@/components/theme/Typography';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 const DEFAULT_FOOTER_HEIGHT = 72;
+
+// 애니메이션(튀는 느낌 줄이려면 stiffness 낮추고 damping 올리기)
+const OPEN_DURATION = 220;
+const CLOSE_DURATION = 220;
 
 type SlideModalProps = {
   visible: boolean;
@@ -34,10 +40,18 @@ type SlideModalProps = {
   // sizing
   minHeight?: number;
 
+  /**
+   * 댓글 모달용:
+   * - autoGrowToMax=true면, content 높이를 측정해서 sheetHeight를 "자연스럽게" 키움
+   * - maxHeight에 도달하면 거기서 멈추고, scrollable이면 내부 ScrollView가 스크롤 시작
+   */
+  autoGrowToMax?: boolean;
+  maxHeight?: number;
+
   // header
   showHeader?: boolean;
   title?: string;
-  headerAlign?: 'left' | 'center'; // left: padding-left 30px
+  headerAlign?: 'left' | 'center';
 
   headerLeft?: React.ReactNode;
   headerCenter?: React.ReactNode; // 없으면 title 표시
@@ -51,155 +65,221 @@ type SlideModalProps = {
   footerHeight?: number;
 
   // keyboard
-  keyboardAvoid?: boolean; // input 있는 모달만 true 권장
+  keyboardAvoid?: boolean;
 
   // drag behavior
-  draggableDown?: boolean; // 기본 true
-  draggableUp?: boolean; // 기본 false (댓글형만 true로)
-  closeOnOverlayPress?: boolean; // 기본 true
+  draggableDown?: boolean;
+  draggableUp?: boolean;
+  closeOnOverlayPress?: boolean;
 };
 
+type Ctx = { startTranslateY: number; startSheetHeight: number };
+
 export default function SlideModal({
-  visible,
-  onClose,
-  children,
-  minHeight = SCREEN_HEIGHT * 0.33,
+                                     visible,
+                                     onClose,
+                                     children,
 
-  showHeader = true,
-  title,
-  headerAlign = 'center',
+                                     minHeight = SCREEN_HEIGHT * 0.33,
 
-  headerLeft,
-  headerCenter,
-  headerRight,
+                                     autoGrowToMax = false,
+                                     maxHeight,
 
-  scrollable = true,
+                                     showHeader = true,
+                                     title,
+                                     headerAlign = 'center',
 
-  footer,
-  footerHeight = DEFAULT_FOOTER_HEIGHT,
+                                     headerLeft,
+                                     headerCenter,
+                                     headerRight,
 
-  keyboardAvoid = false,
+                                     scrollable = true,
 
-  draggableDown = true,
-  draggableUp = false,
-  closeOnOverlayPress = true,
-}: SlideModalProps) {
+                                     footer,
+                                     footerHeight = DEFAULT_FOOTER_HEIGHT,
+
+                                     keyboardAvoid = false,
+
+                                     draggableDown = true,
+                                     draggableUp = false,
+                                     closeOnOverlayPress = true,
+                                   }: SlideModalProps) {
   const insets = useSafeAreaInsets();
 
+  // overlay
   const overlayOpacity = useSharedValue(0);
+
+  // translateY: sheet 슬라이드 (0 = 붙어있음)
   const translateY = useSharedValue(SCREEN_HEIGHT);
+
+  // 댓글형 autoGrow에서 사용할 sheetHeight
+  const sheetHeight = useSharedValue(minHeight);
+
+  // body content 높이 측정
+  const [measuredBodyHeight, setMeasuredBodyHeight] = useState(0);
+
+  const resolvedMaxHeight = useMemo(() => {
+    // 기본: 화면 0.85 정도
+    return maxHeight ?? SCREEN_HEIGHT * 0.85;
+  }, [maxHeight]);
 
   const resolvedFooterHeight = footer ? footerHeight : 0;
 
-  // 드래그 확장(댓글형): 기본은 content 기반 자연 높이.
-  // draggableUp=true 일 때만 "max expanded" 개념을 적용.
-  const expandedTranslateY = useMemo(() => {
-    // 상단 여백 조금 남기고 꽉차는 느낌 (인스타 댓글 느낌)
-    const topGap = 12 + insets.top;
-    return Math.max(0, topGap);
-  }, [insets.top]);
+  const headerHeight = showHeader ? 57 : 0;
 
+  // handle bar 영역 대략값 (wrap + bar)
+  const handleAreaHeight = 5 + 3 + 8; // padding-top 5 + bar 3 + 약간의 여유
+
+  const bodyPaddingTop = 22;
+  const bodyPaddingBottom = resolvedFooterHeight ? resolvedFooterHeight + 22 : 22;
+
+  // ====== open / close ======
   useEffect(() => {
     if (visible) {
       overlayOpacity.value = withTiming(1, { duration: 150 });
       translateY.value = withTiming(0, {
-        duration: 220,
+        duration: OPEN_DURATION,
         easing: Easing.out(Easing.cubic),
       });
     } else {
       overlayOpacity.value = withTiming(0, { duration: 150 });
-      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 });
+      translateY.value = withTiming(SCREEN_HEIGHT, { duration: CLOSE_DURATION });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  // ====== autoGrowToMax: body 높이 측정값으로 sheetHeight 계산 ======
+  useEffect(() => {
+    if (!visible) return;
+    if (!autoGrowToMax) {
+      // 자연 증가 모드는 height 고정 안 걸고 minHeight만 걸어줌(Style로)
+      sheetHeight.value = minHeight;
+      return;
+    }
+
+    const desired =
+      handleAreaHeight +
+      headerHeight +
+      bodyPaddingTop +
+      measuredBodyHeight +
+      bodyPaddingBottom +
+      Math.max(insets.bottom, 0);
+
+    const clamped = Math.max(minHeight, Math.min(resolvedMaxHeight, desired));
+
+    sheetHeight.value = withTiming(clamped, { duration: 160 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    visible,
+    autoGrowToMax,
+    measuredBodyHeight,
+    minHeight,
+    resolvedMaxHeight,
+    headerHeight,
+    bodyPaddingTop,
+    bodyPaddingBottom,
+    insets.bottom,
+  ]);
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
   }));
 
-  const sheetStyle = useAnimatedStyle(() => ({
+  const sheetTranslateStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
 
-  // ----- Drag (Pan) -----
-  type Ctx = { startY: number };
+  // autoGrowToMax=true인 경우에만 height를 강제로 주고(max에서 멈추게)
+  const sheetHeightStyle = useAnimatedStyle(() => {
+    if (!autoGrowToMax) return {};
+    return { height: sheetHeight.value };
+  });
 
+  // ====== Drag ======
   const panHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, Ctx>({
     onStart: (_, ctx) => {
-      ctx.startY = translateY.value;
+      ctx.startTranslateY = translateY.value;
+      ctx.startSheetHeight = sheetHeight.value;
     },
     onActive: (evt, ctx) => {
-      // 기본은 "아래로만 드래그" (닫기)
-      // draggableUp=true면 위로도 허용(확장)
-      const next = ctx.startY + evt.translationY;
-
+      // 기본: 아래로만 드래그(닫기)
       if (!draggableUp) {
-        // 위로 끌어올리는 건 무시(0보다 작게 안 감)
+        const next = ctx.startTranslateY + evt.translationY;
         translateY.value = Math.max(0, next);
         return;
       }
 
-      // 위/아래 모두 허용: expandedTranslateY(위쪽) ~ SCREEN_HEIGHT(아래쪽)
-      // expandedTranslateY는 "0이 아닌 topGap"이라 translateY를 음수로 안 쓰고,
-      // 대신 "sheet 전체를 위로 더 올리는" 느낌을 translateY를 음수로 주는 방식은 복잡해짐.
-      // 여기서는 간단히: translateY를 [- (SCREEN_HEIGHT - expandedTranslateY)] 같은 방식이 아니라
-      // 0에서 위로 더 못 올라가게 하면 확장이 안 되므로,
-      // 확장 모드는 "sheet 자체 높이"를 크게 잡는 방식이 더 정석이지만(아래에서 설명),
-      // 지금 요청 범위에서는 '확장 시 topGap까지 올라간 것처럼' translateY를 음수로 허용한다.
-      // (주의: overflow/레이아웃에 따라 테스트 필요)
-      const minY = -(SCREEN_HEIGHT - expandedTranslateY);
-      const maxY = SCREEN_HEIGHT;
+      // draggableUp=true:
+      // - 위로 끌면 sheetHeight를 늘려서 확장(인스타 댓글 느낌)
+      // - 아래로 끌면 translateY로 닫기 방향
+      if (evt.translationY < 0) {
+        // 위로 끄는 중: translateY는 0 유지, height를 늘림
+        translateY.value = 0;
 
-      translateY.value = Math.min(maxY, Math.max(minY, next));
+        if (autoGrowToMax) {
+          const grow = -evt.translationY;
+          const nextH = Math.min(resolvedMaxHeight, Math.max(minHeight, ctx.startSheetHeight + grow));
+          sheetHeight.value = nextH;
+        }
+      } else {
+        // 아래로 끄는 중: 닫기
+        const next = ctx.startTranslateY + evt.translationY;
+        translateY.value = Math.max(0, next);
+      }
     },
     onEnd: (evt) => {
       if (!draggableDown && !draggableUp) return;
 
-      // 닫기 기준: 아래로 충분히 내리거나 속도가 빠르면 닫기
-      const shouldClose = draggableDown && (evt.translationY > 120 || evt.velocityY > 900);
+      const shouldClose =
+        draggableDown && (evt.translationY > 120 || evt.velocityY > 900);
 
       if (shouldClose) {
         overlayOpacity.value = withTiming(0, { duration: 120 });
-        translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, (finished) => {
+        translateY.value = withTiming(SCREEN_HEIGHT, { duration: CLOSE_DURATION }, (finished) => {
           if (finished) runOnJS(onClose)();
         });
         return;
       }
 
-      // 확장 모드가 켜져 있을 때: 위로 플릭하면 "확장 위치"로 스냅
-      if (draggableUp) {
-        const shouldExpand = evt.translationY < -80 || evt.velocityY < -900;
-        if (shouldExpand) {
-          translateY.value = withSpring(-(SCREEN_HEIGHT - expandedTranslateY), {
-            damping: 18,
-            stiffness: 180,
-          });
-          return;
-        }
-      }
-
-      // 기본: 원위치 스냅(0)
-      translateY.value = withSpring(0, { damping: 18, stiffness: 180 });
+      // 닫기 안 하면 원위치로 복귀
+      translateY.value = withSpring(0, {
+        damping: 22,
+        stiffness: 260,
+      });
     },
   });
 
   if (!visible) return null;
 
+  const onMeasureBody = (e: LayoutChangeEvent) => {
+    if (!autoGrowToMax) return;
+    setMeasuredBodyHeight(e.nativeEvent.layout.height);
+  };
+
+  // body children을 한번 감싸서 높이 측정
+  const MeasuredBodyContent = (
+    <View onLayout={onMeasureBody}>
+      {children}
+    </View>
+  );
+
   const SheetInner = (
-    <SheetTouchable style={minHeight ? ({ minHeight } as StyleProp<ViewStyle>) : undefined}>
+    <SheetTouchable
+      style={[
+        { minHeight },
+        autoGrowToMax ? ({} as StyleProp<ViewStyle>) : ({} as StyleProp<ViewStyle>),
+      ]}
+    >
       {/* Handle Bar */}
       <HandleBarWrap>
         <HandleBar />
       </HandleBarWrap>
 
-      {/* Optional Header */}
-      {/* Optional Header */}
+      {/* Header */}
       {showHeader && (
         <Header>
           <HeaderRow>
-            <HeaderSlot $pos="left">
-              {headerLeft}
-            </HeaderSlot>
+            <HeaderSlot $pos="left">{headerLeft}</HeaderSlot>
 
             <HeaderSlot $pos="center">
               {headerCenter ? (
@@ -213,9 +293,7 @@ export default function SlideModal({
               )}
             </HeaderSlot>
 
-            <HeaderSlot $pos="right">
-              {headerRight}
-            </HeaderSlot>
+            <HeaderSlot $pos="right">{headerRight}</HeaderSlot>
           </HeaderRow>
         </Header>
       )}
@@ -223,6 +301,7 @@ export default function SlideModal({
       {/* Body */}
       {scrollable ? (
         <BodyScroll
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
           contentContainerStyle={{
@@ -231,17 +310,18 @@ export default function SlideModal({
             paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
           }}
         >
-          {children}
+          {MeasuredBodyContent}
         </BodyScroll>
       ) : (
         <BodyFixed
           style={{
+            flex: 1,
             paddingHorizontal: 30,
             paddingTop: 22,
             paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
           }}
         >
-          {children}
+          {MeasuredBodyContent}
         </BodyFixed>
       )}
 
@@ -265,13 +345,11 @@ export default function SlideModal({
       </AnimatedOverlay>
 
       {/* Sheet */}
-      <AnimatedSheet style={sheetStyle} pointerEvents="box-none">
+      <AnimatedSheet style={[sheetTranslateStyle]} pointerEvents="box-none">
         <PanGestureHandler enabled={draggableDown || draggableUp} onGestureEvent={panHandler}>
-          <Animated.View>
+          <Animated.View style={[sheetHeightStyle]}>
             {keyboardAvoid ? (
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              >
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
                 {SheetInner}
               </KeyboardAvoidingView>
             ) : (
@@ -307,7 +385,7 @@ const SheetTouchable = styled.View`
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   overflow: hidden;
-  ${Platform.OS === 'ios' ? 'padding-bottom: 10px;' : null}
+  ${Platform.OS === 'ios' ? 'padding-bottom: 10px;' : ''}
 `;
 
 const HandleBarWrap = styled.View`
@@ -330,29 +408,29 @@ const Header = styled.View`
   justify-content: center;
 `;
 
-const HeaderTitle = styled.View<{ $align: 'left' | 'center' }>`
-  ${({ $align }) =>
-    $align === 'left'
-      ? `padding-left: 30px; align-items: flex-start;`
-      : `align-items: center;`}
-`;
-
 const HeaderRow = styled.View`
   flex-direction: row;
   align-items: center;
   height: 100%;
-  padding: 0 12px; /* 좌우 기본 패딩 (필요하면 0으로) */
+  padding: 0 12px;
 `;
 
 const HeaderSlot = styled.View<{ $pos: 'left' | 'center' | 'right' }>`
   ${({ $pos }) =>
-  $pos === 'center'
-    ? `flex: 1; align-items: center; justify-content: center;`
-    : `width: 72px;`} /* 좌/우 고정폭: 아이콘/버튼 들어가기 좋음 */
-  
+    $pos === 'center'
+      ? `flex: 1; align-items: center; justify-content: center;`
+      : `width: 72px;`}
+
   ${({ $pos }) => ($pos === 'left' ? `align-items: flex-start;` : '')}
   ${({ $pos }) => ($pos === 'right' ? `align-items: flex-end;` : '')}
   justify-content: center;
+`;
+
+const HeaderTitle = styled.View<{ $align: 'left' | 'center' }>`
+  ${({ $align }) =>
+    $align === 'left'
+      ? `width: 100%; padding-left: 30px; align-items: flex-start;`
+      : `align-items: center;`}
 `;
 
 const BodyScroll = styled(ScrollView)`

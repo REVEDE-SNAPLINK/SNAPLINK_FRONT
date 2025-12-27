@@ -37,42 +37,22 @@ export default function BookingHistoryView({
   onPressViewPhotos,
   onPressWriteReview,
 }: BookingHistoryViewProps) {
-  const mapStatusToHistoryCardStatus = (
-    status: UserReservationListItem['status']
-  ): 'PENDING' | 'CONFIRMED' | 'COMPLETED' => {
-    switch (status) {
-      case 'REQUESTED':
-      case 'REJECTED':
-        return 'PENDING';
-      case 'CONFIRMED':
-        return 'CONFIRMED';
-      case 'COMPLETED':
-      case 'DELIVERED':
-      case 'REVIEWED':
-        return 'COMPLETED';
-      default:
-        return 'PENDING';
-    }
-  };
-
   const renderItem = ({ item }: { item: UserReservationListItem }) => {
-    const isCompleted = mapStatusToHistoryCardStatus(item.status) === 'COMPLETED';
-
     return (
       <HistoryCard
         onPress={() => onPressBookingDetail(item.reservationId)}
-        status={mapStatusToHistoryCardStatus(item.status)}
-        photographerNickname={item.photographerNickname}
-        photographerName={item.photographerName}
-        type={item.type} // TODO: api 추가되면 추가
+        status={item.status}
+        photographerNickname={item.photographerNickname || '작가'}
+        photographerName={item.photographerName || '작가'}
+        type={item.type}
         datetime={formatReservationDateTime(item.reservedDate, item.startTime)}
         onPressViewPhotos={
-          isCompleted && onPressViewPhotos
+          item.status === 'DELIVERED' && onPressViewPhotos
             ? () => onPressViewPhotos(item.reservationId)
             : undefined
         }
         onPressWriteReview={
-          isCompleted && onPressWriteReview
+          (item.status === 'DELIVERED' || item.status === 'REVIEWED') && onPressWriteReview
             ? () => onPressWriteReview(item.reservationId)
             : undefined
         }

@@ -10,13 +10,14 @@ export interface ChatRoomItem {
   roomId: number;
   opponentId: string;
   opponentNickname: string;
-  opponentProfileImageUrl?: string;
+  profileImageURI?: string;
   unreadCount: number;
   lastMessageTime: string; // ISO
+  lastMessage: string;
 }
 
 /** 메시지 타입 */
-export type ChatMessageType = 'TEXT' | 'IMAGE';
+export type ChatMessageType = 'TEXT' | 'IMAGE' | 'FILE';
 
 /** 메시지 아이템 */
 export interface ChatMessage {
@@ -123,6 +124,12 @@ export const uploadChatFile = async (
     throw new Error(`Failed to upload chat file ${response.info().status}`);
   }
 
-  // 응답 데이터는 JSON string으로 반환됨
-  return JSON.parse(response.data);
+  // 서버가 plain text URL 또는 JSON string으로 반환할 수 있음
+  try {
+    return JSON.parse(response.data);
+  } catch (e) {
+    // JSON 파싱 실패하면 plain text URL로 간주
+    console.log('[uploadChatFile] Response is plain text URL:', response.data);
+    return response.data;
+  }
 };

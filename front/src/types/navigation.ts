@@ -28,7 +28,7 @@ export type MainStackParamList = {
   MyPosts: undefined;
 
   // Chat
-  ChatDetails: { chatRoomId: number, opponentId: string, opponentProfileImageURI: string };
+  ChatDetails: { chatRoomId: number, opponentId: string, profileImageURI: string };
 
   // Reservation
   BookingHistory: undefined;
@@ -52,6 +52,7 @@ export type MainStackParamList = {
   // For Photographer
   PortfolioOnboarding: undefined;
   BookingCalendar: undefined;
+  ShootingManage: undefined;
 
   // etc
   Notification: undefined;

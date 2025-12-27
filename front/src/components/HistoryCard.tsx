@@ -3,6 +3,7 @@ import Typography from '@/components/theme/Typography.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMemo } from 'react';
+import { ReservationStatus } from '@/api/reservations.ts';
 
 interface HistoryCardProps {
   onPress: () => void;
@@ -10,7 +11,7 @@ interface HistoryCardProps {
   onPressWriteReview?: () => void;
   onPressRejectBooking?: () => void;
   onPressConfirmBooking?: () => void;
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED';
+  status: ReservationStatus;
   userName?: string;
   photographerName: string;
   photographerNickname: string;
@@ -31,25 +32,41 @@ export default function HistoryCard({
   type,
   datetime,
 }: HistoryCardProps) {
+
   const { userType, isExpertMode } = useAuthStore();
 
+  const isUserMode = userType === 'user' || !isExpertMode;
+
   const headerTitle = (() => {
-    if (userType === 'user' || !isExpertMode) {
-      if (status === 'PENDING') return photographerNickname + '과 인생샷 건질 준비 중이에요'
-      return photographerNickname + '과 함께 한 추억이에요'
-    }
-    if (status !== 'PENDING' && userName) return userName + '님에게 추억을 선물했어요!'
-    return photographerNickname + '님, 예약이 접수되었어요!'
-  })();
+    switch (status) {
+      case 'REJECTED':
+        if (isUserMode) return photographerNickname + '님이 예약을 거절했어요'
+        return userName + '님의 예약을 거절했어요'
+      case 'REQUESTED':
+        if (!isUserMode) return photographerNickname + '님, 예약이 접수되었어요!'
+      case 'CONFIRMED':
+        if (isUserMode) return photographerNickname + '님과 인생샷 건질 준비 중이에요'
+        else return userName + '님과 인생샷 건질 준비 중이에요'
+      case 'COMPLETED':
+      case 'DELIVERED':
+      case 'REVIEWED':
+        if (isUserMode) return photographerNickname + '님과 함께 한 추억이에요'
+        else return userName + '님에게 추억을 선물했어요!'
+      }
+    })();
 
   const renderUserActionButtons = useMemo(() => {
-    if (status !== 'COMPLETED') {
+    if (status !== 'DELIVERED' && status !== 'REVIEWED') {
       return (
         <Status
           text={
-            status === 'PENDING'
-              ? '아직 촬영 전이에요'
-              : '작가님이 작업 중이에요'
+            status === 'REQUESTED'
+              ? '작가님의 승인을 기다리고 있어요'
+              : status === 'CONFIRMED'
+            ? '아직 촬영 전이에요' :
+              status === 'COMPLETED'
+            ? '작가님이 작업 중이에요'
+              : '거절된 예약이에요'
           }
         />
       )
@@ -87,24 +104,31 @@ export default function HistoryCard({
   }, [status, onPressWriteReview, onPressViewPhotos]);
 
   const renderPhotographerActionButtons = useMemo(() => {
-    if (status !== 'PENDING') {
-      if (status === 'COMPLETED') {
+    if (status !== 'REQUESTED') {
+      if (status !== 'CONFIRMED' && status === 'REJECTED') {
         return (
-          <Status
-            disabled={false}
-            onPress={onPressViewPhotos || (() => {})}
-            text='사진 업로드'
-          />
+          <Status text={
+            status === 'REJECTED'
+              ? '거절한 예약이에요'
+              : '아직 촬영 전이에요'
+          } />
         )
       }
       return (
-        <Status text='아직 촬영 전이에요' />
+        <Status
+          disabled={false}
+          onPress={onPressViewPhotos || (() => {})}
+          text='사진 업로드'
+        />
       )
     }
     return (
       <ActionButtonWrapper>
         {onPressConfirmBooking && (
-          <ConfirmButton onPress={onPressConfirmBooking}>
+          <ConfirmButton onPress={(e) => {
+            e.stopPropagation();
+            onPressConfirmBooking();
+          }}>
             <Typography
               fontSize={12}
               fontWeight="bold"
@@ -117,7 +141,10 @@ export default function HistoryCard({
           </ConfirmButton>
         )}
         {onPressRejectBooking && (
-          <CancelButton onPress={onPressRejectBooking}>
+          <CancelButton onPress={(e) => {
+            e.stopPropagation();
+            onPressRejectBooking();
+          }}>
             <Typography
               fontSize={12}
               fontWeight="bold"
@@ -134,9 +161,9 @@ export default function HistoryCard({
   }, [status, onPressConfirmBooking, onPressRejectBooking, onPressViewPhotos]);
 
   return (
-    <HistoryContainer>
+    <HistoryContainer onPress={onPress}>
       <InfoWrapper>
-        <Header title={headerTitle} onPress={onPress} />
+        <Header title={headerTitle} />
         <Description name={userType === 'user' ? "작가명" : "고객명"} value={userType === "photographer" && userName ? userName : photographerName} marginBottom={12} />
         <Description name="촬영 항목" value={type} marginBottom={12} />
         <Description name="촬영 일시" value={datetime} />
@@ -146,7 +173,7 @@ export default function HistoryCard({
   );
 }
 
-const HistoryContainer = styled.View`
+const HistoryContainer = styled.Pressable`
   width: 100%;
   border-radius: 10px;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
@@ -169,7 +196,7 @@ const HeaderContainer = styled.View`
   margin-bottom: 16px;
 `
 
-const ViewDetailButton = styled.TouchableOpacity`
+const ViewDetailButton = styled.View`
   padding: 3px 5px;
   border-radius: 100px;
   border: 1px solid ${theme.colors.disabled};
@@ -177,7 +204,7 @@ const ViewDetailButton = styled.TouchableOpacity`
   align-items: center;
 `
 
-const Header = ({ title, onPress }: {title: string, onPress: () => void}) => (
+const Header = ({ title }: {title: string}) => (
   <HeaderContainer>
     <Typography
       fontSize={16}
@@ -188,7 +215,7 @@ const Header = ({ title, onPress }: {title: string, onPress: () => void}) => (
     >
       {title}
     </Typography>
-    <ViewDetailButton onPress={onPress}>
+    <ViewDetailButton>
       <Typography
         fontSize={11}
         lineHeight="140%"
@@ -246,7 +273,15 @@ const StatusWrapper = styled.TouchableOpacity`
 `
 
 const Status = ({ text, disabled = true, onPress = () => {} }: { text: string, disabled?: boolean, onPress?: () => void }) => (
-  <StatusWrapper disabled={disabled} onPress={onPress}>
+  <StatusWrapper
+    disabled={disabled}
+    onPress={(e) => {
+      if (onPress) {
+        e.stopPropagation();
+        onPress();
+      }
+    }}
+  >
     <Typography
       fontSize={12}
       fontWeight="bold"

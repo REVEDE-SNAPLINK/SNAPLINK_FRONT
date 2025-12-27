@@ -23,6 +23,7 @@ import MyReviewsContainer from '@/screens/user/MyReviews/MyReviewsContainer.tsx'
 import NicknameEditScreen from '@/screens/common/NicknameEditScreen.tsx';
 import AccountManageScreen from '@/screens/common/AccountManageScreen.tsx';
 import EmailEditScreen from '@/screens/common/EmailEditScreen.tsx';
+import ShootingManageContainer from '@/screens/photographer/ShootingManage/ShootingManageContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -44,11 +45,17 @@ export default function MainStack() {
       <Stack.Screen name="MyPosts" component={MyPostsContainer} />
 
       {/* Chat */}
+      <Stack.Screen name="ChatDetails" component={ChatDetailsContainer} />
+
+      {/* For Photographer */}
+      <Stack.Screen name="PortfolioOnboarding" component={PortfolioOnboardingContainer} />
+      <Stack.Screen name="ShootingManage" component={ShootingManageContainer} />
+
+
       <Stack.Screen name="NicknameEdit" component={NicknameEditScreen} />
       <Stack.Screen name="EmailEdit" component={EmailEditScreen} />
       <Stack.Screen name="AccountManage" component={AccountManageScreen} />
       <Stack.Screen name="Notification" component={NotificationContainer} />
-      <Stack.Screen name="ChatDetails" component={ChatDetailsContainer} />
       <Stack.Screen name="Booking" component={BookingContainer} />
       <Stack.Screen name="BookingHistory" component={BookingHistoryContainer} />
       <Stack.Screen name="BookingRequest" component={BookingRequestContainer} />
@@ -60,7 +67,6 @@ export default function MainStack() {
       <Stack.Screen name="ReviewPhotos" component={ReviewPhotosContainer} />
       <Stack.Screen name="BookingCalendar" component={BookingCalendarContainer} />
       <Stack.Screen name="MyReviews" component={MyReviewsContainer} />
-      <Stack.Screen name="PortfolioOnboarding" component={PortfolioOnboardingContainer} />
     </Stack.Navigator>
   )
 }

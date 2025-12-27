@@ -11,8 +11,8 @@ export default function ChatContainer() {
 
   const handlePressChatRoom = (chatRoomId: number, opponentId: string) => {
     const room = chatRooms.find((r) => r.roomId === chatRoomId);
-    const profileImageURI = room?.opponentProfileImageUrl || '';
-    navigation.navigate('ChatDetails', { chatRoomId, opponentProfileImageURI: profileImageURI, opponentId });
+    const profileImageURI = room?.profileImageURI || '';
+    navigation.navigate('ChatDetails', { chatRoomId, profileImageURI, opponentId });
   };
 
   return (

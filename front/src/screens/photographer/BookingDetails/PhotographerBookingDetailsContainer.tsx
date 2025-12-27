@@ -39,7 +39,7 @@ export default function PhotographerBookingDetailsContainer() {
   return (
     <PhotographerBookingDetailsView
       onPressBack={handlePressBack}
-      customerName={reservationDetails.photographerName}
+      customerName={reservationDetails.custommerName}
       bookingOption={bookingOption}
       datetime={reservationDetails.shootingDateTime}
       additionalRequest={reservationDetails.requirement}

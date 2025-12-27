@@ -42,14 +42,12 @@ export default function BookingManageContainer() {
 
   const handlePressViewPhotos = (reservationId: number) => navigation.navigate('ViewPhotos', { reservationId })
 
-  const handlePressWriteReview = (reservationId: number) => navigation.navigate('WriteReview', { reservationId })
-
   const handlePressConfirmBooking = async (reservationId: number) => {
     Alert.show({
       title: '예약 수락',
       message: '예약을 수락하시겠습니까?',
       buttons: [
-        { text: '취소', onPress: () => {} },
+        { text: '취소', onPress: () => {}, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
@@ -70,7 +68,7 @@ export default function BookingManageContainer() {
       title: '예약 거절',
       message: '예약을 거절하시겠습니까?',
       buttons: [
-        { text: '취소', onPress: () => {} },
+        { text: '취소', onPress: () => {}, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
@@ -97,7 +95,7 @@ export default function BookingManageContainer() {
   return (
     <BookingManageView
       reservations={reservations}
-      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '' }}
+      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '' }}
       isLoading={isLoading}
       isError={isError}
       onLoadMore={handleLoadMore}
@@ -107,7 +105,6 @@ export default function BookingManageContainer() {
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
       onPressViewPhotos={handlePressViewPhotos}
-      onPressWriteReview={handlePressWriteReview}
       onPressConfirmBooking={handlePressConfirmBooking}
       onPressRejectBooking={handlePressRejectBooking}
     />

@@ -203,13 +203,6 @@ export default function ProfileContainer () {
     navigation.navigate('BookingHistory');
   };
 
-  // const handlePressSnaplinkGuide = () => {
-  //   Alert.show({
-  //     title: '준비중',
-  //     message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
-  //   });
-  // };
-
   const handlePressManageBooking = () => {
     if (!isPhotographer) {
       Alert.show({
@@ -240,15 +233,8 @@ export default function ProfileContainer () {
       });
       return;
     }
+    navigation.navigate('ShootingManage');
   }
-
-  // const handlePressSnaplinkPhotographerGuide = () => {
-  //   Alert.show({
-  //     title: '준비중',
-  //     message: '스냅링크 의뢰 가이드 페이지를 준비중입니다.',
-  //   });
-  // };
-
 
   const handlePressCustomerCenter = () => {
     // TODO: Navigate to CustomerCenter screen
@@ -282,6 +268,14 @@ export default function ProfileContainer () {
     });
   };
 
+  const handlePressOpenSource = () => {
+    // TODO: Navigate to Terms screen
+    Alert.show({
+      title: '준비중',
+      message: '약관 및 정책 페이지를 준비중입니다.',
+    });
+  };
+
   return (
     <ProfileView
       onToggleExpertMode={handleToggleExpertMode}
@@ -300,6 +294,7 @@ export default function ProfileContainer () {
       onPressNotice={handlePressNotice}
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}
+      onPressOpenSource={handlePressOpenSource}
       isExpertMode={isExpertMode}
       isPhotographer={isPhotographer}
       profileImageURI={profileImageURI !== null ? profileImageURI : ''}

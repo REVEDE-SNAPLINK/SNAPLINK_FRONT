@@ -2,6 +2,8 @@ import ScreenContainer from '@/components/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
 import { ChatRoomItem } from '@/api/chat.ts';
+import ServerImage from '@/components/ServerImage.tsx';
+import { formatTimeAgo } from '@/utils/format.ts';
 
 interface ChatViewProps {
   chatRooms: ChatRoomItem[];
@@ -22,40 +24,33 @@ export default function ChatView({
         {chatRooms.map((chatRoom) => (
           <ChatItem key={chatRoom.roomId} onPress={() => onPressChatRoom(chatRoom.roomId, chatRoom.opponentId)}>
             <ChatProfileImageWrapper>
-              <ChatProfileImage
-                source={chatRoom.opponentProfileImageUrl ? { uri: chatRoom.opponentProfileImageUrl } : undefined}
-              />
+              <ChatProfileImage {...(chatRoom.profileImageURI ? { uri: chatRoom.profileImageURI } : {})} />
             </ChatProfileImageWrapper>
             <ChatContentWrapper>
               <ChatContentHeader>
                 <Typography
                   fontSize={16}
                   fontWeight="semiBold"
-                  lineHeight="140%"
-                  letterSpacing="-2.5%"
                   marginRight={5}
                 >
                   {chatRoom.opponentNickname}
                 </Typography>
                 <Typography
-                  fontSize={10}
-                  lineHeight="140%"
-                  letterSpacing="-2.5%"
+                  fontSize={12}
                   color="#C8C8C8"
                 >
-                  {chatRoom.lastMessageTime}
+                  {formatTimeAgo(chatRoom.lastMessageTime)}
                 </Typography>
               </ChatContentHeader>
-              <LastMessageText
-                fontSize={12}
-                lineHeight="140%"
-                letterSpacing="-2.5%"
+              <Typography
+                fontSize={14}
                 color="#AAAAAA"
                 numberOfLines={1}
                 ellipsizeMode="tail"
+                marginTop={5}
               >
-                {/*{chatRoom.lastMessage}*/}
-              </LastMessageText>
+                {chatRoom.lastMessage || '없음'}
+              </Typography>
             </ChatContentWrapper>
             <UnreadTextCounter>
               <Typography
@@ -96,7 +91,7 @@ const ChatProfileImageWrapper = styled.View`
   border-color: #C8C8C8;
 `
 
-const ChatProfileImage = styled.Image`
+const ChatProfileImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
 `
@@ -105,16 +100,12 @@ const ChatContentWrapper = styled.View`
   margin-left: 9px;
   flex: 1;
   justify-content: center;
-  height: 100%;
+  height: 65px;
 `
 
 const ChatContentHeader = styled.View`
   flex-direction: row;
-  align-items: flex-end;
-`
-
-const LastMessageText = styled(Typography)`
-  flex: 1;
+  align-items: center;
 `
 
 const UnreadTextCounter = styled.View`

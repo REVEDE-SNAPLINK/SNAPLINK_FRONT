@@ -10,7 +10,7 @@ import { ChatMessage } from '@/api/chat';
 import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
 import { requestPermission } from '@/utils/permissions';
 import { Alert } from '@/components/theme';
-import { USE_MOCK_DATA, sendMockChatMessage, markMockChatRoomAsRead } from '@/__dev__';
+import { pick } from '@react-native-documents/picker';
 
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
@@ -18,7 +18,7 @@ export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
 
-  const { chatRoomId, opponentProfileImageURI, opponentId } = route.params;
+  const { chatRoomId, profileImageURI, opponentId } = route.params;
   const roomId = Number(chatRoomId);
   const queryClient = useQueryClient();
 
@@ -48,27 +48,21 @@ export default function ChatDetailsContainer() {
   const uploadFileMutation = useUploadChatFileMutation();
 
   // Initialize STOMP WebSocket connection
-
   useEffect(() => {
-    // Mock 모드에서는 WebSocket 연결하지 않음
-    if (USE_MOCK_DATA) {
-      // 채팅방 읽음 처리
-      markMockChatRoomAsRead(roomId);
-      queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
-      return;
-    }
-
     const stompClient = new ChatStompClient();
     stompClientRef.current = stompClient;
 
     const run = async () => {
       try {
+        console.log('[ChatDetails] Connecting to WebSocket...');
         await stompClient.connect((error) => {
-          console.error('STOMP connection error:', error);
+          console.error('[ChatDetails] STOMP connection error:', error);
         });
+        console.log('[ChatDetails] WebSocket connected successfully');
 
+        console.log('[ChatDetails] Subscribing to room:', roomId);
         stompClient.subscribeRoom(roomId, (message: ChatMessage) => {
-          console.log('Received message:', message);
+          console.log('[ChatDetails] Received message:', JSON.stringify(message, null, 2));
 
           // Update query cache with new message
           queryClient.setQueryData(
@@ -95,18 +89,17 @@ export default function ChatDetailsContainer() {
           queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
         });
 
-
+        console.log('[ChatDetails] Entering room:', roomId);
         stompClient.enter(roomId);
       } catch (e) {
-        console.error('STOMP init failed:', e);
+        console.error('[ChatDetails] STOMP init failed:', e);
       }
     };
 
     run();
 
     return () => {
-      // leave는 연결 안되어도 safePublish가 큐잉할 수 있어서,
-      // 여기서는 그냥 disconnect만 해도 됨 (원하면 leave 호출해도 OK)
+      console.log('[ChatDetails] Disconnecting WebSocket...');
       stompClientRef.current?.disconnect();
       stompClientRef.current = null;
     };
@@ -116,78 +109,78 @@ export default function ChatDetailsContainer() {
     navigation.goBack();
   };
 
-  const handlePressSend = useCallback(() => {
+  const handlePressSend = useCallback(async () => {
     if (messageInput.trim().length === 0) return;
 
-    // Mock 모드: 직접 query cache 업데이트
-    if (USE_MOCK_DATA) {
-      try {
-        const newMessage = sendMockChatMessage(roomId, messageInput.trim(), 'TEXT');
-
-        // Update query cache
-        queryClient.setQueryData(
-          chatQueryKeys.messagesInfinite(roomId, { size: 50 }),
-          (oldData: any) => {
-            if (!oldData) return oldData;
-
-            const newPages = [...oldData.pages];
-            if (newPages.length > 0) {
-              newPages[0] = [newMessage, ...newPages[0]];
-            } else {
-              newPages[0] = [newMessage];
-            }
-
-            return {
-              ...oldData,
-              pages: newPages,
-            };
-          }
-        );
-
-        // Update chat rooms
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
-
-        setMessageInput('');
-      } catch (error) {
-        console.error('Failed to send mock message:', error);
-      }
+    if (!stompClientRef.current) {
+      console.error('[ChatDetails] STOMP client not initialized');
+      Alert.show({
+        title: '연결 오류',
+        message: '채팅 서버에 연결되지 않았습니다.',
+      });
       return;
     }
 
-    // 실제 STOMP 전송
-    if (!stompClientRef.current) {
-      console.error('STOMP client not connected');
-      return;
+    // Wait for connection if not connected yet (max 5 seconds)
+    if (!stompClientRef.current.isConnected()) {
+      console.log('[ChatDetails] Waiting for WebSocket connection...');
+      let waitTime = 0;
+      const maxWait = 5000;
+      const checkInterval = 100;
+
+      while (!stompClientRef.current.isConnected() && waitTime < maxWait) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        waitTime += checkInterval;
+      }
+
+      if (!stompClientRef.current.isConnected()) {
+        console.error('[ChatDetails] Connection timeout after', maxWait, 'ms');
+        Alert.show({
+          title: '연결 오류',
+          message: '채팅 서버 연결 대기 시간이 초과되었습니다.',
+        });
+        return;
+      }
+      console.log('[ChatDetails] Connection established after', waitTime, 'ms');
     }
 
     try {
-      stompClientRef.current.sendMessage({
+      const messageData = {
         roomId,
         content: messageInput.trim(),
-        type: 'TEXT',
-      });
+        type: 'TEXT' as const,
+      };
+      console.log('[ChatDetails] Sending message:', JSON.stringify(messageData, null, 2));
+
+      stompClientRef.current.sendMessage(messageData);
       setMessageInput('');
+      console.log('[ChatDetails] Message sent successfully');
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('[ChatDetails] Failed to send message:', error);
       Alert.show({
         title: '전송 실패',
         message: '메시지 전송에 실패했습니다.',
       });
     }
-  }, [messageInput, roomId, queryClient]);
+  }, [messageInput, roomId]);
 
   const handlePressAlbum = useCallback(async () => {
     requestPermission('photo', async () => {
       try {
+        console.log('[ChatDetails] Opening image picker...');
         const result: ImagePickerResponse = await launchImageLibrary({
           mediaType: 'photo',
           selectionLimit: 1,
           quality: 0.8,
         });
 
-        if (result.didCancel) return;
+        if (result.didCancel) {
+          console.log('[ChatDetails] Image picker cancelled');
+          return;
+        }
 
         if (result.errorCode) {
+          console.error('[ChatDetails] Image picker error:', result.errorCode, result.errorMessage);
           Alert.show({
             title: '갤러리 오류',
             message: result.errorMessage || '알 수 없는 오류',
@@ -202,45 +195,54 @@ export default function ChatDetailsContainer() {
             type: result.assets[0].type || 'image/jpeg',
           };
 
+          console.log('[ChatDetails] Uploading image:', file.name);
           // Upload file to server
           const url = await uploadFileMutation.mutateAsync({ roomId, file });
+          console.log('[ChatDetails] Image uploaded successfully:', url);
 
-          // Mock 모드: 직접 query cache 업데이트
-          if (USE_MOCK_DATA) {
-            const newMessage = sendMockChatMessage(roomId, url, 'IMAGE');
-
-            queryClient.setQueryData(
-              chatQueryKeys.messagesInfinite(roomId, { size: 50 }),
-              (oldData: any) => {
-                if (!oldData) return oldData;
-
-                const newPages = [...oldData.pages];
-                if (newPages.length > 0) {
-                  newPages[0] = [newMessage, ...newPages[0]];
-                } else {
-                  newPages[0] = [newMessage];
-                }
-
-                return {
-                  ...oldData,
-                  pages: newPages,
-                };
-              }
-            );
-
-            queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
-          }
-          // 실제 STOMP 전송
-          else if (stompClientRef.current) {
-            stompClientRef.current.sendMessage({
-              roomId,
-              content: url,
-              type: 'IMAGE',
+          if (!stompClientRef.current) {
+            console.error('[ChatDetails] STOMP client not initialized');
+            Alert.show({
+              title: '연결 오류',
+              message: '채팅 서버에 연결되지 않았습니다.',
             });
+            return;
           }
+
+          // Wait for connection if not connected yet
+          if (!stompClientRef.current.isConnected()) {
+            console.log('[ChatDetails] Waiting for WebSocket connection (image)...');
+            let waitTime = 0;
+            const maxWait = 5000;
+            const checkInterval = 100;
+
+            while (!stompClientRef.current.isConnected() && waitTime < maxWait) {
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+              waitTime += checkInterval;
+            }
+
+            if (!stompClientRef.current.isConnected()) {
+              console.error('[ChatDetails] Connection timeout after', maxWait, 'ms');
+              Alert.show({
+                title: '연결 오류',
+                message: '채팅 서버 연결 대기 시간이 초과되었습니다.',
+              });
+              return;
+            }
+            console.log('[ChatDetails] Connection established after', waitTime, 'ms');
+          }
+
+          const imageMessage = {
+            roomId,
+            content: url,
+            type: 'IMAGE' as const,
+          };
+          console.log('[ChatDetails] Sending image message:', JSON.stringify(imageMessage, null, 2));
+          stompClientRef.current.sendMessage(imageMessage);
+          console.log('[ChatDetails] Image message sent successfully');
         }
       } catch (error) {
-        console.error('Failed to upload image:', error);
+        console.error('[ChatDetails] Failed to upload image:', error);
         Alert.show({
           title: '업로드 실패',
           message: '이미지 업로드에 실패했습니다.',
@@ -250,13 +252,74 @@ export default function ChatDetailsContainer() {
   }, [roomId, uploadFileMutation]);
 
   const handlePressFile = useCallback(async () => {
-    // TODO: 파일 picker 기능은 react-native-document-picker 패키지 설치 필요
-    // npm install react-native-document-picker
-    Alert.show({
-      title: '준비중',
-      message: '파일 전송 기능은 준비중입니다.',
-    });
-  }, []);
+    try {
+      console.log('[ChatDetails] Opening document picker...');
+      const result = await pick();
+
+      console.log('[ChatDetails] Document picked:', result);
+
+      if (result && result[0]) {
+        const pickedFile = result[0];
+        const file = {
+          uri: pickedFile.uri,
+          name: pickedFile.name || 'file',
+          type: pickedFile.type || 'application/octet-stream',
+        };
+
+        console.log('[ChatDetails] Uploading file:', file.name);
+        // Upload file to server
+        const url = await uploadFileMutation.mutateAsync({ roomId, file });
+        console.log('[ChatDetails] File uploaded successfully:', url);
+
+        if (!stompClientRef.current) {
+          console.error('[ChatDetails] STOMP client not initialized');
+          Alert.show({
+            title: '연결 오류',
+            message: '채팅 서버에 연결되지 않았습니다.',
+          });
+          return;
+        }
+
+        // Wait for connection if not connected yet
+        if (!stompClientRef.current.isConnected()) {
+          console.log('[ChatDetails] Waiting for WebSocket connection (file)...');
+          let waitTime = 0;
+          const maxWait = 5000;
+          const checkInterval = 100;
+
+          while (!stompClientRef.current.isConnected() && waitTime < maxWait) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            waitTime += checkInterval;
+          }
+
+          if (!stompClientRef.current.isConnected()) {
+            console.error('[ChatDetails] Connection timeout after', maxWait, 'ms');
+            Alert.show({
+              title: '연결 오류',
+              message: '채팅 서버 연결 대기 시간이 초과되었습니다.',
+            });
+            return;
+          }
+          console.log('[ChatDetails] Connection established after', waitTime, 'ms');
+        }
+
+        const fileMessage = {
+          roomId,
+          content: url,
+          type: 'FILE' as const,
+        };
+        console.log('[ChatDetails] Sending file message:', JSON.stringify(fileMessage, null, 2));
+        stompClientRef.current.sendMessage(fileMessage);
+        console.log('[ChatDetails] File message sent successfully');
+      }
+    } catch (error) {
+      console.error('[ChatDetails] Failed to upload file:', error);
+      Alert.show({
+        title: '업로드 실패',
+        message: '파일 업로드에 실패했습니다.',
+      });
+    }
+  }, [roomId, uploadFileMutation]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -268,7 +331,7 @@ export default function ChatDetailsContainer() {
     <ChatDetailsView
       partnerNickname={partnerNickname}
       opponentId={opponentId}
-      opponentProfileImageURI={opponentProfileImageURI}
+      opponentProfileImageURI={profileImageURI}
       messages={messages}
       messageInput={messageInput}
       onChangeMessageInput={setMessageInput}

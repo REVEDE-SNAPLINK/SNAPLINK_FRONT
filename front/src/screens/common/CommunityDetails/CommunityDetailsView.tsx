@@ -369,6 +369,7 @@ export default function CommunityDetailsView({
         title={`댓글 ${post.commentCount}`}
         headerAlign="left"
         scrollable
+        autoGrowToMax
         maxHeight={SCREEN_HEIGHT * 0.8}
         footerHeight={75}
         keyboardAvoid
@@ -432,23 +433,25 @@ export default function CommunityDetailsView({
         visible={isEditModalVisible}
         onClose={onCloseEditModal}
       >
-        <EditModalButton onPress={onPressEdit}>
-          <Typography fontSize={16} letterSpacing="-2.5%">
-            수정
-          </Typography>
-        </EditModalButton>
-        <EditModalDivider />
-        <EditModalButton onPress={onPressDelete}>
-          <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
-            삭제
-          </Typography>
-        </EditModalButton>
-        <EditModalDivider />
-        <EditModalButton onPress={onCloseEditModal}>
-          <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
-            닫기
-          </Typography>
-        </EditModalButton>
+        <EditModalWrapper>
+          <EditModalButton onPress={onPressEdit}>
+            <Typography fontSize={16} letterSpacing="-2.5%">
+              수정
+            </Typography>
+          </EditModalButton>
+          <EditModalDivider />
+          <EditModalButton onPress={onPressDelete}>
+            <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
+              삭제
+            </Typography>
+          </EditModalButton>
+          <EditModalDivider />
+          <EditModalButton onPress={onCloseEditModal}>
+            <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
+              닫기
+            </Typography>
+          </EditModalButton>
+        </EditModalWrapper>
       </SlideModal>
     </>
   );
@@ -612,6 +615,12 @@ const CommentInputWrapper = styled.View<{ hasInput: boolean }>`
   height: 41px;
   align-items: center;
 `;
+
+const EditModalWrapper = styled.View`
+  width: 100%;
+  border: 1px solid #EAEAEA;
+  border-radius: 4px;
+`
 
 const EditModalButton = styled.TouchableOpacity`
   padding: 18px;

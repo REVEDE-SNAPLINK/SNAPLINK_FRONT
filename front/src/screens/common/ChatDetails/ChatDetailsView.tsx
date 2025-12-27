@@ -130,10 +130,7 @@ export default function ChatDetailsView({
         </MessagesContainer>
 
         {/* 하단 입력 영역 */}
-        <InputContainer
-          hasRecommendedMessages={hasRecommendedMessages}
-          style={{ paddingBottom: insets.bottom }}
-        >
+        <InputContainer>
           {/* 추천 메시지 버튼들 */}
           {hasRecommendedMessages && (
             <RecommendedMessagesContainer>
@@ -156,14 +153,14 @@ export default function ChatDetailsView({
             <CrossButton onPress={handlePressCross} showExtraButtons={showExtraButtons}>
               <Icon width={20} height={20} Svg={CrossBlackIcon} />
             </CrossButton>
-            <SearchInputWrapper hasInputValue={hasInputValue}>
-              <SearchInput
+            <MessageInputWrapper hasInputValue={hasInputValue}>
+              <MessageInput
                 value={messageInput}
                 onChangeText={onChangeMessageInput}
                 onSubmitEditing={onPressSend}
               />
               <IconButton width={20} height={20} Svg={SendIcon} onPress={onPressSend} disabled={!hasInputValue} />
-            </SearchInputWrapper>
+            </MessageInputWrapper>
           </InputRow>
 
           {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
@@ -200,10 +197,10 @@ const MessagesContainer = styled.View`
   border-bottom-color: #C8C8C8;
 `;
 
-const InputContainer = styled.View<{ hasRecommendedMessages: boolean }>`
+const InputContainer = styled.View`
   background-color: #fff;
-  padding-top: 15px;
-  padding-bottom: 36px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   padding-left: 25px;
   padding-right: 19px;
 `;
@@ -253,7 +250,6 @@ const InputRow = styled.View`
   flex-direction: row;
   align-items: center;
   width: 100%;
-  padding: 15px 18px;
 `;
 
 const CrossButton = styled.TouchableOpacity<{ showExtraButtons: boolean }>`
@@ -265,7 +261,7 @@ const CrossButton = styled.TouchableOpacity<{ showExtraButtons: boolean }>`
   transform: ${({ showExtraButtons }) => showExtraButtons ? 'rotate(45deg)' : 'rotate(0deg)'};
 `;
 
-const SearchInputWrapper = styled.View<{ hasInputValue: boolean }>`
+const MessageInputWrapper = styled.View<{ hasInputValue: boolean }>`
   flex: 1;
   flex-direction: row;
   padding-horizontal: 12px;
@@ -275,7 +271,7 @@ const SearchInputWrapper = styled.View<{ hasInputValue: boolean }>`
   align-items: center;
 `;
 
-const SearchInput = styled.TextInput`
+const MessageInput = styled.TextInput`
   flex: 1;
   color: #000;
   font-size: 14px;

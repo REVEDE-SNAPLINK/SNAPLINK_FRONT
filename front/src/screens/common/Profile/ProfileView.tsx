@@ -27,6 +27,7 @@ interface ProfileViewProps {
   onPressNotice: () => void;
   onPressFAQ: () => void;
   onPressTerms: () => void;
+  onPressOpenSource: () => void;
   isExpertMode: boolean;
   isPhotographer: boolean;
   profileImageURI: string;
@@ -52,6 +53,7 @@ export default function ProfileView({
   onPressNotice,
   onPressFAQ,
   onPressTerms,
+  onPressOpenSource,
   isExpertMode,
   isPhotographer,
   profileImageURI,
@@ -148,20 +150,10 @@ export default function ProfileView({
               name="판매 촬영 서비스 관리"
               isLast
             />
-            {/*<InfoButton*/}
-            {/*  onPress={onPressSnaplinkPhotographerGuide}*/}
-            {/*  name="스냅링크 작가 가이드"*/}
-            {/*  isLast*/}
-            {/*/>*/}
           </InfoContainer>
         ) : (
           <InfoContainer>
             <InfoButton onPress={onPressBookingHistory} name="촬영 내역" isLast />
-            {/*<InfoButton*/}
-            {/*  onPress={onPressSnaplinkGuide}*/}
-            {/*  name="스냅링크 의뢰 가이드"*/}
-            {/*  isLast*/}
-            {/*/>*/}
           </InfoContainer>
         )}
         <Typography
@@ -225,6 +217,26 @@ export default function ProfileView({
             </Typography>
           </CustomerSupportButton>
         </CustomerSupportButtonWrapper>
+        <CustomerSupportButtonWrapper>
+          <CustomerSupportButton onPress={onPressOpenSource} marginRight={102}>
+            <Typography
+              fontSize={14}
+              fontWeight="semiBold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#000"
+            >
+              오픈소스 라이선스
+            </Typography>
+          </CustomerSupportButton>
+        </CustomerSupportButtonWrapper>
+        <Typography
+          fontSize={12}
+          color="#C8C8C8"
+          marginTop={20}
+        >
+          Copyright Revede, All Rights Reserved.
+        </Typography>
       </ContentContainer>
     </ScreenContainer>
   );

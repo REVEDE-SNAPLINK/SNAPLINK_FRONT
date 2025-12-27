@@ -1,8 +1,7 @@
 import { API_BASE_URL } from '@/config/api.ts';
 import { UploadImageParams } from '@/types/image.ts';
-import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
-import { api, authFetch, authMultipartFetch, MultipartPart } from '@/api/utils.ts';
-import { useAuthStore } from '@/store/authStore.ts';
+import { buildQuery } from '@/utils/format.ts';
+import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils.ts';
 import RNBlobUtil from 'react-native-blob-util';
 
 const COMMUNITY_BASE = `${API_BASE_URL}/api/community`;
@@ -14,6 +13,8 @@ export const COMMUNITY_CATEGORIES = {
 } as const;
 
 export type COMMUNITY_CATEGORY_ENUM = keyof typeof COMMUNITY_CATEGORIES;
+export type COMMUNITY_CATEGORY_VALUE =
+  (typeof COMMUNITY_CATEGORIES)[keyof typeof COMMUNITY_CATEGORIES];
 
 export const CATEGORY_KEYS = Object.keys(
   COMMUNITY_CATEGORIES,
@@ -60,7 +61,7 @@ export const createCommunityPost = async (data: CreateCommunityPostParams) => {
 
 export interface CommunityPost {
   id: string;
-  categoryLabel: COMMUNITY_CATEGORY_ENUM;
+  categoryLabel: COMMUNITY_CATEGORY_VALUE;
   title: string;
   content: string;
   imageUrls: string[];

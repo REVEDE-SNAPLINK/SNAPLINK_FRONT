@@ -74,9 +74,10 @@ export const useReservationDetailQuery = (reservationId?: number) =>
       typeof reservationId === 'number'
         ? reservationsQueryKeys.reservation(reservationId)
         : [],
-    queryFn: () => withMockData(
-      () => getMockReservationDetail(reservationId!) || {} as any,
-      () => getReservationDetail(reservationId!),
-    ),
+    // queryFn: () => withMockData(
+    //   () => getMockReservationDetail(reservationId!) || {} as any,
+    //   () => getReservationDetail(reservationId!),
+    // ),
+    queryFn: () => getReservationDetail(reservationId!),
     enabled: typeof reservationId === 'number',
   });

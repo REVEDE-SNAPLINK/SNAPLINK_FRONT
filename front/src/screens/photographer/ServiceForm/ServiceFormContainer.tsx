@@ -1,16 +1,26 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigation } from '@react-navigation/native';
-import AddShootingInfoView, {
-  ShootingInfoFormData,
-} from '@/screens/photographer/AddShootingInfo/AddShootingInfoView.tsx';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import ServiceFormView, {
+  ServiceFormData,
+} from '@/screens/photographer/ServiceForm/ServiceFormView.tsx';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { Alert } from '@/components/theme';
 
 const TOTAL_STEPS = 3;
 
-export default function AddShootingInfoContainer() {
+type ServiceFormRouteProp = RouteProp<{
+  ServiceForm: {
+    serviceId?: number; // If provided, it's edit mode
+  };
+}, 'ServiceForm'>;
+
+export default function ServiceFormContainer() {
   const navigation = useNavigation<MainNavigationProp>();
+  const route = useRoute<ServiceFormRouteProp>();
+
+  const serviceId = route.params?.serviceId;
+  const isEditMode = serviceId !== undefined;
 
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -20,7 +30,7 @@ export default function AddShootingInfoContainer() {
     formState: { errors },
     watch,
     setValue,
-  } = useForm<ShootingInfoFormData>({
+  } = useForm<ServiceFormData>({
     defaultValues: {
       basePrice: '',
       shootingDuration: null,
@@ -31,8 +41,8 @@ export default function AddShootingInfoContainer() {
       retouchingDuration: null,
       retouchingSelectionRight: null,
       availableDays: [],
-      startTime: null,
-      endTime: null,
+      daySchedules: {},
+      unavailableDateDescription: '',
       additionalOptions: [],
     },
     mode: 'onChange',
@@ -41,25 +51,26 @@ export default function AddShootingInfoContainer() {
   const watchedBasePrice = watch('basePrice');
   const watchedShootingDuration = watch('shootingDuration');
   const watchedShootingPeople = watch('shootingPeople');
+  const watchedAdditionalOptions = watch('additionalOptions');
   const watchedRetouchingType = watch('retouchingType');
   const watchedRetouchingDuration = watch('retouchingDuration');
   const watchedRetouchingSelectionRight = watch('retouchingSelectionRight');
   const watchedAvailableDays = watch('availableDays');
-  const watchedStartTime = watch('startTime');
-  const watchedEndTime = watch('endTime');
+  const watchedDaySchedules = watch('daySchedules');
+  const watchedUnavailableDateDescription = watch('unavailableDateDescription');
 
   const validateStep = useCallback(
     async (step: number): Promise<boolean> => {
       switch (step) {
         case 0:
-          // Step1: 촬영 정보
+          // Step6: 촬영 정보
           return (
             watchedBasePrice.trim() !== '' &&
             watchedShootingDuration !== null &&
             watchedShootingPeople !== null
           );
         case 1:
-          // Step2: 보정 정보
+          // Step7: 보정 정보
           if (watchedRetouchingType === '제공하지 않음') {
             return true;
           }
@@ -68,13 +79,21 @@ export default function AddShootingInfoContainer() {
             watchedRetouchingDuration !== null &&
             watchedRetouchingSelectionRight !== null
           );
-        case 2:
-          // Step3: 촬영 가능 일정
-          return (
-            watchedAvailableDays.length >= 1 &&
-            watchedStartTime !== null &&
-            watchedEndTime !== null
-          );
+        case 2: {
+          // Step8: 촬영 가능 일정
+          if (watchedAvailableDays.length < 1) return false;
+
+          // Check if all selected weekdays (except 공휴일) have time schedules
+          const selectedWeekdays = watchedAvailableDays.filter(day => day !== '공휴일');
+          if (selectedWeekdays.length === 0 && watchedAvailableDays.includes('공휴일')) {
+            return true; // Only 공휴일 is selected, which doesn't need time
+          }
+
+          return selectedWeekdays.every(day => {
+            const schedule = watchedDaySchedules[day];
+            return schedule && schedule.startTime !== null && schedule.endTime !== null;
+          });
+        }
         default:
           return false;
       }
@@ -87,8 +106,7 @@ export default function AddShootingInfoContainer() {
       watchedRetouchingDuration,
       watchedRetouchingSelectionRight,
       watchedAvailableDays,
-      watchedStartTime,
-      watchedEndTime,
+      watchedDaySchedules,
     ]
   );
 
@@ -109,12 +127,19 @@ export default function AddShootingInfoContainer() {
           watchedRetouchingDuration !== null &&
           watchedRetouchingSelectionRight !== null
         );
-      case 2:
-        return (
-          watchedAvailableDays.length >= 1 &&
-          watchedStartTime !== null &&
-          watchedEndTime !== null
-        );
+      case 2: {
+        if (watchedAvailableDays.length < 1) return false;
+
+        const selectedWeekdays = watchedAvailableDays.filter(day => day !== '공휴일');
+        if (selectedWeekdays.length === 0 && watchedAvailableDays.includes('공휴일')) {
+          return true;
+        }
+
+        return selectedWeekdays.every(day => {
+          const schedule = watchedDaySchedules[day];
+          return schedule && schedule.startTime !== null && schedule.endTime !== null;
+        });
+      }
       default:
         return false;
     }
@@ -127,9 +152,16 @@ export default function AddShootingInfoContainer() {
     watchedRetouchingDuration,
     watchedRetouchingSelectionRight,
     watchedAvailableDays,
-    watchedStartTime,
-    watchedEndTime,
+    watchedDaySchedules,
   ]);
+
+  const handlePressBack = () => {
+    if (currentStep === 0) {
+      navigation.goBack();
+    } else {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   const handlePressSubmit = async () => {
     if (!isStepValid) return;
@@ -145,13 +177,17 @@ export default function AddShootingInfoContainer() {
   };
 
   const onSubmit = useCallback(
-    async (data: ShootingInfoFormData) => {
-      // TODO: API 호출하여 촬영 정보 저장
-      console.log('Shooting info data:', data);
+    async (data: ServiceFormData) => {
+      // TODO: API 연동
+      // isEditMode ? updateService(serviceId, data) : createService(data)
+
+      console.log('Form data:', data);
+      console.log('Is edit mode:', isEditMode);
+      console.log('Service ID:', serviceId);
 
       Alert.show({
         title: '완료',
-        message: '촬영 정보가 추가되었습니다.',
+        message: isEditMode ? '촬영 서비스가 수정되었습니다.' : '촬영 서비스가 등록되었습니다.',
         buttons: [
           {
             text: '확인',
@@ -162,8 +198,15 @@ export default function AddShootingInfoContainer() {
         ],
       });
     },
-    [navigation]
+    [isEditMode, serviceId, navigation]
   );
+
+  const handleDeleteOption = useCallback((index: number) => {
+    setValue(
+      'additionalOptions',
+      [...watchedAdditionalOptions.filter((_, i) => i !== index)]
+    );
+  }, [watchedAdditionalOptions, setValue]);
 
   const handleToggleDay = useCallback((day: string) => {
     setValue(
@@ -174,17 +217,22 @@ export default function AddShootingInfoContainer() {
     );
   }, [setValue, watchedAvailableDays]);
 
-  const submitButtonText = currentStep === TOTAL_STEPS - 1 ? '완료하기' : '다음';
+  const submitButtonText = currentStep === TOTAL_STEPS - 1
+    ? (isEditMode ? '수정 완료' : '등록 완료')
+    : '다음';
 
   return (
-    <AddShootingInfoView
+    <ServiceFormView
       currentStep={currentStep}
       control={control}
       errors={errors}
+      onPressBack={handlePressBack}
       onPressSubmit={handlePressSubmit}
       isSubmitDisabled={!isStepValid}
       submitButtonText={submitButtonText}
+      onDeleteOption={handleDeleteOption}
       onToggleDay={handleToggleDay}
+      isEditMode={isEditMode}
     />
   );
 }

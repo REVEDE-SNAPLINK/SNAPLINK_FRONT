@@ -24,6 +24,7 @@ import NicknameEditScreen from '@/screens/common/NicknameEditScreen.tsx';
 import AccountManageScreen from '@/screens/common/AccountManageScreen.tsx';
 import EmailEditScreen from '@/screens/common/EmailEditScreen.tsx';
 import ShootingManageContainer from '@/screens/photographer/ShootingManage/ShootingManageContainer.tsx';
+import ServiceFormContainer from '@/screens/photographer/ServiceForm/ServiceFormContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -50,6 +51,7 @@ export default function MainStack() {
       {/* For Photographer */}
       <Stack.Screen name="PortfolioOnboarding" component={PortfolioOnboardingContainer} />
       <Stack.Screen name="ShootingManage" component={ShootingManageContainer} />
+      <Stack.Screen name="ServiceForm" component={ServiceFormContainer} />
 
 
       <Stack.Screen name="NicknameEdit" component={NicknameEditScreen} />

@@ -6,7 +6,7 @@ import {
   getPhotographerReservations, getReservationDetail, GetReservationListParams, getReservationPhotos,
   getUserReservations,
 } from '@/api/reservations.ts';
-import { withMockData, getMockUserReservationsPage, getMockPhotographerReservationsPage, getMockReservationDetail, getMockReservationPhotos } from '@/__dev__';
+import { withMockData, getMockPhotographerReservationsPage, getMockReservationPhotos } from '@/__dev__';
 
 export const useUserReservationsInfiniteQuery = (
   params: Omit<GetReservationListParams, 'page'>,
@@ -14,10 +14,11 @@ export const useUserReservationsInfiniteQuery = (
   useInfiniteQuery({
     queryKey: reservationsQueryKeys.userListInfinite(params),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) => withMockData(
-      () => getMockUserReservationsPage(pageParam, params.size || 10),
-      () => getUserReservations({ ...params, page: pageParam }),
-    ),
+    // queryFn: ({ pageParam }) => withMockData(
+    //   () => getMockUserReservationsPage(pageParam, params.size || 10),
+    //   () => getUserReservations({ ...params, page: pageParam }),
+    // ),
+    queryFn: ({ pageParam }) => getUserReservations({ ...params, page: pageParam }),
     getNextPageParam: (lastPage) =>
       lastPage.last ? undefined : lastPage.number + 1,
   });

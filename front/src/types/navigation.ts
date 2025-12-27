@@ -53,6 +53,7 @@ export type MainStackParamList = {
   PortfolioOnboarding: undefined;
   BookingCalendar: undefined;
   ShootingManage: undefined;
+  ServiceForm: { serviceId?: number };
 
   // etc
   Notification: undefined;

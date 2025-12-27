@@ -16,6 +16,18 @@ export type COMMUNITY_CATEGORY_ENUM = keyof typeof COMMUNITY_CATEGORIES;
 export type COMMUNITY_CATEGORY_VALUE =
   (typeof COMMUNITY_CATEGORIES)[keyof typeof COMMUNITY_CATEGORIES];
 
+export function getCategoryEnumByValue(
+  value?: COMMUNITY_CATEGORY_VALUE
+): COMMUNITY_CATEGORY_ENUM | null {
+  if (!value) return null;
+
+  return (
+    Object.entries(COMMUNITY_CATEGORIES).find(
+      ([, v]) => v === value
+    )?.[0] as COMMUNITY_CATEGORY_ENUM | undefined
+  ) ?? null;
+}
+
 export const CATEGORY_KEYS = Object.keys(
   COMMUNITY_CATEGORIES,
 ) as COMMUNITY_CATEGORY_ENUM[];

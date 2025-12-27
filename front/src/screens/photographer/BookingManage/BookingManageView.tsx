@@ -47,7 +47,7 @@ export default function BookingManageView({
         onPress={() => onPressBookingDetail(item.reservationId)}
         status={item.status}
         userName={item.userName || '고객'}
-        photographerNickname={photographerProfile.nickname || '작가'}
+        photographerNickName={photographerProfile.nickname || '작가'}
         photographerName={photographerProfile.name || '작가'}
         type={item.type}
         datetime={formatReservationDateTime(item.reservedDate, item.startTime)}

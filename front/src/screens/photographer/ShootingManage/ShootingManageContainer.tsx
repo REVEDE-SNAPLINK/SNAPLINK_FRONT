@@ -8,11 +8,18 @@ export default function ShootingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
 
   const handlePressBack = () => navigation.goBack();
-  const handlePressCreateOption = () => navigation.goBack();
-  const handlePressEditOption = () => navigation.goBack();
+
+  const handlePressCreateOption = () => {
+    navigation.navigate('ServiceForm', {});
+  };
+
+  const handlePressEditOption = (optionId: number) => {
+    navigation.navigate('ServiceForm', { serviceId: optionId });
+  };
+
   const handlePressDeleteOption = () => {
     // TODO: API 연결 후 구현
-  }
+  };
 
   const dummyOptions: ShootingOptionResponse[] = [
     {

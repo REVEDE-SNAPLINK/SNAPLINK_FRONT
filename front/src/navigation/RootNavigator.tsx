@@ -44,3 +44,13 @@ export default function RootNavigator() {
     </>
   );
 }
+
+// export default function RootNavigator() {
+//   return (
+//     <Stack.Navigator
+//       screenOptions={{headerShown: false}}
+//     >
+//       <Stack.Screen name="Auth" component={AuthStack} />
+//     </Stack.Navigator>
+//   )
+// }

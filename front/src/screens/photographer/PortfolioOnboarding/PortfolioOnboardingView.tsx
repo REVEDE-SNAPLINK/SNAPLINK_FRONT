@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import Animated, {
   useSharedValue,
@@ -10,28 +10,32 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import { SubmitButton, Typography } from '@/components/theme';
 import ScreenContainer from '@/components/ScreenContainer.tsx';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
-import CrossIcon from '@/assets/icons/cross.svg';
 import { Platform, ScrollView } from 'react-native';
 import Checkbox from '@/components/Checkbox.tsx';
-import FormInput from '@/components/form/FormInput.tsx';
-import DropDownInput from '@/components/form/DropDownInput.tsx';
 import TextInput from '@/components/theme/TextInput.tsx';
 import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
 import { GetRegionsResponse } from '@/api/regions.ts';
 import { GetConceptsResponse } from '@/api/concepts.ts';
-import TimeDropDownInput from '@/components/form/TimeDropDownInput.tsx';
+import PhotoGrid from '@/components/PhotoGrid.tsx';
+import PortfolioStep6 from '@/components/PortfolioStep6.tsx';
+import PortfolioStep7 from '@/components/PortfolioStep7.tsx';
+import PortfolioStep8, { DaySchedule } from '@/components/PortfolioStep8.tsx';
+
+export interface Tag {
+  id: number;
+  keyword: string;
+}
 
 interface Option {
   name: string;
   description: string;
   price: string;
-  isChecked: boolean;
 }
 
 export interface PortfolioOnboardingFormData {
   description: string;
   shootingRegions: number[];
+  shootingTags: number[];
   shootingConcepts: number[];
   basePrice: string;
   shootingDuration: string | null;
@@ -42,8 +46,8 @@ export interface PortfolioOnboardingFormData {
   retouchingDuration: string | null;
   retouchingSelectionRight: string | null;
   availableDays: string[];
-  startTime: Date | null;
-  endTime: Date | null;
+  daySchedules: { [day: string]: DaySchedule };
+  unavailableDateDescription: string;
   additionalOptions: Option[];
 }
 
@@ -51,6 +55,7 @@ interface PortfolioOnboardingViewProps {
   currentStep: number;
   control: Control<PortfolioOnboardingFormData>;
   errors: FieldErrors<PortfolioOnboardingFormData>;
+  onPressBack: () => void;
   onPressSubmit: () => void;
   isSubmitDisabled: boolean;
   submitButtonText: string;
@@ -59,16 +64,23 @@ interface PortfolioOnboardingViewProps {
   onProfileImageUpload: () => void;
   photoURIs: string[];
   onPhotoUpload: () => void;
+  checkedPhotos: boolean[];
+  setCheckedPhotos: (index: number) => void;
+  onDeletePhotos: () => void;
   regions: GetRegionsResponse[];
+  tags: Tag[];
   concepts: GetConceptsResponse[];
   onToggleRegion: (id: number) => void;
+  onToggleTag: (id: number) => void;
   onToggleConcept: (id: number) => void;
+  onDeleteOption: (index: number) => void;
   onToggleDay: (day: string) => void;
 }
 
 export default function PortfolioOnboardingView({
   currentStep,
   control,
+  onPressBack,
   onPressSubmit,
   isSubmitDisabled,
   submitButtonText,
@@ -77,10 +89,16 @@ export default function PortfolioOnboardingView({
   onProfileImageUpload,
   photoURIs,
   onPhotoUpload,
+  checkedPhotos,
+  setCheckedPhotos,
+  onDeletePhotos,
   regions,
+  tags,
   concepts,
   onToggleRegion,
+  onToggleTag,
   onToggleConcept,
+  onDeleteOption,
   onToggleDay,
 }: PortfolioOnboardingViewProps) {
   const opacity = useSharedValue(1);
@@ -124,6 +142,8 @@ export default function PortfolioOnboardingView({
           <PortfolioOnboardingStep2
             photoURIs={photoURIs}
             onPhotoUpload={onPhotoUpload}
+            checkedImages={checkedPhotos}
+            setCheckedImages={setCheckedPhotos}
           />
         );
       case 2:
@@ -137,24 +157,39 @@ export default function PortfolioOnboardingView({
       case 3:
         return (
           <PortfolioOnboardingStep4
+            tags={tags}
+            control={control}
+            onToggleTag={onToggleTag}
+          />
+        );
+      case 4:
+        return (
+          <PortfolioOnboardingStep5
             concepts={concepts}
             control={control}
             onToggleConcept={onToggleConcept}
           />
         );
-      case 4:
-        return <PortfolioOnboardingStep5 control={control} />;
       case 5:
-        return <PortfolioOnboardingStep6 control={control} />;
+        return <PortfolioStep6 control={control} onDeleteOption={onDeleteOption} />;
       case 6:
-        return <PortfolioOnboardingStep7 control={control} onToggleDay={onToggleDay} />;
+        return <PortfolioStep7 control={control} />;
+      case 7:
+        return <PortfolioStep8 control={control} onToggleDay={onToggleDay} />;
       default:
         return null;
     }
   };
 
+  const canDeletePhotos = currentStep === 1 && checkedPhotos.filter((v) => v).length >= 1;
+
   return (
-    <ScreenContainer headerShown={false} paddingHorizontal={40}>
+    <ScreenContainer
+      headerShown
+      headerTitle="작가 가입"
+      {...(currentStep !== 1 ? { paddingHorizontal: 40 } : {})}
+      onPressBack={onPressBack}
+    >
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollContainer>
           <AnimatedFormContainer style={animatedStyle}>
@@ -162,7 +197,9 @@ export default function PortfolioOnboardingView({
           </AnimatedFormContainer>
         </ScrollContainer>
       </KeyboardFormView>
-      <Footer>
+      <Footer
+        style={[{ ...(currentStep === 1 ? { paddingLeft: 40, paddingRight: 40 } : {}) }]}
+      >
         <ProgressBarContainer>
           <Typography
             fontSize={12}
@@ -176,11 +213,11 @@ export default function PortfolioOnboardingView({
           </ProgressBar>
         </ProgressBarContainer>
         <SubmitButton
-          onPress={onPressSubmit}
+          onPress={canDeletePhotos ? onDeletePhotos : onPressSubmit}
           width="100%"
           disabled={isSubmitDisabled}
-          text={submitButtonText}
-          marginBottom={33}
+          text={canDeletePhotos ? '사진 삭제하기' : submitButtonText}
+          marginBottom={10}
         />
       </Footer>
     </ScreenContainer>
@@ -200,17 +237,11 @@ const PortfolioOnboardingStep1 = ({
 }: PortfolioOnboardingStep1Props) => {
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
+      <Typography fontSize={18} lineHeight="140%">
         <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
           포트폴리오 프로필
         </Typography>
         을 채워주세요.
-      </Typography>
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-      >
-        프로필 사진을 등록해 주세요.
       </Typography>
       <ProfileImageUpload
         imageURI={profileImageURI}
@@ -246,15 +277,19 @@ const PortfolioOnboardingStep1 = ({
 interface PortfolioOnboardingStep2Props {
   photoURIs: string[];
   onPhotoUpload: () => void;
+  checkedImages: boolean[];
+  setCheckedImages: (index: number) => void;
 }
 
 const PortfolioOnboardingStep2 = ({
   photoURIs,
   onPhotoUpload,
+  checkedImages,
+  setCheckedImages,
 }: PortfolioOnboardingStep2Props) => {
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
+      <Typography fontSize={18} lineHeight="140%" marginBottom={20} marginLeft={40}>
         <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
           포트폴리오 사진
         </Typography>
@@ -264,27 +299,19 @@ const PortfolioOnboardingStep2 = ({
         fontSize={12}
         letterSpacing={0.2}
         marginBottom={12}
+        marginLeft={40}
         color="#737373"
       >
         *최초 등록은 1장만 업로드해도 포트폴리오 등록이 완료됩니다.
       </Typography>
-      <PhotoScrollContainerWrapper>
-        <PhotoScrollContainer>
-          <PhotoGrid>
-            <PhotoWrapper>
-              <UploadPhotoButton onPress={onPhotoUpload}>
-                <Icon width={20} height={20} Svg={CrossIcon} />
-              </UploadPhotoButton>
-            </PhotoWrapper>
-            {photoURIs.map((uri, index) => (
-              <PhotoWrapper key={index}>
-                <PhotoImage source={{ uri }} />
-              </PhotoWrapper>
-            ))}
-          </PhotoGrid>
-          <ScrollViewSpacer />
-        </PhotoScrollContainer>
-      </PhotoScrollContainerWrapper>
+      <PhotoGrid
+        imageURIs={photoURIs}
+        checkedImages={checkedImages}
+        setCheckedImage={setCheckedImages}
+        addable
+        onPressAddImage={onPhotoUpload}
+        width={337}
+      />
     </>
   );
 };
@@ -346,16 +373,72 @@ const PortfolioOnboardingStep3 = ({
 };
 
 interface PortfolioOnboardingStep4Props {
+  tags: Tag[],
+  control: Control<PortfolioOnboardingFormData>;
+  onToggleTag: (id: number) => void;
+}
+
+const PortfolioOnboardingStep4 = ({
+  tags,
+  control,
+  onToggleTag,
+}: PortfolioOnboardingStep4Props) => {
+  return (
+    <>
+      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+          촬영 관련 키워드
+        </Typography>
+        를 알려주세요.
+      </Typography>
+      <Typography
+        fontSize={12}
+        marginBottom={10}
+        color="#767676"
+      >
+        *중복 선택 가능
+      </Typography>
+      <ScrollView>
+        <Controller
+          control={control}
+          name="shootingTags"
+          render={({ field: { value } }) => (
+            <>
+              {tags.map((tag) => (
+                <CheckOptionWrapper key={tag.id}>
+                  <Checkbox
+                    isChecked={value.includes(tag.id)}
+                    onPress={() => onToggleTag(tag.id)}
+                  />
+                  <Typography
+                    fontSize={12}
+                    color="#767676"
+                    marginLeft={12}
+                  >
+                    {tag.keyword}
+                  </Typography>
+                </CheckOptionWrapper>
+              ))}
+            </>
+          )}
+        />
+        <ScrollViewSpacer />
+      </ScrollView>
+    </>
+  );
+};
+
+interface PortfolioOnboardingStep5Props {
   concepts: GetConceptsResponse[],
   control: Control<PortfolioOnboardingFormData>;
   onToggleConcept: (id: number) => void;
 }
 
-const PortfolioOnboardingStep4 = ({
+const PortfolioOnboardingStep5 = ({
   concepts,
   control,
   onToggleConcept,
-}: PortfolioOnboardingStep4Props) => {
+}: PortfolioOnboardingStep5Props) => {
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -401,342 +484,7 @@ const PortfolioOnboardingStep4 = ({
   );
 };
 
-interface PortfolioOnboardingStep5Props {
-  control: Control<PortfolioOnboardingFormData>;
-}
 
-const PortfolioOnboardingStep5 = ({ control }: PortfolioOnboardingStep5Props) => {
-  return (
-    <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
-          촬영 정보
-        </Typography>
-        를 자세히 알려주세요.
-      </Typography>
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-      >
-        기본 촬영 비용
-      </Typography>
-      <Controller
-        control={control}
-        name="basePrice"
-        render={({ field: { onChange, value } }) => (
-          <FormInput
-            placeholder="원"
-            value={value}
-            onChangeText={onChange}
-            keyboardType="numeric"
-          />
-        )}
-      />
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={25}
-      >
-        기본 촬영과 관련된 내용을 설명해주세요.
-      </Typography>
-      <Controller
-        control={control}
-        name="shootingDescription"
-        render={({ field: { onChange, value } }) => (
-          <FormInput
-            placeholder="입력해주세요 *"
-            value={value}
-            onChangeText={onChange}
-            multiline
-            height={116}
-            style={{ textAlignVertical: 'top', paddingTop: 16 }}
-          />
-        )}
-      />
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={25}
-      >
-        촬영 소요 시간
-      </Typography>
-      <Controller
-        control={control}
-        name="shootingDuration"
-        render={({ field: { onChange, value } }) => (
-          <DropDownInput
-            placeholder="선택해주세요 *"
-            options={['1시간', '2시간', '3시간', '4시간', '5시간', '6시간 이상']}
-            value={value || undefined}
-            onChange={onChange}
-          />
-        )}
-      />
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={25}
-      >
-        촬영 인원
-      </Typography>
-      <Controller
-        control={control}
-        name="shootingPeople"
-        render={({ field: { onChange, value } }) => (
-          <DropDownInput
-            placeholder="선택해주세요 *"
-            options={['1명', '2명', '3명', '4명', '5명', '6명 이상']}
-            value={value || undefined}
-            onChange={onChange}
-          />
-        )}
-      />
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={25}
-      >
-        원본 파일 제공
-      </Typography>
-      <Controller
-        control={control}
-        name="provideRawFiles"
-        render={({ field: { onChange, value } }) => (
-          <CheckOptionWrapper>
-            <Checkbox isChecked={value} onPress={() => onChange(!value)} />
-            <Typography
-              fontSize={12}
-              color="#767676"
-              marginLeft={12}
-            >
-              제공 가능
-            </Typography>
-          </CheckOptionWrapper>
-        )}
-      />
-
-      <OptionList control={control} />
-    </>
-  );
-};
-
-interface PortfolioOnboardingStep6Props {
-  control: Control<PortfolioOnboardingFormData>;
-}
-
-const PortfolioOnboardingStep6 = ({ control }: PortfolioOnboardingStep6Props) => {
-  const retouchingType = control._formValues.retouchingType;
-  const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
-
-  return (
-    <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
-          보정 정보
-        </Typography>
-        를 자세히 알려주세요.
-      </Typography>
-      <ScrollView>
-        <Typography
-          fontSize={16}
-          letterSpacing="-2.5%"
-          marginBottom={10}
-        >
-          보정 작업 제공
-        </Typography>
-        <Controller
-          control={control}
-          name="retouchingType"
-          render={({ field: { onChange, value } }) => (
-            <DropDownInput
-              placeholder="선택해주세요 *"
-              options={['얼굴 보정', '색감 보정', '얼굴, 색감 보정', '제공하지 않음']}
-              value={value || undefined}
-              onChange={onChange}
-            />
-          )}
-        />
-        {showRetouchingDetails && (
-          <>
-            <Typography
-              fontSize={16}
-              letterSpacing="-2.5%"
-              marginBottom={10}
-              marginTop={25}
-            >
-              보정 작업 소요 기간
-            </Typography>
-            <Controller
-              control={control}
-              name="retouchingDuration"
-              render={({ field: { onChange, value } }) => (
-                <DropDownInput
-                  placeholder="선택해주세요 *"
-                  options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내']}
-                  value={value || undefined}
-                  onChange={onChange}
-                />
-              )}
-            />
-            <Typography
-              fontSize={16}
-              letterSpacing="-2.5%"
-              marginBottom={10}
-              marginTop={25}
-            >
-              보정 사진 선택 권한
-            </Typography>
-            <Controller
-              control={control}
-              name="retouchingSelectionRight"
-              render={({ field: { onChange, value } }) => (
-                <DropDownInput
-                  placeholder="선택해주세요 *"
-                  options={['작가 선택', '고객 선택', '작가와 고객 함께 선택']}
-                  value={value || undefined}
-                  onChange={onChange}
-                />
-              )}
-            />
-          </>
-        )}
-        <ScrollViewSpacer />
-      </ScrollView>
-    </>
-  );
-};
-
-const days = [
-  '월요일',
-  '화요일',
-  '수요일',
-  '목요일',
-  '금요일',
-  '토요일',
-  '일요일',
-  '공휴일',
-];
-
-interface PortfolioOnboardingStep7Props {
-  control: Control<PortfolioOnboardingFormData>;
-  onToggleDay: (day: string) => void;
-}
-
-const PortfolioOnboardingStep7 = ({
-  control,
-  onToggleDay,
-}: PortfolioOnboardingStep7Props) => {
-  // Generate time options (00:00 to 23:00)
-  const timeOptions = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, '0')}:00`
-  );
-
-  const startTime = control._formValues.startTime;
-
-  // Filter end time options to be later than start time
-  const endTimeOptions = useMemo(() => {
-    if (!startTime) return timeOptions;
-    const startHour = startTime.getHours();
-    return timeOptions.filter((time) => {
-      const hour = parseInt(time.split(':')[0]);
-      return hour > startHour;
-    });
-  }, [startTime, timeOptions]);
-
-  return (
-    <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
-          촬영 가능한 일정
-        </Typography>
-        을 자세히 알려주세요.
-      </Typography>
-      <Typography
-        fontSize={12}
-        marginBottom={10}
-        color="#767676"
-      >
-        *중복 선택 가능
-      </Typography>
-      <ScrollView>
-        <Controller
-          control={control}
-          name="availableDays"
-          render={({ field: { value } }) => (
-            <>
-              {days.map((day, i) => (
-                <CheckOptionWrapper key={i}>
-                  <Checkbox
-                    isChecked={value.includes(day)}
-                    onPress={() => onToggleDay(day)}
-                  />
-                  <Typography
-                    fontSize={12}
-                    color="#767676"
-                    marginLeft={12}
-                  >
-                    {day}
-                  </Typography>
-                </CheckOptionWrapper>
-              ))}
-            </>
-          )}
-        />
-        <Typography
-          fontSize={16}
-          letterSpacing="-2.5%"
-          marginBottom={17}
-          marginTop={29}
-        >
-          촬영 가능 시간대
-        </Typography>
-        <TimeOptionWrapper>
-          <Controller
-            control={control}
-            name="startTime"
-            render={({ field: { onChange, value } }) => (
-              <TimeDropDownInput
-                placeholder="시작 시간"
-                options={timeOptions}
-                value={value ? `${String(value.getHours()).padStart(2, '0')}:00` : undefined}
-                onChange={(timeStr) => {
-                  const [hours] = timeStr.split(':').map(Number);
-                  const date = new Date();
-                  date.setHours(hours, 0, 0, 0);
-                  onChange(date);
-                }}
-              />
-            )}
-          />
-          <TimeBar />
-          <Controller
-            control={control}
-            name="endTime"
-            render={({ field: { onChange, value } }) => (
-              <TimeDropDownInput
-                placeholder="종료 시간"
-                options={endTimeOptions}
-                value={value ? `${String(value.getHours()).padStart(2, '0')}:00` : undefined}
-                onChange={(timeStr) => {
-                  const [hours] = timeStr.split(':').map(Number);
-                  const date = new Date();
-                  date.setHours(hours, 0, 0, 0);
-                  onChange(date);
-                }}
-              />
-            )}
-          />
-        </TimeOptionWrapper>
-        <ScrollViewSpacer />
-      </ScrollView>
-    </>
-  );
-};
 
 const KeyboardFormView = styled.KeyboardAvoidingView`
   flex: 1;
@@ -752,7 +500,6 @@ const ScrollContainer = styled.ScrollView`
 const AnimatedFormContainer = styled(Animated.View)`
   flex: 1;
   width: 100%;
-  margin-top: 40px;
 `;
 
 const ProgressBarContainer = styled.View`
@@ -779,53 +526,11 @@ const ProgressBarFill = styled(Animated.View)`
 
 const Footer = styled.View`
   width: 100%;
-  height: 171px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   align-items: center;
   justify-content: center;
 `
-
-const PhotoScrollContainerWrapper = styled.View`
-  width: 100%;
-  align-items: center;
-`;
-
-const GRID_COLUMNS = 2;
-const PHOTO_PADDING = 2;
-const CONTAINER_WIDTH = 332;
-const PHOTO_SIZE = (CONTAINER_WIDTH - (PHOTO_PADDING * 3)) / GRID_COLUMNS;
-
-const PhotoScrollContainer = styled.ScrollView`
-  width: ${CONTAINER_WIDTH}px;
-`;
-
-const PhotoGrid = styled.View`
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-content: space-between;
-  width: 100%;
-`;
-
-const PhotoWrapper = styled.View`
-  width: ${PHOTO_SIZE}px;
-  height: ${PHOTO_SIZE}px;
-  padding: ${PHOTO_PADDING}px 0;
-`;
-
-const PhotoImage = styled.Image`
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
-`;
-
-const UploadPhotoButton = styled.TouchableOpacity`
-  width: 100%;
-  height: 100%;
-  border: 1px dashed #C8C8C8;
-  border-radius: 8px;
-  justify-content: center;
-  align-items: center;
-`;
 
 const ScrollViewSpacer = styled.View`
   height: 100px;
@@ -838,169 +543,3 @@ const CheckOptionWrapper = styled.View`
   margin-bottom: 15px;
 `;
 
-const TimeOptionWrapper = styled.View`
-  width: 100%;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const TimeBar = styled.View`
-  width: 16px;
-  height: 2px;
-  margin: 0 10px;
-  background-color: #C8C8C8;
-`;
-
-const AddOptionButton = styled.TouchableOpacity`
-  width: 100%;
-  height: 49px;
-  border-radius: 8px;
-  border: 1px solid ${theme.colors.primary};
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-`
-
-const OptionWrapper = styled.View`
-  width: 100%;
-  padding: 21px 13px;
-  border-radius: 10px;
-  border: 1px solid ${theme.colors.primary};
-  margin-top: 20px;
-`
-
-const OptionCheckWrapper = styled.View`
-  flex-direction: row;
-  align-items: center;
-`
-
-interface OptionItemProps extends Option {
-  setChecked: (checked: boolean) => void;
-  setName: (name: string) => void;
-  setDescription: (description: string) => void;
-  setPrice: (price: string) => void;
-}
-
-const OptionItem = ({ name, description, price, setName, setDescription, setPrice, isChecked, setChecked }: OptionItemProps) => {
-  return (
-    <OptionWrapper>
-      <OptionCheckWrapper>
-        <Checkbox isChecked={isChecked} onPress={() => setChecked(!isChecked)} />
-        <Typography
-          fontSize={14}
-          color="primary"
-          marginLeft={12}
-        >옵션 추가하기</Typography>
-      </OptionCheckWrapper>
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={21}
-      >
-        추가 옵션
-      </Typography>
-      <FormInput
-        placeholder="추가 옵션명 *"
-        value={name}
-        onChangeText={setName}
-      />
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={21}
-      >
-        추가 옵션 설명
-      </Typography>
-      <FormInput
-        placeholder="입력해주세요 *"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-        height={116}
-        style={{ textAlignVertical: 'top', paddingTop: 16 }}
-      />
-      <Typography
-        fontSize={16}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={21}
-      >
-        추가 옵션 비용
-      </Typography>
-      <FormInput
-        placeholder="원 *"
-        value={price}
-        onChangeText={setPrice}
-        keyboardType="numeric"
-      />
-    </OptionWrapper>
-  )
-}
-
-interface OptionProps {
-  control: Control<PortfolioOnboardingFormData>;
-}
-
-const OptionList = ({
-  control,
-}: OptionProps) => {
-  return (
-    <Controller
-      control={control}
-      name="additionalOptions"
-      render={({ field: { onChange, value: options } }) => {
-        const optionList = options || [];
-        return (
-          <>
-            <AddOptionButton
-              onPress={() => {
-                const newOptions = [...optionList, { name: '', description: '', price: '', isChecked: true}];
-                onChange(newOptions);
-              }}
-            >
-              <Typography
-                fontSize={14}
-                fontWeight="bold"
-                color="primary"
-              >
-                옵션 추가
-              </Typography>
-            </AddOptionButton>
-            {optionList.map((option: Option, index: number) => (
-              <OptionItem
-                key={index}
-                name={option.name}
-                description={option.description}
-                price={option.price}
-                isChecked={option.isChecked}
-                setChecked={(checked: boolean) => {
-                  const newOptions = [...optionList];
-                  newOptions[index] = { ...newOptions[index], isChecked: checked };
-                  onChange(newOptions);
-                }}
-                setName={(name: string) => {
-                  const newOptions = [...optionList];
-                  newOptions[index] = { ...newOptions[index], name };
-                  onChange(newOptions);
-                }}
-                setDescription={(description: string) => {
-                  const newOptions = [...optionList];
-                  newOptions[index] = { ...newOptions[index], description };
-                  onChange(newOptions);
-                }}
-                setPrice={(price: string) => {
-                  const newOptions = [...optionList];
-                  newOptions[index] = { ...newOptions[index], price };
-                  onChange(newOptions);
-                }}
-              />
-            ))}
-          </>
-        )
-      }}
-    />
-  )
-}

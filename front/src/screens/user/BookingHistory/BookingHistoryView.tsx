@@ -42,7 +42,7 @@ export default function BookingHistoryView({
       <HistoryCard
         onPress={() => onPressBookingDetail(item.reservationId)}
         status={item.status}
-        photographerNickname={item.photographerNickname || '작가'}
+        photographerNickName={item.photographerNickName || '작가'}
         photographerName={item.photographerName || '작가'}
         type={item.type}
         datetime={formatReservationDateTime(item.reservedDate, item.startTime)}

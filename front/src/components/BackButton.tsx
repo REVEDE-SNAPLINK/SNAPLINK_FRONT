@@ -1,5 +1,5 @@
 import IconButton from '@/components/IconButton.tsx';
-import ArrowLeftIcon from '@/assets/icons/arrow-left.svg'
+import ArrowLeftIcon from '@/assets/icons/arrow-left-black.svg'
 
 interface BackButtonProps {
   onPress: () => void;

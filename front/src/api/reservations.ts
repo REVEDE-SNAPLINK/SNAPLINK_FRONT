@@ -67,7 +67,7 @@ export interface ReservationListItem {
 
 export interface UserReservationListItem extends ReservationListItem {
   photographerName: string;
-  photographerNickname: string;
+  photographerNickName: string;
 }
 
 export interface PhotographerReservationListItem extends ReservationListItem {
@@ -155,7 +155,7 @@ export interface UploadReservationZipRequest {
 export interface ReservationDetail {
   reservationId: number;
   photographerName: string;
-  custommerName: string;
+  customerName: string;
   shootingOptions: string[];
   shootingDateTime: string; // "2025.11.03(월) 18:00"
   requirement: string;

@@ -4,7 +4,7 @@ import { CommunityPost, CreateCommunityPostParams } from '@/api/community.ts';
 interface CommunityPostModalState {
   visible: boolean;
   initialPost?: CommunityPost;
-  onSubmit?: (params: CreateCommunityPostParams, isLoading: boolean) => void;
+  onSubmit?: (params: CreateCommunityPostParams) => void;
   isLoading?: boolean;
 }
 

@@ -14,6 +14,8 @@ interface Props {
   // Header props
   headerShown?: boolean;
   headerTitle?: string;
+  headerHeight?: number;
+  isShowLogo?: boolean;
   onPressBack?: () => void;
   headerToolIcon?: ComponentType<SvgProps>;
   onPressTool?: () => void;
@@ -29,15 +31,12 @@ export default function ScreenContainer({
   alignItemsCenter = true,
   headerShown = true,
   headerTitle = "",
+  headerHeight,
+  isShowLogo = false,
   headerToolIcon,
 }: Props) {
   return (
-    <StyledSafeAreaView
-      backgroundColor={backgroundColor}
-      android={Platform.OS === 'android'}
-      paddingHorizontal={paddingHorizontal}
-      alignItemsCenter={alignItemsCenter}
-    >
+    <StyledSafeAreaView>
       <StatusBar barStyle="dark-content" backgroundColor={barBackgroundColor} />
       {headerShown && (
         <HeaderWithBackButton
@@ -45,23 +44,34 @@ export default function ScreenContainer({
           onPressTool={onPressTool}
           title={headerTitle}
           ToolIcon={headerToolIcon}
+          isShowLogo={isShowLogo}
+          height={headerHeight}
         />
       )}
-      {children}
+      <Container
+        backgroundColor={backgroundColor}
+        paddingHorizontal={paddingHorizontal}
+        alignItemsCenter={alignItemsCenter}
+      >
+        {children}
+      </Container>
     </StyledSafeAreaView>
   )
 }
 
-const StyledSafeAreaView = styled(SafeAreaView)<{
-  backgroundColor: string,
-  android: boolean,
+const StyledSafeAreaView = styled(SafeAreaView)`
+  flex: 1;
+  box-sizing: border-box;
+`
+
+const Container = styled.View<{
   paddingHorizontal?: number,
   alignItemsCenter: boolean,
+  backgroundColor: string,
 }>`
   flex: 1;
+  width: 100%;
   background-color: ${({ backgroundColor }) => backgroundColor};
-  box-sizing: border-box;
-  ${({ android }) => android && `padding-top: 10px;`}
   ${({ paddingHorizontal }) => paddingHorizontal !== undefined && `padding-horizontal: ${paddingHorizontal}px;`}
   ${({ alignItemsCenter }) => alignItemsCenter ? `align-items: center;` : ''}
 `

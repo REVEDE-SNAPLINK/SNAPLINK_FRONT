@@ -2,14 +2,14 @@ import { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { TouchableOpacity } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import FormErrorMessage from '@/components/FormErrorMessage.tsx';
-import DatePicker from '@/components/DatePicker.tsx';
+import DatePicker from 'react-native-date-picker'
 import CalendarIcon from '@/assets/icons/calendar.svg';
 import Icon from '@/components/Icon.tsx';
 
 interface DateInputProps {
   placeholder: string;
   errorMessage?: string;
-  value?: Date;
+  value: Date;
   onChange?: (date: Date) => void;
 }
 
@@ -45,7 +45,15 @@ const FormErrorMessageSpacer = styled.View`
 const DateInput = forwardRef<DateInputRef, DateInputProps>(
   ({ placeholder, errorMessage, value, onChange }, ref) => {
     const [isPickerVisible, setIsPickerVisible] = useState(false);
-    const [selectedDate, setSelectedDate] = useState<Date | undefined>(value);
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+    const minimumDate = new Date('1900-01-01')
+
+    const maximumDate = (() => {
+      const today = new Date();
+      const thisYear = today.getFullYear();
+      return new Date(`${thisYear - 14}-12-31`);
+    })();
 
     useEffect(() => {
       setSelectedDate(value);
@@ -96,10 +104,17 @@ const DateInput = forwardRef<DateInputRef, DateInputProps>(
           </>
         )}
         <DatePicker
-          visible={isPickerVisible}
-          onClose={() => setIsPickerVisible(false)}
-          onConfirm={handleConfirm}
-          initialDate={selectedDate}
+          modal
+          mode="date"
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+          open={isPickerVisible}
+          onCancel={() => setIsPickerVisible(false)}
+          onConfirm={(date) => {
+            handleConfirm(date)
+            setIsPickerVisible(false);
+          }}
+          date={selectedDate}
         />
       </>
     );

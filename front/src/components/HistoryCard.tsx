@@ -14,7 +14,7 @@ interface HistoryCardProps {
   status: ReservationStatus;
   userName?: string;
   photographerName: string;
-  photographerNickname: string;
+  photographerNickName: string;
   type: string;
   datetime: string;
 }
@@ -28,7 +28,7 @@ export default function HistoryCard({
   status,
   userName,
   photographerName,
-  photographerNickname,
+  photographerNickName,
   type,
   datetime,
 }: HistoryCardProps) {
@@ -40,17 +40,17 @@ export default function HistoryCard({
   const headerTitle = (() => {
     switch (status) {
       case 'REJECTED':
-        if (isUserMode) return photographerNickname + '님이 예약을 거절했어요'
+        if (isUserMode) return photographerNickName + '님이 예약을 거절했어요'
         return userName + '님의 예약을 거절했어요'
       case 'REQUESTED':
-        if (!isUserMode) return photographerNickname + '님, 예약이 접수되었어요!'
+        if (!isUserMode) return photographerNickName + '님, 예약이 접수되었어요!'
       case 'CONFIRMED':
-        if (isUserMode) return photographerNickname + '님과 인생샷 건질 준비 중이에요'
+        if (isUserMode) return photographerNickName + '님과 인생샷 건질 준비 중이에요'
         else return userName + '님과 인생샷 건질 준비 중이에요'
       case 'COMPLETED':
       case 'DELIVERED':
       case 'REVIEWED':
-        if (isUserMode) return photographerNickname + '님과 함께 한 추억이에요'
+        if (isUserMode) return photographerNickName + '님과 함께 한 추억이에요'
         else return userName + '님에게 추억을 선물했어요!'
       }
     })();

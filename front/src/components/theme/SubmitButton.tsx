@@ -67,7 +67,7 @@ export default function SubmitButton({
   ...rest
 }: Props) {
   const SubmitButtonElement = (
-    <StyledSubmitButton $width={width} $disabled={disabled} $type={type} $size={size} {...rest}>
+    <StyledSubmitButton $width={width} $disabled={disabled} $type={type} $size={size} {...rest} disabled={disabled}>
       <Typography
         fontWeight="bold"
         fontSize={size === "large" ? 16 : 12}

@@ -7,14 +7,17 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { SignUpFormData } from '@/api/auth.ts';
 import { requestPermission } from '@/utils/permissions.ts'
 import { useNavigation } from '@react-navigation/native';
-import { RootNavigationProp } from '@/types/navigation.ts';
+import { AuthNavigationProp, RootNavigationProp } from '@/types/navigation.ts';
+import { Linking } from 'react-native';
+import { Alert } from '@/components/theme';
 
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
 const TOTAL_STEPS = 6;
 
 export default function UserOnboardingContainer() {
-  const navigation = useNavigation<RootNavigationProp>();
-  const { userId, userType, signUp, setIsFirst } = useAuthStore();
+  const rootNavigation = useNavigation<RootNavigationProp>();
+  const authNavigation = useNavigation<AuthNavigationProp>();
+  const { userId, userType, signUp, setIsFirst, setUserType } = useAuthStore();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [agreedTerms, setAgreedTerms] = useState<string[]>([]);
@@ -34,7 +37,7 @@ export default function UserOnboardingContainer() {
       name: '',
       email: '',
       nickname: '',
-      birthDate: null,
+      birthDate: new Date(),
       gender: null,
     },
     mode: 'onChange',
@@ -47,10 +50,39 @@ export default function UserOnboardingContainer() {
   const watchedGender = watch('gender');
 
   // 닉네임이 변경되면 중복 에러 초기화
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setNicknameError(null);
   }, [watchedNickname]);
+
+  const handlePressBack = () => {
+    if (currentStep === 0) {
+      authNavigation.goBack();
+    } else {
+      setCurrentStep((prev) => prev - 1);
+    }
+  }
+
+  const handlePressUser = () => {
+    setUserType('user');
+    setCurrentStep(1);
+  }
+  const handlePressPhotographer = () => {
+    setUserType('photographer');
+    setCurrentStep(1);
+  }
+
+  const handlePressTermLink = async (url: string) => {
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.show({
+        'title': '링크 연결 실패',
+        'message': '지원되지 않는 주소잆니다.',
+      })
+    }
+  }
 
   const handleToggleTerm = useCallback((termId: string) => {
     setShowTermsError(false);
@@ -96,13 +128,13 @@ export default function UserOnboardingContainer() {
   const validateStep = useCallback(
     async (step: number): Promise<boolean> => {
       switch (step) {
-        case 0:
+        case 1:
           return REQUIRED_TERMS.every((termId) =>
             agreedTerms.includes(termId)
           );
-        case 1:
-          return await trigger('name');
         case 2:
+          return await trigger('name');
+        case 3:
           const isEmailValid = await trigger('email');
           if (!isEmailValid) return false;
 
@@ -114,7 +146,7 @@ export default function UserOnboardingContainer() {
           }
           setEmailError(null);
           return true;
-        case 3:
+        case 4:
           const isNicknameValid = await trigger('nickname');
           if (!isNicknameValid) return false;
 
@@ -126,9 +158,9 @@ export default function UserOnboardingContainer() {
           }
           setNicknameError(null);
           return true;
-        case 4:
-          return await trigger('birthDate');
         case 5:
+          return await trigger('birthDate');
+        case 6:
           return await trigger('gender');
         default:
           return false;
@@ -139,17 +171,17 @@ export default function UserOnboardingContainer() {
 
   const isStepValid = useMemo(() => {
     switch (currentStep) {
-      case 0:
-        return REQUIRED_TERMS.every((termId) => agreedTerms.includes(termId));
       case 1:
-        return watchedName.trim() !== '';
+        return REQUIRED_TERMS.every((termId) => agreedTerms.includes(termId));
       case 2:
-        return watchedEmail.trim() !== '';
+        return watchedName.trim() !== '';
       case 3:
-        return watchedNickname.trim() !== '';
+        return watchedEmail.trim() !== '';
       case 4:
-        return watchedBirthDate !== null;
+        return watchedNickname.trim() !== '';
       case 5:
+        return watchedBirthDate !== null;
+      case 6:
         return watchedGender !== null;
       default:
         return false;
@@ -160,7 +192,7 @@ export default function UserOnboardingContainer() {
     // 버튼 disabled 상태 재확인
     if (!isStepValid) {
       // 약관 동의 스텝에서 에러 표시
-      if (currentStep === 0) {
+      if (currentStep === 1) {
         setShowTermsError(true);
       }
       return;
@@ -170,7 +202,7 @@ export default function UserOnboardingContainer() {
 
     if (!isValid) {
       // 약관 동의 스텝에서 에러 표시
-      if (currentStep === 0) {
+      if (currentStep === 1) {
         setShowTermsError(true);
       }
       return;
@@ -179,7 +211,7 @@ export default function UserOnboardingContainer() {
     // 다음 스텝으로 이동하면 에러 초기화
     setShowTermsError(false);
 
-    if (currentStep === 0) {
+    if (currentStep === 1) {
       await requestPermission('notification');
     }
 
@@ -200,8 +232,6 @@ export default function UserOnboardingContainer() {
 
       const isAgreeMarketing = data.agreedTerms.includes('marketing');
 
-      console.log(userId);
-
       const signUpData: SignUpFormData = {
         name: data.name,
         nickname: data.nickname,
@@ -215,10 +245,10 @@ export default function UserOnboardingContainer() {
 
       signUp(signUpData).then(() => {
         setIsFirst(true);
-        navigation.reset({ index: 0, routes: [{ name: "Main" }] });
+        rootNavigation.reset({ index: 0, routes: [{ name: "Main" }] });
       });
     },
-    [signUp, userId, userType, navigation, setIsFirst],
+    [signUp, userId, userType, rootNavigation, setIsFirst],
   );
 
   const submitButtonText = currentStep === TOTAL_STEPS - 1 ? '완료' : '다음';
@@ -228,6 +258,10 @@ export default function UserOnboardingContainer() {
       currentStep={currentStep}
       control={control}
       errors={errors}
+      onPressBack={handlePressBack}
+      onPressUser={handlePressUser}
+      onPressPhotographer={handlePressPhotographer}
+      onPressTermLink={handlePressTermLink}
       onPressSubmit={handlePressSubmit}
       onToggleTerm={handleToggleTerm}
       onToggleAllTerms={handleToggleAllTerms}

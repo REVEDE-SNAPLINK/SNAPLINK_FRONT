@@ -11,7 +11,7 @@ import { theme } from '@/theme';
 import {
   CommunityPost,
   CreateCommunityPostParams,
-  COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES, CATEGORY_KEYS
+  COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES, CATEGORY_KEYS, getCategoryEnumByValue,
 } from '@/api/community.ts';
 import {
   CameraOptions,
@@ -42,7 +42,10 @@ export default function CommunityPostModal({
   initialPost,
   isLoading,
 }: CommunityPostModalProps) {
-  const [selectedCategory, setSelectedCategory] = useState<COMMUNITY_CATEGORY_ENUM | null>(initialPost?.categoryLabel || null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<COMMUNITY_CATEGORY_ENUM | null>(
+      getCategoryEnumByValue(initialPost?.categoryLabel)
+    );
   const [title, setTitle] = useState(initialPost?.title || '');
   const [content, setContent] = useState(initialPost?.content || '');
   const [images, setImages] = useState<UploadImageParams[]>([]);

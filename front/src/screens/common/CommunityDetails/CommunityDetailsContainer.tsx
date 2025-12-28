@@ -10,6 +10,9 @@ import { useCommunityPostQuery, useCommunityCommentsQuery } from '@/queries/comm
 import {
   useToggleLikeMutation,
   useCreateCommentMutation,
+  useUpdateCommentMutation,
+  useDeleteCommentMutation,
+  useUpdatePostMutation,
   useDeletePostMutation,
 } from '@/mutations/community.ts';
 
@@ -34,6 +37,8 @@ export default function CommunityDetailsContainer() {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
+  const [replyTo, setReplyTo] = useState<{ parentId: number; nickname: string } | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
 
   const commentInputRef = useRef<TextInput | null>(null);
 
@@ -47,6 +52,9 @@ export default function CommunityDetailsContainer() {
   // Mutations
   const toggleLikeMutation = useToggleLikeMutation();
   const createCommentMutation = useCreateCommentMutation(postId);
+  const updateCommentMutation = useUpdateCommentMutation();
+  const deleteCommentMutation = useDeleteCommentMutation();
+  const updatePostMutation = useUpdatePostMutation();
   const deletePostMutation = useDeletePostMutation();
 
   const handlePressBack = () => {
@@ -80,22 +88,43 @@ export default function CommunityDetailsContainer() {
   const handleCloseCommentModal = () => {
     setIsCommentModalVisible(false);
     setCommentInput('');
+    setReplyTo(null);
+    setEditingCommentId(null);
   };
 
   const handleSubmitComment = () => {
     if (commentInput.trim().length === 0) return;
 
-    createCommentMutation.mutate(
-      {
-        content: commentInput.trim(),
-        parentId: 0, // 0 for top-level comments
-      },
-      {
-        onSuccess: () => {
-          setCommentInput('');
+    // If editing, update comment
+    if (editingCommentId) {
+      updateCommentMutation.mutate(
+        {
+          commentId: editingCommentId,
+          content: commentInput.trim(),
         },
-      }
-    );
+        {
+          onSuccess: () => {
+            setCommentInput('');
+            setEditingCommentId(null);
+            commentInputRef.current?.blur();
+          },
+        }
+      );
+    } else {
+      // Create new comment or reply
+      createCommentMutation.mutate(
+        {
+          content: commentInput.trim(),
+          parentId: replyTo ? replyTo.parentId : 0, // 0 for top-level comments
+        },
+        {
+          onSuccess: () => {
+            setCommentInput('');
+            setReplyTo(null);
+          },
+        }
+      );
+    }
   };
 
   const handlePressMore = () => {
@@ -110,10 +139,29 @@ export default function CommunityDetailsContainer() {
     setIsShareModalVisible(false);
   };
 
-  const handleUpdatePost = (params: CreateCommunityPostParams) => {
-    // TODO: Implement updatePost API when available
-    console.log('Update post:', params);
-    closeCommunityPostModal();
+  const handleUpdatePost = (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => {
+    if (!post) return;
+
+    updatePostMutation.mutate(
+      {
+        postId: post.id,
+        request: {
+          category: params.category,
+          title: params.title,
+          content: params.content,
+          deletePhotoIds: params.deletePhotoIds || [],
+        },
+        images: params.images,
+      },
+      {
+        onSuccess: () => {
+          closeCommunityPostModal();
+        },
+        onError: (error: Error) => {
+          console.error('Failed to update post:', error);
+        },
+      }
+    );
   };
 
   const handlePressEdit = () => {
@@ -132,6 +180,38 @@ export default function CommunityDetailsContainer() {
     });
   };
 
+  const handlePressReply = (commentId: number, nickname: string) => {
+    setReplyTo({ parentId: commentId, nickname });
+    setCommentInput(`@${nickname} `);
+    setTimeout(() => {
+      commentInputRef.current?.focus();
+    }, 100);
+  };
+
+  const handlePressEditComment = (commentId: number, content: string) => {
+    setEditingCommentId(commentId.toString());
+    setCommentInput(content);
+    setReplyTo(null);
+    setTimeout(() => {
+      commentInputRef.current?.focus();
+    }, 100);
+  };
+
+  const handlePressDeleteComment = (commentId: number) => {
+    deleteCommentMutation.mutate(commentId.toString(), {
+      onSuccess: () => {
+        // Comment deleted successfully
+      },
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setCommentInput('');
+    setReplyTo(null);
+    commentInputRef.current?.blur();
+  };
+
   const isMyPost = post?.author.userId === userId;
 
   return (
@@ -139,11 +219,14 @@ export default function CommunityDetailsContainer() {
       post={post}
       comments={comments}
       isMyPost={isMyPost}
+      userId={userId}
       isCommentModalVisible={isCommentModalVisible}
       isEditModalVisible={isEditModalVisible}
       isShareModalVisible={isShareModalVisible}
       commentInput={commentInput}
       commentInputRef={commentInputRef}
+      replyTo={replyTo}
+      editingCommentId={editingCommentId}
       onChangeCommentInput={setCommentInput}
       shareLinks={shareLinks}
       onPressBack={handlePressBack}
@@ -159,6 +242,10 @@ export default function CommunityDetailsContainer() {
       onPressMore={handlePressMore}
       onPressEdit={handlePressEdit}
       onPressDelete={handlePressDelete}
+      onPressReply={handlePressReply}
+      onPressEditComment={handlePressEditComment}
+      onPressDeleteComment={handlePressDeleteComment}
+      onCancelEdit={handleCancelEdit}
     />
   );
 }

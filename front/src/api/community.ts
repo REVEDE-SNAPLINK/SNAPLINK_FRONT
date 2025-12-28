@@ -3,6 +3,7 @@ import { UploadImageParams } from '@/types/image.ts';
 import { buildQuery } from '@/utils/format.ts';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils.ts';
 import RNBlobUtil from 'react-native-blob-util';
+import { PageableInfo, SortItem } from '@/api/photographers.ts';
 
 const COMMUNITY_BASE = `${API_BASE_URL}/api/community`;
 
@@ -117,24 +118,39 @@ export interface GetPageable {
   sort?: string[];
 }
 
-export interface GetCommunityPostsResponse {
-  totalPages: number;
-  totalElements: number;
+export interface PageResponse<T> {
+  totalPages?: number; // 어떤 응답은 totalPages/totalElements가 없어서 optional로 둠(스펙 상 혼재)
+  totalElements?: number;
 
-  pageable: Pageable;
+  pageable: PageableInfo;
 
   numberOfElements: number;
   size: number;
   number: number;
 
-  sort: Sort[];
+  sort: SortItem[];
 
   first: boolean;
   last: boolean;
   empty: boolean;
 
-  content: CommunityPost[];
+  content: T[];
 }
+
+export type GetCommunityPostsResponse = PageResponse<CommunityPost>;
+
+export interface Comment {
+  id: number;
+  content: string;
+  userId: string;
+  nickname: string;
+  profileImageUrl: string;
+  createdAt: string;
+  replyCount: number;
+  isDeleted: boolean;
+}
+
+export type GetCommentsResponse = PageResponse<Comment>;
 
 export const getCommunityPosts = async (params: GetPageable): Promise<GetCommunityPostsResponse> => {
   const qs = buildQuery(params);
@@ -175,7 +191,50 @@ export const deletePost = async (postId: string) => {
   if (!response.ok) throw new Error(`Failed to delete post ${response.status}`);
 }
 
-export const getComments = async (postId: string, pageable: GetPageable) => {
+export interface UpdateCommunityPostParams {
+  postId: string;
+  request: {
+    category: COMMUNITY_CATEGORY_ENUM;
+    title: string;
+    content: string;
+    deletePhotoIds: string[];
+  };
+  images: UploadImageParams[];
+}
+
+export const updatePost = async (params: UpdateCommunityPostParams) => {
+  const url = `${COMMUNITY_BASE}/posts/${params.postId}`;
+
+  const parts: MultipartPart[] = [
+    // request는 JSON 파트
+    {
+      name: 'request',
+      type: 'application/json',
+      data: JSON.stringify({
+        category: params.request.category,
+        title: params.request.title,
+        content: params.request.content,
+        deletePhotoIds: params.request.deletePhotoIds,
+      }),
+    },
+
+    // images는 file 파트들
+    ...params.images.map((img) => ({
+      name: 'images',
+      filename: img.name ?? 'image.jpg',
+      type: img.type,
+      data: RNBlobUtil.wrap(img.uri.replace('file://', '')),
+    })),
+  ];
+
+  const res = await authMultipartFetch(url, parts, 'PUT');
+
+  if (res.info().status < 200 || res.info().status >= 300) {
+    throw new Error(`Failed to update post ${res.info().status}`);
+  }
+}
+
+export const getComments = async (postId: string, pageable: GetPageable): Promise<GetCommentsResponse> => {
   const qs = buildQuery(pageable);
 
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments${qs}`, {

@@ -14,8 +14,6 @@ import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import Checkbox from '@/components/theme/Checkbox.tsx';
 import OptionItem, { Option } from '@/components/OptionItem.tsx';
-import CrossIcon from '@/assets/icons/cross-black.svg';
-import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 
 export interface DaySchedule {

@@ -3,7 +3,7 @@ import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
 import { Alert } from '@/components/theme';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
-import type { GetMyReviewsResponse } from '@/api/me';
+import type { GetMyReviewsResponse, MyReviewItem } from '@/api/me';
 import { MainNavigationProp } from '@/types/navigation.ts';
 
 export default function MyReviewsContainer() {
@@ -15,29 +15,19 @@ export default function MyReviewsContainer() {
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressReview = (reviewId: string) => {
-    navigation.navigate('ReviewDetails', { reviewId: Number(reviewId) });
+  const handlePressReview = (review: MyReviewItem) => {
+    navigation.navigate('ReviewDetails', { reviewId: review.reviewId, review });
   };
 
-  const handlePressAllPhotos = () => {
-    // TODO: Navigate to MyReviewPhotos screen
-    Alert.show({
-      title: '준비중',
-      message: '내 리뷰 사진 전체보기 기능을 준비중입니다.',
-    });
+  const handlePressEdit = (review: MyReviewItem) => {
+    // Navigate to WriteReview with review data for editing
+    // Note: WriteReview expects reservationId, but we only have reviewId from MyReviewItem
+    // We'll pass the review object which contains the reservationId field
+    const reservationId = (review as any).reservationId || 0; // Type assertion as MyReviewItem might not have this yet
+    navigation.navigate('WriteReview', { reservationId, review });
   };
 
-  const handlePressEdit = (_reviewId: string) => {
-    // TODO: Pass reservationId to WriteReview screen for editing
-    // For now, just show alert
-    Alert.show({
-      title: '리뷰 수정',
-      message: '리뷰 수정 기능을 준비중입니다.',
-    });
-    // navigation.navigate('WriteReview', { id: reservationId, reviewId: Number(reviewId) });
-  };
-
-  const handlePressDelete = (reviewId: string) => {
+  const handlePressDelete = (reviewId: number) => {
     Alert.show({
       title: '리뷰 삭제',
       message: '정말로 이 리뷰를 삭제하시겠습니까?',
@@ -50,7 +40,7 @@ export default function MyReviewsContainer() {
           text: '삭제',
           type: 'destructive',
           onPress: () => {
-            deleteReviewMutation.mutate(Number(reviewId), {
+            deleteReviewMutation.mutate(reviewId, {
               onSuccess: () => {
                 Alert.show({
                   title: '삭제 완료',
@@ -75,19 +65,6 @@ export default function MyReviewsContainer() {
   const allReviews = pages.flatMap((page) => page.content);
   const totalCount = pages[0]?.totalElements || 0;
 
-  const reviews = allReviews.map((review) => ({
-    id: String(review.id),
-    photographerId: String(review.photographerId),
-    photographerNickname: review.photographerNickname,
-    photographerProfileImage: review.photographerProfileImage,
-    rating: review.rating,
-    title: review.shootingTag, // API에 title이 없으면 shootingTag 사용
-    content: review.content,
-    bookingType: review.shootingTag,
-    images: review.imageUrls,
-    createdAt: review.createdAt,
-  }));
-
   // 로딩 상태
   if (isLoading) {
     return (
@@ -96,7 +73,6 @@ export default function MyReviewsContainer() {
         totalCount={0}
         onPressBack={handlePressBack}
         onPressReview={handlePressReview}
-        onPressAllPhotos={handlePressAllPhotos}
         onPressEdit={handlePressEdit}
         onPressDelete={handlePressDelete}
       />
@@ -110,11 +86,10 @@ export default function MyReviewsContainer() {
 
   return (
     <MyReviewsView
-      reviews={reviews}
+      reviews={allReviews}
       totalCount={totalCount}
       onPressBack={handlePressBack}
       onPressReview={handlePressReview}
-      onPressAllPhotos={handlePressAllPhotos}
       onPressEdit={handlePressEdit}
       onPressDelete={handlePressDelete}
     />

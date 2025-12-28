@@ -1,6 +1,7 @@
 // src/api/reviews.ts
 import { API_BASE_URL } from '@/config/api';
-import { authFetch } from '@/api/utils';
+import { authFetch, authMultipartFetch } from '@/api/utils';
+import RNBlobUtil from 'react-native-blob-util';
 
 const REVIEWS_BASE = `${API_BASE_URL}/api/reviews`;
 const RESERVATIONS_BASE = `${API_BASE_URL}/api/reservations`;
@@ -58,32 +59,33 @@ export interface CreateReservationReviewParams {
  * multipart/form-data:
  * - request: JSON 문자열
  * - images: array(files)
- *
- * ⚠️ Content-Type 직접 지정하지 말기(boundary 깨짐)
  */
 export const createReservationReview = async (
   params: CreateReservationReviewParams,
 ): Promise<void> => {
-  const formData = new FormData();
-
-  // ✅ RN 호환: JSON을 문자열로 넣기
-  formData.append('request', JSON.stringify(params.request));
-
-  // images(files) - 같은 key로 여러 번 append
-  params.images.forEach((img) => {
-    formData.append('images', {
-      uri: img.uri,
-      name: img.name,
+  const parts = [
+    {
+      name: 'request',
+      type: 'application/json',
+      data: JSON.stringify(params.request),
+    },
+    ...params.images.map((img) => ({
+      name: 'images',
+      filename: img.name,
       type: img.type,
-    } as any);
-  });
+      data: RNBlobUtil.wrap(img.uri),
+    })),
+  ];
 
-  const response = await authFetch(`${RESERVATIONS_BASE}/${params.reservationId}/reviews`, {
-    method: 'POST',
-    body: formData,
-  });
+  const response = await authMultipartFetch(
+    `${RESERVATIONS_BASE}/${params.reservationId}/reviews`,
+    parts,
+    'POST',
+  );
 
-  if (!response.ok) throw new Error(`Failed to create reservation review ${response.status}`);
+  if (response.info().status >= 400) {
+    throw new Error(`Failed to create reservation review ${response.info().status}`);
+  }
 };
 
 /** 내 리뷰 조회 응답 */
@@ -111,12 +113,13 @@ export interface UpdateReviewRequest {
   rating: number;
   shootingTag: string;
   content: string;
+  deletePhotoIds: number[];
 }
 
 export interface UpdateReviewParams {
   reviewId: number;
   request: UpdateReviewRequest;
-  images: UploadImageFile[];
+  newImages: UploadImageFile[];
 }
 
 /**
@@ -125,27 +128,32 @@ export interface UpdateReviewParams {
  *
  * multipart/form-data:
  * - request: JSON 문자열
- * - images: array(files)
+ * - newImages: array(files)
  */
 export const updateReview = async (params: UpdateReviewParams): Promise<void> => {
-  const formData = new FormData();
-
-  formData.append('request', JSON.stringify(params.request));
-
-  params.images.forEach((img) => {
-    formData.append('images', {
-      uri: img.uri,
-      name: img.name,
+  const parts = [
+    {
+      name: 'request',
+      type: 'application/json',
+      data: JSON.stringify(params.request),
+    },
+    ...params.newImages.map((img) => ({
+      name: 'newImages',
+      filename: img.name,
       type: img.type,
-    } as any);
-  });
+      data: RNBlobUtil.wrap(img.uri),
+    })),
+  ];
 
-  const response = await authFetch(`${REVIEWS_BASE}/${params.reviewId}`, {
-    method: 'PATCH',
-    body: formData,
-  });
+  const response = await authMultipartFetch(
+    `${REVIEWS_BASE}/${params.reviewId}`,
+    parts,
+    'PATCH',
+  );
 
-  if (!response.ok) throw new Error(`Failed to update review ${response.status}`);
+  if (response.info().status >= 400) {
+    throw new Error(`Failed to update review ${response.info().status}`);
+  }
 };
 
 /**

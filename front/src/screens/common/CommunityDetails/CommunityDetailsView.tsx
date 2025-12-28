@@ -10,6 +10,7 @@ import {
   NativeScrollEvent,
   Animated,
   Linking,
+  Keyboard,
 } from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
@@ -18,9 +19,10 @@ import HeartIcon from '@/assets/icons/heart-black.svg';
 import HeartRedIcon from '@/assets/icons/heart-red.svg';
 import ChatIcon from '@/assets/icons/chat-blank-black.svg';
 import MoreCircleIcon from '@/assets/icons/more-circle.svg';
+import MoreIcon from '@/assets/icons/more.svg';
 import SendIcon from '@/assets/icons/send.svg';
 import { theme } from '@/theme';
-import { CommunityPost } from '@/api/community.ts';
+import { Comment, CommunityPost } from '@/api/community.ts';
 import ServerImage from '@/components/ServerImage.tsx';
 import LinearGradient from 'react-native-linear-gradient';
 import ArrowLeftIcon from '@/assets/icons/arrow-left-white.svg';
@@ -31,21 +33,6 @@ import UploadBlackIcon from '@/assets/icons/upload.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// TODO: Define proper Comment interface when API is available
-interface Comment {
-  id: string;
-  content: string;
-  author?: {
-    userId: string;
-    nickname: string;
-    profileImageUrl: string;
-  };
-  // Legacy fields for compatibility
-  authorNickname?: string;
-  authorProfileImage?: string;
-  createdAt: string;
-}
-
 export interface ShareLink {
   name: string;
   url: string;
@@ -55,11 +42,14 @@ interface CommunityDetailsViewProps {
   post?: CommunityPost;
   comments: Comment[];
   isMyPost: boolean;
+  userId: string;
   isCommentModalVisible: boolean;
   isEditModalVisible: boolean;
   isShareModalVisible: boolean;
   commentInput: string;
   commentInputRef: RefObject<TextInput | null>;
+  replyTo: { parentId: number; nickname: string } | null;
+  editingCommentId: string | null;
   onChangeCommentInput: (text: string) => void;
   shareLinks: ShareLink[];
   onPressBack: () => void;
@@ -75,6 +65,10 @@ interface CommunityDetailsViewProps {
   onCloseShreModal: () => void;
   onPressEdit: () => void;
   onPressDelete: () => void;
+  onPressReply: (commentId: number, nickname: string) => void;
+  onPressEditComment: (commentId: number, content: string) => void;
+  onPressDeleteComment: (commentId: number) => void;
+  onCancelEdit: () => void;
 }
 
 // Image Carousel Component
@@ -159,15 +153,100 @@ function AnimatedDot({ index, activeIndex }: { index: number; activeIndex: numbe
   );
 }
 
+// Comment Item Component with more menu
+function CommentItemWithMenu({
+  comment,
+  userId,
+  onPressReply,
+  onPressEditComment,
+  onPressDeleteComment,
+}: {
+  comment: Comment;
+  userId: string;
+  onPressReply: (commentId: number, nickname: string) => void;
+  onPressEditComment: (commentId: number, content: string) => void;
+  onPressDeleteComment: (commentId: number) => void;
+}) {
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const isMyComment = comment.userId === userId;
+
+  return (
+    <CommentItem>
+      <CommentContentWrapper>
+        <CommentAuthorProfileImage
+          {...(comment.profileImageUrl !== undefined ? { uri: comment.profileImageUrl } : {})}
+        />
+
+        <CommentContent>
+          <Typography
+            fontSize={12}
+            fontWeight="semiBold"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+          >
+            {comment.nickname}
+          </Typography>
+          <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%">
+            {comment.content}
+          </Typography>
+        </CommentContent>
+
+        {isMyComment && (
+          <MoreButtonWrapper>
+            <IconButton
+              width={16}
+              height={16}
+              Svg={MoreIcon}
+              onPress={() => setShowMoreMenu(!showMoreMenu)}
+            />
+            {showMoreMenu && (
+              <MoreMenu>
+                <MoreMenuItem onPress={() => {
+                  setShowMoreMenu(false);
+                  onPressEditComment(comment.id, comment.content);
+                }}>
+                  <Typography fontSize={14} letterSpacing="-2.5%">
+                    수정
+                  </Typography>
+                </MoreMenuItem>
+                <MoreMenuDivider />
+                <MoreMenuItem onPress={() => {
+                  setShowMoreMenu(false);
+                  onPressDeleteComment(comment.id);
+                }}>
+                  <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
+                    삭제
+                  </Typography>
+                </MoreMenuItem>
+              </MoreMenu>
+            )}
+          </MoreButtonWrapper>
+        )}
+      </CommentContentWrapper>
+      <ReplyButton onPress={() => onPressReply(comment.id, comment.nickname)}>
+        <Typography
+          fontSize={12}
+          style={{ textDecorationLine: 'underline' }}
+        >
+          답글 달기
+        </Typography>
+      </ReplyButton>
+    </CommentItem>
+  );
+}
+
 export default function CommunityDetailsView({
   post,
   comments,
   isMyPost,
+  userId,
   isCommentModalVisible,
   isEditModalVisible,
   isShareModalVisible,
   commentInput,
   commentInputRef,
+  replyTo,
+  editingCommentId,
   onChangeCommentInput,
   shareLinks,
   onPressBack,
@@ -183,6 +262,10 @@ export default function CommunityDetailsView({
   onCloseShreModal,
   onPressEdit,
   onPressDelete,
+  onPressReply,
+  onPressEditComment,
+  onPressDeleteComment,
+  onCancelEdit,
 }: CommunityDetailsViewProps) {
   const insets = useSafeAreaInsets();
   const statusBarHeight = Platform.OS === 'ios' ? insets.top : 0;
@@ -196,6 +279,24 @@ export default function CommunityDetailsView({
   }
 
   const hasInput = commentInput.trim().length > 0;
+
+  // Handle @ mention deletion
+  const handleKeyPress = ({ nativeEvent }: any) => {
+    if (nativeEvent.key === 'Backspace' && replyTo) {
+      const mentionText = `@${replyTo.nickname} `;
+      if (commentInput === mentionText || commentInput.startsWith(mentionText)) {
+        // If backspace is pressed and input starts with mention, remove entire mention
+        onChangeCommentInput('');
+      }
+    }
+  };
+
+  // Handle blur - cancel editing if in edit mode
+  const handleBlur = () => {
+    if (editingCommentId) {
+      onCancelEdit();
+    }
+  };
 
   return (
     <>
@@ -327,32 +428,28 @@ export default function CommunityDetailsView({
               </Typography>
               {comments.slice(0, 3).map(comment => (
                 <CommentItem key={comment.id}>
-                  <CommentAuthorProfileImage
-                    source={
-                      comment.author?.profileImageUrl
-                        ? { uri: comment.author.profileImageUrl }
-                        : comment.authorProfileImage
-                        ? { uri: comment.authorProfileImage }
-                        : undefined
-                    }
-                  />
-                  <CommentContent>
-                    <Typography
-                      fontSize={12}
-                      fontWeight="semiBold"
-                      lineHeight="140%"
-                      letterSpacing="-2.5%"
-                    >
-                      {comment.author?.nickname || comment.authorNickname}
-                    </Typography>
-                    <Typography
-                      fontSize={12}
-                      lineHeight="140%"
-                      letterSpacing="-2.5%"
-                    >
-                      {comment.content}
-                    </Typography>
-                  </CommentContent>
+                  <CommentContentWrapper>
+                    <CommentAuthorProfileImage
+                      {...(comment.profileImageUrl !== undefined ? { uri: comment.profileImageUrl } : {})}
+                    />
+                    <CommentContent>
+                      <Typography
+                        fontSize={12}
+                        fontWeight="semiBold"
+                        lineHeight="140%"
+                        letterSpacing="-2.5%"
+                      >
+                        {comment.nickname}
+                      </Typography>
+                      <Typography
+                        fontSize={12}
+                        lineHeight="140%"
+                        letterSpacing="-2.5%"
+                      >
+                        {comment.content}
+                      </Typography>
+                    </CommentContent>
+                  </CommentContentWrapper>
                 </CommentItem>
               ))}
               {post.commentCount > 3 && (
@@ -401,6 +498,8 @@ export default function CommunityDetailsView({
               ref={commentInputRef}
               value={commentInput}
               onChangeText={onChangeCommentInput}
+              onKeyPress={handleKeyPress}
+              onBlur={handleBlur}
               placeholder="댓글을 입력하세요"
               placeholderTextColor="#A4A4A4"
               multiline
@@ -423,30 +522,14 @@ export default function CommunityDetailsView({
         }
       >
         {comments.map(comment => (
-          <CommentItem key={comment.id}>
-            <CommentAuthorProfileImage
-              source={
-                comment.author?.profileImageUrl
-                  ? { uri: comment.author.profileImageUrl }
-                  : comment.authorProfileImage
-                  ? { uri: comment.authorProfileImage }
-                  : undefined
-              }
-            />
-            <CommentContent>
-              <Typography
-                fontSize={12}
-                fontWeight="semiBold"
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-              >
-                {comment.author?.nickname || comment.authorNickname}
-              </Typography>
-              <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%">
-                {comment.content}
-              </Typography>
-            </CommentContent>
-          </CommentItem>
+          <CommentItemWithMenu
+            key={comment.id}
+            comment={comment}
+            userId={userId}
+            onPressReply={onPressReply}
+            onPressEditComment={onPressEditComment}
+            onPressDeleteComment={onPressDeleteComment}
+          />
         ))}
       </SlideModal>
 
@@ -631,11 +714,15 @@ const CommentSectionWrapper = styled.View`
 `;
 
 const CommentItem = styled.View`
-  flex-direction: row;
   margin-bottom: 15px;
 `;
 
-const CommentAuthorProfileImage = styled.Image`
+const CommentContentWrapper = styled.View`
+  flex-direction: row;
+  position: relative;
+`
+
+const CommentAuthorProfileImage = styled(ServerImage)`
   width: 32px;
   height: 32px;
   border-radius: 32px;
@@ -646,6 +733,41 @@ const CommentAuthorProfileImage = styled.Image`
 const CommentContent = styled.View`
   flex: 1;
 `;
+
+const MoreButtonWrapper = styled.View`
+  position: relative;
+  margin-left: 10px;
+`;
+
+const MoreMenu = styled.View`
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #EAEAEA;
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.1;
+  shadow-radius: 4px;
+  elevation: 3;
+  z-index: 1000;
+  min-width: 80px;
+`;
+
+const MoreMenuItem = styled.TouchableOpacity`
+  padding: 12px 16px;
+  align-items: center;
+`;
+
+const MoreMenuDivider = styled.View`
+  height: 1px;
+  background-color: #e0e0e0;
+`;
+
+const ReplyButton = styled.TouchableOpacity`
+  padding-left: 30px;
+`
 
 const MoreCommentsButton = styled.TouchableOpacity`
   width: 100%;

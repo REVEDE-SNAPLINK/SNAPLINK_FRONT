@@ -4,14 +4,14 @@ import { CommunityPost, CreateCommunityPostParams } from '@/api/community.ts';
 interface CommunityPostModalState {
   visible: boolean;
   initialPost?: CommunityPost;
-  onSubmit?: (params: CreateCommunityPostParams) => void;
+  onSubmit?: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void;
   isLoading?: boolean;
 }
 
 interface ModalStore {
   communityPostModal: CommunityPostModalState;
   openCommunityPostModal: (
-    onSubmit: (params: CreateCommunityPostParams) => void,
+    onSubmit: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void,
     initialPost?: CommunityPost,
   ) => void;
   closeCommunityPostModal: () => void;

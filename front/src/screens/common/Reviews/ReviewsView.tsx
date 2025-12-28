@@ -24,7 +24,7 @@ interface ReviewsViewProps {
   totalCount: number;
   averageRating: number;
   onPressBack: () => void;
-  onPressReview: (reviewId: number) => void;
+  onPressReview: (review: PhotographerReviewItem) => void;
   onPressAllPhotos: () => void;
   onLoadMore: () => void;
   onRefresh: () => void;
@@ -101,7 +101,7 @@ export default function ReviewsView({
   );
 
   const renderReviewItem = ({ item: review }: { item: PhotographerReviewItem }) => (
-    <ReviewItem onPress={() => onPressReview(review.reviewId)}>
+    <ReviewItem onPress={() => onPressReview(review)}>
       <ReviewItemHeader>
         <ReviewWriterProfileImage
           {...(review.writerProfileKey ? { uri: review.writerProfileKey } :  {})}

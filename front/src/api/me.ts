@@ -11,15 +11,12 @@ export interface MyReviewPhoto {
 }
 
 export interface MyReviewItem {
-  id: number;
-  reservationId: number;
-  photographerId: number;
+  reviewId: number;
   photographerNickname: string;
-  photographerProfileImage?: string;
   rating: number;
-  shootingTag: string;
   content: string;
-  imageUrls: string[];
+  shootingTag: string;
+  photos: MyReviewPhoto[];
   createdAt: string;
 }
 

@@ -5,8 +5,21 @@ import PhotographerDetailsView from './PhotographerDetailsView.tsx';
 import { usePhotographerProfileInfiniteQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { LatestReviewSummaryItem } from '@/api/photographers.ts';
+import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
+
+export interface ShareLink {
+  name: string;
+  url: string;
+}
+
+const shareLinks: ShareLink[] = [
+  {
+    name: '카카오톡 오픈 채팅',
+    url: 'https://pf.kakao.com/_KasSn/chat'
+  }
+];
 
 export default function PhotographerDetailsContainer() {
   const route = useRoute<PhotographerDetailsRouteProp>();
@@ -14,6 +27,7 @@ export default function PhotographerDetailsContainer() {
   const { photographerId } = route.params;
 
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews'>('portfolio');
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
   // Fetch photographer profile (includes portfolio thumbnails)
   const {
@@ -29,6 +43,7 @@ export default function PhotographerDetailsContainer() {
 
   // Scrap mutation
   const scrapMutation = useTogglePhotographerScrapMutation();
+  const chatMutation = useCreateOrGetChatRoomMutation();
 
   // Get photographer data from first page (profile info is same across all pages)
   const profileData = useMemo(() => {
@@ -47,20 +62,29 @@ export default function PhotographerDetailsContainer() {
     navigation.goBack();
   }, [navigation]);
 
-  const handlePressUpload = useCallback(() => {
-    // TODO: Navigate to portfolio upload screen
-    navigation.navigate('PortfolioOnboarding');
-  }, [navigation]);
+  const handlePressShare = useCallback(() => {
+    setIsShareModalVisible(true);
+  }, []);
+
+  const handleCloseShareModal = useCallback(() => {
+    setIsShareModalVisible(false);
+  }, []);
 
   const handlePressFavorite = useCallback(() => {
     scrapMutation.mutate(photographerId);
   }, [scrapMutation, photographerId]);
 
   const handlePressInquiry = useCallback(() => {
-    // TODO: Open chat with photographer
-    // Use createOrGetChatRoom mutation
-    console.log('Navigate to inquiry');
-  }, []);
+    chatMutation.mutate({ receiverId: photographerId }, {
+      onSuccess: (response) => {
+        navigation.navigate('ChatDetails', {
+          chatRoomId: response.roomId,
+          opponentId: photographerId,
+          profileImageURI: profileData.profileImageURI
+        })
+      }
+    });
+  }, [chatMutation, photographerId, navigation, profileData.profileImageURI]);
 
   const handlePressReservation = useCallback(() => {
     navigation.navigate('Booking', { photographerId });
@@ -77,8 +101,8 @@ export default function PhotographerDetailsContainer() {
   }, []);
 
   const handlePressPortfolioImage = useCallback((imageId: number) => {
-    navigation.navigate('PostDetail', { postId: imageId });
-  }, [navigation]);
+    console.log(imageId);
+  }, []);
 
   const handlePressShowAllReviews = useCallback(() => {
     navigation.navigate('Reviews', { photographerId });
@@ -112,8 +136,11 @@ export default function PhotographerDetailsContainer() {
       reviewPreviewImages={reviewSummary?.topPhotoKeys || []}
       reviews={reviews}
       isScrapped={profileData?.scrapped || false}
+      isShareModalVisible={isShareModalVisible}
+      shareLinks={shareLinks}
       onPressBack={handlePressBack}
-      onPressUpload={handlePressUpload}
+      onPressShare={handlePressShare}
+      onCloseShareModal={handleCloseShareModal}
       onPressFavorite={handlePressFavorite}
       onPressInquiry={handlePressInquiry}
       onPressReservation={handlePressReservation}

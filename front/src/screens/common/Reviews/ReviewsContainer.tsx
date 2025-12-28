@@ -3,6 +3,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import ReviewsView from '@/screens/common/Reviews/ReviewsView.tsx';
 import { usePhotographerReviewsInfiniteQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
+import { PhotographerReviewItem } from '@/api/photographers.ts';
 
 type ReviewsRouteProp = RouteProp<MainStackParamList, 'Reviews'>;
 
@@ -38,9 +39,8 @@ export default function ReviewsContainer() {
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressReview = (reviewId: number) => {
-    const review = reviews.find((r) => r.reviewId === reviewId);
-    navigation.navigate('ReviewDetails', { reviewId, review });
+  const handlePressReview = (review: PhotographerReviewItem) => {
+    navigation.navigate('ReviewDetails', { reviewId: review.reviewId, review });
   };
 
   const handlePressAllPhotos = () => {

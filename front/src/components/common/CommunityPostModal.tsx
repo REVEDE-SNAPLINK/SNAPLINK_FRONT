@@ -24,13 +24,14 @@ import { UploadImageParams } from '@/types/image.ts';
 import { generateImageFilename } from '@/utils/format.ts';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import ServerImage from '@/components/ServerImage.tsx';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface CommunityPostModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (params: CreateCommunityPostParams) => void;
+  onSubmit: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void;
   initialPost?: CommunityPost;
   isLoading: boolean;
 }
@@ -49,9 +50,11 @@ export default function CommunityPostModal({
   const [title, setTitle] = useState(initialPost?.title || '');
   const [content, setContent] = useState(initialPost?.content || '');
   const [images, setImages] = useState<UploadImageParams[]>([]);
+  const [serverImages, setServerImages] = useState<string[]>(initialPost?.imageUrls || []);
+  const [deletePhotoIds, setDeletePhotoIds] = useState<string[]>([]);
   const [isTopicListVisible, setIsTopicListVisible] = useState(false);
 
-  const isDirty = selectedCategory !== null || title !== '' || content !== '' || images.length > 0;
+  const isDirty = selectedCategory !== null || title !== '' || content !== '' || images.length > 0 || serverImages.length > 0;
 
   // Sliding animation
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -61,6 +64,8 @@ export default function CommunityPostModal({
     setTitle('');
     setContent('');
     setImages([]);
+    setServerImages([]);
+    setDeletePhotoIds([]);
   }
 
   useEffect(() => {
@@ -242,6 +247,7 @@ export default function CommunityPostModal({
       title: title.trim(),
       content: content.trim(),
       images,
+      deletePhotoIds: initialPost ? deletePhotoIds : undefined,
     });
   };
 
@@ -313,10 +319,25 @@ export default function CommunityPostModal({
                 onChangeText={setContent}
               />
               <PostImageList>
+                {/* Server images */}
+                {serverImages.length > 0 &&
+                  serverImages.map((imageUrl, index) => (
+                    <ServerPostImageView
+                      key={`server-${index}`}
+                      uri={imageUrl}
+                      onDelete={() => {
+                        // TODO: 실제로는 photoId를 받아야 하지만 현재 API에는 없어서 임시로 URL 사용
+                        setDeletePhotoIds([...deletePhotoIds, imageUrl]);
+                        setServerImages(serverImages.filter((_, i) => i !== index));
+                      }}
+                    />
+                  ))
+                }
+                {/* New uploaded images */}
                 {images.length > 0 &&
                   images.map((image, index) => (
                     <PostImageView
-                      key={index}
+                      key={`new-${index}`}
                       uri={image.uri}
                       onDelete={() => setImages(images.filter((_, i) => i !== index))}
                     />
@@ -524,3 +545,29 @@ const PostImageView = ({
     </PostImageContainer>
   )
 }
+
+interface ServerPostImageViewProps {
+  uri: string;
+  onDelete: () => void;
+}
+
+const ServerPostImageView = ({
+  uri,
+  onDelete,
+}: ServerPostImageViewProps) => {
+  return (
+    <PostImageContainer>
+      <PostImageDeleteButton onPress={onDelete}>
+        <Icon width={15} height={15} Svg={CrossIcon} />
+      </PostImageDeleteButton>
+      <PostImageWrapper>
+        <StyledServerImage uri={uri} />
+      </PostImageWrapper>
+    </PostImageContainer>
+  )
+}
+
+const StyledServerImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
+`

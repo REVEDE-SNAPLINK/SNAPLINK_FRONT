@@ -1,55 +1,10 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import WriteReviewView from '@/screens/user/WriteReview/WriteReviewView.tsx';
-import { useState } from 'react';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { useState, useCallback } from 'react';
 import { Alert } from '@/components/theme/Alert';
-import { requestPermission } from '@/utils/permissions';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-
-/**
- * Request payload for writing a review
- */
-// interface WriteReviewRequest {
-//   bookingId: string;
-//   rating: number;
-//   images: string[]; // array of image URIs
-//   shootingType: string;
-//   content: string;
-// }
-
-/**
- * Response type for writing a review
- */
-// interface WriteReviewResponse {
-//   reviewId: string;
-//   createdAt: string;
-// }
-
-/**
- * Submit review to API
- * TODO: Replace with actual API call when backend is ready
- *
- * API endpoint will be: POST /api/reviews
- * Body: WriteReviewRequest
- */
-// async function submitReview(request: WriteReviewRequest): Promise<WriteReviewResponse> {
-//   // Simulate API delay
-//   await new Promise((resolve) => setTimeout(resolve, 1000));
-//
-//   // TODO: Replace with actual API call
-//   // const response = await fetch('/api/reviews', {
-//   //   method: 'POST',
-//   //   headers: { 'Content-Type': 'application/json' },
-//   //   body: JSON.stringify(request),
-//   // });
-//   // const data = await response.json();
-//   // return data;
-//
-//   return {
-//     reviewId: 'review-' + Date.now(),
-//     createdAt: new Date().toISOString(),
-//   };
-// }
+import { UploadImageFile } from '@/api/photographers.ts';
+import { useCreateReservationReviewMutation, useUpdateReviewMutation } from '@/mutations/reviews.ts';
 
 // Form validation constants
 const MAX_IMAGES = 3;
@@ -60,30 +15,28 @@ const CONTENT_MAX_LENGTH = 1000;
 export default function WriteReviewContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
-  const { reservationId } = route.params;
+  const { reservationId, review } = route.params;
 
-  // Form state
-  const [rating, setRating] = useState(0);
-  const [images, setImages] = useState<string[]>([]);
-  const [shootingType, setShootingType] = useState('');
-  const [content, setContent] = useState('');
+  // Determine if we're in edit mode
+  const isEditMode = !!review;
+
+  // Form state - initialize with existing review data if editing
+  const [rating, setRating] = useState(review?.rating || 0);
+  const [images, setImages] = useState<(UploadImageFile | string)[]>(
+    review?.photos?.map((photo) => photo.url) || []
+  );
+  const [shootingType, setShootingType] = useState(review?.shootingTag || '');
+  const [content, setContent] = useState(review?.content || '');
+
+  // Track photo IDs to delete (only for edit mode)
+  const [deletePhotoIds, setDeletePhotoIds] = useState<number[]>([]);
 
   // Check if form has any changes
   const isDirty = rating > 0 || images.length > 0 || shootingType.length > 0 || content.length > 0;
 
-  // TODO: Uncomment when API is ready
-  // const mutation = useMutation({
-  //   mutationFn: submitReview,
-  //   onSuccess: (data) => {
-  //     // Navigate back to booking history or booking details
-  //     navigation.navigate('BookingManage');
-  //     // Optionally show success toast
-  //   },
-  //   onError: (error) => {
-  //     // Handle error - show error toast or alert
-  //     console.error('Failed to submit review:', error);
-  //   },
-  // });
+  // Mutations
+  const createMutation = useCreateReservationReviewMutation();
+  const updateMutation = useUpdateReviewMutation();
 
   const handlePressBack = () => {
     // If user has made changes, show alert
@@ -113,53 +66,108 @@ export default function WriteReviewContainer() {
   };
 
   const handleSubmit = () => {
-    // TODO: Uncomment when API is ready
-    // mutation.mutate({
-    //   bookingId,
-    //   rating,
-    //   images,
-    //   shootingType,
-    //   content,
-    // });
+    // Separate new images from existing URLs
+    const newImages = images.filter(
+      (img): img is UploadImageFile => typeof img === 'object' && 'uri' in img
+    );
 
-    // Temporary: Just navigate back
-    console.log('Review submitted:', { reservationId, rating, images, shootingType, content });
-    navigation.navigate('BookingHistory');
+    if (isEditMode && review) {
+      // Update existing review
+      updateMutation.mutate(
+        {
+          reviewId: review.reviewId,
+          request: {
+            rating,
+            shootingTag: shootingType,
+            content,
+            deletePhotoIds,
+          },
+          newImages,
+        },
+        {
+          onSuccess: () => {
+            Alert.show({
+              title: '수정 완료',
+              message: '리뷰가 수정되었습니다.',
+            });
+            navigation.goBack();
+          },
+          onError: (error) => {
+            Alert.show({
+              title: '수정 실패',
+              message: '리뷰 수정에 실패했습니다.',
+            });
+            console.error('Failed to update review:', error);
+          },
+        }
+      );
+    } else {
+      // Create new review
+      createMutation.mutate(
+        {
+          reservationId,
+          request: {
+            rating,
+            shootingTag: shootingType,
+            content,
+          },
+          images: newImages,
+        },
+        {
+          onSuccess: () => {
+            Alert.show({
+              title: '작성 완료',
+              message: '리뷰가 작성되었습니다.',
+            });
+            navigation.navigate('BookingHistory');
+          },
+          onError: (error) => {
+            Alert.show({
+              title: '작성 실패',
+              message: '리뷰 작성에 실패했습니다.',
+            });
+            console.error('Failed to create review:', error);
+          },
+        }
+      );
+    }
   };
 
-  const handleImageSelect = () => {
-    // 사진 권한 요청 후 갤러리 열기
-    requestPermission(
-      'photo',
-      async () => {
-        // 권한 허용됨 - 갤러리 열기
-        const result = await launchImageLibrary({
-          mediaType: 'photo',
-          selectionLimit: MAX_IMAGES - images.length,
-          quality: 0.8,
-        });
+  const handleRemoveImage = useCallback(
+    (index: number) => {
+      const imageToRemove = images[index];
 
-        if (result.assets && !result.didCancel) {
-          const newImages = result.assets
-            .filter((asset) => asset.uri)
-            .map((asset) => asset.uri as string);
-
-          setImages([...images, ...newImages].slice(0, MAX_IMAGES));
+      // If it's an existing photo (string URL), track its photoId for deletion
+      if (typeof imageToRemove === 'string' && review?.photos) {
+        const photoToDelete = review.photos.find((photo) => photo.url === imageToRemove);
+        if (photoToDelete) {
+          setDeletePhotoIds((prev) => [...prev, photoToDelete.photoId]);
         }
       }
-      // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리
-    );
-  };
+
+      // Remove from images array
+      setImages((prev) => prev.filter((_, i) => i !== index));
+    },
+    [images, review]
+  );
+
+  const handleAddImages = useCallback((newImages: UploadImageFile[]) => {
+    setImages((prev) => [...prev, ...newImages].slice(0, MAX_IMAGES));
+  }, []);
 
   return (
     <WriteReviewView
+      headerTitle={isEditMode ? '후기 수정' : '후기 작성'}
       onPressBack={handlePressBack}
       onSubmit={handleSubmit}
+      isSubmitting={createMutation.isPending || updateMutation.isPending}
+      submitButtonText={isEditMode ? '수정 완료' : '작성 완료'}
       rating={rating}
       onRatingChange={setRating}
       images={images}
       maxImages={MAX_IMAGES}
-      onImageSelect={handleImageSelect}
+      onRemoveImage={handleRemoveImage}
+      onAddImages={handleAddImages}
       shootingType={shootingType}
       shootingTypeMinLength={SHOOTING_TYPE_MIN_LENGTH}
       onShootingTypeChange={setShootingType}
@@ -167,7 +175,6 @@ export default function WriteReviewContainer() {
       contentMinLength={CONTENT_MIN_LENGTH}
       contentMaxLength={CONTENT_MAX_LENGTH}
       onContentChange={setContent}
-      // isSubmitting={mutation.isPending} // TODO: Uncomment when API is ready
     />
   );
 }

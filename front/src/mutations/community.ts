@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createCommunityPost,
+  updatePost,
   deletePost,
   toggleLike,
   createComment,
@@ -14,6 +15,17 @@ export const useCreateCommunityPostMutation = () => {
 
   return useMutation({
     mutationFn: createCommunityPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: communityKeys.all });
+    },
+  });
+};
+
+export const useUpdatePostMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updatePost,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: communityKeys.all });
     },

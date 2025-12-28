@@ -2,6 +2,7 @@ import React from 'react';
 import {
   FlatList,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/common/ScreenContainer';
@@ -13,11 +14,14 @@ import { theme } from '@/theme';
 import BookmarkIcon from '@/assets/icons/bookmark-white.svg'
 import ChatIcon from '@/assets/icons/chat-white.svg';
 import UploadIcon from '@/assets/icons/upload.svg';
+import UploadBlackIcon from '@/assets/icons/upload.svg';
 import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
 import ActiveStarIcon from '@/assets/icons/star-color.svg'
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import { GetPhotographerProfileResponse, PhotographerPortfolioThumb } from '@/api/photographers.ts';
+import SlideModal from '@/components/theme/SlideModal.tsx';
+import { ShareLink } from '@/screens/common/PhotographerDetails/PhotographerDetailsContainer.tsx';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_MARGIN = 2;
@@ -49,8 +53,11 @@ interface PhotographerDetailsViewProps {
   reviewPreviewImages: string[];
   reviews: Review[];
   isScrapped: boolean;
+  isShareModalVisible: boolean;
+  shareLinks: ShareLink[];
   onPressBack: () => void;
-  onPressUpload: () => void;
+  onPressShare: () => void;
+  onCloseShareModal: () => void;
   onPressFavorite: () => void;
   onPressInquiry: () => void;
   onPressReservation: () => void;
@@ -73,8 +80,11 @@ export default function PhotographerDetailsView({
   reviewPreviewImages,
   reviews,
   isScrapped,
+  isShareModalVisible,
+  shareLinks,
   onPressBack,
-  onPressUpload,
+  onPressShare,
+  onCloseShareModal,
   onPressFavorite,
   onPressInquiry,
   onPressReservation,
@@ -310,15 +320,16 @@ export default function PhotographerDetailsView({
   }
 
   return (
-    <ScreenContainer
-      headerShown={true}
-      headerTitle={photographer.nickname}
-      onPressBack={onPressBack}
-      headerToolIcon={UploadIcon}
-      onPressTool={onPressUpload}
-    >
+    <>
+      <ScreenContainer
+        headerShown={true}
+        headerTitle={photographer.nickname}
+        onPressBack={onPressBack}
+        headerToolIcon={UploadIcon}
+        onPressTool={onPressShare}
+      >
 
-      <ContentContainer>
+        <ContentContainer>
         {activeTab === 'portfolio' ? (
           <FlatList
             key="portfolio-list"
@@ -378,6 +389,38 @@ export default function PhotographerDetailsView({
         )}
       </BottomActionContainer>
     </ScreenContainer>
+
+    {/* Share Modal */}
+    <SlideModal
+      visible={isShareModalVisible}
+      onClose={onCloseShareModal}
+      title="Links"
+      minHeight={SCREEN_WIDTH * 0.25}
+    >
+      {shareLinks.map((v, i) => (
+        <ShareLink
+          key={i}
+          onPress={() => {
+            (async () => {
+              const supported = await Linking.canOpenURL(v.url);
+
+              if (supported) {
+                Linking.openURL(v.url);
+              }
+            })();
+          }}
+        >
+          <Icon width={18} height={18} Svg={UploadBlackIcon} />
+          <Typography
+            fontSize={14}
+            marginLeft={15}
+          >
+            {v.name}
+          </Typography>
+        </ShareLink>
+      ))}
+    </SlideModal>
+  </>
   );
 }
 
@@ -600,4 +643,10 @@ const ShowReviewButton = styled.TouchableOpacity`
   border: 1px solid ${theme.colors.primary};
   justify-content: center;
   align-items: center;
+`
+
+const ShareLink = styled.Pressable`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 15px;
 `

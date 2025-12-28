@@ -53,13 +53,9 @@ export const useChatMessagesInfiniteQuery = (
 /** 채팅방 생성/조회 */
 export const useCreateOrGetChatRoomMutation = () => {
   const qc = useQueryClient();
-  const { createOrGetMockChatRoom } = require('@/__dev__');
 
   return useMutation({
-    mutationFn: (body: CreateOrGetRoomRequest) => withMockMutation(
-      () => createOrGetMockChatRoom(body.receiverId),
-      () => createOrGetChatRoom(body),
-    ),
+    mutationFn: (body: CreateOrGetRoomRequest) => createOrGetChatRoom(body),
     onSuccess: async () => {
       // 방이 생기거나 lastMessage/unreadCount 변화 가능
       await qc.invalidateQueries({ queryKey: chatQueryKeys.rooms() });

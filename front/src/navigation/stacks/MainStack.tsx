@@ -3,7 +3,6 @@ import { MainStackParamList } from '@/types/navigation';
 import MainTab from '@/screens/MainTab';
 import SearchPhotographerContainer from '@/screens/common/SearchPhotographer/SearchPhotographerContainer.tsx';
 import PhotographerDetailsContainer from '@/screens/common/PhotographerDetails/PhotographerDetailsContainer.tsx';
-import PostDetailContainer from '@/screens/common/PostDetail/PostDetailContainer.tsx';
 import ChatDetailsContainer from '@/screens/common/ChatDetails/ChatDetailsContainer.tsx';
 import BookingContainer from '@/screens/user/Booking/BookingContainer.tsx';
 import BookingHistoryContainer from '@/screens/user/BookingHistory/BookingHistoryContainer.tsx';
@@ -46,7 +45,6 @@ export default function MainStack() {
 
       {/* Community */}
       <Stack.Screen name="CommunityDetails" component={CommunityDetailsContainer} />
-      <Stack.Screen name="PostDetail" component={PostDetailContainer} />
       <Stack.Screen name="MyPosts" component={MyPostsContainer} />
 
       {/* Chat */}

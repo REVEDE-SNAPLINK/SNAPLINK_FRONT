@@ -11,12 +11,10 @@ import styled from '@/utils/scale/CustomStyled.ts';
 interface AIRecommdationFormViewProps {
   onPressBack: () => void;
   images: UploadImageFile[];
-  setImages: (images: UploadImageFile[]) => void;
+  onRemoveImage: (index: number) => void;
+  onAddImages: (newImages: UploadImageFile[]) => void;
   prompt: string;
   setPrompt: (prompt: string) => void;
-  checkedImages: boolean[];
-  setCheckedImages: (checkedImages: boolean[]) => void;
-  onPressDeleteImages: () => void;
   onPressSubmit: () => void;
 }
 
@@ -26,16 +24,12 @@ const SCREEN_PADDING = 33;
 export default function AIRecommdationFormView({
   onPressBack,
   images,
-  setImages,
+  onRemoveImage,
+  onAddImages,
   prompt,
   setPrompt,
-  checkedImages,
-  setCheckedImages,
-  onPressDeleteImages,
   onPressSubmit,
 }: AIRecommdationFormViewProps) {
-  const canDeleteImage = checkedImages.filter((v) => v).length >= 1;
-
   return (
     <ScreenContainer
       headerTitle="AI 작가 추천"
@@ -64,12 +58,10 @@ export default function AIRecommdationFormView({
           </Typography>
           <ImageUploadInput
             images={images}
-            setImages={setImages}
+            onRemoveImage={onRemoveImage}
+            onAddImages={onAddImages}
             maxLength={1}
-            gridColumns={1}
-            width={200}
-            checkedImages={checkedImages}
-            setCheckedImages={setCheckedImages}
+            width={337}
           />
           <CaptionWrapper>
             <Typography
@@ -97,8 +89,8 @@ export default function AIRecommdationFormView({
         </ScrollContainer>
         <SubmitButton
           width="100%"
-          text={canDeleteImage ? '사진 삭제하기' : '추천 작가 확인하기'}
-          onPress={canDeleteImage ? onPressDeleteImages : onPressSubmit}
+          text="추천 작가 확인하기"
+          onPress={onPressSubmit}
         />
       </KeyboardAvoidingView>
     </ScreenContainer>

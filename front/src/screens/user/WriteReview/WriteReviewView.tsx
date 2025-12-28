@@ -3,23 +3,26 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import IconButton from '@/components/IconButton.tsx';
 import Typography from '@/components/theme/Typography.tsx';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
 import ActiveStarIcon from '@/assets/icons/star-color.svg'
-import CrossIcon from '@/assets/icons/cross.svg'
 import TextInput from '@/components/theme/TextInput.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
+import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
+import { UploadImageFile } from '@/api/photographers.ts';
 
 interface WriteReviewViewProps {
+  headerTitle: string;
   onPressBack: () => void;
   onSubmit: () => void;
   isSubmitting?: boolean;
+  submitButtonText: string;
   // Form values
   rating: number;
   onRatingChange: (rating: number) => void;
-  images: string[];
+  images: (UploadImageFile | string)[];
   maxImages: number;
-  onImageSelect: () => void;
+  onRemoveImage: (index: number) => void;
+  onAddImages: (newImages: UploadImageFile[]) => void;
   shootingType: string;
   shootingTypeMinLength: number;
   onShootingTypeChange: (text: string) => void;
@@ -32,14 +35,17 @@ interface WriteReviewViewProps {
 const STAR_RATINGS = [1, 2, 3, 4, 5] as const;
 
 export default function WriteReviewView({
+  headerTitle,
   onPressBack,
   onSubmit,
   isSubmitting = false,
+  submitButtonText,
   rating,
   onRatingChange,
   images,
   maxImages,
-  onImageSelect,
+  onRemoveImage,
+  onAddImages,
   shootingType,
   shootingTypeMinLength,
   onShootingTypeChange,
@@ -51,7 +57,7 @@ export default function WriteReviewView({
 
   return (
     <ScreenContainer
-        headerTitle="후기 작성"
+        headerTitle={headerTitle}
         headerShown={true}
         onPressBack={onPressBack}
       >
@@ -81,22 +87,12 @@ export default function WriteReviewView({
             >
               {' '}･ 촬영과 무관한 내용 등이 나오지 않게 유의해 주세요.
             </Typography>
-            <UploadImagesButton onPress={onImageSelect}>
-              <Icon
-                width={20}
-                height={20}
-                Svg={CrossIcon}
-              />
-              <Typography
-                fontSize={12}
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                color={theme.colors.disabled}
-                marginTop={14}
-              >
-                {images.length}/{maxImages}
-              </Typography>
-            </UploadImagesButton>
+            <ImageUploadInput
+              images={images}
+              onRemoveImage={onRemoveImage}
+              onAddImages={onAddImages}
+              maxLength={maxImages}
+            />
             <Caption
               text="어떤 사진 촬영하셨나요?"
               minLength={shootingTypeMinLength}
@@ -145,7 +141,7 @@ export default function WriteReviewView({
           </TermsWrapper>
           <SubmitButtonWrapper>
             <SubmitButton
-              text="작성 완료"
+              text={submitButtonText}
               onPress={onSubmit}
               disabled={isSubmitting || rating === 0 || shootingType.length < shootingTypeMinLength || content.length < contentMinLength}
             />
@@ -169,16 +165,6 @@ const RateButtonWrapper = styled.View`
   width: 223px;
   justify-content: space-between;
   align-self: center;
-`
-
-const UploadImagesButton = styled.TouchableOpacity`
-  width: 100%;
-  height: 170px;
-  border-radius: 8px;
-  border: 1px dashed ${theme.colors.disabled};
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 18px;
 `
 
 const CaptionWrapper = styled.View`

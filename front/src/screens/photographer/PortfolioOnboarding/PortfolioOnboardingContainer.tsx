@@ -52,7 +52,7 @@ const dummyTags: Tag[] = [
   { id: 24, keyword: '기타' },
 ];
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 const DAY_KO_TO_ENUM = {
   '월요일': 'MONDAY',
@@ -165,20 +165,44 @@ export default function PortfolioOnboardingContainer() {
           // Step3: 활동 지역 (최소 1개)
           return watchedShootingRegions.length >= 1;
         case 3:
-          // Step3: 활동 키워드 (최소 1개)
+          // Step4: 활동 키워드 (최소 1개)
           return watchedShootingTags.length >= 1;
         case 4:
-          // Step4: 활동 컨셉 (최소 1개)
+          // Step5: 활동 컨셉 (최소 1개)
           return watchedShootingConcepts.length >= 1;
         case 5:
-          // Step5: 촬영 정보
+          // Step6: 촬영 정보
           return (
             watchedBasePrice.trim() !== '' &&
             watchedShootingDuration !== null &&
             watchedShootingPeople !== null
           );
-        case 6:
-          // Step6: 보정 정보
+        case 6: {
+          // Step7: 추가 옵션
+          // 추가 옵션 자체는 필수가 아님
+          if (watchedAdditionalOptions.length === 0) return true;
+
+          // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
+          return watchedAdditionalOptions.every(option => {
+            const hasAnyValue = option.name.trim() !== '' ||
+                                option.description.trim() !== '' ||
+                                option.price.trim() !== '';
+
+            if (!hasAnyValue) {
+              // 모든 필드가 비어있으면 유효 (입력하지 않음)
+              return true;
+            }
+
+            // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
+            return (
+              option.name.trim() !== '' &&
+              option.description.trim() !== '' &&
+              option.price.trim() !== ''
+            );
+          });
+        }
+        case 7:
+          // Step8: 보정 정보
           if (watchedRetouchingType === '제공하지 않음') {
             return true;
           }
@@ -187,8 +211,8 @@ export default function PortfolioOnboardingContainer() {
             watchedRetouchingDuration !== null &&
             watchedRetouchingSelectionRight !== null
           );
-        case 7:
-          // Step7: 촬영 가능 일정
+        case 8:
+          // Step9: 촬영 가능 일정
           if (watchedAvailableDays.length < 1) return false;
 
           // Check if all selected weekdays (except 공휴일) have time schedules
@@ -214,6 +238,7 @@ export default function PortfolioOnboardingContainer() {
       watchedBasePrice,
       watchedShootingDuration,
       watchedShootingPeople,
+      watchedAdditionalOptions,
       watchedRetouchingType,
       watchedRetouchingDuration,
       watchedRetouchingSelectionRight,
@@ -240,7 +265,30 @@ export default function PortfolioOnboardingContainer() {
           watchedShootingDuration !== null &&
           watchedShootingPeople !== null
         );
-      case 6:
+      case 6: {
+        // 추가 옵션 자체는 필수가 아님
+        if (watchedAdditionalOptions.length === 0) return true;
+
+        // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
+        return watchedAdditionalOptions.every(option => {
+          const hasAnyValue = option.name.trim() !== '' ||
+                              option.description.trim() !== '' ||
+                              option.price.trim() !== '';
+
+          if (!hasAnyValue) {
+            // 모든 필드가 비어있으면 유효 (입력하지 않음)
+            return true;
+          }
+
+          // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
+          return (
+            option.name.trim() !== '' &&
+            option.description.trim() !== '' &&
+            option.price.trim() !== ''
+          );
+        });
+      }
+      case 7:
         if (watchedRetouchingType === '제공하지 않음') {
           return true;
         }
@@ -249,7 +297,7 @@ export default function PortfolioOnboardingContainer() {
           watchedRetouchingDuration !== null &&
           watchedRetouchingSelectionRight !== null
         );
-      case 7: {
+      case 8: {
         if (watchedAvailableDays.length < 1) return false;
 
         // Check if all selected weekdays (except 공휴일) have time schedules
@@ -276,6 +324,7 @@ export default function PortfolioOnboardingContainer() {
     watchedBasePrice,
     watchedShootingDuration,
     watchedShootingPeople,
+    watchedAdditionalOptions,
     watchedRetouchingType,
     watchedRetouchingDuration,
     watchedRetouchingSelectionRight,
@@ -290,9 +339,10 @@ export default function PortfolioOnboardingContainer() {
     if (currentStep === 2) return 20;
     if (currentStep === 3) return 30;
     if (currentStep === 4) return 40;
-    if (currentStep === 5) return 60;
-    if (currentStep === 6) return 80;
-    if (currentStep === 7 && !isStepValid) return 90;
+    if (currentStep === 5) return 50;
+    if (currentStep === 6) return 60;
+    if (currentStep === 7) return 75;
+    if (currentStep === 8 && !isStepValid) return 90;
     return 100;
   }, [currentStep, isStepValid]);
 

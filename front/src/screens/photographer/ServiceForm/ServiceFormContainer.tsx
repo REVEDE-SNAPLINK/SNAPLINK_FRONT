@@ -7,7 +7,7 @@ import ServiceFormView, {
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { Alert } from '@/components/theme';
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 type ServiceFormRouteProp = RouteProp<{
   ServiceForm: {
@@ -63,14 +63,38 @@ export default function ServiceFormContainer() {
     async (step: number): Promise<boolean> => {
       switch (step) {
         case 0:
-          // Step6: 촬영 정보
+          // Step1: 촬영 정보
           return (
             watchedBasePrice.trim() !== '' &&
             watchedShootingDuration !== null &&
             watchedShootingPeople !== null
           );
-        case 1:
-          // Step7: 보정 정보
+        case 1: {
+          // Step2: 추가 옵션
+          // 추가 옵션 자체는 필수가 아님
+          if (watchedAdditionalOptions.length === 0) return true;
+
+          // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
+          return watchedAdditionalOptions.every(option => {
+            const hasAnyValue = option.name.trim() !== '' ||
+                                option.description.trim() !== '' ||
+                                option.price.trim() !== '';
+
+            if (!hasAnyValue) {
+              // 모든 필드가 비어있으면 유효 (입력하지 않음)
+              return true;
+            }
+
+            // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
+            return (
+              option.name.trim() !== '' &&
+              option.description.trim() !== '' &&
+              option.price.trim() !== ''
+            );
+          });
+        }
+        case 2:
+          // Step3: 보정 정보
           if (watchedRetouchingType === '제공하지 않음') {
             return true;
           }
@@ -79,8 +103,8 @@ export default function ServiceFormContainer() {
             watchedRetouchingDuration !== null &&
             watchedRetouchingSelectionRight !== null
           );
-        case 2: {
-          // Step8: 촬영 가능 일정
+        case 3: {
+          // Step4: 촬영 가능 일정
           if (watchedAvailableDays.length < 1) return false;
 
           // Check if all selected weekdays (except 공휴일) have time schedules
@@ -102,6 +126,7 @@ export default function ServiceFormContainer() {
       watchedBasePrice,
       watchedShootingDuration,
       watchedShootingPeople,
+      watchedAdditionalOptions,
       watchedRetouchingType,
       watchedRetouchingDuration,
       watchedRetouchingSelectionRight,
@@ -118,7 +143,30 @@ export default function ServiceFormContainer() {
           watchedShootingDuration !== null &&
           watchedShootingPeople !== null
         );
-      case 1:
+      case 1: {
+        // 추가 옵션 자체는 필수가 아님
+        if (watchedAdditionalOptions.length === 0) return true;
+
+        // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
+        return watchedAdditionalOptions.every(option => {
+          const hasAnyValue = option.name.trim() !== '' ||
+                              option.description.trim() !== '' ||
+                              option.price.trim() !== '';
+
+          if (!hasAnyValue) {
+            // 모든 필드가 비어있으면 유효 (입력하지 않음)
+            return true;
+          }
+
+          // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
+          return (
+            option.name.trim() !== '' &&
+            option.description.trim() !== '' &&
+            option.price.trim() !== ''
+          );
+        });
+      }
+      case 2:
         if (watchedRetouchingType === '제공하지 않음') {
           return true;
         }
@@ -127,7 +175,7 @@ export default function ServiceFormContainer() {
           watchedRetouchingDuration !== null &&
           watchedRetouchingSelectionRight !== null
         );
-      case 2: {
+      case 3: {
         if (watchedAvailableDays.length < 1) return false;
 
         const selectedWeekdays = watchedAvailableDays.filter(day => day !== '공휴일');
@@ -148,6 +196,7 @@ export default function ServiceFormContainer() {
     watchedBasePrice,
     watchedShootingDuration,
     watchedShootingPeople,
+    watchedAdditionalOptions,
     watchedRetouchingType,
     watchedRetouchingDuration,
     watchedRetouchingSelectionRight,

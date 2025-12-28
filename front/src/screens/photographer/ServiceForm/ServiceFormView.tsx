@@ -13,13 +13,10 @@ import { Platform, ScrollView } from 'react-native';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import Checkbox from '@/components/theme/Checkbox.tsx';
-import OptionList from '@/components/OptionList.tsx';
-
-interface Option {
-  name: string;
-  description: string;
-  price: string;
-}
+import OptionItem, { Option } from '@/components/OptionItem.tsx';
+import CrossIcon from '@/assets/icons/cross-black.svg';
+import Icon from '@/components/Icon.tsx';
+import { theme } from '@/theme';
 
 export interface DaySchedule {
   startTime: Date | null;
@@ -82,11 +79,13 @@ export default function ServiceFormView({
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <ServiceFormStep1 control={control} onDeleteOption={onDeleteOption} />;
+        return <ServiceFormStep1 control={control} />;
       case 1:
-        return <ServiceFormStep2 control={control} />;
+        return <ServiceFormStep2 control={control} onDeleteOption={onDeleteOption} />;
       case 2:
-        return <ServiceFormStep3 control={control} onToggleDay={onToggleDay} />;
+        return <ServiceFormStep3 control={control} />;
+      case 3:
+        return <ServiceFormStep4 control={control} onToggleDay={onToggleDay} />;
       default:
         return null;
     }
@@ -137,12 +136,10 @@ const AnimatedFormContainer = styled(Animated.View)`
 
 interface ServiceFormStep1Props {
   control: Control<ServiceFormData>;
-  onDeleteOption: (index: number) => void;
 }
 
 const ServiceFormStep1 = ({
   control,
-  onDeleteOption,
 }: ServiceFormStep1Props) => {
   return (
     <>
@@ -292,19 +289,188 @@ const ServiceFormStep1 = ({
           </CheckOptionWrapper>
         )}
       />
-
-      <OptionList control={control} onDelete={onDeleteOption} />
     </>
   );
 };
 
 interface ServiceFormStep2Props {
   control: Control<ServiceFormData>;
+  onDeleteOption: (index: number) => void;
 }
 
 const ServiceFormStep2 = ({
-  control
+  control,
+  onDeleteOption,
 }: ServiceFormStep2Props) => {
+  return (
+    <>
+      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
+        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+          추가할 옵션
+        </Typography>
+        을 선택해 주세요.
+      </Typography>
+      <Controller
+        control={control}
+        name="additionalOptions"
+        render={({ field: { onChange, value: options } }) => {
+          const optionList = options || [];
+          const firstOption = optionList[0] || { name: '', description: '', price: '', time: '' };
+          const restOptions = optionList.slice(1);
+
+          return (
+            <>
+              {/* 첫 번째 추가 옵션 (항상 표시) */}
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+              >
+                추가 옵션
+              </Typography>
+              <FormInput
+                placeholder="추가 옵션명 *"
+                value={firstOption.name}
+                onChangeText={(name: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name, description: '', price: '', time: '' });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], name };
+                  }
+                  onChange(newOptions);
+                }}
+              />
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+                marginTop={21}
+              >
+                추가 옵션 시간
+              </Typography>
+              <FormInput
+                placeholder="시간을 추가로 판매할 경우 입력해주세요."
+                value={firstOption.time || ''}
+                onChangeText={(time: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description: '', price: '', time });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], time };
+                  }
+                  onChange(newOptions);
+                }}
+              />
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+                marginTop={21}
+              >
+                추가 옵션 설명
+              </Typography>
+              <FormInput
+                placeholder="입력해주세요 *"
+                value={firstOption.description}
+                onChangeText={(description: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description, price: '', time: '' });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], description };
+                  }
+                  onChange(newOptions);
+                }}
+                multiline
+                height={116}
+                style={{ textAlignVertical: 'top', paddingTop: 16 }}
+              />
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+                marginTop={21}
+              >
+                추가 옵션 비용
+              </Typography>
+              <FormInput
+                placeholder="원 *"
+                value={firstOption.price}
+                onChangeText={(price: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description: '', price, time: '' });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], price };
+                  }
+                  onChange(newOptions);
+                }}
+                keyboardType="numeric"
+              />
+
+              {/* 옵션 추가 버튼 */}
+              <AddOptionButton
+                onPress={() => {
+                  const newOptions = [...optionList, { name: '', description: '', price: '', time: '' }];
+                  onChange(newOptions);
+                }}
+              >
+                <Typography
+                  fontSize={14}
+                  fontWeight="bold"
+                  color="primary"
+                >
+                  옵션 추가
+                </Typography>
+              </AddOptionButton>
+
+              {/* 추가된 옵션들 */}
+              {restOptions.map((option: Option, index: number) => (
+                <OptionItem
+                  key={index}
+                  name={option.name}
+                  description={option.description}
+                  price={option.price}
+                  time={option.time}
+                  setName={(name: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], name };
+                    onChange(newOptions);
+                  }}
+                  setDescription={(description: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], description };
+                    onChange(newOptions);
+                  }}
+                  setPrice={(price: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], price };
+                    onChange(newOptions);
+                  }}
+                  setTime={(time: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], time };
+                    onChange(newOptions);
+                  }}
+                  onDelete={() => onDeleteOption(index + 1)}
+                />
+              ))}
+            </>
+          );
+        }}
+      />
+    </>
+  );
+};
+
+interface ServiceFormStep3Props {
+  control: Control<ServiceFormData>;
+}
+
+const ServiceFormStep3 = ({
+  control
+}: ServiceFormStep3Props) => {
   const retouchingType = useWatch({ control, name: 'retouchingType' });
   const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
 
@@ -397,15 +563,15 @@ const days = [
   '공휴일',
 ];
 
-interface ServiceFormStep3Props {
+interface ServiceFormStep4Props {
   control: Control<ServiceFormData>;
   onToggleDay: (day: string) => void;
 }
 
-const ServiceFormStep3 = ({
+const ServiceFormStep4 = ({
   control,
   onToggleDay,
-}: ServiceFormStep3Props) => {
+}: ServiceFormStep4Props) => {
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, '0')}:00`
   );
@@ -605,4 +771,14 @@ const TimeDropDownInputWrapper = styled.View`
 
 const DayScheduleSection = styled.View`
   width: 100%;
+`;
+
+const AddOptionButton = styled.TouchableOpacity`
+  width: 100%;
+  height: 49px;
+  border-radius: 8px;
+  border: 1px solid ${theme.colors.primary};
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
 `;

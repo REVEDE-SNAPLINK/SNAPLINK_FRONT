@@ -19,17 +19,13 @@ import { GetConceptsResponse } from '@/api/concepts.ts';
 import PhotoGrid from '@/components/PhotoGrid.tsx';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
-import OptionList from '@/components/OptionList.tsx';
+import OptionItem, { Option } from '@/components/OptionItem.tsx';
+import CrossIcon from '@/assets/icons/cross-black.svg';
+import Icon from '@/components/Icon.tsx';
 
 export interface Tag {
   id: number;
   keyword: string;
-}
-
-interface Option {
-  name: string;
-  description: string;
-  price: string;
 }
 
 export interface DaySchedule {
@@ -176,11 +172,13 @@ export default function PortfolioOnboardingView({
           />
         );
       case 5:
-        return <PortfolioOnboardingStep6 control={control} onDeleteOption={onDeleteOption} />;
+        return <PortfolioOnboardingStep6 control={control} />;
       case 6:
-        return <PortfolioOnboardingStep7 control={control} />;
+        return <PortfolioOnboardingStep7 control={control} onDeleteOption={onDeleteOption} />;
       case 7:
-        return <PortfolioOnboardingStep8 control={control} onToggleDay={onToggleDay} />;
+        return <PortfolioOnboardingStep8 control={control} />;
+      case 8:
+        return <PortfolioOnboardingStep9 control={control} onToggleDay={onToggleDay} />;
       default:
         return null;
     }
@@ -491,12 +489,10 @@ const PortfolioOnboardingStep5 = ({
 
 interface PortfolioOnboardingStep6Props {
   control: Control<PortfolioOnboardingFormData>;
-  onDeleteOption: (index: number) => void;
 }
 
 const PortfolioOnboardingStep6 = ({
   control,
-  onDeleteOption,
 }: PortfolioOnboardingStep6Props) => {
   return (
     <>
@@ -646,19 +642,188 @@ const PortfolioOnboardingStep6 = ({
           </CheckOptionWrapper>
         )}
       />
-
-      <OptionList control={control} onDelete={onDeleteOption} />
     </>
   );
 };
 
 interface PortfolioOnboardingStep7Props {
   control: Control<PortfolioOnboardingFormData>;
+  onDeleteOption: (index: number) => void;
 }
 
 const PortfolioOnboardingStep7 = ({
-  control
+  control,
+  onDeleteOption,
 }: PortfolioOnboardingStep7Props) => {
+  return (
+    <>
+      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
+        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+          추가할 옵션
+        </Typography>
+        을 선택해 주세요.
+      </Typography>
+      <Controller
+        control={control}
+        name="additionalOptions"
+        render={({ field: { onChange, value: options } }) => {
+          const optionList = options || [];
+          const firstOption = optionList[0] || { name: '', description: '', price: '', time: '' };
+          const restOptions = optionList.slice(1);
+
+          return (
+            <>
+              {/* 첫 번째 추가 옵션 (항상 표시) */}
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+              >
+                추가 옵션
+              </Typography>
+              <FormInput
+                placeholder="추가 옵션명 *"
+                value={firstOption.name}
+                onChangeText={(name: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name, description: '', price: '', time: '' });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], name };
+                  }
+                  onChange(newOptions);
+                }}
+              />
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+                marginTop={21}
+              >
+                추가 옵션 시간
+              </Typography>
+              <FormInput
+                placeholder="시간을 추가로 판매할 경우 입력해주세요."
+                value={firstOption.time || ''}
+                onChangeText={(time: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description: '', price: '', time });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], time };
+                  }
+                  onChange(newOptions);
+                }}
+              />
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+                marginTop={21}
+              >
+                추가 옵션 설명
+              </Typography>
+              <FormInput
+                placeholder="입력해주세요 *"
+                value={firstOption.description}
+                onChangeText={(description: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description, price: '', time: '' });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], description };
+                  }
+                  onChange(newOptions);
+                }}
+                multiline
+                height={116}
+                style={{ textAlignVertical: 'top', paddingTop: 16 }}
+              />
+              <Typography
+                fontSize={16}
+                letterSpacing="-2.5%"
+                marginBottom={10}
+                marginTop={21}
+              >
+                추가 옵션 비용
+              </Typography>
+              <FormInput
+                placeholder="원 *"
+                value={firstOption.price}
+                onChangeText={(price: string) => {
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description: '', price, time: '' });
+                  } else {
+                    newOptions[0] = { ...newOptions[0], price };
+                  }
+                  onChange(newOptions);
+                }}
+                keyboardType="numeric"
+              />
+
+              {/* 옵션 추가 버튼 */}
+              <AddOptionButton
+                onPress={() => {
+                  const newOptions = [...optionList, { name: '', description: '', price: '', time: '' }];
+                  onChange(newOptions);
+                }}
+              >
+                <Typography
+                  fontSize={14}
+                  fontWeight="bold"
+                  color="primary"
+                >
+                  옵션 추가
+                </Typography>
+              </AddOptionButton>
+
+              {/* 추가된 옵션들 */}
+              {restOptions.map((option: Option, index: number) => (
+                <OptionItem
+                  key={index}
+                  name={option.name}
+                  description={option.description}
+                  price={option.price}
+                  time={option.time}
+                  setName={(name: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], name };
+                    onChange(newOptions);
+                  }}
+                  setDescription={(description: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], description };
+                    onChange(newOptions);
+                  }}
+                  setPrice={(price: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], price };
+                    onChange(newOptions);
+                  }}
+                  setTime={(time: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index + 1] = { ...newOptions[index + 1], time };
+                    onChange(newOptions);
+                  }}
+                  onDelete={() => onDeleteOption(index + 1)}
+                />
+              ))}
+            </>
+          );
+        }}
+      />
+    </>
+  );
+};
+
+interface PortfolioOnboardingStep8Props {
+  control: Control<PortfolioOnboardingFormData>;
+}
+
+const PortfolioOnboardingStep8 = ({
+  control
+}: PortfolioOnboardingStep8Props) => {
   const retouchingType = useWatch({ control, name: 'retouchingType' });
   const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
 
@@ -751,15 +916,15 @@ const days = [
   '공휴일',
 ];
 
-interface PortfolioOnboardingStep8Props {
+interface PortfolioOnboardingStep9Props {
   control: Control<PortfolioOnboardingFormData>;
   onToggleDay: (day: string) => void;
 }
 
-const PortfolioOnboardingStep8 = ({
+const PortfolioOnboardingStep9 = ({
   control,
   onToggleDay,
-}: PortfolioOnboardingStep8Props) => {
+}: PortfolioOnboardingStep9Props) => {
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, '0')}:00`
   );
@@ -997,5 +1162,15 @@ const TimeDropDownInputWrapper = styled.View`
 
 const DayScheduleSection = styled.View`
   width: 100%;
+`;
+
+const AddOptionButton = styled.TouchableOpacity`
+  width: 100%;
+  height: 49px;
+  border-radius: 8px;
+  border: 1px solid ${theme.colors.primary};
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
 `;
 

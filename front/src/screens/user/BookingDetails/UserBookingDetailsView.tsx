@@ -1,4 +1,4 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
@@ -17,6 +17,7 @@ interface UserBookingDetailsViewProps {
   status: ReservationStatus;
   onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
+  onPressShowMyReview?: () => void;
   isLoading?: boolean;
 }
 
@@ -29,11 +30,9 @@ export default function UserBookingDetailsView({
   status,
   onPressViewPhotos,
   onPressWriteReview,
+  onPressShowMyReview,
   isLoading = false,
 }: UserBookingDetailsViewProps) {
-  const isCompleted = status === 'COMPLETED' || status === 'DELIVERED' || status === 'REVIEWED';
-  const canWriteReview = status === 'DELIVERED' && onPressWriteReview;
-
   if (isLoading) {
     return (
       <ScreenContainer
@@ -66,7 +65,7 @@ export default function UserBookingDetailsView({
         <Description name="촬영 일시" value={datetime} />
         <Description name="요청 사항" value={additionalRequest} />
       </InfoContainer>
-      {isCompleted && onPressViewPhotos && (
+      {(status === 'DELIVERED' || status === 'REVIEWED') && onPressViewPhotos && (
         <ViewPhotosButton onPress={onPressViewPhotos}>
           <Typography
             fontSize={16}
@@ -80,13 +79,28 @@ export default function UserBookingDetailsView({
           <Icon width={24} height={24} Svg={ArrowRightIcon} />
         </ViewPhotosButton>
       )}
-      <WriteReviewButtonWrapper>
-        <SubmitButton
-          text="촬영 후기 작성"
-          onPress={onPressWriteReview || (() => {})}
-          disabled={!canWriteReview}
-        />
-      </WriteReviewButtonWrapper>
+      {status === 'REVIEWED' && onPressShowMyReview && (
+        <ViewPhotosButton onPress={onPressViewPhotos}>
+          <Typography
+            fontSize={16}
+            fontWeight="semiBold"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+            color="#000"
+          >
+            내가 쓴 후기 보기
+          </Typography>
+          <Icon width={24} height={24} Svg={ArrowRightIcon} />
+        </ViewPhotosButton>
+      )}
+      {status === 'DELIVERED' && onPressWriteReview && (
+        <WriteReviewButtonWrapper>
+          <SubmitButton
+            text="촬영 후기 작성"
+            onPress={onPressWriteReview}
+          />
+        </WriteReviewButtonWrapper>
+      )}
     </ScreenContainer>
   );
 }

@@ -1,4 +1,4 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
@@ -8,11 +8,10 @@ import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import SearchPhotographerList from '@/components/user/SearchPhotographerList.tsx';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import BackButton from '@/components/BackButton.tsx';
-import SwapIcon from '@/assets/icons/swap.svg'
-import { useState } from 'react';
+import BackButton from '@/components/common/BackButton';
+import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
 
-const SORT_BY_ENUM = {
+export const SORT_BY_ENUM = {
   'LATEST': '최신순',
   'REVIEWS': '후기 많은 순',
   'HIGH_PRICE': '가격순(높은 순)',
@@ -21,6 +20,14 @@ const SORT_BY_ENUM = {
 };
 
 export type SortByKey = keyof typeof SORT_BY_ENUM;
+
+const SORT_OPTIONS: SortOption<SortByKey>[] = [
+  { key: 'LATEST', label: '최신순' },
+  { key: 'REVIEWS', label: '후기 많은 순' },
+  { key: 'HIGH_PRICE', label: '가격순(높은 순)' },
+  { key: 'LOW_PRICE', label: '가격순(낮은 순)' },
+  { key: 'DEFAULT', label: '기본 순' },
+];
 
 interface SearchPhotographerViewProps {
   onPressBack: () => void;
@@ -73,8 +80,6 @@ export default function SearchPhotographerView({
   isFetchingNextPage,
   onPressPhotographer,
 }: SearchPhotographerViewProps) {
-  const [openSortBy, setOpenSortBy] = useState<boolean>(false);
-
   return (
     <>
       <ScreenContainer paddingHorizontal={20} headerShown={false}>
@@ -101,39 +106,11 @@ export default function SearchPhotographerView({
           <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color={theme.colors.disabled}>
             {totalCount}명
           </Typography>
-          <SortButtonWrapper>
-            {openSortBy && (
-              <SortList>
-                {(Object.keys(SORT_BY_ENUM) as SortByKey[]).map((s, i) => (
-                  <SortItem
-                    key={s}
-                    onPress={() => {
-                      onChangeSortBy(s);
-                      setOpenSortBy(false)
-                    }}
-                    isSelected={sortBy === s}
-                    {...(i === Object.keys(SORT_BY_ENUM).length - 1 ? { isLast: true } : i === 0 ? { isFirst: true } : {})}
-                  >
-                    <Typography fontSize={12} fontWeight="semiBold" color={sortBy === s ? '#fff' : 'textPrimary'}>
-                      {SORT_BY_ENUM[s]}
-                    </Typography>
-                  </SortItem>
-                ))}
-              </SortList>
-            )}
-            <SortButton onPress={() => setOpenSortBy(!openSortBy)}>
-              <Typography
-                fontSize={12}
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                color={theme.colors.disabled}
-                marginRight={1.5}
-              >
-                {SORT_BY_ENUM[sortBy]}
-              </Typography>
-              <Icon width={14} height={14} Svg={SwapIcon} />
-            </SortButton>
-          </SortButtonWrapper>
+          <SortButton
+            options={SORT_OPTIONS}
+            selectedKey={sortBy}
+            onSelect={onChangeSortBy}
+          />
         </SearchResultHeader>
         <SearchResultWrapper>
           <SearchPhotographerList
@@ -194,52 +171,7 @@ const SearchResultHeader = styled.View`
   margin-bottom: 20px;
 `
 
-const SortButtonWrapper = styled.View`
-  
-`
-
-const SortButton = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-`
-
 const SearchResultWrapper = styled.View`
   flex: 1;
   width: 100%;
-`
-
-const SortList = styled.View`
-  width: 120px;
-  border-radius: 10px;
-  background-color: #fff;
-  position: absolute;
-  right: 0;
-  top: 20px;
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
-  z-index: 100;
-`
-
-const SortItem = styled.TouchableOpacity<{ isFirst?: boolean, isLast?: boolean, isSelected: boolean }>`
-  width: 100%;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 101;
-  ${({ isFirst }) => isFirst && `
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-  `}
-  ${({ isLast }) => !isLast ? `
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-color: #C8C8C8;
-   ` : `
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-   `
-  }
-  ${({ isSelected }) => isSelected && `
-    background-color: ${theme.colors.primary};
-  `}
 `

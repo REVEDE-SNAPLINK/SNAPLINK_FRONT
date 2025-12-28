@@ -4,7 +4,11 @@ import PhotographerViewPhotosView from '@/screens/photographer/ViewPhotos/Photog
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Alert } from '@/components/theme';
 import { useReservationPhotosQuery } from '@/queries/reservations.ts';
-import { useUploadReservationZipMutation, useDeleteReservationPhotosMutation } from '@/mutations/reservations.ts';
+import {
+  useUploadReservationZipMutation,
+  useDeleteReservationPhotosMutation,
+  usePatchReservationStatusMutation,
+} from '@/mutations/reservations.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 export default function PhotographerViewPhotosContainer() {
@@ -12,23 +16,18 @@ export default function PhotographerViewPhotosContainer() {
   const route = useRoute<RouteProp<MainStackParamList, 'ViewPhotos'>>();
   const { reservationId } = route.params;
 
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<number[]>([]);
+  const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
 
-  const { data, isLoading } = useReservationPhotosQuery(reservationId);
-  const { mutateAsync: uploadZip } = useUploadReservationZipMutation();
-  const { mutateAsync: deletePhotos } = useDeleteReservationPhotosMutation();
+  const { data, isLoading, refetch } = useReservationPhotosQuery(reservationId);
+  const { mutateAsync: uploadZip, isPending: isUploadPending } = useUploadReservationZipMutation();
+  const { mutateAsync: deletePhotos, isPending: isDeletePending } = useDeleteReservationPhotosMutation();
+  const { mutateAsync: changeStatus, isPending: isChangePeading } = usePatchReservationStatusMutation();
 
   const handlePressBack = () => navigation.goBack();
 
-  const handleTogglePhotoSelection = (photoId: number) => {
-    setSelectedPhotoIds((prev) => {
-      if (prev.includes(photoId)) {
-        return prev.filter((id) => id !== photoId);
-      } else {
-        return [...prev, photoId];
-      }
-    });
-  };
+  const handleCheckedImages = (index: number) => {
+    setCheckedImages([...checkedImages.slice(0, index), !checkedImages[index], ...checkedImages.slice(index + 1)]);
+  }
 
   const handleUploadPhotos = async () => {
     try {
@@ -46,14 +45,30 @@ export default function PhotographerViewPhotosContainer() {
         type: file.type,
       };
 
-      await uploadZip({ reservationId, zipFile });
+      uploadZip({ reservationId, zipFile },{
+        onSuccess: () => {
+          refetch().finally(() => {
+            changeStatus(({ reservationId, status: 'DELIVERED' }), {
+              onSuccess: () => {
+                Alert.show({ title: '업로드 완료', message: '촬영 사진 업로드가 완료되었습니다.' })
+              },
+              onError: () => {
+                Alert.show({ title: '업로드 실패', message: '네트워크를 확인해보세요.' })
+              }
+            })
+          })
+        },
+        onError: () => {
+          Alert.show({ title: '업로드 실패', message: '네트워크를 확인해보세요.' })
+        }
+      });
     } catch (err) {
       Alert.show({ title: '오류', message: '파일 선택에 실패했습니다.' });
     }
   };
 
   const handleDeletePhotos = async () => {
-    if (selectedPhotoIds.length === 0) {
+    if (checkedImages.length === 0) {
       Alert.show({
         title: '삭제 실패',
         message: '삭제할 사진을 선택해주세요.',
@@ -61,16 +76,18 @@ export default function PhotographerViewPhotosContainer() {
       return;
     }
 
+    const deletePhotoIds = data?.photos.filter((_, i) => checkedImages[i]).map((v) => v.id) || [];
+
     Alert.show({
       title: '사진 삭제',
-      message: `선택한 ${selectedPhotoIds.length}개의 사진을 삭제하시겠습니까?`,
+      message: `선택한 ${deletePhotoIds.length}개의 사진을 삭제하시겠습니까?`,
       buttons: [
         { text: '취소', type: 'cancel', onPress: () => {} },
         {
           text: '삭제',
           onPress: async () => {
-            await deletePhotos({ reservationId, photoIds: selectedPhotoIds });
-            setSelectedPhotoIds([]);
+            await deletePhotos({ reservationId, photoIds: deletePhotoIds });
+            setCheckedImages([]);
             Alert.show({
               title: '삭제 완료',
               message: '선택한 사진이 삭제되었습니다.',
@@ -84,12 +101,12 @@ export default function PhotographerViewPhotosContainer() {
   return (
     <PhotographerViewPhotosView
       onPressBack={handlePressBack}
-      photos={data?.photos || []}
-      selectedPhotoIds={selectedPhotoIds}
-      onTogglePhotoSelection={handleTogglePhotoSelection}
+      imageURIs={data?.photos.map((v) => v.url) || []}
+      checkedImages={checkedImages}
+      setCheckedImages={handleCheckedImages}
       onUploadPhotos={handleUploadPhotos}
       onDeletePhotos={handleDeletePhotos}
-      isLoading={isLoading}
+      isLoading={isLoading || isUploadPending || isDeletePending || isChangePeading}
     />
   );
 }

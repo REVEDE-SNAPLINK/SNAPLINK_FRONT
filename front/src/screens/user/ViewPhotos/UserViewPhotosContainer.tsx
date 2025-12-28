@@ -1,65 +1,34 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import UserViewPhotosView from '@/screens/user/ViewPhotos/UserViewPhotosView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { UserMainNavigationProp, UserMainStackParamList } from '@/types/userNavigation.ts';
-import { useQuery } from '@tanstack/react-query';
 import { Alert } from '@/components/theme';
-import { Photo, BookingPhotosResponse } from '@/types/booking';
-
-/**
- * Get photos for a booking
- * TODO: Replace with actual API call when backend is ready
- *
- * API endpoint will be: GET /api/bookings/:bookingId/photos
- */
-async function getBookingPhotos(bookingId: string): Promise<BookingPhotosResponse> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Dummy data - Generate 12 photos (6 original + 6 edited)
-  const photos: Photo[] = [];
-  for (let i = 1; i <= 12; i++) {
-    photos.push({
-      id: `photo-${i}`,
-      url: `https://picsum.photos/400/400?random=${i + 100}`,
-      type: i % 2 === 0 ? 'edited' : 'original',
-    });
-  }
-
-  return {
-    bookingId,
-    photos,
-    zipUrl: `https://example.com/bookings/${bookingId}/photos.zip`,
-  };
-}
+import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import { useReservationPhotosQuery } from '@/queries/reservations.ts';
+import RNBlobUtil from 'react-native-blob-util';
+import { Platform } from 'react-native';
 
 export default function UserViewPhotosContainer() {
-  const navigation = useNavigation<UserMainNavigationProp>();
-  const route = useRoute<RouteProp<UserMainStackParamList, 'ViewPhotos'>>();
-  const { id: bookingId } = route.params;
+  const navigation = useNavigation<MainNavigationProp>();
+  const route = useRoute<RouteProp<MainStackParamList, 'ViewPhotos'>>();
+  const { reservationId } = route.params;
 
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  const { data, isLoading } = useReservationPhotosQuery(reservationId);
 
-  // Fetch booking photos
-  const { data, isLoading } = useQuery({
-    queryKey: ['bookingPhotos', bookingId],
-    queryFn: () => getBookingPhotos(bookingId),
-  });
+  const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
 
   const handlePressBack = () => navigation.goBack();
 
-  const handleTogglePhotoSelection = (photoId: string) => {
-    setSelectedPhotoIds((prev) => {
-      if (prev.includes(photoId)) {
-        return prev.filter((id) => id !== photoId);
-      } else {
-        return [...prev, photoId];
-      }
-    });
+  const handleCheckedImages = (index: number) => {
+    setCheckedImages([...checkedImages.slice(0, index), !checkedImages[index], ...checkedImages.slice(index + 1)]);
   };
 
+  // 체크된 사진들의 인덱스
+  const selectedIndices = useMemo(() => {
+    return checkedImages.map((checked, index) => (checked ? index : -1)).filter((i) => i !== -1);
+  }, [checkedImages]);
+
   const handleDownloadZip = async () => {
-    if (!data?.zipUrl) {
+    if (!data?.zip) {
       Alert.show({
         title: '다운로드 실패',
         message: 'ZIP 파일을 찾을 수 없습니다.',
@@ -67,26 +36,55 @@ export default function UserViewPhotosContainer() {
       return;
     }
 
-    // TODO: Implement actual download functionality
-    // if (Platform.OS === 'ios') {
-    //   RNFetchBlob.ios.openDocument(data.zipUrl);
-    // } else {
-    //   const { config, fs } = RNFetchBlob;
-    //   const downloads = fs.dirs.DownloadDir;
-    //   config({
-    //     fileCache: true,
-    //     addAndroidDownloads: {
-    //       useDownloadManager: true,
-    //       notification: true,
-    //       path: `${downloads}/photos_${bookingId}.zip`,
-    //     },
-    //   }).fetch('GET', data.zipUrl);
-    // }
+    try {
+      const { fs } = RNBlobUtil;
+      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+      const fileName = `reservation_${reservationId}_photos.zip`;
+      const filePath = `${downloads}/${fileName}`;
 
-    Alert.show({
-      title: '다운로드 시작',
-      message: '원본/보정본 모음.zip 다운로드를 시작합니다.',
-    });
+      Alert.show({
+        title: '다운로드 시작',
+        message: '원본/보정본 모음.zip 다운로드를 시작합니다.',
+      });
+
+      if (Platform.OS === 'ios') {
+        // iOS: 다운로드 후 파일 공유
+        const response = await RNBlobUtil.config({
+          fileCache: true,
+          path: filePath,
+        }).fetch('GET', data.zip.url);
+
+        await RNBlobUtil.ios.openDocument(response.path());
+
+        Alert.show({
+          title: '다운로드 완료',
+          message: 'ZIP 파일이 다운로드되었습니다.',
+        });
+      } else {
+        // Android: 다운로드 매니저 사용
+        await RNBlobUtil.config({
+          fileCache: true,
+          addAndroidDownloads: {
+            useDownloadManager: true,
+            notification: true,
+            title: fileName,
+            description: '사진 ZIP 파일 다운로드',
+            path: filePath,
+          },
+        }).fetch('GET', data.zip.url);
+
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${data.zip.fileCount}개의 사진이 포함된 ZIP 파일이 다운로드되었습니다.`,
+        });
+      }
+    } catch (error) {
+      console.error('ZIP download error:', error);
+      Alert.show({
+        title: '다운로드 실패',
+        message: 'ZIP 파일 다운로드 중 오류가 발생했습니다.',
+      });
+    }
   };
 
   const handleDownloadPhotos = async () => {
@@ -98,37 +96,93 @@ export default function UserViewPhotosContainer() {
       return;
     }
 
-    const photosToDownload = selectedPhotoIds.length === 0 || selectedPhotoIds.length === data.photos.length
-      ? data.photos
-      : data.photos.filter((photo) => selectedPhotoIds.includes(photo.id));
+    // 선택된 사진이 없으면 전체 다운로드
+    const photosToDownload =
+      selectedIndices.length === 0
+        ? data.photos
+        : selectedIndices.map((index) => data.photos[index]);
 
-    // TODO: Implement actual download functionality for selected photos
-    // const downloadPromises = photosToDownload.map(async (photo, index) => {
-    //   const { config, fs } = RNFetchBlob;
-    //   const downloads = fs.dirs.DownloadDir;
-    //   return config({
-    //     fileCache: true,
-    //     addAndroidDownloads: {
-    //       useDownloadManager: true,
-    //       notification: true,
-    //       path: `${downloads}/photo_${bookingId}_${index + 1}.jpg`,
-    //     },
-    //   }).fetch('GET', photo.url);
-    // });
-    // await Promise.all(downloadPromises);
+    try {
+      const { fs } = RNBlobUtil;
+      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
 
-    Alert.show({
-      title: '다운로드 시작',
-      message: `${photosToDownload.length}개의 사진 다운로드를 시작합니다.`,
-    });
+      Alert.show({
+        title: '다운로드 시작',
+        message: `${photosToDownload.length}개의 사진 다운로드를 시작합니다.`,
+      });
+
+      if (Platform.OS === 'ios') {
+        // iOS: 개별 다운로드 후 공유
+        const downloadPromises = photosToDownload.map(async (photo) => {
+          const ext = photo.url.split('.').pop() || 'jpg';
+          const fileName = `reservation_${reservationId}_photo_${photo.sortOrder}.${ext}`;
+          const filePath = `${downloads}/${fileName}`;
+
+          const response = await RNBlobUtil.config({
+            fileCache: true,
+            path: filePath,
+          }).fetch('GET', photo.url);
+
+          return response.path();
+        });
+
+        const paths = await Promise.all(downloadPromises);
+
+        // 첫 번째 사진만 공유 다이얼로그 열기 (여러 개는 복잡함)
+        if (paths.length > 0) {
+          await RNBlobUtil.ios.openDocument(paths[0]);
+        }
+
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${photosToDownload.length}개의 사진이 다운로드되었습니다.`,
+        });
+      } else {
+        // Android: 다운로드 매니저로 개별 다운로드
+        const downloadPromises = photosToDownload.map(async (photo) => {
+          const ext = photo.url.split('.').pop() || 'jpg';
+          const fileName = `reservation_${reservationId}_photo_${photo.sortOrder}.${ext}`;
+          const filePath = `${downloads}/${fileName}`;
+
+          return RNBlobUtil.config({
+            fileCache: true,
+            addAndroidDownloads: {
+              useDownloadManager: true,
+              notification: true,
+              title: fileName,
+              description: '사진 다운로드',
+              path: filePath,
+            },
+          }).fetch('GET', photo.url);
+        });
+
+        await Promise.all(downloadPromises);
+
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${photosToDownload.length}개의 사진이 다운로드되었습니다.`,
+        });
+      }
+    } catch (error) {
+      console.error('Photos download error:', error);
+      Alert.show({
+        title: '다운로드 실패',
+        message: '사진 다운로드 중 오류가 발생했습니다.',
+      });
+    }
   };
+
+  const imageURIs = useMemo(() => {
+    if (!data?.photos) return [];
+    return data.photos.map((photo) => photo.url);
+  }, [data?.photos]);
 
   return (
     <UserViewPhotosView
       onPressBack={handlePressBack}
-      photos={data?.photos || []}
-      selectedPhotoIds={selectedPhotoIds}
-      onTogglePhotoSelection={handleTogglePhotoSelection}
+      imageURIs={imageURIs}
+      checkedImages={checkedImages}
+      setCheckedImages={handleCheckedImages}
       onDownloadZip={handleDownloadZip}
       onDownloadPhotos={handleDownloadPhotos}
       isLoading={isLoading}

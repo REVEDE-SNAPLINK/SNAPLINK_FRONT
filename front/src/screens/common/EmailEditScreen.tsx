@@ -1,21 +1,30 @@
 import { useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
-import ScreenContainer from '@/components/ScreenContainer';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton, Typography } from '@/components/theme';
+import { SubmitButton } from '@/components/theme';
 import FormInput from '@/components/form/FormInput';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
+import { useMeQuery } from '@/queries/user.ts';
+import { usePatchMyEmailMutation } from '@/mutations/user.ts';
 
 type EmailEditFormData = {
   email: string;
 };
 
+// Email validation regex
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export default function EmailEditScreen() {
   const navigation = useNavigation<MainNavigationProp>();
+  const { data: meData } = useMeQuery();
+  const patchMyEmailMutation = usePatchMyEmailMutation();
 
-  const defaultValues = useMemo<EmailEditFormData>(() => ({ email: '' }), []);
+  const defaultValues = useMemo<EmailEditFormData>(() => ({
+    email: meData?.email || ''
+  }), [meData?.email]);
 
   const {
     control,
@@ -31,13 +40,18 @@ export default function EmailEditScreen() {
 
   const handlePressBack = () => navigation.goBack();
 
-  const handleSubmitName = (data: EmailEditFormData) => {
-    // TODO: API 호출로 이름 수정(예: patchUserProfile)
-    // 성공 시 navigation.goBack() 등
-    console.log('submit name:', data.email);
+  const handleSubmitEmail = async (data: EmailEditFormData) => {
+    const trimmedEmail = data.email.trim();
+
+    try {
+      await patchMyEmailMutation.mutateAsync(trimmedEmail);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Failed to update email:', error);
+    }
   };
 
-  const handlePressSubmit = handleSubmit(handleSubmitName);
+  const handlePressSubmit = handleSubmit(handleSubmitEmail);
 
   return (
     <ScreenContainer
@@ -48,19 +62,16 @@ export default function EmailEditScreen() {
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollContainer>
           <Content>
-            <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-              <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
-                이름
-              </Typography>
-              을 수정해 주세요.
-            </Typography>
 
             <Controller
               control={control}
               name="email"
               rules={{
                 required: '이메일을 입력해주세요.',
-                validate: (value) => value.trim() !== '' || '이름을 입력해주세요.',
+                validate: {
+                  notEmpty: (value) => value.trim() !== '' || '이메일을 입력해주세요.',
+                  validFormat: (value) => EMAIL_REGEX.test(value.trim()) || '올바른 이메일 형식이 아닙니다.',
+                },
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormInput
@@ -69,6 +80,8 @@ export default function EmailEditScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   errorMessage={errors.email?.message}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
                 />
               )}
             />

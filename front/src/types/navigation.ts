@@ -1,5 +1,6 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BookingFormData } from '@/screens/user/Booking/BookingContainer.tsx';
+import { PhotographerReviewItem } from '@/api/photographers.ts';
 
 // Root Stack
 export type RootStackParamList = {
@@ -22,6 +23,8 @@ export type MainStackParamList = {
   SearchPhotographer: { searchKey: string };
   PhotographerDetails: { photographerId: string };
   PostDetail: { postId: number };
+  AIRecommdationForm: undefined;
+  AIRecommdationResult: { prompt: string; resultCount?: number };
 
   // Community
   CommunityDetails: { postId: string };
@@ -38,7 +41,7 @@ export type MainStackParamList = {
 
   // Review
   Reviews: { photographerId: string };
-  ReviewDetails: { reviewId: number };
+  ReviewDetails: { reviewId: number; review?: PhotographerReviewItem };
   ReviewPhotos: { photographerId: string };
   WriteReview: { reservationId: number };
   ViewPhotos: { reservationId: number };

@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { TouchableOpacity } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
-import FormErrorMessage from '@/components/FormErrorMessage.tsx';
+import FormErrorMessage from '@/components/form/FormErrorMessage';
 import DatePicker from 'react-native-date-picker'
 import CalendarIcon from '@/assets/icons/calendar.svg';
 import Icon from '@/components/Icon.tsx';

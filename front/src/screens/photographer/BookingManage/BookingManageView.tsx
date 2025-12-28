@@ -1,7 +1,7 @@
 import { FlatList, RefreshControl } from 'react-native';
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import HistoryCard from '@/components/HistoryCard.tsx';
+import HistoryCard from '@/components/common/HistoryCard';
 import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
@@ -23,6 +23,7 @@ interface BookingManageViewProps {
   onPressViewPhotos?: (reservationId: number) => void;
   onPressConfirmBooking?: (reservationId: number) => void;
   onPressRejectBooking?: (reservationId: number) => void;
+  onPressCompleteBooking?: (reservationId: number) => void;
 }
 
 export default function BookingManageView({
@@ -39,12 +40,17 @@ export default function BookingManageView({
   onPressViewPhotos,
   onPressConfirmBooking,
   onPressRejectBooking,
+  onPressCompleteBooking,
 }: BookingManageViewProps) {
   const renderItem = ({ item }: { item: PhotographerReservationListItem }) => {
+
+    const endDateTime = new Date(`${item.reservedDate}T${item.endTime}`);
+    const canCompleteBooking = item.status === 'CONFIRMED' && (new Date() > endDateTime);
 
     return (
       <HistoryCard
         onPress={() => onPressBookingDetail(item.reservationId)}
+        canCompleteBooking={canCompleteBooking}
         status={item.status}
         userName={item.userName || '고객'}
         photographerNickName={photographerProfile.nickname || '작가'}
@@ -54,6 +60,11 @@ export default function BookingManageView({
         onPressViewPhotos={
           (item.status === 'COMPLETED' || item.status === 'DELIVERED' || item.status === 'REVIEWED') && onPressViewPhotos
             ? () => onPressViewPhotos(item.reservationId)
+            : undefined
+        }
+        onPressCompleteBooking={
+          (item.status === 'CONFIRMED') && onPressCompleteBooking
+            ? () => onPressCompleteBooking(item.reservationId)
             : undefined
         }
         onPressConfirmBooking={

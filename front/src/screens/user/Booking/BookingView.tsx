@@ -1,6 +1,6 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import Typography from '@/components/theme/Typography.tsx';
-import Calendar from '@/components/Calendar.tsx';
+import Calendar from '@/components/common/Calendar';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import { formatNumber } from '@/utils/format.ts';

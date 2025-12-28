@@ -1,4 +1,4 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import Typography from '../../../components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import ActiveStarIcon from '@/assets/icons/star-color.svg';

@@ -25,6 +25,8 @@ import AccountManageScreen from '@/screens/common/AccountManageScreen.tsx';
 import EmailEditScreen from '@/screens/common/EmailEditScreen.tsx';
 import ShootingManageContainer from '@/screens/photographer/ShootingManage/ShootingManageContainer.tsx';
 import ServiceFormContainer from '@/screens/photographer/ServiceForm/ServiceFormContainer.tsx';
+import AIRecommdationFormContainer from '@/screens/common/AIRecommdationForm/AIRecommdationFormContainer.tsx';
+import AIRecommdationResultContainer from '@/screens/common/AIRecommdationResult/AIRecommdationResultContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -39,6 +41,8 @@ export default function MainStack() {
       {/* Home */}
       <Stack.Screen name="SearchPhotographer" component={SearchPhotographerContainer} />
       <Stack.Screen name="PhotographerDetails" component={PhotographerDetailsContainer} />
+      <Stack.Screen name="AIRecommdationForm" component={AIRecommdationFormContainer} />
+      <Stack.Screen name="AIRecommdationResult" component={AIRecommdationResultContainer} />
 
       {/* Community */}
       <Stack.Screen name="CommunityDetails" component={CommunityDetailsContainer} />

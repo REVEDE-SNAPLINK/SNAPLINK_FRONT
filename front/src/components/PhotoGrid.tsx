@@ -2,13 +2,13 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import { Dimensions } from 'react-native';
 import ServerImage from '@/components/ServerImage.tsx';
 import { theme } from '@/theme';
-import Checkbox from '@/components/Checkbox.tsx';
+import Checkbox from '@/components/theme/Checkbox';
 import CrossIcon from '@/assets/icons/cross.svg';
 import Icon from '@/components/Icon.tsx';
+import { useMemo } from 'react';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PHOTO_MARGIN = 5;
-const GRID_COLUMNS = 2;
 
 interface PhotoGridProps {
   imageURIs: string[];
@@ -18,6 +18,8 @@ interface PhotoGridProps {
   addable?: boolean;
   onPressAddImage?: () => void;
   width?: number;
+  gridColumns?: number;
+  scrollable?: boolean;
 }
 
 export default function PhotoGrid({
@@ -28,42 +30,53 @@ export default function PhotoGrid({
   addable = false,
   onPressAddImage,
   width = SCREEN_WIDTH,
+  gridColumns = 2,
+  scrollable = true,
 }: PhotoGridProps) {
-  const PHOTO_SIZE = (width - PHOTO_MARGIN * (GRID_COLUMNS - 1)) / 2;
+  const PHOTO_SIZE = (width - PHOTO_MARGIN * (gridColumns - 1)) / gridColumns;
+
+  const renderGrid = useMemo(() => (
+    <GridWrapper>
+      {addable && onPressAddImage !== undefined && (
+        <AddImageButton size={PHOTO_SIZE} onPress={onPressAddImage}>
+          <Icon width={20} height={20} Svg={CrossIcon} />
+        </AddImageButton>
+      )}
+      {imageURIs.map((uri, index) => (
+        <ImageWrapper
+          key={index}
+          size={PHOTO_SIZE}
+          marginRight={addable ? (index % gridColumns + 2) !== gridColumns : (index % gridColumns + 1) !== gridColumns}
+        >
+          <CheckboxWrapper
+            onPress={() => setCheckedImage(index)}
+            isChecked={checkedImages[index]}
+          >
+            <Checkbox
+              isChecked={checkedImages[index]}
+              onPress={() => setCheckedImage(index)}
+            />
+          </CheckboxWrapper>
+          {isServerImage ? (
+            <ServerPhoto uri={uri} />
+          ) : (
+            <Photo source={{ uri }} />
+          )}
+        </ImageWrapper>
+      ))}
+    </GridWrapper>
+  ), [PHOTO_SIZE, addable, isServerImage, imageURIs, checkedImages, onPressAddImage, setCheckedImage, gridColumns]);
 
   return (
     <RootContainer>
       <Container width={width}>
-        <ScrollContainer contentContainerStyle={{ flexGrow: 1 }}>
-          <GridWrapper>
-            {addable && onPressAddImage !== undefined && (
-              <AddImageButton size={PHOTO_SIZE} onPress={onPressAddImage}>
-                <Icon width={20} height={20} Svg={CrossIcon} />
-              </AddImageButton>
-            )}
-            {imageURIs.map((uri, index) => (
-              <ImageWrapper
-                key={index}
-                size={PHOTO_SIZE}
-              >
-                <CheckboxWrapper
-                  onPress={() => setCheckedImage(index)}
-                  isChecked={checkedImages[index]}
-                >
-                  <Checkbox
-                    isChecked={checkedImages[index]}
-                    onPress={() => setCheckedImage(index)}
-                  />
-                </CheckboxWrapper>
-                {isServerImage ? (
-                  <ServerPhoto uri={uri} />
-                ) : (
-                  <Photo source={{ uri }} />
-                )}
-              </ImageWrapper>
-            ))}
-          </GridWrapper>
-        </ScrollContainer>
+        {scrollable ? (
+          <ScrollContainer contentContainerStyle={{ flexGrow: 1 }} nestedScrollEnabled={false}>
+            {renderGrid}
+          </ScrollContainer>
+        ) :
+          renderGrid
+        }
       </Container>
     </RootContainer>
   )
@@ -88,12 +101,12 @@ const GridWrapper = styled.View`
   width: 100%;
   flex-wrap: wrap;
   flex-direction: row;
-  justify-content: space-between;
 `
 
-const ImageWrapper = styled.Pressable<{ size: number }>`
+const ImageWrapper = styled.Pressable<{ size: number, marginRight?: boolean; }>`
   overflow: hidden;
   margin-bottom: ${PHOTO_MARGIN}px;
+  ${({ marginRight }) => marginRight && `margin-right: ${PHOTO_MARGIN}px;`}
   ${({ size }) => `
     width: ${size}px;
     height: ${size}px;
@@ -106,6 +119,7 @@ const AddImageButton = styled.TouchableOpacity<{ size: number }>`
   justify-content: center;
   border: 2px dashed #C8C8C8;
   margin-bottom: ${PHOTO_MARGIN}px;
+  margin-right: ${PHOTO_MARGIN}px;
   ${({ size }) => `
     width: ${size}px;
     height: ${size}px;

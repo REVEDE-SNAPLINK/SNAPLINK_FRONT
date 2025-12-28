@@ -1,4 +1,4 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import { Typography } from '@/components/theme';

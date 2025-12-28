@@ -26,7 +26,13 @@ export const usePatchMyNicknameMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (nickname: string) => patchMe({ nickname }),
+    mutationFn: (nickname: string) => {
+      const currentData = queryClient.getQueryData(userQueryKeys.me()) as { email?: string } | undefined;
+      return patchMe({
+        nickname,
+        email: currentData?.email || '',
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userQueryKeys.me() });
       queryClient.invalidateQueries({ queryKey: userQueryKeys.profile() });
@@ -41,7 +47,13 @@ export const usePatchMyEmailMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (email: string) => patchMe({ email }),
+    mutationFn: (email: string) => {
+      const currentData = queryClient.getQueryData(userQueryKeys.me()) as { nickname?: string } | undefined;
+      return patchMe({
+        email,
+        nickname: currentData?.nickname || '',
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userQueryKeys.me() });
       queryClient.invalidateQueries({ queryKey: userQueryKeys.profile() });

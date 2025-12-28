@@ -1,4 +1,4 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import Typography from '@/components/theme/Typography.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';

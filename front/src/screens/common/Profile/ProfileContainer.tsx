@@ -16,6 +16,7 @@ import { usePatchPhotographerProfileImageMutation } from '@/mutations/photograph
 import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useEffect, useState } from 'react';
+import { openTermUrl } from '@/utils/link.ts';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -237,35 +238,19 @@ export default function ProfileContainer () {
   }
 
   const handlePressCustomerCenter = () => {
-    // TODO: Navigate to CustomerCenter screen
-    Alert.show({
-      title: '준비중',
-      message: '고객센터 페이지를 준비중입니다.',
-    });
+    openTermUrl();
   };
 
   const handlePressNotice = () => {
-    // TODO: Navigate to Notice screen
-    Alert.show({
-      title: '준비중',
-      message: '공지사항 페이지를 준비중입니다.',
-    });
+    openTermUrl();
   };
 
   const handlePressFAQ = () => {
-    // TODO: Navigate to FAQ screen
-    Alert.show({
-      title: '준비중',
-      message: 'FAQ 페이지를 준비중입니다.',
-    });
+    openTermUrl();
   };
 
   const handlePressTerms = () => {
-    // TODO: Navigate to Terms screen
-    Alert.show({
-      title: '준비중',
-      message: '약관 및 정책 페이지를 준비중입니다.',
-    });
+    openTermUrl();
   };
 
   const handlePressOpenSource = () => {

@@ -1,5 +1,5 @@
 import styled from '@/utils/scale/CustomStyled.ts';
-import BackButton from '@/components/BackButton.tsx';
+import BackButton from '@/components/common/BackButton.tsx';
 import Typography from '@/components/theme/Typography.tsx';
 import IconButton from '@/components/IconButton.tsx';
 import { SvgProps } from 'react-native-svg';

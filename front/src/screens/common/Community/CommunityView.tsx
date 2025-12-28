@@ -1,11 +1,10 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import Icon from '@/components/Icon.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
 import SwapIcon from '@/assets/icons/swap.svg';
-import SearchIcon from '@/assets/icons/search.svg';
-import NotificationIcon from '@/assets/icons/notification.svg';
+import SearchIcon from '@/assets/icons/search-white.svg';
 import IconButton from '@/components/IconButton.tsx';
 import { Dimensions, FlatList, RefreshControl } from 'react-native';
 import HeartRedIcon from '@/assets/icons/heart-red.svg';
@@ -14,6 +13,7 @@ import ChatIcon from '@/assets/icons/chat-blank-black.svg';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { CommunityPost, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
 import ServerImage from '@/components/ServerImage.tsx';
+import NotificationButton from '@/components/theme/NotificationButton.tsx';
 
 interface CommunityViewProps {
   posts: CommunityPost[];
@@ -21,12 +21,10 @@ interface CommunityViewProps {
   selectedCategory: COMMUNITY_CATEGORY_ENUM | undefined;
   sortBy: 'recommended' | 'latest';
   searchKey: string;
-  isLoading?: boolean;
   isLoadingMore?: boolean;
   isRefreshing?: boolean;
   onChangeSearchKey: (key: string) => void;
   onSubmitSearch: () => void;
-  onPressNotification: () => void;
   onPressTab: (category: COMMUNITY_CATEGORY_ENUM) => void;
   onToggleSort: () => void;
   onPressPost: (postId: string) => void;
@@ -47,12 +45,10 @@ export default function CommunityView({
   selectedCategory,
   sortBy,
   searchKey,
-  isLoading = false,
   isLoadingMore = false,
   isRefreshing = false,
   onChangeSearchKey,
   onSubmitSearch,
-  onPressNotification,
   onPressTab,
   onToggleSort,
   onPressPost,
@@ -79,7 +75,7 @@ export default function CommunityView({
           />
           <Icon width={24} height={24} Svg={SearchIcon} />
         </SearchInputWrapper>
-        <IconButton width={24} height={22.48} Svg={NotificationIcon} onPress={onPressNotification} />
+        <NotificationButton />
       </Header>
       <TabNavigator>
         {CATEGORIES.map(({ key, label }) => (

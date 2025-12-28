@@ -11,6 +11,8 @@ interface HistoryCardProps {
   onPressWriteReview?: () => void;
   onPressRejectBooking?: () => void;
   onPressConfirmBooking?: () => void;
+  onPressCompleteBooking?: () => void;
+  canCompleteBooking?: boolean;
   status: ReservationStatus;
   userName?: string;
   photographerName: string;
@@ -25,6 +27,8 @@ export default function HistoryCard({
   onPressWriteReview,
   onPressRejectBooking,
   onPressConfirmBooking,
+  onPressCompleteBooking,
+  canCompleteBooking,
   status,
   userName,
   photographerName,
@@ -105,7 +109,16 @@ export default function HistoryCard({
 
   const renderPhotographerActionButtons = useMemo(() => {
     if (status !== 'REQUESTED') {
-      if (status !== 'CONFIRMED' && status === 'REJECTED') {
+      if (status !== 'COMPLETED' && status !== 'DELIVERED' && status !== 'REVIEWED') {
+        if (status === 'CONFIRMED' && canCompleteBooking && onPressCompleteBooking) {
+          return (
+            <Status
+              text="촬영 완료"
+              disabled={false}
+              onPress={onPressCompleteBooking}
+            />
+          )
+        }
         return (
           <Status text={
             status === 'REJECTED'
@@ -158,7 +171,7 @@ export default function HistoryCard({
         )}
       </ActionButtonWrapper>
     );
-  }, [status, onPressConfirmBooking, onPressRejectBooking, onPressViewPhotos]);
+  }, [status, onPressConfirmBooking, onPressRejectBooking, onPressViewPhotos, onPressCompleteBooking, canCompleteBooking]);
 
   return (
     <HistoryContainer onPress={onPress}>
@@ -263,17 +276,29 @@ const Description = ({ name, value, marginBottom }: {name: string, value: string
   </DescriptionWrapper>
 )
 
-const StatusWrapper = styled.TouchableOpacity`
+const StatusWrapper = styled.TouchableOpacity<{ $disabled: boolean }>`
   width: 100%;
   height: 40px;
   border-radius: 8px;
-  border: 1px solid ${theme.colors.disabled};
+  border: 1px solid ${({ $disabled }) => $disabled ? theme.colors.disabled : theme.colors.primary};
   justify-content: center;
   align-items: center;
+  ${({ $disabled }) => !$disabled ? `background-color: ${theme.colors.primary}` : null };
 `
 
-const Status = ({ text, disabled = true, onPress = () => {} }: { text: string, disabled?: boolean, onPress?: () => void }) => (
+interface StatusProps {
+  text: string,
+  disabled?: boolean,
+  onPress?: () => void
+}
+
+const Status = ({
+  text,
+  disabled = true,
+  onPress = () => {}
+}: StatusProps ) => (
   <StatusWrapper
+    $disabled={disabled}
     disabled={disabled}
     onPress={(e) => {
       if (onPress) {
@@ -287,7 +312,7 @@ const Status = ({ text, disabled = true, onPress = () => {} }: { text: string, d
       fontWeight="bold"
       lineHeight="140%"
       letterSpacing="-2.5%"
-      color={theme.colors.disabled}
+      color={disabled ? theme.colors.disabled : '#fff'}
     >
       {text}
     </Typography>

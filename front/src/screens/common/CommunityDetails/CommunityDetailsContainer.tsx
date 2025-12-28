@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { TextInput } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
+import CommunityDetailsView, { ShareLink } from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import { CreateCommunityPostParams } from '@/api/community.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
@@ -15,6 +15,13 @@ import {
 
 type CommunityDetailsRouteProp = RouteProp<MainStackParamList, 'CommunityDetails'>;
 
+const shareLinks: ShareLink[] = [
+  {
+    name: '카카오톡 오픈 채팅',
+    url: 'https://pf.kakao.com/_KasSn/chat'
+  }
+]
+
 export default function CommunityDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<CommunityDetailsRouteProp>();
@@ -25,6 +32,7 @@ export default function CommunityDetailsContainer() {
 
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
 
   const commentInputRef = useRef<TextInput | null>(null);
@@ -46,8 +54,7 @@ export default function CommunityDetailsContainer() {
   };
 
   const handlePressShare = () => {
-    // TODO: Implement share functionality
-    console.log('Share post');
+    setIsShareModalVisible(true);
   };
 
   const handlePressLike = () => {
@@ -99,6 +106,10 @@ export default function CommunityDetailsContainer() {
     setIsEditModalVisible(false);
   };
 
+  const handleCloseShareModal = () => {
+    setIsShareModalVisible(false);
+  };
+
   const handleUpdatePost = (params: CreateCommunityPostParams) => {
     // TODO: Implement updatePost API when available
     console.log('Update post:', params);
@@ -130,9 +141,11 @@ export default function CommunityDetailsContainer() {
       isMyPost={isMyPost}
       isCommentModalVisible={isCommentModalVisible}
       isEditModalVisible={isEditModalVisible}
+      isShareModalVisible={isShareModalVisible}
       commentInput={commentInput}
       commentInputRef={commentInputRef}
       onChangeCommentInput={setCommentInput}
+      shareLinks={shareLinks}
       onPressBack={handlePressBack}
       onPressShare={handlePressShare}
       onPressLike={handlePressLike}
@@ -140,9 +153,10 @@ export default function CommunityDetailsContainer() {
       onPressMoreComments={handlePressMoreComments}
       onPressWriteComment={handlePressWriteComment}
       onCloseCommentModal={handleCloseCommentModal}
+      onCloseShreModal={handleCloseShareModal}
+      onCloseEditModal={handleCloseEditModal}
       onSubmitComment={handleSubmitComment}
       onPressMore={handlePressMore}
-      onCloseEditModal={handleCloseEditModal}
       onPressEdit={handlePressEdit}
       onPressDelete={handlePressDelete}
     />

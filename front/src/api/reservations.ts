@@ -1,8 +1,9 @@
 // src/api/reservations.ts
 import { API_BASE_URL } from '@/config/api';
-import { authFetch } from '@/api/utils';
+import { authFetch, authMultipartFetch } from '@/api/utils';
 import { GetPageable } from '@/api/community';
 import { buildQuery } from '@/utils/format';
+import RNBlobUtil from 'react-native-blob-util';
 
 const RESERVATIONS_BASE = `${API_BASE_URL}/api/reservations`;
 
@@ -249,12 +250,8 @@ export const patchReservationStatus = async (
 ): Promise<void> => {
   const { reservationId, status } = params;
 
-  const response = await authFetch(`${RESERVATIONS_BASE}/${reservationId}/status`, {
+  const response = await authFetch(`${RESERVATIONS_BASE}/${reservationId}/status?status=${status}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ status }),
   });
 
   if (!response.ok) throw new Error(`Failed to patch reservation status ${response.status}`);
@@ -322,27 +319,25 @@ export const deleteReservationPhotos = async (
  * POST /api/reservations/{reservationId}/photos
  * 작가가 결과 ZIP 파일을 업로드(multipart/form-data)
  * form-data: zipFile
- *
- * ⚠️ multipart에서는 Content-Type을 직접 지정하지 마세요(boundary 깨짐)
  */
 export const uploadReservationZip = async (
   params: UploadReservationZipRequest,
 ): Promise<void> => {
-  const formData = new FormData();
+  const response = await authMultipartFetch(
+    `${RESERVATIONS_BASE}/${params.reservationId}/photos`,
+    [
+      {
+        name: 'zipFile',
+        filename: params.zipFile.name,
+        type: params.zipFile.type ?? 'application/zip',
+        data: RNBlobUtil.wrap(params.zipFile.uri),
+      },
+    ],
+    'POST',
+  );
 
-  formData.append('zipFile', {
-    uri: params.zipFile.uri,
-    name: params.zipFile.name,
-    type: params.zipFile.type ?? 'application/zip',
-  } as any);
-
-  const response = await authFetch(`${RESERVATIONS_BASE}/${params.reservationId}/photos`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to upload reservation zip ${response.status}`);
+  if (response.info().status >= 400) {
+    throw new Error(`Failed to upload reservation zip ${response.info().status}`);
   }
 };
 

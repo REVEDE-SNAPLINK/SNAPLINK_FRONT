@@ -1,24 +1,30 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import { theme } from '@/theme';
-import { Photographer } from '@/types/photographer.ts';
-import { ScrollView, TouchableOpacity } from 'react-native';
+import { PhotographerSearchItem } from '@/api/photographers.ts';
+import { FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import Icon from '@/components/Icon.tsx';
-import BookmarkColorIcon from '@/assets/icons/bookmark-color.svg';
+import Loading from '@/components/Loading.tsx';
 
 interface BookmarksViewProps {
-  photographers: Photographer[];
+  photographers: PhotographerSearchItem[];
   totalCount: number;
   onPressPhotographer: (photographerId: string) => void;
-  onPressBookmark: (photographerId: string) => void;
+  onLoadMore: () => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  isFetchingNextPage: boolean;
 }
 
 export default function BookmarksView({
   photographers,
   totalCount,
   onPressPhotographer,
-  onPressBookmark,
+  onLoadMore,
+  onRefresh,
+  isRefreshing,
+  isFetchingNextPage,
 }: BookmarksViewProps) {
   const hasBookmarks = photographers.length > 0;
 
@@ -47,17 +53,28 @@ export default function BookmarksView({
             </Typography>
           </BookmarkCountHeader>
           <BookmarkListWrapper>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {photographers.map((photographer) => (
+            <FlatList
+              testID="bookmarks-list"
+              data={photographers}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
                 <BookmarkedPhotographerItem
-                  key={photographer.id}
-                  photographer={photographer}
-                  onPress={() => onPressPhotographer(photographer.id)}
-                  onPressBookmark={() => onPressBookmark(photographer.id)}
+                  photographer={item}
+                  onPress={() => onPressPhotographer(item.id)}
                 />
-              ))}
-              <ScrollSpacer />
-            </ScrollView>
+              )}
+              onEndReached={onLoadMore}
+              onEndReachedThreshold={0.5}
+              refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <Loading size="small" variant="inline" />
+                ) : (
+                  <ScrollSpacer />
+                )
+              }
+              showsVerticalScrollIndicator={false}
+            />
           </BookmarkListWrapper>
         </>
       )}
@@ -66,35 +83,44 @@ export default function BookmarksView({
 }
 
 interface BookmarkedPhotographerItemProps {
-  photographer: Photographer;
+  photographer: PhotographerSearchItem;
   onPress: () => void;
-  onPressBookmark: () => void;
 }
 
 const BookmarkedPhotographerItem = ({
   photographer,
   onPress,
-  onPressBookmark,
 }: BookmarkedPhotographerItemProps) => {
   const formatPrice = (price: number) => {
     return price.toLocaleString();
   };
 
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) return `${minutes}분`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
+  };
+
+  const genderLabel = photographer.gender === 'WOMAN' ? '여성작가' : '남성작가';
+
   return (
     <BookmarkedPhotographerItemContainer>
-      <PortfolioImagesWrapper>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 5 }}>
-          {photographer.portfolioImages.map((item, index) => (
-            <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
-              <PhotofolioImage source={require('@/assets/imgs/snap-sample2.png')} />
-            </PhotofolioImageWrapper>
-          ))}
-        </ScrollView>
-        <BookmarkButton onPress={onPressBookmark}>
-          <Icon width={24} height={24} Svg={BookmarkColorIcon} />
-        </BookmarkButton>
-      </PortfolioImagesWrapper>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <PortfolioImagesWrapper>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={photographer.portfolioImages}
+            keyExtractor={(item, index) => `${photographer.id}-${index}`}
+            renderItem={({ item }) => (
+              <PhotofolioImageWrapper>
+                <PhotofolioImage source={{ uri: item }} />
+              </PhotofolioImageWrapper>
+            )}
+            style={{ marginBottom: 5 }}
+          />
+        </PortfolioImagesWrapper>
         <PhotographerInfoWrapper>
           <Typography
             fontSize={12}
@@ -107,19 +133,18 @@ const BookmarkedPhotographerItem = ({
           </Typography>
           <Icon width={13} height={12} source={require('@/assets/icons/star-review.png')} />
           <Typography fontSize={11} lineHeight="140%" letterSpacing="-2.5%" color="textSecondary">
-            {photographer.rating.toFixed(1)} ({photographer.reviewCount})
+            {photographer.averageRating.toFixed(1)} ({photographer.reviewCount})
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerInfoWrapper>
           <Typography fontSize={11} fontWeight="medium" lineHeight="140%" letterSpacing="-2.5%">
-            {photographer.shootingUnit} {formatPrice(photographer.price)}원
+            {formatTime(photographer.baseTime)} {formatPrice(photographer.basePrice)}원
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerLabelWrapper>
-          {photographer.isPartner && <PhotographerLabel text="파트너 작가" special />}
-          <PhotographerLabel text={photographer.gender} />
-          {photographer.shootingTypes.map((type, index) => (
-            <PhotographerLabel key={index} text={type} />
+          <PhotographerLabel text={genderLabel} />
+          {photographer.concepts.map((concept, index) => (
+            <PhotographerLabel key={index} text={concept} />
           ))}
         </PhotographerLabelWrapper>
       </TouchableOpacity>
@@ -166,18 +191,6 @@ const PhotofolioImage = styled.Image`
   width: 101px;
   height: 101px;
   resize-mode: cover;
-`;
-
-const BookmarkButton = styled.TouchableOpacity`
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  background-color: rgba(255, 255, 255, 0.9);
-  justify-content: center;
-  align-items: center;
 `;
 
 const PhotographerInfoWrapper = styled.View`

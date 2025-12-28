@@ -1,9 +1,9 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
-import styled from '@/utils/scale/CustomStyled.ts';
+import ScreenContainer from '@/components/common/ScreenContainer';
+import styled from '@/utils/scale/CustomStyled';
 import { Typography } from '@/components/theme';
-import { ChatRoomItem } from '@/api/chat.ts';
-import ServerImage from '@/components/ServerImage.tsx';
-import { formatTimeAgo } from '@/utils/format.ts';
+import ServerImage from '@/components/ServerImage';
+import { ChatRoomItem } from '@/api/chat';
+import { formatTimeAgo } from '@/utils/format';
 
 interface ChatViewProps {
   chatRooms: ChatRoomItem[];

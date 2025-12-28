@@ -52,8 +52,7 @@ export default function HomeContainer() {
   const latestList = latest3?.content ?? [];
   const topRatedList = topRated3?.content ?? [];
 
-  const handlePressNotification = () => navigation.navigate('Notification');
-  const handlePressAI = () => {};
+  const handlePressAI = () => navigation.navigate('AIRecommdationForm');
   const handleSubmitSearchKey = () => {
     navigation.navigate('SearchPhotographer', { searchKey });
   };
@@ -66,7 +65,6 @@ export default function HomeContainer() {
   return (
     <>
       <HomeView
-        onPressNotification={handlePressNotification}
         onPressAI={handlePressAI}
         onPressAllPhotographer={handlePressAllPhotographer}
         onPressAllPhotographerItem={handlePressAllPhotographerItem}

@@ -1,15 +1,15 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import Typography from '../../../components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import ActiveStarIcon from '@/assets/icons/star-color.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg';
 import React from 'react';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Review } from '@/api/review.ts';
-import { ScrollView } from 'react-native';
+import { PhotographerReviewItem } from '@/api/photographers.ts';
+import ServerImage from '@/components/ServerImage.tsx';
 
 interface ReviewDetailsViewProps {
-  review?: Review;
+  review?: PhotographerReviewItem;
   onPressBack: () => void;
 }
 
@@ -41,11 +41,11 @@ export default function ReviewDetailsView({ review, onPressBack }: ReviewDetails
       <ReviewDetailsContainer showsVerticalScrollIndicator={false}>
         <ReviewItemHeader>
           <ReviewWriterProfileImage
-            source={review.authorProfileImage ? { uri: review.authorProfileImage } : undefined}
+            {...(review.writerProfileKey ? { uri: review.writerProfileKey } : {})}
           />
           <ReviewWriterInfoWrapper>
             <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
-              {review.authorNickname}
+              {review.writerNickname}
             </Typography>
             <ReviewInfoWrapper>
               {renderStars(review.rating)}
@@ -56,24 +56,15 @@ export default function ReviewDetailsView({ review, onPressBack }: ReviewDetails
           </ReviewWriterInfoWrapper>
         </ReviewItemHeader>
         <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
-          {review.bookingType}
+          {review.shootingTag}
         </Typography>
-        {review.images.length > 0 && (
+        {review.photoKeys.length > 0 && (
           <ReviewImageWrapper horizontal showsHorizontalScrollIndicator={false}>
-            {review.images.map((img, index) => (
-              <ReviewImage key={index} source={{ uri: img }} />
+            {review.photoKeys.map((key, index) => (
+              <ReviewImage key={index} uri={key} />
             ))}
           </ReviewImageWrapper>
         )}
-        <Typography
-          fontSize={16}
-          fontWeight="bold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          marginBottom={10}
-        >
-          {review.title}
-        </Typography>
         <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%" marginBottom={10}>
           {review.content}
         </Typography>
@@ -100,7 +91,7 @@ const ReviewItemHeader = styled.View`
   margin-bottom: 10px;
 `
 
-const ReviewWriterProfileImage = styled.Image`
+const ReviewWriterProfileImage = styled(ServerImage)`
   width: 45px;
   height: 45px;
   border-radius: 45px;
@@ -115,12 +106,12 @@ const ReviewInfoWrapper = styled.View`
   align-items: flex-end;
 `
 
-const ReviewImageWrapper = styled.View`
+const ReviewImageWrapper = styled.ScrollView`
   height: 100px;
   margin-vertical: 10px;
 `
 
-const ReviewImage = styled.Image`
+const ReviewImage = styled(ServerImage)`
   width: 100px;
   height: 100px;
   margin-right: 10px;

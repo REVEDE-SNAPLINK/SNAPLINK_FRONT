@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import RangeSlider from './RangeSlider';
 import { FilterCategory, FilterValue } from '@/types/filter';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import SlideModal from '@/components/theme/SlideModal.tsx';
 
 interface FilterModalProps {
   categories: FilterCategory[];
@@ -23,7 +23,6 @@ export default function FilterModal({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [localFilters, setLocalFilters] = useState<FilterValue[]>(selectedFilters);
 
-  // Sync localFilters when selectedFilters prop changes
   useEffect(() => {
     setLocalFilters(selectedFilters);
   }, [selectedFilters]);
@@ -85,126 +84,98 @@ export default function FilterModal({
     onClose();
   };
 
-  // Gesture to block parent swipe on iOS
-  const blockGesture = Gesture.Pan()
-    .onTouchesDown(() => true)
-    .onUpdate(() => {})
-    .enabled(true);
+  const headerContent = (
+    <ModalHeaderContent>
+      {categories.map((category, index) => (
+        <CategoryTabButton
+          key={category.id}
+          onPress={() => setCurrentIndex(index)}
+          isActive={currentIndex === index}
+          name={category.name}
+        />
+      ))}
+    </ModalHeaderContent>
+  );
 
   return (
-    <Container>
-      <Overlay onPress={onClose} />
-      <GestureDetector gesture={blockGesture}>
-        <ModalContainer>
-        <ModalHeader>
-          {categories.map((category, index) => (
-            <CategoryTabButton
-              key={category.id}
-              onPress={() => setCurrentIndex(index)}
-              isActive={currentIndex === index}
-              name={category.name}
-            />
-          ))}
-        </ModalHeader>
-        <ModalBody>
-          <ModalContent>
-            <Typography
-              fontSize={14}
-              fontWeight="bold"
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginBottom={10}
-            >
-              {currentCategory.name}
-            </Typography>
+    <SlideModal
+      visible={true}
+      onClose={onClose}
+      showHeader={true}
+      headerCenter={headerContent}
+      minHeight={276}
+      maxHeight={500}
+      scrollable={false}
+      footer={
+        <SubmitButton
+          text="적용하기"
+          width="100%"
+          onPress={handleApply}
+        />
+      }
+      footerHeight={72}
+    >
+      <ModalContent>
+        <Typography
+          fontSize={14}
+          fontWeight="bold"
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          marginBottom={10}
+        >
+          {currentCategory.name}
+        </Typography>
 
-            {currentCategory.type === 'ENUM' && (
-              <EnumItemsContainer>
-                {currentCategory.items.map((item) => {
-                  const filter = getFilterValue(currentCategory.id);
-                  const isSelected =
-                    filter && filter.type === 'ENUM' && filter.values.includes(item);
+        {currentCategory.type === 'ENUM' && (
+          <EnumItemsContainer>
+            {currentCategory.items.map((item) => {
+              const filter = getFilterValue(currentCategory.id);
+              const isSelected =
+                filter && filter.type === 'ENUM' && filter.values.includes(item);
 
-                  return (
-                    <EnumFilterChip
-                      key={item}
-                      onPress={() => updateEnumFilter(currentCategory.id, item)}
-                      name={item}
-                      isSelected={!!isSelected}
-                    />
-                  );
-                })}
-              </EnumItemsContainer>
-            )}
+              return (
+                <EnumFilterChip
+                  key={item}
+                  onPress={() => updateEnumFilter(currentCategory.id, item)}
+                  name={item}
+                  isSelected={!!isSelected}
+                />
+              );
+            })}
+          </EnumItemsContainer>
+        )}
 
-            {currentCategory.type === 'NUMBER' && (
-              <RangeSlider
-                min={currentCategory.min}
-                max={currentCategory.max}
-                unit={currentCategory.unit}
-                initialMinValue={
-                  getFilterValue(currentCategory.id)?.type === 'NUMBER'
-                    ? (getFilterValue(currentCategory.id) as any).min
-                    : currentCategory.min
-                }
-                initialMaxValue={
-                  getFilterValue(currentCategory.id)?.type === 'NUMBER'
-                    ? (getFilterValue(currentCategory.id) as any).max
-                    : currentCategory.max
-                }
-                onChange={(min, max) => updateNumberFilter(currentCategory.id, min, max)}
-              />
-            )}
-          </ModalContent>
-          <SubmitButton text="적용하기" width="100%" onPress={handleApply} marginTop={37} />
-        </ModalBody>
-      </ModalContainer>
-      </GestureDetector>
-    </Container>
+        {currentCategory.type === 'NUMBER' && (
+          <RangeSlider
+            min={currentCategory.min}
+            max={currentCategory.max}
+            unit={currentCategory.unit}
+            initialMinValue={
+              getFilterValue(currentCategory.id)?.type === 'NUMBER'
+                ? (getFilterValue(currentCategory.id) as any).min
+                : currentCategory.min
+            }
+            initialMaxValue={
+              getFilterValue(currentCategory.id)?.type === 'NUMBER'
+                ? (getFilterValue(currentCategory.id) as any).max
+                : currentCategory.max
+            }
+            onChange={(min, max) => updateNumberFilter(currentCategory.id, min, max)}
+          />
+        )}
+      </ModalContent>
+    </SlideModal>
   );
 }
 
-const Container = styled.View`
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-`
+/** ---------- styles ---------- */
 
-const Overlay = styled.TouchableOpacity`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 5;
-  background-color: rgba(0, 0, 0, 0.4);
-`
-
-const ModalContainer = styled.View`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 10;
-  background-color: #fff;
-  min-height: 276px;
-  border-top-left-radius: 35px;
-  border-top-right-radius: 35px;
-`
-
-const ModalHeader = styled.View`
-  width: 100%;
-  padding-horizontal: 31px;
-  padding-top: 22px;
-  align-items: flex-start;
-  box-sizing: border-box;
-  height: 57px;
-  border-bottom-width: 1px;
-  border-bottom-color: ${theme.colors.disabled};
+const ModalHeaderContent = styled.View`
   flex-direction: row;
-`
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+`;
 
 const CategoryTabButtonWrapper = styled.TouchableOpacity`
   margin-right: 14px;
@@ -238,17 +209,7 @@ const CategoryTabButton = ({
   );
 };
 
-const ModalBody = styled.View`
-  flex: 1;
-  padding-horizontal: 31px;
-  padding-top: 14px;
-  padding-bottom: 17px;
-  justify-content: space-between;
-`;
-
 const ModalContent = styled.View`
-  justify-content: flex-start;
-  flex: 1;
   width: 100%;
 `;
 

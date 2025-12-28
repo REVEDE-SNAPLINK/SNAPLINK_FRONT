@@ -1,6 +1,6 @@
 import { TextInputProps } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
-import FormErrorMessage from '@/components/FormErrorMessage.tsx';
+import FormErrorMessage from '@/components/form/FormErrorMessage';
 
 interface FormInputProps extends TextInputProps {
   placeholder: string;

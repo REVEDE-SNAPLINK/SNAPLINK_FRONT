@@ -7,7 +7,7 @@ import {
 } from '@/api/photographers.ts';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { photographersQueryKeys } from '@/queries/keys.ts';
-import { withMockData, getMockPhotographerProfile, getMockPhotographerProfilePage, getMockPhotographerReviewSummary } from '@/__dev__';
+import { withMockData, getMockPhotographerProfile, getMockPhotographerProfilePage } from '@/__dev__';
 
 /** 작가 프로필 상세 조회 */
 export const usePhotographerProfileQuery = (
@@ -55,10 +55,11 @@ export const usePhotographerProfileInfiniteQuery = (
 export const usePhotographerReviewSummaryQuery = (photographerId?: string) =>
   useQuery({
     queryKey: photographerId ? photographersQueryKeys.reviewSummary(photographerId) : [],
-    queryFn: () => withMockData(
-      () => getMockPhotographerReviewSummary(photographerId!) || {} as any,
-      () => getPhotographerReviewSummary(photographerId!),
-    ),
+    // queryFn: () => withMockData(
+    //   () => getMockPhotographerReviewSummary(photographerId!) || {} as any,
+    //   () => getPhotographerReviewSummary(photographerId!),
+    // ),
+    queryFn: () => getPhotographerReviewSummary(photographerId!),
     enabled: Boolean(photographerId),
     staleTime: 1000 * 60, // 1분 정도 캐시 (원하면 조절)
   });

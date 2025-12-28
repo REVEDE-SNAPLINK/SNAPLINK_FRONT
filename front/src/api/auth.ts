@@ -24,10 +24,10 @@ export type SignInResponse =
 
 // 로그인
 export async function signInApi (provider: string, token: string): Promise<SignInResponse> {
-  console.log({
-    provider,
-    token,
-  })
+  // console.log({
+  //   provider,
+  //   token,
+  // })
 
   const response = await fetch(`${AUTH_BASE}/signin`, {
     method: 'POST',

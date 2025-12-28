@@ -73,11 +73,11 @@ export const authFetch = async (
     response = await fetch(input as any, retryInit);
   }
 
-  // console.log('--------------------------------------');
-  // console.log('url:', input);
-  // console.log('request:', nextInit);
-  // console.log('response:', response);
-  // console.log('--------------------------------------');
+  console.log('--------------------------------------');
+  console.log('url:', input);
+  console.log('request:', nextInit);
+  console.log('response:', response);
+  console.log('--------------------------------------');
 
   return response;
 };
@@ -142,6 +142,13 @@ export const authMultipartFetch = async (
 
     response = await RNBlobUtil.fetch(method, url, retryHeaders, parts);
   }
+
+  console.log('--------------------------------------');
+  console.log('url:', url);
+  console.log('request:', parts);
+  console.log('response:', response);
+  console.log('--------------------------------------');
+
 
   return response;
 };

@@ -1,18 +1,17 @@
-import { ImageSourcePropType } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import Icon from '@/components/Icon';
 import { ComponentType } from 'react';
 import { SvgProps } from 'react-native-svg';
 import { theme } from '@/theme';
+import BadgeIcon from '@/components/theme/BadgeIcon.tsx';
 
 export type TabItem = {
   key: string;
   label: string;
-} & (
-  | { iconSource: ImageSourcePropType }
-  | { IconSvg: ComponentType<SvgProps> }
-);
+  IconSvg: ComponentType<SvgProps>;
+  badgeCount?: number;
+};
 
 type BottomNavigationProps = {
   tabs: TabItem[];
@@ -37,10 +36,10 @@ export default function BottomNavigation({
             activeOpacity={0.7}
           >
             <IconWrapper>
-              {'IconSvg' in tab ? (
-                <Icon width={24} height={24} Svg={tab.IconSvg} />
+              {tab.badgeCount !== undefined ? (
+                <BadgeIcon badgeCount={tab.badgeCount} width={24} height={24} Svg={tab.IconSvg} />
               ) : (
-                <Icon width={24} height={24} source={tab.iconSource} />
+                <Icon width={24} height={24} Svg={tab.IconSvg} />
               )}
             </IconWrapper>
             <Typography

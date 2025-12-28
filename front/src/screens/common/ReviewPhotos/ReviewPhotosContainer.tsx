@@ -1,7 +1,8 @@
+import { useMemo, useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import ReviewPhotosView from '@/screens/common/ReviewPhotos/ReviewPhotosView.tsx';
-import { usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
+import { usePhotographerReviewsInfiniteQuery } from '@/queries/photographers.ts';
 
 type ReviewPhotosRouteProp = RouteProp<MainStackParamList, 'ReviewPhotos'>;
 
@@ -11,19 +12,40 @@ export default function ReviewPhotosContainer() {
 
   const { photographerId } = route.params;
 
-  // Fetch review summary (includes topPhotoKeys - 최신 사진 10개)
-  const { data: reviewSummary } = usePhotographerReviewSummaryQuery(photographerId);
+  // Fetch all reviews with infinite scroll
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = usePhotographerReviewsInfiniteQuery(photographerId, { size: 20 });
 
-  const photos = reviewSummary?.topPhotoKeys.map((photoKey, index) => ({
-    id: String(index),
-    url: photoKey,
-  })) || [];
+  // Extract all photoKeys from all reviews
+  const photos = useMemo(() => {
+    if (!data) return [];
+    return data.pages.flatMap((page) => page.content.flatMap((review) => review.photoKeys));
+  }, [data]);
+
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressPhoto = (photoId: string) => {
-    // TODO: Open fullscreen image viewer
-    console.log('Open photo:', photoId);
+  const handlePressPhoto = (photoUrl: string) => {
+    const index = photos.findIndex((url) => url === photoUrl);
+    if (index !== -1) {
+      setSelectedPhotoIndex(index);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedPhotoIndex(null);
+  };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
   return (
@@ -31,6 +53,11 @@ export default function ReviewPhotosContainer() {
       photos={photos}
       onPressBack={handlePressBack}
       onPressPhoto={handlePressPhoto}
+      selectedPhotoIndex={selectedPhotoIndex}
+      onCloseModal={handleCloseModal}
+      onLoadMore={handleLoadMore}
+      isFetchingNextPage={isFetchingNextPage}
+      isLoading={isLoading}
     />
   );
 }

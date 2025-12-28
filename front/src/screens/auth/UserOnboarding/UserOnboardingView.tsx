@@ -8,8 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/ScreenContainer.tsx';
-import FormErrorMessage from '@/components/FormErrorMessage.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
+import FormErrorMessage from '@/components/form/FormErrorMessage';
 import FormInput from '@/components/form/FormInput.tsx';
 import DateInput from '@/components/form/DateInput.tsx';
 import RadioGroup, { RadioOption } from '@/components/RadioGroup.tsx';
@@ -19,6 +19,10 @@ import Icon from '@/components/Icon.tsx';
 import TypeUserImg from '@/assets/imgs/type-user.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import TypePhotographerImg from '@/assets/imgs/type-photographer.svg';
+import { TERMS_BASE_URL } from '@/config/api.ts';
+
+// Email validation regex
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export interface UserOnboardingFormData {
   agreedTerms: string[];
@@ -51,11 +55,11 @@ interface UserOnboardingViewProps {
 // TODO: 랜딩 페이지 구현 후 실제 링크로 연결
 const TERMS_DATA: TermItem[] = [
   { id: 'age', label: '만 14세 이상입니다', required: true },
-  { id: 'service', label: '이용약관 동의', required: true, link: 'https://snaplink-web-mu.vercel.app/' },
-  { id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true, link: 'https://snaplink-web-mu.vercel.app/' },
-  { id: 'optional', label: '선택정보 수집 및 이용 동의', required: false, link: 'https://snaplink-web-mu.vercel.app/' },
-  { id: 'marketing', label: '개인정보 마케팅 활용 동의', required: false, link: 'https://snaplink-web-mu.vercel.app/' },
-  { id: 'notification', label: '마케팅 알림 수신 동의', required: false, link: 'https://snaplink-web-mu.vercel.app/' },
+  { id: 'service', label: '이용약관 동의', required: true, link: TERMS_BASE_URL },
+  { id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true, link: TERMS_BASE_URL },
+  { id: 'optional', label: '선택정보 수집 및 이용 동의', required: false, link: TERMS_BASE_URL },
+  { id: 'marketing', label: '개인정보 마케팅 활용 동의', required: false, link: TERMS_BASE_URL },
+  { id: 'notification', label: '마케팅 알림 수신 동의', required: false, link: TERMS_BASE_URL },
 ];
 
 const GENDER_OPTIONS: RadioOption<'FEMALE' | 'MALE'>[] = [
@@ -329,7 +333,10 @@ const UserOnboardingStep4 = ({ control, errors, emailError }: UserOnboardingStep
         name="email"
         rules={{
           required: '이메일을 입력해주세요.',
-          validate: (value) => value.trim() !== '' || '이름을 입력해주세요.',
+          validate: {
+            notEmpty: (value) => value.trim() !== '' || '이메일을 입력해주세요.',
+            validFormat: (value) => EMAIL_REGEX.test(value.trim()) || '올바른 이메일 형식이 아닙니다.',
+          },
         }}
         render={({ field: { onChange, onBlur, value } }) => (
           <FormInput
@@ -337,7 +344,9 @@ const UserOnboardingStep4 = ({ control, errors, emailError }: UserOnboardingStep
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
-            errorMessage={emailError || errors.name?.message}
+            errorMessage={emailError || errors.email?.message}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
         )}
       />

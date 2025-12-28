@@ -1,11 +1,11 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer.tsx';
 import ScheduleCalendar from '@/components/ScheduleCalendar.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
-import { PhotographerBooking } from '@/api/photographer.ts';
+import { PhotographerBooking } from '@/api/photographers.ts';
 
 interface BookingCalendarViewProps {
   selectedDate: string;

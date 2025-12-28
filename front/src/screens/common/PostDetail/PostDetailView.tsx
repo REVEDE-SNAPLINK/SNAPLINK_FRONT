@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, Dimensions, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Carousel from 'react-native-reanimated-carousel';
-import ScreenContainer from '@/components/ScreenContainer';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import Icon from '@/components/Icon';

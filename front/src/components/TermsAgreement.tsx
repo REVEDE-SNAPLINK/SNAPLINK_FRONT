@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { TouchableOpacity } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
-import Checkbox from '@/components/Checkbox.tsx';
+import Checkbox from '@/components/theme/Checkbox';
 
 export interface TermItem {
   id: string;

@@ -6,6 +6,7 @@ import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
 import { login } from '@react-native-kakao/user';
 import { jwtDecode } from 'jwt-decode';
 import { Platform } from 'react-native';
+import { queryClient } from '@/config/queryClient.ts';
 
 type AuthStatus = 'idle' | 'loading' | 'authed' | 'anon' | 'needs_signup';
 type UserType = 'user' | 'photographer';
@@ -147,6 +148,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // refreshToken은 로컬에서 무조건 제거
     await clearRefreshToken().catch(() => {});
 
+    // Query 캐시 초기화
+    queryClient.clear();
+
     // 서버 로그아웃/FCM 정리는 best-effort
     await Promise.allSettled([
       logoutApi(),
@@ -186,6 +190,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // 로컬 정리는 항상 수행
     await clearRefreshToken().catch(() => {});
     set({ status: 'anon', accessToken: null, userId: '' });
+
+    // Query 캐시 초기화
+    queryClient.clear();
 
     // FCM 정리는 best-effort
     await safeDeleteFcmToken();

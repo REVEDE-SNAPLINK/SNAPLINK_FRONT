@@ -4,7 +4,7 @@ import { useModalStore } from '@/store/modalStore.ts';
 import MainStack from '@/navigation/stacks/MainStack.tsx';
 import AuthStack from '@/navigation/stacks/AuthStack.tsx';
 import { RootStackParamList } from '@/types/navigation';
-import CommunityPostModal from '@/components/CommunityPostModal.tsx';
+import CommunityPostModal from '@/components/common/CommunityPostModal';
 import { CreateCommunityPostParams } from '@/api/community.ts';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

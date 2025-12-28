@@ -1,4 +1,4 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
@@ -126,12 +126,12 @@ export default function ProfileView({
           </IconNavigationButton>
         </IconNavigationButtonWrapper>
         <InfoContainer>
+          <InfoButton name="이름" value={name} />
           <InfoButton
             onPress={onPressEditNickname}
             name="닉네임"
             value={nickname}
           />
-          <InfoButton onPress={() => {}} name="이름" value={name} />
           <InfoButton onPress={onPressEditEmail} name="이메일" value={email} />
           <InfoButton onPress={onPressManageAccount} name="계정 관리" isLast />
         </InfoContainer>
@@ -309,7 +309,7 @@ const InfoValueWrapper = styled.View`
 `
 
 interface InfoButtonProps {
-  onPress: () => void;
+  onPress?: () => void;
   name: string;
   value?: string;
   isLast?: boolean;
@@ -322,7 +322,7 @@ const InfoButton = ({
   isLast = false,
 }: InfoButtonProps) => {
   return (
-    <InfoWrapper onPress={onPress} isLast={isLast}>
+    <InfoWrapper {...(onPress !== undefined ? { onPress } : {})} isLast={isLast} disabled={onPress === undefined}>
       <Typography
         fontSize={12}
         fontWeight="semiBold"
@@ -342,11 +342,15 @@ const InfoButton = ({
             {value}
           </Typography>
         )}
-        <Icon
-          width={15}
-          height={15}
-          Svg={ArrowRightIcon}
-        />
+        {onPress !== undefined ? (
+          <Icon
+            width={15}
+            height={15}
+            Svg={ArrowRightIcon}
+          />
+        ) : (
+          <EmptyIcon />
+        )}
       </InfoValueWrapper>
     </InfoWrapper>
   );
@@ -362,3 +366,7 @@ const CustomerSupportButton = styled.TouchableOpacity<{ marginRight?: number }>`
   ${({ marginRight }) => marginRight && `margin-right: ${marginRight}px;`}
 `
 
+const EmptyIcon = styled.View`
+  width: 5px;
+  height: 15px;
+`

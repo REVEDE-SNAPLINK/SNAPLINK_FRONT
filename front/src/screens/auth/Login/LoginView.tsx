@@ -2,7 +2,7 @@ import React from 'react';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SocialLoginButton from '@/components/SocialLoginButton';
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import Icon from '@/components/Icon.tsx';
 import Logo from '@/assets/imgs/logo.svg'
 import Kakao from '@/assets/icons/kakao.svg';

@@ -1,7 +1,16 @@
 import { RefObject, useState, useRef, useEffect } from 'react';
-import BackButton from '@/components/BackButton.tsx';
+import BackButton from '@/components/common/BackButton';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Dimensions, Platform, TextInput, ScrollView, NativeSyntheticEvent, NativeScrollEvent, Animated } from 'react-native';
+import {
+  Dimensions,
+  Platform,
+  TextInput,
+  ScrollView,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  Animated,
+  Linking,
+} from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
 import { Typography } from '@/components/theme';
@@ -17,6 +26,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import ArrowLeftIcon from '@/assets/icons/arrow-left-white.svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SlideModal from '@/components/theme/SlideModal.tsx';
+import Icon from '@/components/Icon.tsx';
+import UploadBlackIcon from '@/assets/icons/upload.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -35,25 +46,33 @@ interface Comment {
   createdAt: string;
 }
 
+export interface ShareLink {
+  name: string;
+  url: string;
+}
+
 interface CommunityDetailsViewProps {
   post?: CommunityPost;
   comments: Comment[];
   isMyPost: boolean;
   isCommentModalVisible: boolean;
   isEditModalVisible: boolean;
+  isShareModalVisible: boolean;
   commentInput: string;
   commentInputRef: RefObject<TextInput | null>;
   onChangeCommentInput: (text: string) => void;
+  shareLinks: ShareLink[];
   onPressBack: () => void;
   onPressShare: () => void;
   onPressLike: () => void;
   onPressChat: () => void;
   onPressMoreComments: () => void;
-  onPressWriteComment: () => void;
+  onPressWriteComment: () => void
   onCloseCommentModal: () => void;
   onSubmitComment: () => void;
   onPressMore: () => void;
   onCloseEditModal: () => void;
+  onCloseShreModal: () => void;
   onPressEdit: () => void;
   onPressDelete: () => void;
 }
@@ -146,9 +165,11 @@ export default function CommunityDetailsView({
   isMyPost,
   isCommentModalVisible,
   isEditModalVisible,
+  isShareModalVisible,
   commentInput,
   commentInputRef,
   onChangeCommentInput,
+  shareLinks,
   onPressBack,
   onPressShare,
   onPressLike,
@@ -159,6 +180,7 @@ export default function CommunityDetailsView({
   onSubmitComment,
   onPressMore,
   onCloseEditModal,
+  onCloseShreModal,
   onPressEdit,
   onPressDelete,
 }: CommunityDetailsViewProps) {
@@ -453,6 +475,36 @@ export default function CommunityDetailsView({
           </EditModalButton>
         </EditModalWrapper>
       </SlideModal>
+
+      <SlideModal
+        visible={isShareModalVisible}
+        onClose={onCloseShreModal}
+        title="Links"
+        minHeight={SCREEN_HEIGHT * 0.25}
+      >
+        {shareLinks.map((v, i) => (
+          <ShareLink
+            key={i}
+            onPress={() => {
+              (async () => {
+                const supported = await Linking.canOpenURL(v.url);
+
+                if (supported) {
+                  Linking.openURL(v.url);
+                }
+              })();
+            }}
+          >
+            <Icon width={18} height={18} Svg={UploadBlackIcon} />
+            <Typography
+              fontSize={14}
+              marginLeft={15}
+            >
+              카카오톡 오픈 채팅
+            </Typography>
+          </ShareLink>
+        ))}
+      </SlideModal>
     </>
   );
 }
@@ -631,3 +683,9 @@ const EditModalDivider = styled.View`
   height: 1px;
   background-color: #e0e0e0;
 `;
+
+const ShareLink = styled.Pressable`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 15px;
+`

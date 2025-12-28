@@ -5,7 +5,7 @@ import ProfileView from '../ProfileView.tsx';
 jest.mock('@/assets/icons/camera-white.svg', () => 'CameraIcon');
 jest.mock('@/assets/icons/chat-black.svg', () => 'ChatIcon');
 jest.mock('@/assets/icons/heart-black.svg', () => 'HeartIcon');
-jest.mock('@/assets/icons/notification.svg', () => 'NotificationIcon');
+jest.mock('@/assets/icons/notification.svg', () => 'NotificationButton');
 jest.mock('@/assets/icons/arrow-right2-gray.svg', () => 'ArrowRightIcon');
 
 describe('ChatView Component', () => {

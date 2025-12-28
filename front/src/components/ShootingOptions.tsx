@@ -3,8 +3,8 @@ import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
 import { formatNumber } from '@/utils/format.ts';
 import { View } from 'react-native';
-import { RequiredShootingOption, OptionalShootingOption } from '@/api/photographer.ts';
-import Checkbox from '@/components/Checkbox.tsx';
+import Checkbox from '@/components/theme/Checkbox.tsx';
+import { RequiredShootingOption, OptionalShootingOption } from '@/api/photographers.ts';
 
 /**
  * Required Option Component

@@ -6,7 +6,7 @@ import {
   getPhotographerReservations, getReservationDetail, GetReservationListParams, getReservationPhotos,
   getUserReservations,
 } from '@/api/reservations.ts';
-import { withMockData, getMockPhotographerReservationsPage, getMockReservationPhotos } from '@/__dev__';
+import { withMockData, getMockPhotographerReservationsPage } from '@/__dev__';
 
 export const useUserReservationsInfiniteQuery = (
   params: Omit<GetReservationListParams, 'page'>,
@@ -62,10 +62,11 @@ export const useReservationPhotosQuery = (reservationId?: number) =>
     queryKey: typeof reservationId === 'number'
       ? reservationsQueryKeys.reservationPhotos(reservationId)
       : [],
-    queryFn: () => withMockData(
-      () => getMockReservationPhotos(reservationId!) || { zip: null, photos: [], photoConfirmed: false },
-      () => getReservationPhotos(reservationId!),
-    ),
+    // queryFn: () => withMockData(
+    //   () => getMockReservationPhotos(reservationId!) || { zip: null, photos: [], photoConfirmed: false },
+    //   () => getReservationPhotos(reservationId!),
+    // ),
+    queryFn: () => getReservationPhotos(reservationId!),
     enabled: typeof reservationId === 'number',
   });
 

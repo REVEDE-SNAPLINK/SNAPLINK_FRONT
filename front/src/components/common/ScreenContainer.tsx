@@ -1,9 +1,9 @@
 import { ReactNode, ComponentType } from 'react';
-import { StatusBar, Platform } from 'react-native';
+import { StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgProps } from 'react-native-svg';
 import styled from '@/utils/scale/CustomStyled';
-import HeaderWithBackButton from './HeaderWithBackButton';
+import HeaderWithBackButton from '@/components/common/HeaderWithBackButton';
 
 interface Props {
   children: ReactNode;

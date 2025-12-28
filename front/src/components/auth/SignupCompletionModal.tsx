@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import styled from '@/utils/scale/CustomStyled';
-import CommonModal from '@/components/CommonModal';
+import CommonModal from '@/components/common/CommonModal';
 import Typography from '@/components/theme/Typography';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import SubmitButton from '@/components/theme/SubmitButton'

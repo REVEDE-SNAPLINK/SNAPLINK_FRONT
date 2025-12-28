@@ -18,6 +18,10 @@ export default function UserBookingDetailsContainer() {
 
   const handlePressWriteReview = () => navigation.navigate('WriteReview', { reservationId });
 
+  const handlePressShowMyReview = () => {
+    // TODO: api 추가 후 연결
+  }
+
   if (!reservationDetails) {
     return (
       <UserBookingDetailsView
@@ -34,6 +38,7 @@ export default function UserBookingDetailsContainer() {
 
   const canViewPhotos = reservationDetails.status === 'DELIVERED' || reservationDetails.status === 'REVIEWED';
   const canWriteReview = reservationDetails.status === 'DELIVERED';
+  const canShowMyReview = reservationDetails.status === 'REVIEWED';
   const shootingOptions =
     Array.isArray(reservationDetails.shootingOptions)
       ? reservationDetails.shootingOptions.join(', ')
@@ -49,6 +54,7 @@ export default function UserBookingDetailsContainer() {
       status={reservationDetails.status}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       onPressWriteReview={canWriteReview ? handlePressWriteReview : undefined}
+      onPressShowMyReview={canShowMyReview ? handlePressShowMyReview : undefined}
       isLoading={isLoading}
     />
   );

@@ -31,7 +31,6 @@ export default function CommunityContainer() {
 
   const {
     data: infiniteData,
-    isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -78,10 +77,6 @@ export default function CommunityContainer() {
     navigation.navigate('CommunityDetails', { postId });
   };
 
-  const handlePressNotification = () => {
-    navigation.navigate('Notification');
-  };
-
   const handlePressTab = (category: COMMUNITY_CATEGORY_ENUM) => {
     setSelectedCategory(category);
   };
@@ -125,10 +120,8 @@ export default function CommunityContainer() {
       selectedCategory={selectedCategory}
       sortBy={sortBy}
       searchKey={searchKey}
-      isLoading={isLoading}
       onChangeSearchKey={setSearchKey}
       onSubmitSearch={handleSubmitSearch}
-      onPressNotification={handlePressNotification}
       onPressTab={handlePressTab}
       onToggleSort={handleToggleSort}
       onPressPost={handlePressPost}

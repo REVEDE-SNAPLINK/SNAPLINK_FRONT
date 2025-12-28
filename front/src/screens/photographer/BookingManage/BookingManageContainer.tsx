@@ -84,6 +84,27 @@ export default function BookingManageContainer() {
     });
   };
 
+  const handlePressCompleteBooking = async (reservationId: number) => {
+    Alert.show({
+      title: '촬영 완료',
+      message: '촬영을 완료하시겠습니까?',
+      buttons: [
+        { text: '취소', onPress: () => {}, type: 'cancel' },
+        {
+          text: '확인',
+          onPress: async () => {
+            patchStatusMutate({ reservationId, status: 'COMPLETED' })
+            Alert.show({
+              title: '촬영 완료',
+              message: '촬영이 완료되었습니다.',
+              buttons: [{ text: '확인', onPress: () => refetch() }],
+            });
+          },
+        },
+      ],
+    });
+  }
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refetch();
@@ -107,6 +128,7 @@ export default function BookingManageContainer() {
       onPressViewPhotos={handlePressViewPhotos}
       onPressConfirmBooking={handlePressConfirmBooking}
       onPressRejectBooking={handlePressRejectBooking}
+      onPressCompleteBooking={handlePressCompleteBooking}
     />
   );
 }

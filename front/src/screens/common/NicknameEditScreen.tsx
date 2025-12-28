@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
-import ScreenContainer from '@/components/ScreenContainer';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton, Typography } from '@/components/theme';
+import { SubmitButton } from '@/components/theme';
 import FormInput from '@/components/form/FormInput';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
+import { useMeQuery } from '@/queries/user.ts';
+import { usePatchMyNicknameMutation } from '@/mutations/user.ts';
 
 type NicknameEditFormData = {
   nickname: string;
@@ -14,8 +16,12 @@ type NicknameEditFormData = {
 
 export default function NicknameEditScreen() {
   const navigation = useNavigation<MainNavigationProp>();
+  const { data: meData } = useMeQuery();
+  const patchMyNicknameMutation = usePatchMyNicknameMutation();
 
-  const defaultValues = useMemo<NicknameEditFormData>(() => ({ nickname: '' }), []);
+  const defaultValues = useMemo<NicknameEditFormData>(() => ({
+    nickname: meData?.nickname || ''
+  }), [meData?.nickname]);
 
   const [nicknameError, setNicknameError] = useState<string | null>(null);
 
@@ -45,21 +51,15 @@ export default function NicknameEditScreen() {
   const handleSubmitNickname = async (data: NicknameEditFormData) => {
     const value = data.nickname.trim();
 
-    // 1) 클라이언트 1차 검증(필요하면 더 추가)
     if (!value) {
       setError('nickname', { type: 'validate', message: '닉네임을 입력해주세요.' });
       return;
     }
 
     try {
-      // TODO: API 호출로 닉네임 수정(예: patchUserProfile)
-      // await patchNickname(value)
-
-      console.log('submit nickname:', value);
-      // 성공 시 goBack()
+      await patchMyNicknameMutation.mutateAsync(value);
+      navigation.goBack();
     } catch (e: any) {
-      // 2) 서버 에러(중복 닉네임 등) 표기 예시
-      // - 서버 에러 메시지를 그대로 쓰거나 매핑
       const message = e?.message ?? '닉네임을 저장할 수 없어요. 잠시 후 다시 시도해주세요.';
       setNicknameError(message);
     }

@@ -5,6 +5,8 @@ import { theme } from '@/theme';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { FlatList, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
 import Loading from '@/components/Loading.tsx';
+import AIIcon from '@/assets/icons/ai-button-small.svg';
+import StarIcon from '@/assets/icons/star-review.svg';
 
 interface SearchPhotographerListProps {
   photographers: PhotographerSearchItem[];
@@ -13,6 +15,8 @@ interface SearchPhotographerListProps {
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
   onPressItem: (photographerId: string) => void;
+  aiRecommendationScore?: number;
+  isAIRecommendation?: boolean;
 }
 
 export default function SearchPhotographerList({
@@ -22,6 +26,8 @@ export default function SearchPhotographerList({
   isRefreshing,
   isFetchingNextPage,
   onPressItem,
+  aiRecommendationScore,
+  isAIRecommendation = false,
 }: SearchPhotographerListProps) {
   return (
     <FlatList
@@ -29,7 +35,12 @@ export default function SearchPhotographerList({
       data={photographers}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <SearchPhotographerItem photographer={item} onPress={() => onPressItem(item.id)} />
+        <SearchPhotographerItem
+          photographer={item}
+          onPress={() => onPressItem(item.id)}
+          aiRecommendationScore={aiRecommendationScore}
+          isAIRecommendation={isAIRecommendation}
+        />
       )}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
@@ -49,9 +60,11 @@ export default function SearchPhotographerList({
 interface SearchPhotographerItemProps {
   photographer: PhotographerSearchItem;
   onPress: () => void;
+  aiRecommendationScore?: number;
+  isAIRecommendation?: boolean;
 }
 
-const SearchPhotographerItem = ({ photographer, onPress }: SearchPhotographerItemProps) => {
+const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
   const formatPrice = (price: number) => {
     return price.toLocaleString();
   };
@@ -61,6 +74,18 @@ const SearchPhotographerItem = ({ photographer, onPress }: SearchPhotographerIte
   return (
     <SearchPhotographerItemContainer>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        {aiRecommendationScore !== undefined && (
+          <ResultCaption>
+            <Icon width={13} height={13} Svg={AIIcon} />
+            <Typography
+              fontSize={10}
+              color="primary"
+              marginLeft={5}
+            >
+              AI 추천 적합도 {aiRecommendationScore}%
+            </Typography>
+          </ResultCaption>
+        )}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -82,7 +107,7 @@ const SearchPhotographerItem = ({ photographer, onPress }: SearchPhotographerIte
           >
             {photographer.nickname}
           </Typography>
-          <Icon width={13} height={12} source={require('@/assets/icons/star-review.png')} />
+          <Icon width={13} height={12} Svg={StarIcon}/>
           <Typography fontSize={11} lineHeight="140%" letterSpacing="-2.5%" color="textSecondary">
             {photographer.averageRating.toFixed(1)} ({photographer.reviewCount})
           </Typography>
@@ -93,9 +118,9 @@ const SearchPhotographerItem = ({ photographer, onPress }: SearchPhotographerIte
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerLabelWrapper>
-          <PhotographerLabel text={genderLabel} />
+          <PhotographerLabel text={genderLabel} special={isAIRecommendation} />
           {photographer.concepts.map((concept, index) => (
-            <PhotographerLabel key={index} text={concept} />
+            <PhotographerLabel key={index} text={concept} special={isAIRecommendation} />
           ))}
         </PhotographerLabelWrapper>
       </TouchableOpacity>
@@ -140,6 +165,7 @@ const PhotographerLabelContainer = styled.View<{ special: boolean }>`
   justify-content: center;
   box-sizing: border-box;
   margin-right: 5px;
+  border-radius: 5px;
   background-color: ${({ special }) => special ? "#EAFFFA" : theme.colors.bgSecondary};
   ${({ special }) => special && `border: 1px solid ${theme.colors.primary};`}
 `
@@ -163,4 +189,13 @@ const PhotographerLabel = ({
 
 const ScrollSpacer = styled.View`
   height: 50px;
+`;
+
+const ResultCaption = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 5px;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
 `;

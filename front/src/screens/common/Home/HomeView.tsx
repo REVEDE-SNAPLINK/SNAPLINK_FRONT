@@ -2,17 +2,16 @@ import { theme } from '@/theme';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Icon from '@/components/Icon.tsx';
 import Typography from '@/components/theme/Typography.tsx';
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import IconButton from '@/components/IconButton.tsx';
 import Banner, { BannerItem } from '@/components/user/Banner.tsx';
 import PhotographerList from '@/components/user/PhotographerList.tsx';
 import LogoIcon from '@/assets/icons/logo-icon.svg'
-import NotificationIcon from '@/assets/icons/notification.svg';
 import AIButtonIcon from '@/assets/icons/ai-button.svg'
 import { PhotographerSearchItem } from '@/api/photographers.ts';
+import NotificationButton from '@/components/theme/NotificationButton.tsx';
 
 interface HomeViewProps {
-  onPressNotification: () => void;
   onPressAI:  () => void;
   onPressAllPhotographer: () => void;
   onPressAllPhotographerItem: (photographerId: string) => void;
@@ -26,7 +25,6 @@ interface HomeViewProps {
 }
 
 export default function HomeView({
-  onPressNotification,
   onPressAI,
   onPressAllPhotographer,
   onPressAllPhotographerItem,
@@ -57,12 +55,7 @@ export default function HomeView({
             Snaplink
           </Typography>
         </LogoWrapper>
-        <IconButton
-          width={24}
-          height={24}
-          Svg={NotificationIcon}
-          onPress={onPressNotification}
-        />
+        <NotificationButton />
       </Header>
       <SearchFormWrapper>
         <IconButton

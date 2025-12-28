@@ -12,7 +12,15 @@ export default function ReviewsContainer() {
   const { photographerId } = route.params;
 
   // Fetch reviews with infinite scroll
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = usePhotographerReviewsInfiniteQuery(
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+    isRefetching,
+    isLoading,
+  } = usePhotographerReviewsInfiniteQuery(
     photographerId,
     { size: 20 },
   );
@@ -23,26 +31,16 @@ export default function ReviewsContainer() {
   // Flatten reviews from all pages
   const reviews = useMemo(() => {
     if (!data) return [];
-    return data.pages.flatMap((page) => page.content).map((r) => ({
-      id: String(r.reviewId),
-      authorNickname: r.writerNickname,
-      authorProfileImage: r.writerProfileKey,
-      rating: r.rating,
-      title: r.shootingTag,
-      content: r.content,
-      bookingType: r.shootingTag,
-      images: r.photoKeys,
-      createdAt: r.createdAt,
-      reply: r.reply,
-    }));
+    return data.pages.flatMap((page) => page.content).map((r) => r);
   }, [data]);
 
   const totalCount = data?.pages[0]?.totalElements || 0;
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressReview = (reviewId: string) => {
-    navigation.navigate('ReviewDetails', { reviewId });
+  const handlePressReview = (reviewId: number) => {
+    const review = reviews.find((r) => r.reviewId === reviewId);
+    navigation.navigate('ReviewDetails', { reviewId, review });
   };
 
   const handlePressAllPhotos = () => {
@@ -55,16 +53,24 @@ export default function ReviewsContainer() {
     }
   };
 
+  const handleRefresh = () => {
+    refetch();
+  };
+
   return (
     <ReviewsView
       reviews={reviews}
+      reviewSummary={reviewSummary}
       totalCount={totalCount}
       averageRating={reviewSummary?.averageRating || 0}
       onPressBack={handlePressBack}
       onPressReview={handlePressReview}
       onPressAllPhotos={handlePressAllPhotos}
       onLoadMore={handleLoadMore}
+      onRefresh={handleRefresh}
       isFetchingNextPage={isFetchingNextPage}
+      isRefreshing={isRefetching}
+      isLoading={isLoading}
     />
   );
 }

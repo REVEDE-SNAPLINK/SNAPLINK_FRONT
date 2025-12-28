@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, LayoutAnimation, Platform, UIManager, ScrollView } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
-import FormErrorMessage from '@/components/FormErrorMessage.tsx';
+import FormErrorMessage from '@/components/form/FormErrorMessage.tsx';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
@@ -17,6 +17,7 @@ interface DropDownInputProps {
   value?: string;
   onChange?: (value: string) => void;
   errorMessage?: string;
+  disabled?: boolean;
 
   // 확장 높이 제한
   maxVisibleOptions?: number; // 기본 5개 정도
@@ -30,6 +31,7 @@ export default function DropDownInput({
   value,
   onChange,
   errorMessage,
+  disabled = false,
   maxVisibleOptions = 4,
 }: DropDownInputProps) {
   const [open, setOpen] = useState(false);
@@ -65,12 +67,12 @@ export default function DropDownInput({
 
   return (
     <Wrapper>
-      <TouchableOpacity onPress={toggle} activeOpacity={0.7} style={{ width: '100%' }}>
-        <InputFieldWrapper>
+      <TouchableOpacity onPress={toggle} activeOpacity={0.7} style={{ width: '100%' }} disabled={disabled}>
+        <InputFieldWrapper $disabled={disabled}>
           {value ? (
-            <StyledInputField>{value}</StyledInputField>
+            <StyledInputField $disabled={disabled}>{value}</StyledInputField>
           ) : (
-            <PlaceholderText>{placeholder}</PlaceholderText>
+            <PlaceholderText $disabled={disabled}>{placeholder}</PlaceholderText>
           )}
           <Animated.View style={arrowStyle}>
             <Icon width={24} height={24} Svg={ArrowDownIcon} />
@@ -121,9 +123,9 @@ const Wrapper = styled.View`
   width: 100%;
 `;
 
-const InputFieldWrapper = styled.View`
+const InputFieldWrapper = styled.View<{ $disabled?: boolean }>`
   width: 100%;
-  background-color: #f9f9f9;
+  background-color: ${({ $disabled }) => ($disabled ? '#e9e9e9' : '#f9f9f9')};
   border: 1px solid #e9e9e9;
   border-radius: 5px;
   height: ${ROW_HEIGHT}px;
@@ -134,20 +136,20 @@ const InputFieldWrapper = styled.View`
   flex-direction: row;
 `;
 
-const StyledInputField = styled.Text`
+const StyledInputField = styled.Text<{ $disabled?: boolean }>`
   flex: 1;
   font-size: 14px;
   font-family: Pretendard-Regular;
   letter-spacing: 0.2px;
-  color: #000;
+  color: ${({ $disabled }) => ($disabled ? '#a0a0a0' : '#000')};
 `;
 
-const PlaceholderText = styled.Text`
+const PlaceholderText = styled.Text<{ $disabled?: boolean }>`
   flex: 1;
   font-size: 14px;
   font-family: Pretendard-Regular;
   letter-spacing: 0.2px;
-  color: #737373;
+  color: ${({ $disabled }) => ($disabled ? '#a0a0a0' : '#737373')};
 `;
 
 const FormErrorMessageSpacer = styled.View`

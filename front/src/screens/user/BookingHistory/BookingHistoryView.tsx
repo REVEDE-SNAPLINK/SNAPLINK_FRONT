@@ -1,7 +1,7 @@
 import { FlatList, RefreshControl } from 'react-native';
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import HistoryCard from '@/components/HistoryCard.tsx';
+import HistoryCard from '@/components/common/HistoryCard';
 import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';

@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, FlatList } from 'react-native';
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
 import Icon from '@/components/Icon';
 import { theme } from '@/theme';
 import CrossBlackIcon from '@/assets/icons/cross-black.svg';
 import SendIcon from '@/assets/icons/send.svg';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import IconButton from '@/components/IconButton.tsx';
 import ImageIcon from '@/assets/icons/image.svg'
 import PaperPlusIcon from '@/assets/icons/paper-plus.svg'
@@ -47,7 +46,6 @@ export default function ChatDetailsView({
   onLoadMore,
   isFetchingNextPage,
 }: ChatDetailsViewProps) {
-  const insets = useSafeAreaInsets();
   const [showExtraButtons, setShowExtraButtons] = useState(false);
 
   const hasRecommendedMessages = recommendedMessages.length > 0;

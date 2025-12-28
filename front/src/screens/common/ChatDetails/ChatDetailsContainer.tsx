@@ -14,6 +14,14 @@ import { pick } from '@react-native-documents/picker';
 
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
+const recommdationMessages = [
+  '안녕하세요!',
+  '네, 알겠습니다.',
+  '네, 감사합니다.',
+  '당일 예약 가능할까요?',
+  '그럼 촬영날 뵙겠습니다.',
+]
+
 export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
@@ -108,6 +116,10 @@ export default function ChatDetailsContainer() {
   const handlePressBack = () => {
     navigation.goBack();
   };
+
+  const handlePressRecommendedMessage = (message: string) => {
+    setMessageInput(message);
+  }
 
   const handlePressSend = useCallback(async () => {
     if (messageInput.trim().length === 0) return;
@@ -337,8 +349,8 @@ export default function ChatDetailsContainer() {
       onChangeMessageInput={setMessageInput}
       onPressSend={handlePressSend}
       onPressBack={handlePressBack}
-      recommendedMessages={[]}
-      onPressRecommendedMessage={() => {}}
+      recommendedMessages={recommdationMessages}
+      onPressRecommendedMessage={handlePressRecommendedMessage}
       onPressAlbum={handlePressAlbum}
       onPressFile={handlePressFile}
       onLoadMore={handleLoadMore}

@@ -65,7 +65,7 @@ export default function ProfileImageUpload({
     <UploadProfileButtonWrapper marginTop={marginTop} marginBottom={marginBottom}>
       <UploadProfileButton size={size} onPress={onPress}>
         <ProfileImageWrapper size={size}>
-          {imageURI && <ProfileImage source={{ uri: imageURI }} />}
+          {imageURI && <ProfileImage uri={imageURI} />}
         </ProfileImageWrapper>
         <UploadProfileIconWrapper>
           <Icon width={18} height={18} Svg={CameraIcon} />

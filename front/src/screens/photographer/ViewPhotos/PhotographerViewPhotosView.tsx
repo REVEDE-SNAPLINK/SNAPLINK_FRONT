@@ -1,24 +1,16 @@
-import ScreenContainer from '@/components/ScreenContainer.tsx';
+import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
-import CrossIcon from '@/assets/icons/cross.svg';
-import Icon from '@/components/Icon.tsx';
-import { Image } from 'react-native';
-import Checkbox from '@/components/Checkbox.tsx';
-import { ReservationPhoto } from '@/api/reservations.ts';
-
-const GRID_COLUMNS = 2;
-const PHOTO_PADDING = 2;
-const CONTAINER_WIDTH = 332;
-const PHOTO_SIZE = (CONTAINER_WIDTH - (PHOTO_PADDING * 3)) / GRID_COLUMNS;
+import PhotoGrid from '@/components/PhotoGrid.tsx';
+import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 
 interface PhotographerViewPhotosViewProps {
   onPressBack: () => void;
-  photos: ReservationPhoto[];
-  selectedPhotoIds: number[];
-  onTogglePhotoSelection: (photoId: number) => void;
+  imageURIs: string[];
+  checkedImages: boolean[];
+  setCheckedImages: (index: number) => void;
   onUploadPhotos: () => void;
   onDeletePhotos: () => void;
   isLoading?: boolean;
@@ -26,83 +18,64 @@ interface PhotographerViewPhotosViewProps {
 
 export default function PhotographerViewPhotosView({
   onPressBack,
-  photos,
-  selectedPhotoIds,
-  onTogglePhotoSelection,
+  imageURIs,
+  checkedImages,
+  setCheckedImages,
   onUploadPhotos,
   onDeletePhotos,
   isLoading = false,
 }: PhotographerViewPhotosViewProps) {
-  const noneSelected = selectedPhotoIds.length === 0;
-
   const getButtonText = () => {
-    return noneSelected ? '사진 등록하기' : '선택 사진 삭제하기';
+    return imageURIs.length > 0 ? '선택 사진 삭제하기' : '사진 등록하기';
   };
 
   const handleButtonPress = () => {
-    if (noneSelected) {
-      onUploadPhotos();
-    } else {
+    if (imageURIs.length > 0) {
       onDeletePhotos();
+    } else {
+      onUploadPhotos();
     }
   };
 
   return (
-    <ScreenContainer
-      headerShown={true}
-      headerTitle="촬영 사진 관리"
-      onPressBack={onPressBack}
-    >
-      <PageCaptionWrapper>
-        <PageCaption>
-          <Typography
-            fontSize={11}
-            lineHeight="160%"
-            letterSpacing="-2.5%"
-            color="textSecondary"
-          >
-            {' '}･ 사진을 업로드하면 고객이 다운로드할 수 있습니다.
-          </Typography>
-        </PageCaption>
-      </PageCaptionWrapper>
-      <ContentContainer>
-        <PhotoScrollContainer
-          nestedScrollEnabled={false}
-        >
-          <PhotoGrid>
-            <PhotoWrapper isSelected={false}>
-              <UploadPhotoButton onPress={onUploadPhotos}>
-                <Icon width={20} height={20} Svg={CrossIcon} />
-              </UploadPhotoButton>
-            </PhotoWrapper>
-            {photos.map((photo) => {
-              const isSelected = selectedPhotoIds.includes(photo.id);
-              return (
-                <PhotoWrapper key={photo.id} isSelected={isSelected}>
-                  <CheckboxWrapper>
-                    <Checkbox
-                      isChecked={isSelected}
-                      onPress={() => onTogglePhotoSelection(photo.id)}
-                    />
-                  </CheckboxWrapper>
-                  <PhotoImage
-                    source={{ uri: photo.url }}
-                    resizeMode="cover"
-                  />
-                </PhotoWrapper>
-              );
-            })}
-          </PhotoGrid>
-        </PhotoScrollContainer>
-      </ContentContainer>
-      <SubmitButtonWrapper>
-        <SubmitButton
-          text={getButtonText()}
-          onPress={handleButtonPress}
-          disabled={isLoading}
-        />
-      </SubmitButtonWrapper>
-    </ScreenContainer>
+    <>
+      <ScreenContainer
+        headerShown={true}
+        headerTitle="촬영 사진 관리"
+        onPressBack={onPressBack}
+      >
+        <PageCaptionWrapper>
+          <PageCaption>
+            <Typography
+              fontSize={11}
+              lineHeight="160%"
+              letterSpacing="-2.5%"
+              color="textSecondary"
+            >
+              {' '}･ 사진을 업로드하면 고객이 다운로드할 수 있습니다.
+            </Typography>
+          </PageCaption>
+        </PageCaptionWrapper>
+        <ContentContainer>
+          <PhotoGrid
+            imageURIs={imageURIs}
+            checkedImages={checkedImages}
+            setCheckedImage={setCheckedImages}
+            addable={!isLoading && imageURIs.length === 0}
+            onPressAddImage={onUploadPhotos}
+            width={332}
+          />
+        </ContentContainer>
+        <SubmitButtonWrapper>
+          <SubmitButton
+            text={getButtonText()}
+            onPress={handleButtonPress}
+            disabled={isLoading || (imageURIs.length > 0 && checkedImages.filter((v) => v).length === 0)}
+          />
+        </SubmitButtonWrapper>
+      </ScreenContainer>
+      <LoadingSpinner visible={isLoading} />
+    </>
   )
 }
 
@@ -127,55 +100,6 @@ const ContentContainer = styled.View`
   background-color: ${theme.colors.bgSecondary};
   align-items: center;
   padding-vertical: 15px;
-`
-
-const PhotoScrollContainer = styled.ScrollView`
-  width: ${CONTAINER_WIDTH}px;
-`
-
-const PhotoGrid = styled.View`
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-content: space-between;
-  width: 100%;
-  background-color: ${theme.colors.bgPrimary};
-`
-
-const PhotoWrapper = styled.View<{ isSelected: boolean }>`
-  width: ${PHOTO_SIZE}px;
-  height: ${PHOTO_SIZE}px;
-  padding: ${PHOTO_PADDING}px 0;
-  border-width: ${({ isSelected }) => isSelected ? '2px' : '0px'};
-  border-style: solid;
-  border-color: ${({ isSelected }) => isSelected ? theme.colors.primary : 'transparent'};
-  border-radius: 4px;
-  overflow: hidden;
-`
-
-const CheckboxWrapper = styled.View`
-  position: absolute;
-  top: 9px;
-  left: 11px;
-  width: 100%;
-  height: 100%;
-  z-index: 10;
-`
-
-const PhotoImage = styled(Image)`
-  width: 100%;
-  height: 100%;
-`
-
-const UploadPhotoButton = styled.TouchableOpacity`
-  width: 100%;
-  height: 100%;
-  border-width: 1px;
-  border-style: dashed;
-  border-color: #C8C8C8;
-  border-radius: 8px;
-  justify-content: center;
-  align-items: center;
 `
 
 const SubmitButtonWrapper = styled.View`

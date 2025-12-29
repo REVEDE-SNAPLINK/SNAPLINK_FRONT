@@ -49,6 +49,8 @@ export default function HistoryCard({
 
   const isUserMode = userType === 'user' || !isExpertMode;
 
+  console.log(status);
+
   const headerTitle = (() => {
     switch (status) {
       case 'CANCELLED':

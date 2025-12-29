@@ -26,6 +26,8 @@ export default function ProfileContainer () {
 
   const isPhotographer = userType === 'photographer';
 
+  console.log(isPhotographer);
+
   const { data: userProfile, isSuccess } = useMeQuery();
 
   useEffect(() => {

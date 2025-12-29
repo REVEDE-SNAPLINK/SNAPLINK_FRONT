@@ -111,15 +111,6 @@ export interface RejectOrCancelBookingParams extends PatchBookingStatusParams {
   reason: string;
 }
 
-/** 예약 생성 요청 */
-export interface CreateReservationRequest {
-  photographerId: string;
-  shootingDate: string; // ISO date-time string
-  options: number[];
-  requirement: string;
-  totalAmount: number;
-}
-
 export interface BookingRequestOption {
   id: number;
   count: number;

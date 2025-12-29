@@ -1,5 +1,6 @@
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
+import { Image } from 'react-native';
 import Icon from '@/components/Icon.tsx';
 import CameraIcon from '@/assets/icons/camera-white.svg';
 import ServerImage from '@/components/ServerImage.tsx';
@@ -41,6 +42,12 @@ const ProfileImage = styled(ServerImage)`
   resize-mode: cover;
 `;
 
+const LocalProfileImage = styled(Image)`
+  width: 100%;
+  height: 100%;
+  resize-mode: cover;
+`;
+
 const UploadProfileIconWrapper = styled.View`
   width: 30px;
   height: 30px;
@@ -54,6 +61,13 @@ const UploadProfileIconWrapper = styled.View`
   right: 4px;
 `;
 
+// Helper function to check if URI contains protocol (local file or http/https URL)
+// If it contains '://', use react-native Image
+// Otherwise, it's a CloudFront Key, use ServerImage
+const hasProtocol = (uri: string): boolean => {
+  return uri.includes('://');
+};
+
 export default function ProfileImageUpload({
   imageURI,
   onPress,
@@ -61,11 +75,19 @@ export default function ProfileImageUpload({
   marginTop,
   marginBottom,
 }: ProfileImageUploadProps) {
+  const useNativeImage = imageURI ? hasProtocol(imageURI) : false;
+
   return (
     <UploadProfileButtonWrapper marginTop={marginTop} marginBottom={marginBottom}>
       <UploadProfileButton size={size} onPress={onPress}>
         <ProfileImageWrapper size={size}>
-          {imageURI && <ProfileImage uri={imageURI} />}
+          {imageURI && (
+            useNativeImage ? (
+              <LocalProfileImage source={{ uri: imageURI }} />
+            ) : (
+              <ProfileImage uri={imageURI} />
+            )
+          )}
         </ProfileImageWrapper>
         <UploadProfileIconWrapper>
           <Icon width={18} height={18} Svg={CameraIcon} />

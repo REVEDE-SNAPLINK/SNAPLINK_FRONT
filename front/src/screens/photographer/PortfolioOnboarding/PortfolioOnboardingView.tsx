@@ -33,21 +33,23 @@ export interface DaySchedule {
 
 export interface PortfolioOnboardingFormData {
   description: string;
-  shootingRegions: number[];
-  shootingTags: number[];
-  shootingConcepts: number[];
-  basePrice: string;
-  shootingDuration: string | null;
-  shootingPeople: string | null;
-  shootingDescription: string;
-  retouchingType: string | null;
-  provideRawFiles: boolean;
-  retouchingDuration: string | null;
-  retouchingSelectionRight: string | null;
+  regionIds: number[];
+  tagIds: number[];
+  conceptIds: number[];
+  shootingProductName: string;
+  shootingProductBasePrice: string;
+  shootingProductPhotoTime: string | null;
+  shootingProductPersonnel: string | null;
+  shootingProductDescription: string;
+  shootingProductEditingType: string | null;
+  shootingProductProvidesRawFile: boolean;
+  shootingProductEditingDeadline: string | null;
+  shootingProductSelectionAuthority: string | null;
+  shootingProductProvidedEditCount: string;
   availableDays: string[];
   daySchedules: { [day: string]: DaySchedule };
   unavailableDateDescription: string;
-  additionalOptions: Option[];
+  shootingProductOptions: Option[];
 }
 
 interface PortfolioOnboardingViewProps {
@@ -262,7 +264,7 @@ const PortfolioOnboardingStep1 = ({
         name="description"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            placeholder="입력"
+            placeholder="작가님을 표현할 수 있는 주 촬영 컨셉, MBTI 등등 자유롭게 내용을 작성해 주세요."
             value={value}
             onChangeText={onChange}
             multiline
@@ -346,7 +348,7 @@ const PortfolioOnboardingStep3 = ({
       <ScrollView>
         <Controller
           control={control}
-          name="shootingRegions"
+          name="regionIds"
           render={({ field: { value } }) => (
             <>
               {regions.map((region) => (
@@ -402,7 +404,7 @@ const PortfolioOnboardingStep4 = ({
       <ScrollView>
         <Controller
           control={control}
-          name="shootingTags"
+          name="tagIds"
           render={({ field: { value } }) => (
             <>
               {tags.map((tag) => (
@@ -458,7 +460,7 @@ const PortfolioOnboardingStep5 = ({
       <ScrollView>
         <Controller
           control={control}
-          name="shootingConcepts"
+          name="conceptIds"
           render={({ field: { value } }) => (
             <>
               {concepts.map((concept) => (
@@ -505,11 +507,30 @@ const PortfolioOnboardingStep6 = ({
         letterSpacing="-2.5%"
         marginBottom={10}
       >
+        기본 촬영 서비스명
+      </Typography>
+      <Controller
+        control={control}
+        name="shootingProductName"
+        render={({ field: { onChange, value } }) => (
+          <FormInput
+            placeholder="판매할 서비스 이름을 입력해주세요 *"
+            value={value}
+            onChangeText={onChange}
+          />
+        )}
+      />
+      <Typography
+        fontSize={16}
+        letterSpacing="-2.5%"
+        marginBottom={10}
+        marginTop={25}
+      >
         기본 촬영 비용
       </Typography>
       <Controller
         control={control}
-        name="basePrice"
+        name="shootingProductBasePrice"
         render={({ field: { onChange, value } }) => (
           <FormInput
             placeholder="원"
@@ -529,7 +550,7 @@ const PortfolioOnboardingStep6 = ({
       </Typography>
       <Controller
         control={control}
-        name="shootingDescription"
+        name="shootingProductDescription"
         render={({ field: { onChange, value } }) => (
           <FormInput
             placeholder="입력해주세요 *"
@@ -551,7 +572,7 @@ const PortfolioOnboardingStep6 = ({
       </Typography>
       <Controller
         control={control}
-        name="shootingDuration"
+        name="shootingProductPhotoTime"
         render={({ field: { onChange, value } }) => {
           const currentNumber = value ? parseFloat(value) : null;
           const currentHour = currentNumber !== null ? Math.floor(currentNumber) : null;
@@ -606,7 +627,7 @@ const PortfolioOnboardingStep6 = ({
       </Typography>
       <Controller
         control={control}
-        name="shootingPeople"
+        name="shootingProductPersonnel"
         render={({ field: { onChange, value } }) => (
           <DropDownInput
             placeholder="선택해주세요 *"
@@ -626,7 +647,7 @@ const PortfolioOnboardingStep6 = ({
       </Typography>
       <Controller
         control={control}
-        name="provideRawFiles"
+        name="shootingProductProvidesRawFile"
         render={({ field: { onChange, value } }) => (
           <CheckOptionWrapper>
             <Checkbox isChecked={value} onPress={() => onChange(!value)} />
@@ -663,7 +684,7 @@ const PortfolioOnboardingStep7 = ({
       </Typography>
       <Controller
         control={control}
-        name="additionalOptions"
+        name="shootingProductOptions"
         render={({ field: { onChange, value: options } }) => {
           const optionList = options || [];
           const firstOption = optionList[0] || { name: '', description: '', price: '', time: '' };
@@ -701,8 +722,9 @@ const PortfolioOnboardingStep7 = ({
                 추가 옵션 시간
               </Typography>
               <FormInput
-                placeholder="시간을 추가로 판매할 경우 입력해주세요."
+                placeholder="시간을 추가로 판매할 경우 입력해주세요.(분)"
                 value={firstOption.time || ''}
+                keyboardType="numeric"
                 onChangeText={(time: string) => {
                   const newOptions = [...optionList];
                   if (newOptions.length === 0) {
@@ -822,7 +844,7 @@ interface PortfolioOnboardingStep8Props {
 const PortfolioOnboardingStep8 = ({
   control
 }: PortfolioOnboardingStep8Props) => {
-  const retouchingType = useWatch({ control, name: 'retouchingType' });
+  const retouchingType = useWatch({ control, name: 'shootingProductEditingType' });
   const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
 
   return (
@@ -843,7 +865,7 @@ const PortfolioOnboardingStep8 = ({
         </Typography>
         <Controller
           control={control}
-          name="retouchingType"
+          name="shootingProductEditingType"
           render={({ field: { onChange, value } }) => (
             <DropDownInput
               placeholder="선택해주세요 *"
@@ -865,7 +887,7 @@ const PortfolioOnboardingStep8 = ({
             </Typography>
             <Controller
               control={control}
-              name="retouchingDuration"
+              name="shootingProductEditingDeadline"
               render={({ field: { onChange, value } }) => (
                 <DropDownInput
                   placeholder="선택해주세요 *"
@@ -885,13 +907,33 @@ const PortfolioOnboardingStep8 = ({
             </Typography>
             <Controller
               control={control}
-              name="retouchingSelectionRight"
+              name="shootingProductSelectionAuthority"
               render={({ field: { onChange, value } }) => (
                 <DropDownInput
                   placeholder="선택해주세요 *"
                   options={['작가 선택', '고객 선택', '작가와 고객 함께 선택']}
                   value={value || undefined}
                   onChange={onChange}
+                />
+              )}
+            />
+            <Typography
+              fontSize={16}
+              letterSpacing="-2.5%"
+              marginBottom={10}
+              marginTop={25}
+            >
+              제공하는 사진 장수
+            </Typography>
+            <Controller
+              control={control}
+              name="shootingProductProvidedEditCount"
+              render={({ field: { onChange, value } }) => (
+                <FormInput
+                  placeholder="입력해주세요 *"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="numeric"
                 />
               )}
             />

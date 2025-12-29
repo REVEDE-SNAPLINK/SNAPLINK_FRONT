@@ -19,6 +19,7 @@ import {
   launchCamera,
   launchImageLibrary,
 } from 'react-native-image-picker';
+import { Image as ImageCompressor } from 'react-native-compressor';
 import { generateImageFilename } from '@/utils/format.ts';
 import { UploadImageParams } from '@/types/image.ts';
 import { DayOfWeek, PhotographerScheduleItem, UploadImageFile } from '@/api/photographers.ts';
@@ -585,9 +586,7 @@ export default function PortfolioOnboardingContainer() {
         const options: CameraOptions = {
           mediaType: 'photo',
           saveToPhotos: true,
-          quality: 0.3,
-          maxWidth: 600,
-          maxHeight: 600,
+          quality: 1.0, // 최고 품질로 촬영 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchCamera(options);
@@ -613,11 +612,31 @@ export default function PortfolioOnboardingContainer() {
           return;
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
-          setProfileImageURI({
-            uri: response.assets[0].uri,
-            name: response.assets[0].fileName,
-            type: response.assets[0].type,
-          });
+          try {
+            // react-native-compressor로 이미지 압축
+            const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
+              compressionMethod: 'auto',
+              maxWidth: 400,
+              maxHeight: 400,
+              quality: 0.6,
+            });
+
+            console.log('=== Camera Image Compression ===');
+            console.log('Original URI:', response.assets[0].uri);
+            console.log('Compressed URI:', compressedUri);
+
+            setProfileImageURI({
+              uri: compressedUri,
+              name: response.assets[0].fileName,
+              type: response.assets[0].type,
+            });
+          } catch (error) {
+            console.error('Camera image compression failed:', error);
+            Alert.show({
+              title: '이미지 압축 실패',
+              message: '이미지 압축 중 오류가 발생했습니다.',
+            });
+          }
         } else {
           console.log('No image URI found in response');
         }
@@ -633,9 +652,7 @@ export default function PortfolioOnboardingContainer() {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 1,
-          quality: 0.2,
-          maxWidth: 400,
-          maxHeight: 400,
+          quality: 1.0, // 최고 품질로 선택 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -649,11 +666,31 @@ export default function PortfolioOnboardingContainer() {
           return;
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
-          setProfileImageURI({
-            uri: response.assets[0].uri,
-            name: response.assets[0].fileName,
-            type: response.assets[0].type,
-          });
+          try {
+            // react-native-compressor로 이미지 압축
+            const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
+              compressionMethod: 'auto',
+              maxWidth: 400,
+              maxHeight: 400,
+              quality: 0.6,
+            });
+
+            console.log('=== Profile Image Compression ===');
+            console.log('Original URI:', response.assets[0].uri);
+            console.log('Compressed URI:', compressedUri);
+
+            setProfileImageURI({
+              uri: compressedUri,
+              name: response.assets[0].fileName,
+              type: response.assets[0].type,
+            });
+          } catch (error) {
+            console.error('Image compression failed:', error);
+            Alert.show({
+              title: '이미지 압축 실패',
+              message: '이미지 압축 중 오류가 발생했습니다.',
+            });
+          }
         }
       }
     );
@@ -691,9 +728,7 @@ export default function PortfolioOnboardingContainer() {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 0,
-          quality: 0.3,
-          maxWidth: 800,
-          maxHeight: 800,
+          quality: 1.0, // 최고 품질로 선택 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -707,18 +742,43 @@ export default function PortfolioOnboardingContainer() {
           return;
         }
         if (response.assets && response.assets.length > 0) {
-          const images = response.assets
-            .filter(
-              (asset): asset is UploadImageParams =>
-                !!asset.uri && !!asset.fileName && !!asset.type,
-            )
-            .map((asset) => ({
-              uri: asset.uri!,
-              name: generateImageFilename(asset.type, 'photographer_portfolio'),
-              type: asset.type!,
-            }));
-          setPhotoURIs([...photoURIs, ...images]);
-          setCheckedImages([...checkedImages, ...Array(images.length)].fill(false));
+          try {
+            // 각 이미지를 react-native-compressor로 압축
+            const compressedImages = await Promise.all(
+              response.assets
+                .filter(
+                  (asset): asset is UploadImageParams =>
+                    !!asset.uri && !!asset.fileName && !!asset.type,
+                )
+                .map(async (asset) => {
+                  const compressedUri = await ImageCompressor.compress(asset.uri!, {
+                    compressionMethod: 'auto',
+                    maxWidth: 1000,
+                    maxHeight: 1000,
+                    quality: 0.7,
+                  });
+
+                  console.log('=== Portfolio Image Compression ===');
+                  console.log('Original URI:', asset.uri);
+                  console.log('Compressed URI:', compressedUri);
+
+                  return {
+                    uri: compressedUri,
+                    name: generateImageFilename(asset.type, 'photographer_portfolio'),
+                    type: asset.type!,
+                  };
+                })
+            );
+
+            setPhotoURIs([...photoURIs, ...compressedImages]);
+            setCheckedImages([...checkedImages, ...Array(compressedImages.length).fill(false)]);
+          } catch (error) {
+            console.error('Portfolio image compression failed:', error);
+            Alert.show({
+              title: '이미지 압축 실패',
+              message: '이미지 압축 중 오류가 발생했습니다.',
+            });
+          }
         }
       }
     );

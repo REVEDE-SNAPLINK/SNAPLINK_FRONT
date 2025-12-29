@@ -56,7 +56,8 @@ export default function MainStack() {
       <Stack.Screen name="PortfolioOnboarding" component={PortfolioOnboardingContainer} />
       <Stack.Screen name="ShootingManage" component={ShootingManageContainer} />
       <Stack.Screen name="ServiceForm" component={ServiceFormContainer} />
-
+      <Stack.Screen name="BookingReject" component={BookingRejectScreen} />
+      <Stack.Screen name="BookingCancel" component={BookingCancelScreen} />
 
       <Stack.Screen name="NicknameEdit" component={NicknameEditScreen} />
       <Stack.Screen name="EmailEdit" component={EmailEditScreen} />
@@ -66,8 +67,6 @@ export default function MainStack() {
       <Stack.Screen name="BookingHistory" component={BookingHistoryContainer} />
       <Stack.Screen name="BookingRequest" component={BookingRequestContainer} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsContainer} />
-      <Stack.Screen name="BookingReject" component={BookingRejectScreen} />
-      <Stack.Screen name="BookingCancel" component={BookingCancelScreen} />
       <Stack.Screen name="WriteReview" component={WriteReviewContainer} />
       <Stack.Screen name="ViewPhotos" component={ViewPhotosContainer} />
       <Stack.Screen name="Reviews" component={ReviewsContainer} />

@@ -117,9 +117,9 @@ export const authMultipartFetch = async (
   const { getAccessToken } = useAuthStore.getState();
   const token = await getAccessToken();
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'multipart/form-data',
-  };
+  // IMPORTANT: Do NOT set Content-Type for multipart/form-data
+  // RNBlobUtil will automatically set the correct Content-Type with boundary
+  const headers: Record<string, string> = {};
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -136,7 +136,6 @@ export const authMultipartFetch = async (
     if (!refreshed) return response;
 
     const retryHeaders: Record<string, string> = {
-      'Content-Type': 'multipart/form-data',
       Authorization: `Bearer ${refreshed}`,
     };
 

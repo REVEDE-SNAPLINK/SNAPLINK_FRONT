@@ -211,14 +211,13 @@ const AnimatedOverlayBackground = styled(Animated.View)`
 `;
 
 const AnimatedModalContainer = styled(Animated.View)`
-  width: 330px;
+  width: 327px;
   min-height: 153px;
   padding: 16px 19px;
   background-color: white;
   border-radius: 10px;
   justify-content: space-between;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
-  elevation: 5;
   position: relative;
   z-index: 1003;
 `;
@@ -238,7 +237,7 @@ const ButtonContainer = styled.View<{
   buttonCount: number;
   isLastButton: boolean;
 }>`
-  ${({buttonCount}) => (buttonCount === 1 ? 'min-width: 140px;' : 'flex: 1;')}
+  ${({buttonCount}) => (buttonCount === 1 ? 'min-width: 285px;' : 'flex: 1;')}
   margin-right: ${({isLastButton, buttonCount}) =>
     !isLastButton && buttonCount > 1 ? '9px' : '0'};
 `;

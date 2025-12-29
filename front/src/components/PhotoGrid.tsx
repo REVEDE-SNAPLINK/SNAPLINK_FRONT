@@ -10,6 +10,13 @@ import { useMemo } from 'react';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PHOTO_MARGIN = 5;
 
+// Helper function to check if URI contains protocol (local file or http/https URL)
+// If it contains '://', use react-native Image
+// Otherwise, it's a CloudFront Key, use ServerImage
+const hasProtocol = (uri: string): boolean => {
+  return uri.includes('://');
+};
+
 interface PhotoGridProps {
   imageURIs: string[];
   checkedImages: boolean[];
@@ -26,7 +33,6 @@ export default function PhotoGrid({
   imageURIs,
   checkedImages,
   setCheckedImage,
-  isServerImage = false,
   addable = false,
   onPressAddImage,
   width = SCREEN_WIDTH,
@@ -42,30 +48,35 @@ export default function PhotoGrid({
           <Icon width={20} height={20} Svg={CrossIcon} />
         </AddImageButton>
       )}
-      {imageURIs.map((uri, index) => (
-        <ImageWrapper
-          key={index}
-          size={PHOTO_SIZE}
-          marginRight={addable ? (index % gridColumns + 2) !== gridColumns : (index % gridColumns + 1) !== gridColumns}
-        >
-          <CheckboxWrapper
-            onPress={() => setCheckedImage(index)}
-            isChecked={checkedImages[index]}
+      {imageURIs.map((uri, index) => {
+        // Auto-detect: if URI has protocol (://), use native Image, otherwise use ServerImage
+        const useNativeImage = hasProtocol(uri);
+
+        return (
+          <ImageWrapper
+            key={index}
+            size={PHOTO_SIZE}
+            marginRight={addable ? (index % gridColumns + 2) !== gridColumns : (index % gridColumns + 1) !== gridColumns}
           >
-            <Checkbox
-              isChecked={checkedImages[index]}
+            <CheckboxWrapper
               onPress={() => setCheckedImage(index)}
-            />
-          </CheckboxWrapper>
-          {isServerImage ? (
-            <ServerPhoto uri={uri} />
-          ) : (
-            <Photo source={{ uri }} />
-          )}
-        </ImageWrapper>
-      ))}
+              isChecked={checkedImages[index]}
+            >
+              <Checkbox
+                isChecked={checkedImages[index]}
+                onPress={() => setCheckedImage(index)}
+              />
+            </CheckboxWrapper>
+            {useNativeImage ? (
+              <Photo source={{ uri }} />
+            ) : (
+              <ServerPhoto uri={uri} />
+            )}
+          </ImageWrapper>
+        );
+      })}
     </GridWrapper>
-  ), [PHOTO_SIZE, addable, isServerImage, imageURIs, checkedImages, onPressAddImage, setCheckedImage, gridColumns]);
+  ), [PHOTO_SIZE, addable, imageURIs, checkedImages, onPressAddImage, setCheckedImage, gridColumns]);
 
   return (
     <RootContainer>

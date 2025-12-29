@@ -1,7 +1,7 @@
 // src/api/photographers.ts
 import { API_BASE_URL } from '@/config/api';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
-import { buildQuery } from '@/utils/format';
+import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 
 const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
@@ -118,16 +118,43 @@ export interface PatchPhotographerProfileImageParams {
  * 작가 프로필 사진 업로드/변경
  *
  * multipart/form-data: image
+ * @returns CloudFront key (string)
  */
 export const patchPhotographerProfileImage = async (
   params: PatchPhotographerProfileImageParams,
-): Promise<void> => {
+): Promise<string> => {
+  // Remove file:// prefix for RNBlobUtil.wrap()
+  let filePath = params.image.uri;
+  if (filePath.startsWith('file://')) {
+    filePath = filePath.replace('file://', '');
+  }
+
+  // Check file size
+  try {
+    const stat = await RNBlobUtil.fs.stat(filePath);
+    const fileSizeKB = Math.round(stat.size / 1024);
+    const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
+
+    console.log('=== patchPhotographerProfileImage ===');
+    console.log('Original URI:', params.image.uri);
+    console.log('Processed Path:', filePath);
+    console.log('File Size:', `${fileSizeKB} KB (${fileSizeMB} MB)`);
+    console.log('Filename:', generateImageFilename(params.image.type, 'photographer_profile_image_'));
+    console.log('Type:', normalizeImageMime(params.image.type));
+
+    if (stat.size > 5 * 1024 * 1024) {
+      console.warn('⚠️ WARNING: File size exceeds 5MB, may cause 413 error');
+    }
+  } catch (e) {
+    console.error('Failed to check file size:', e);
+  }
+
   const parts: MultipartPart[] = [
     {
       name: 'image',
-      filename: params.image.name,
-      type: params.image.type,
-      data: RNBlobUtil.wrap(params.image.uri.replace('file://', '')),
+      filename: generateImageFilename(params.image.type, 'photographer_profile_image_'),
+      type: normalizeImageMime(params.image.type),
+      data: RNBlobUtil.wrap(filePath),
     },
   ];
 
@@ -140,6 +167,9 @@ export const patchPhotographerProfileImage = async (
   if (response.info().status < 200 || response.info().status >= 300) {
     throw new Error(`Failed to patch profile image ${response.info().status}`);
   }
+
+  // CloudFront key 반환
+  return response.text();
 };
 
 /* ---------------------------------------------
@@ -162,23 +192,35 @@ export interface PhotographerScheduleItem {
   endTime: string;
 }
 
-/**
- * swagger에 isEnhanced 값이 "일부제공"처럼 문자열로 보였어서 string으로 둠.
- * 서버가 boolean/enum이면 이후 좁혀도 됨.
- */
+export interface ShootingOption {
+  name: string;
+  description: string;
+  price: number;
+  additionalTime: number;
+}
+
+export interface ShootingProduct {
+  name: string;
+  basePrice: number;
+  description: string;
+  photoTime: number;
+  personnel: number;
+  providesRawFile: boolean;
+  editingType: "FACIAL" | "COLOR" | "BOTH" | "NONE",
+  editingDeadline: "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS";
+  providedEditCount: number;
+  selectionAuthority: "PHOTOGRAPHER" | "CUSTOMER" | "BOTH";
+  options: ShootingOption[];
+}
+
 export interface PhotographerSignRequest {
   description: string;
-  basePrice: number;
-  baseTime: number;
-  basePeople: number;
-  regionId: number[];
-  conceptId: number[];
+  regionIds: number[];
+  conceptIds: number[];
   schedules: PhotographerScheduleItem[];
   isPublicHolidays: boolean;
-  isOriginal: boolean;
-  isEnhanced: string;
-  enhancedTime: string;
-  enhancedPermission: string;
+  tag: number[]; // Array of tag IDs
+  shootingProduct: ShootingProduct;
 }
 
 /**
@@ -281,6 +323,37 @@ export interface CreatePortfolioParams {
 export const createPortfolio = async (
   params: CreatePortfolioParams,
 ): Promise<void> => {
+  console.log('=== createPortfolio ===');
+  console.log(`Uploading ${params.images.length} images`);
+
+  // Check file sizes
+  let totalSize = 0;
+  for (let i = 0; i < params.images.length; i++) {
+    const img = params.images[i];
+    let filePath = img.uri;
+    if (filePath.startsWith('file://')) {
+      filePath = filePath.replace('file://', '');
+    }
+
+    try {
+      const stat = await RNBlobUtil.fs.stat(filePath);
+      const fileSizeKB = Math.round(stat.size / 1024);
+      const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
+      totalSize += stat.size;
+
+      console.log(`Image ${i + 1}/${params.images.length}: ${fileSizeKB} KB (${fileSizeMB} MB)`);
+
+      if (stat.size > 5 * 1024 * 1024) {
+        console.warn(`⚠️ WARNING: Image ${i + 1} exceeds 5MB, may cause 413 error`);
+      }
+    } catch (e) {
+      console.error(`Failed to check file size for image ${i + 1}:`, e);
+    }
+  }
+
+  const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+  console.log(`Total size: ${totalSizeMB} MB`);
+
   const parts: MultipartPart[] = [
     // request는 JSON 파트
     {
@@ -290,12 +363,20 @@ export const createPortfolio = async (
     },
 
     // images는 file 파트들
-    ...params.images.map((img) => ({
-      name: 'images',
-      filename: img.name,
-      type: img.type,
-      data: RNBlobUtil.wrap(img.uri.replace('file://', '')),
-    })),
+    ...params.images.map((img) => {
+      // Remove file:// prefix for RNBlobUtil.wrap()
+      let filePath = img.uri;
+      if (filePath.startsWith('file://')) {
+        filePath = filePath.replace('file://', '');
+      }
+
+      return {
+        name: 'images',
+        filename: img.name,
+        type: img.type,
+        data: RNBlobUtil.wrap(filePath),
+      };
+    }),
   ];
 
   const response = await authMultipartFetch(

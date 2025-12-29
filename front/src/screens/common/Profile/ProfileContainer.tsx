@@ -55,7 +55,6 @@ export default function ProfileContainer () {
         const options: CameraOptions = {
           mediaType: 'photo',
           saveToPhotos: true,
-          quality: 1.0, // 최고 품질로 촬영 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchCamera(options);
@@ -82,17 +81,12 @@ export default function ProfileContainer () {
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           try {
-            // react-native-compressor로 이미지 압축
             const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
               compressionMethod: 'auto',
               maxWidth: 400,
               maxHeight: 400,
               quality: 0.6,
             });
-
-            console.log('=== Profile Camera Compression ===');
-            console.log('Original URI:', response.assets[0].uri);
-            console.log('Compressed URI:', compressedUri);
 
             uploadProfileImageMutation.mutate({
               image: {
@@ -138,7 +132,6 @@ export default function ProfileContainer () {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 1,
-          quality: 1.0, // 최고 품질로 선택 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -153,17 +146,12 @@ export default function ProfileContainer () {
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           try {
-            // react-native-compressor로 이미지 압축
             const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
               compressionMethod: 'auto',
               maxWidth: 400,
               maxHeight: 400,
               quality: 0.6,
             });
-
-            console.log('=== Profile Gallery Compression ===');
-            console.log('Original URI:', response.assets[0].uri);
-            console.log('Compressed URI:', compressedUri);
 
             uploadProfileImageMutation.mutate({
               image: {

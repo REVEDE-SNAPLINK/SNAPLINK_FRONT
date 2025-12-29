@@ -129,21 +129,12 @@ export const patchPhotographerProfileImage = async (
     filePath = filePath.replace('file://', '');
   }
 
-  // Check file size
+  // Check file size for warnings
   try {
     const stat = await RNBlobUtil.fs.stat(filePath);
-    const fileSizeKB = Math.round(stat.size / 1024);
-    const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
-
-    console.log('=== patchPhotographerProfileImage ===');
-    console.log('Original URI:', params.image.uri);
-    console.log('Processed Path:', filePath);
-    console.log('File Size:', `${fileSizeKB} KB (${fileSizeMB} MB)`);
-    console.log('Filename:', generateImageFilename(params.image.type, 'photographer_profile_image_'));
-    console.log('Type:', normalizeImageMime(params.image.type));
-
     if (stat.size > 5 * 1024 * 1024) {
-      console.warn('⚠️ WARNING: File size exceeds 5MB, may cause 413 error');
+      const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
+      console.warn(`⚠️ Profile image size: ${fileSizeMB} MB - may cause 413 error`);
     }
   } catch (e) {
     console.error('Failed to check file size:', e);
@@ -323,11 +314,7 @@ export interface CreatePortfolioParams {
 export const createPortfolio = async (
   params: CreatePortfolioParams,
 ): Promise<void> => {
-  console.log('=== createPortfolio ===');
-  console.log(`Uploading ${params.images.length} images`);
-
-  // Check file sizes
-  let totalSize = 0;
+  // Check file sizes for warnings
   for (let i = 0; i < params.images.length; i++) {
     const img = params.images[i];
     let filePath = img.uri;
@@ -337,22 +324,14 @@ export const createPortfolio = async (
 
     try {
       const stat = await RNBlobUtil.fs.stat(filePath);
-      const fileSizeKB = Math.round(stat.size / 1024);
-      const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
-      totalSize += stat.size;
-
-      console.log(`Image ${i + 1}/${params.images.length}: ${fileSizeKB} KB (${fileSizeMB} MB)`);
-
       if (stat.size > 5 * 1024 * 1024) {
-        console.warn(`⚠️ WARNING: Image ${i + 1} exceeds 5MB, may cause 413 error`);
+        const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
+        console.warn(`⚠️ Portfolio image ${i + 1}: ${fileSizeMB} MB - may cause 413 error`);
       }
     } catch (e) {
       console.error(`Failed to check file size for image ${i + 1}:`, e);
     }
   }
-
-  const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
-  console.log(`Total size: ${totalSizeMB} MB`);
 
   const parts: MultipartPart[] = [
     // request는 JSON 파트

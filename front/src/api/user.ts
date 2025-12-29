@@ -75,21 +75,12 @@ export const patchUserProfileImage = async (
     filePath = filePath.replace('file://', '');
   }
 
-  // Check file size
+  // Check file size for warnings
   try {
     const stat = await RNBlobUtil.fs.stat(filePath);
-    const fileSizeKB = Math.round(stat.size / 1024);
-    const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
-
-    console.log('=== patchUserProfileImage ===');
-    console.log('Original URI:', params.image.uri);
-    console.log('Processed Path:', filePath);
-    console.log('File Size:', `${fileSizeKB} KB (${fileSizeMB} MB)`);
-    console.log('Filename:', generateImageFilename(params.image.type, 'user_profile_image_'));
-    console.log('Type:', normalizeImageMime(params.image.type));
-
     if (stat.size > 5 * 1024 * 1024) {
-      console.warn('⚠️ WARNING: File size exceeds 5MB, may cause 413 error');
+      const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
+      console.warn(`⚠️ User profile image size: ${fileSizeMB} MB - may cause 413 error`);
     }
   } catch (e) {
     console.error('Failed to check file size:', e);

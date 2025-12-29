@@ -586,7 +586,6 @@ export default function PortfolioOnboardingContainer() {
         const options: CameraOptions = {
           mediaType: 'photo',
           saveToPhotos: true,
-          quality: 1.0, // 최고 품질로 촬영 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchCamera(options);
@@ -613,17 +612,12 @@ export default function PortfolioOnboardingContainer() {
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           try {
-            // react-native-compressor로 이미지 압축
             const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
               compressionMethod: 'auto',
               maxWidth: 400,
               maxHeight: 400,
               quality: 0.6,
             });
-
-            console.log('=== Camera Image Compression ===');
-            console.log('Original URI:', response.assets[0].uri);
-            console.log('Compressed URI:', compressedUri);
 
             setProfileImageURI({
               uri: compressedUri,
@@ -652,7 +646,6 @@ export default function PortfolioOnboardingContainer() {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 1,
-          quality: 1.0, // 최고 품질로 선택 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -667,17 +660,12 @@ export default function PortfolioOnboardingContainer() {
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           try {
-            // react-native-compressor로 이미지 압축
             const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
               compressionMethod: 'auto',
               maxWidth: 400,
               maxHeight: 400,
               quality: 0.6,
             });
-
-            console.log('=== Profile Image Compression ===');
-            console.log('Original URI:', response.assets[0].uri);
-            console.log('Compressed URI:', compressedUri);
 
             setProfileImageURI({
               uri: compressedUri,
@@ -728,7 +716,6 @@ export default function PortfolioOnboardingContainer() {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 0,
-          quality: 1.0, // 최고 품질로 선택 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -743,7 +730,6 @@ export default function PortfolioOnboardingContainer() {
         }
         if (response.assets && response.assets.length > 0) {
           try {
-            // 각 이미지를 react-native-compressor로 압축
             const compressedImages = await Promise.all(
               response.assets
                 .filter(
@@ -757,10 +743,6 @@ export default function PortfolioOnboardingContainer() {
                     maxHeight: 1000,
                     quality: 0.7,
                   });
-
-                  console.log('=== Portfolio Image Compression ===');
-                  console.log('Original URI:', asset.uri);
-                  console.log('Compressed URI:', compressedUri);
 
                   return {
                     uri: compressedUri,

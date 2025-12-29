@@ -6,6 +6,7 @@ import {
   CameraOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
+import { Image as ImageCompressor } from 'react-native-compressor';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import ProfileView from '@/screens/common/Profile/ProfileView.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
@@ -54,7 +55,7 @@ export default function ProfileContainer () {
         const options: CameraOptions = {
           mediaType: 'photo',
           saveToPhotos: true,
-          quality: 0.8,
+          quality: 1.0, // 최고 품질로 촬영 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchCamera(options);
@@ -80,27 +81,47 @@ export default function ProfileContainer () {
           return;
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
-          uploadProfileImageMutation.mutate({
-            image: {
-              uri: response.assets[0].uri,
-              name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
-              type: response.assets[0].type || 'image/jpeg',
-            }
-          }, {
-            onSuccess: () => {
-              Alert.show({
-                title: '업데이트 완료',
-                message: '프로필 사진이 업데이트되었습니다.',
-              });
-            },
-            onError: () => {
-              Alert.show({
-                title: '업데이트 실패',
-                message: '프로필 사진 업데이트에 실패했습니다.',
-              });
-            },
-          });
-          setProfileImageURI(response.assets[0].uri);
+          try {
+            // react-native-compressor로 이미지 압축
+            const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
+              compressionMethod: 'auto',
+              maxWidth: 400,
+              maxHeight: 400,
+              quality: 0.6,
+            });
+
+            console.log('=== Profile Camera Compression ===');
+            console.log('Original URI:', response.assets[0].uri);
+            console.log('Compressed URI:', compressedUri);
+
+            uploadProfileImageMutation.mutate({
+              image: {
+                uri: compressedUri,
+                name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
+                type: response.assets[0].type || 'image/jpeg',
+              }
+            }, {
+              onSuccess: () => {
+                Alert.show({
+                  title: '업데이트 완료',
+                  message: '프로필 사진이 업데이트되었습니다.',
+                });
+              },
+              onError: () => {
+                Alert.show({
+                  title: '업데이트 실패',
+                  message: '프로필 사진 업데이트에 실패했습니다.',
+                });
+              },
+            });
+            setProfileImageURI(compressedUri);
+          } catch (error) {
+            console.error('Profile image compression failed:', error);
+            Alert.show({
+              title: '이미지 압축 실패',
+              message: '이미지 압축 중 오류가 발생했습니다.',
+            });
+          }
         } else {
           console.log('No image URI found in response');
         }
@@ -117,7 +138,7 @@ export default function ProfileContainer () {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 1,
-          quality: 0.8,
+          quality: 1.0, // 최고 품질로 선택 후 수동 압축
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -131,27 +152,47 @@ export default function ProfileContainer () {
           return;
         }
         if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
-          uploadProfileImageMutation.mutate({
-            image: {
-              uri: response.assets[0].uri,
-              name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
-              type: response.assets[0].type || 'image/jpeg',
-            }
-          }, {
-            onSuccess: () => {
-              Alert.show({
-                title: '업데이트 완료',
-                message: '프로필 사진이 업데이트되었습니다.',
-              });
-            },
-            onError: () => {
-              Alert.show({
-                title: '업데이터 실패',
-                message: '프로필 사진 업데이트에 실패했습니다.',
-              });
-            },
-          });
-          setProfileImageURI(response.assets[0].uri);
+          try {
+            // react-native-compressor로 이미지 압축
+            const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
+              compressionMethod: 'auto',
+              maxWidth: 400,
+              maxHeight: 400,
+              quality: 0.6,
+            });
+
+            console.log('=== Profile Gallery Compression ===');
+            console.log('Original URI:', response.assets[0].uri);
+            console.log('Compressed URI:', compressedUri);
+
+            uploadProfileImageMutation.mutate({
+              image: {
+                uri: compressedUri,
+                name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
+                type: response.assets[0].type || 'image/jpeg',
+              }
+            }, {
+              onSuccess: () => {
+                Alert.show({
+                  title: '업데이트 완료',
+                  message: '프로필 사진이 업데이트되었습니다.',
+                });
+              },
+              onError: () => {
+                Alert.show({
+                  title: '업데이터 실패',
+                  message: '프로필 사진 업데이트에 실패했습니다.',
+                });
+              },
+            });
+            setProfileImageURI(compressedUri);
+          } catch (error) {
+            console.error('Profile gallery image compression failed:', error);
+            Alert.show({
+              title: '이미지 압축 실패',
+              message: '이미지 압축 중 오류가 발생했습니다.',
+            });
+          }
         }
       }
       // onDenied 콜백 제거 - requestPermission 내부에서 적절한 안내 처리

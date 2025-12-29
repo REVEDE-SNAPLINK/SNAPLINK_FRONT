@@ -13,5 +13,7 @@ dependencyResolutionManagement {
     maven { url "https://devrepo.kakao.com/nexus/content/groups/public/" }
     // jitpack 쓰면 유지
     maven { url "https://www.jitpack.io" }
+    // notifee local maven repository
+    maven { url "../node_modules/@notifee/react-native/android/libs" }
   }
 }

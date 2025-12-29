@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import BookingManageView from '@/screens/photographer/BookingManage/BookingManageView.tsx';
 import { Alert } from '@/components/theme';
-import { usePhotographerReservationsInfiniteQuery } from '@/queries/reservations.ts';
-import { usePatchReservationStatusMutation } from '@/mutations/reservations.ts';
+import { usePhotographerBookingsInfiniteQuery } from '@/queries/reservations.ts';
+import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/reservations.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 
@@ -13,7 +13,8 @@ export default function BookingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { mutate: patchStatusMutate } = usePatchReservationStatusMutation();
+  const { mutate: approveMutation } = useApproveBookingMutation();
+  const { mutate: completeMutaion } = useCompleteBookingMutation();
 
   const { data: photographerProfile } = useMeQuery();
 
@@ -25,13 +26,13 @@ export default function BookingManageContainer() {
     isLoading,
     isError,
     refetch,
-  } = usePhotographerReservationsInfiniteQuery({
+  } = usePhotographerBookingsInfiniteQuery({
     size: PAGE_SIZE,
     sort: ['reservedDate,desc'],
   });
 
-  const handlePressBookingDetail = (reservationId: number) => {
-    navigation.navigate('BookingDetails', { reservationId });
+  const handlePressBookingDetail = (bookingId: number) => {
+    navigation.navigate('BookingDetails', { bookingId });
   };
 
   const handleLoadMore = () => {
@@ -40,9 +41,9 @@ export default function BookingManageContainer() {
     }
   };
 
-  const handlePressViewPhotos = (reservationId: number) => navigation.navigate('ViewPhotos', { reservationId })
+  const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { reservationId: bookingId })
 
-  const handlePressConfirmBooking = async (reservationId: number) => {
+  const handlePressConfirmBooking = async (bookingId: number) => {
     Alert.show({
       title: '예약 수락',
       message: '예약을 수락하시겠습니까?',
@@ -51,7 +52,7 @@ export default function BookingManageContainer() {
         {
           text: '확인',
           onPress: async () => {
-            patchStatusMutate({ reservationId, status: 'CONFIRMED' })
+            approveMutation({ bookingId })
             Alert.show({
               title: '예약 수락 완료',
               message: '예약이 수락되었습니다.',
@@ -63,28 +64,11 @@ export default function BookingManageContainer() {
     });
   };
 
-  const handlePressRejectBooking = async (reservationId: number) => {
-    Alert.show({
-      title: '예약 거절',
-      message: '예약을 거절하시겠습니까?',
-      buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
-        {
-          text: '확인',
-          onPress: async () => {
-            patchStatusMutate({ reservationId, status: 'REJECTED' })
-            Alert.show({
-              title: '예약 거절 완료',
-              message: '예약이 거절되었습니다.',
-              buttons: [{ text: '확인', onPress: () => refetch() }],
-            });
-          },
-        },
-      ],
-    });
+  const handlePressRejectBooking = (bookingId: number) => {
+    navigation.navigate('BookingReject', { bookingId });
   };
 
-  const handlePressCompleteBooking = async (reservationId: number) => {
+  const handlePressCompleteBooking = async (bookingId: number) => {
     Alert.show({
       title: '촬영 완료',
       message: '촬영을 완료하시겠습니까?',
@@ -93,7 +77,7 @@ export default function BookingManageContainer() {
         {
           text: '확인',
           onPress: async () => {
-            patchStatusMutate({ reservationId, status: 'COMPLETED' })
+            completeMutaion({ bookingId })
             Alert.show({
               title: '촬영 완료',
               message: '촬영이 완료되었습니다.',
@@ -111,11 +95,11 @@ export default function BookingManageContainer() {
     setIsRefreshing(false);
   };
 
-  const reservations = data?.pages.flatMap((page) => page.content) ?? [];
+  const bookings = data?.pages.flatMap((page) => page.content) ?? [];
 
   return (
     <BookingManageView
-      reservations={reservations}
+      bookings={bookings}
       photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '' }}
       isLoading={isLoading}
       isError={isError}

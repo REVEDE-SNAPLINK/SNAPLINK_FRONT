@@ -54,8 +54,6 @@ type SlideModalProps = {
   headerAlign?: 'left' | 'center';
 
   headerLeft?: React.ReactNode;
-  headerCenter?: React.ReactNode; // 없으면 title 표시
-  headerRight?: React.ReactNode;
 
   // body layout
   scrollable?: boolean;
@@ -76,34 +74,32 @@ type SlideModalProps = {
 type Ctx = { startTranslateY: number; startSheetHeight: number };
 
 export default function SlideModal({
-                                     visible,
-                                     onClose,
-                                     children,
+  visible,
+  onClose,
+  children,
 
-                                     minHeight = SCREEN_HEIGHT * 0.33,
+  minHeight = SCREEN_HEIGHT * 0.33,
 
-                                     autoGrowToMax = false,
-                                     maxHeight,
+  autoGrowToMax = false,
+  maxHeight,
 
-                                     showHeader = true,
-                                     title,
-                                     headerAlign = 'center',
+  showHeader = true,
+  title,
+  headerAlign = 'left',
 
-                                     headerLeft,
-                                     headerCenter,
-                                     headerRight,
+  headerLeft,
 
-                                     scrollable = true,
+  scrollable = true,
 
-                                     footer,
-                                     footerHeight = DEFAULT_FOOTER_HEIGHT,
+  footer,
+  footerHeight = DEFAULT_FOOTER_HEIGHT,
 
-                                     keyboardAvoid = false,
+  keyboardAvoid = false,
 
-                                     draggableDown = true,
-                                     draggableUp = false,
-                                     closeOnOverlayPress = true,
-                                   }: SlideModalProps) {
+  draggableDown = true,
+  draggableUp = false,
+  closeOnOverlayPress = true,
+}: SlideModalProps) {
   const insets = useSafeAreaInsets();
 
   // overlay
@@ -278,22 +274,17 @@ export default function SlideModal({
       {/* Header */}
       {showHeader && (
         <Header>
-          <HeaderRow>
-            <HeaderSlot $pos="left">{headerLeft}</HeaderSlot>
-
-            <HeaderSlot $pos="center">
-              {headerCenter ? (
-                headerCenter
-              ) : (
-                <HeaderTitle $align={headerAlign}>
-                  <Typography fontSize={14} fontWeight="regular">
-                    {title ?? ''}
-                  </Typography>
-                </HeaderTitle>
-              )}
-            </HeaderSlot>
-
-            <HeaderSlot $pos="right">{headerRight}</HeaderSlot>
+          <HeaderRow textAlign={headerAlign}>
+            {headerLeft !== undefined ? (
+              headerLeft
+            ) : (
+              <Typography
+                fontSize={14}
+                fontWeight="bold"
+              >
+                {title ?? ''}
+              </Typography>
+            )}
           </HeaderRow>
         </Header>
       )}
@@ -408,29 +399,12 @@ const Header = styled.View`
   justify-content: center;
 `;
 
-const HeaderRow = styled.View`
+const HeaderRow = styled.View<{ textAlign: 'left' | 'center' }>`
   flex-direction: row;
   align-items: center;
   height: 100%;
-  padding: 0 12px;
-`;
-
-const HeaderSlot = styled.View<{ $pos: 'left' | 'center' | 'right' }>`
-  ${({ $pos }) =>
-    $pos === 'center'
-      ? `flex: 1; align-items: center; justify-content: center;`
-      : `width: 72px;`}
-
-  ${({ $pos }) => ($pos === 'left' ? `align-items: flex-start;` : '')}
-  ${({ $pos }) => ($pos === 'right' ? `align-items: flex-end;` : '')}
-  justify-content: center;
-`;
-
-const HeaderTitle = styled.View<{ $align: 'left' | 'center' }>`
-  ${({ $align }) =>
-    $align === 'left'
-      ? `width: 100%; padding-left: 30px; align-items: flex-start;`
-      : `align-items: center;`}
+  padding: 0 30px;
+  ${({ textAlign }) => textAlign === 'left' ? `justify-content: flex-start;` : `justify-content: center;`}
 `;
 
 const BodyScroll = styled(ScrollView)`

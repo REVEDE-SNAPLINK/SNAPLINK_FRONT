@@ -102,7 +102,7 @@ export default function FilterModal({
       visible={true}
       onClose={onClose}
       showHeader={true}
-      headerCenter={headerContent}
+      headerLeft={headerContent}
       minHeight={276}
       maxHeight={500}
       scrollable={false}

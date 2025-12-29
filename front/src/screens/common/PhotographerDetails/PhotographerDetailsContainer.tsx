@@ -1,18 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
-import PhotographerDetailsView from './PhotographerDetailsView.tsx';
+import PhotographerDetailsView, { ShareLink } from './PhotographerDetailsView.tsx';
 import { usePhotographerProfileInfiniteQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { LatestReviewSummaryItem } from '@/api/photographers.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
-
-export interface ShareLink {
-  name: string;
-  url: string;
-}
 
 const shareLinks: ShareLink[] = [
   {

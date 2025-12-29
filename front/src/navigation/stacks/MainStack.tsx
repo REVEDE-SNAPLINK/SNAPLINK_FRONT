@@ -26,6 +26,8 @@ import ShootingManageContainer from '@/screens/photographer/ShootingManage/Shoot
 import ServiceFormContainer from '@/screens/photographer/ServiceForm/ServiceFormContainer.tsx';
 import AIRecommdationFormContainer from '@/screens/common/AIRecommdationForm/AIRecommdationFormContainer.tsx';
 import AIRecommdationResultContainer from '@/screens/common/AIRecommdationResult/AIRecommdationResultContainer.tsx';
+import BookingRejectScreen from '@/screens/photographer/BookingReject/BookingRejectScreen.tsx';
+import BookingCancelScreen from '@/screens/user/BookingCancel/BookingCancelScreen.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -64,6 +66,8 @@ export default function MainStack() {
       <Stack.Screen name="BookingHistory" component={BookingHistoryContainer} />
       <Stack.Screen name="BookingRequest" component={BookingRequestContainer} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsContainer} />
+      <Stack.Screen name="BookingReject" component={BookingRejectScreen} />
+      <Stack.Screen name="BookingCancel" component={BookingCancelScreen} />
       <Stack.Screen name="WriteReview" component={WriteReviewContainer} />
       <Stack.Screen name="ViewPhotos" component={ViewPhotosContainer} />
       <Stack.Screen name="Reviews" component={ReviewsContainer} />

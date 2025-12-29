@@ -6,28 +6,29 @@ import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
 import { formatReservationDateTime } from '@/utils/format';
-import { PhotographerReservationListItem } from '@/api/reservations.ts';
+import { PhotographerBookingListItem } from '@/api/reservations.ts';
 import { GetMeResponse } from '@/api/user.ts';
 
 interface BookingManageViewProps {
-  reservations: PhotographerReservationListItem[];
+  bookings: PhotographerBookingListItem[];
   photographerProfile: GetMeResponse;
   isLoading: boolean;
   isError: boolean;
   onLoadMore: () => void;
   isFetchingNextPage: boolean;
   hasNextPage?: boolean;
-  onPressBookingDetail: (reservationId: number) => void;
+  onPressBookingDetail: (bookingId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  onPressViewPhotos?: (reservationId: number) => void;
-  onPressConfirmBooking?: (reservationId: number) => void;
-  onPressRejectBooking?: (reservationId: number) => void;
-  onPressCompleteBooking?: (reservationId: number) => void;
+  onPressViewPhotos?: (bookingId: number) => void;
+  onPressConfirmBooking?: (bookingId: number) => void;
+  onPressRejectBooking?: (bookingId: number) => void;
+  onPressCompleteBooking?: (bookingId: number) => void;
+  onPressCancelBooking?: (bookingId: number) => void;
 }
 
 export default function BookingManageView({
-  reservations,
+  bookings,
   photographerProfile,
   isLoading,
   isError,
@@ -41,40 +42,49 @@ export default function BookingManageView({
   onPressConfirmBooking,
   onPressRejectBooking,
   onPressCompleteBooking,
+  onPressCancelBooking,
 }: BookingManageViewProps) {
-  const renderItem = ({ item }: { item: PhotographerReservationListItem }) => {
+  const renderItem = ({ item }: { item: PhotographerBookingListItem }) => {
 
-    const endDateTime = new Date(`${item.reservedDate}T${item.endTime}`);
-    const canCompleteBooking = item.status === 'CONFIRMED' && (new Date() > endDateTime);
+    const endDateTime = new Date(`${item.shootingDate}T${item.endTime}`);
+    const startDateTime = new Date(`${item.shootingDate}T${item.startTime}`);
+    const canCancelBooking = item.status === 'APPROVED' && (new Date() < startDateTime);
+    const canCompleteBooking = item.status === 'APPROVED' && (new Date() > endDateTime);
 
     return (
       <HistoryCard
-        onPress={() => onPressBookingDetail(item.reservationId)}
+        onPress={() => onPressBookingDetail(item.bookingId)}
         canCompleteBooking={canCompleteBooking}
+        canCancelBooking={canCancelBooking}
         status={item.status}
-        userName={item.userName || '고객'}
+        userName={item.customerName || '고객'}
         photographerNickName={photographerProfile.nickname || '작가'}
         photographerName={photographerProfile.name || '작가'}
         type={item.type}
-        datetime={formatReservationDateTime(item.reservedDate, item.startTime)}
+        datetime={formatReservationDateTime(item.shootingDate, item.startTime)}
         onPressViewPhotos={
-          (item.status === 'COMPLETED' || item.status === 'DELIVERED' || item.status === 'REVIEWED') && onPressViewPhotos
-            ? () => onPressViewPhotos(item.reservationId)
+          (item.status === 'COMPLETED' || item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK') && onPressViewPhotos
+            ? () => onPressViewPhotos(item.bookingId)
             : undefined
         }
         onPressCompleteBooking={
-          (item.status === 'CONFIRMED') && onPressCompleteBooking
-            ? () => onPressCompleteBooking(item.reservationId)
+          (item.status === 'APPROVED') && onPressCompleteBooking
+            ? () => onPressCompleteBooking(item.bookingId)
+            : undefined
+        }
+        onPressCancelBooking={
+          (item.status === 'APPROVED') && onPressCancelBooking
+            ? () => onPressCancelBooking(item.bookingId)
             : undefined
         }
         onPressConfirmBooking={
-          item.status === 'REQUESTED' && onPressConfirmBooking
-            ? () => onPressConfirmBooking(item.reservationId)
+          item.status === 'WAITING_FOR_APPROVAL' && onPressConfirmBooking
+            ? () => onPressConfirmBooking(item.bookingId)
             : undefined
         }
         onPressRejectBooking={
-          item.status === 'REQUESTED' && onPressRejectBooking
-            ? () => onPressRejectBooking(item.reservationId)
+          item.status === 'WAITING_FOR_APPROVAL' && onPressRejectBooking
+            ? () => onPressRejectBooking(item.bookingId)
             : undefined
         }
       />
@@ -119,9 +129,9 @@ export default function BookingManageView({
       <ContentContainer>
         <FlatList
           testID="booking-history-list"
-          data={reservations}
+          data={bookings}
           renderItem={renderItem}
-          keyExtractor={(item) => item.reservationId.toString()}
+          keyExtractor={(item) => item.bookingId.toString()}
           contentContainerStyle={{
             paddingTop: 24,
             paddingHorizontal: 27,

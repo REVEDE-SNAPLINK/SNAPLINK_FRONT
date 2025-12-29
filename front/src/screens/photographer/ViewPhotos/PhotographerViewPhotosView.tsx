@@ -61,7 +61,7 @@ export default function PhotographerViewPhotosView({
             imageURIs={imageURIs}
             checkedImages={checkedImages}
             setCheckedImage={setCheckedImages}
-            addable={!isLoading && imageURIs.length === 0}
+            addable={!isLoading}
             onPressAddImage={onUploadPhotos}
             width={332}
           />

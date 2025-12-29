@@ -21,7 +21,11 @@ import ActiveStarIcon from '@/assets/icons/star-color.svg'
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import { GetPhotographerProfileResponse, PhotographerPortfolioThumb } from '@/api/photographers.ts';
 import SlideModal from '@/components/theme/SlideModal.tsx';
-import { ShareLink } from '@/screens/common/PhotographerDetails/PhotographerDetailsContainer.tsx';
+
+export interface ShareLink {
+  name: string;
+  url: string;
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_MARGIN = 2;
@@ -398,7 +402,7 @@ export default function PhotographerDetailsView({
       minHeight={SCREEN_WIDTH * 0.25}
     >
       {shareLinks.map((v, i) => (
-        <ShareLink
+        <ShareLinkButton
           key={i}
           onPress={() => {
             (async () => {
@@ -417,7 +421,7 @@ export default function PhotographerDetailsView({
           >
             {v.name}
           </Typography>
-        </ShareLink>
+        </ShareLinkButton>
       ))}
     </SlideModal>
   </>
@@ -645,7 +649,7 @@ const ShowReviewButton = styled.TouchableOpacity`
   align-items: center;
 `
 
-const ShareLink = styled.Pressable`
+const ShareLinkButton = styled.Pressable`
   flex-direction: row;
   align-items: center;
   margin-bottom: 15px;

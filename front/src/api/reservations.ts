@@ -49,15 +49,6 @@ export interface PageResponse<T> {
   content: T[];
 }
 
-/** 예약 상태(작가가 변경하는 상태 포함) */
-export type ReservationStatus =
-  | 'REQUESTED' // 예약 요청
-  | 'CONFIRMED' // 승인
-  | 'REJECTED' // 거절
-  | 'COMPLETED' // 촬영 완료
-  | 'DELIVERED' // 사진 전달
-  | 'REVIEWED'; // 리뷰 입력
-
 export type BookingStatus =
   | 'WAITING_FOR_APPROVAL' // 예약 요청
   | 'APPROVED' // 승인
@@ -65,7 +56,7 @@ export type BookingStatus =
   | 'CANCELLED' // 촬영 완료
   | 'COMPLETED' // 촬영 완료
   | 'PHOTOS_DELIVERED' // 사진 전달
-  | 'USER_PHOTO_CHECK'; // 리뷰 입력
+  | 'USER_PHOTO_CHECK'; // 사용자가 사진을 승인함
 
 /** 예약 리스트 아이템(현재는 고객/작가 구분 정보 없음) */
 export interface BookingListItem {
@@ -80,11 +71,11 @@ export interface BookingListItem {
 export interface UserBookingListItem extends BookingListItem {
   photographerName: string;
   photographerNickName: string;
+  isreview: boolean;
 }
 
 export interface PhotographerBookingListItem extends BookingListItem {
   customerName: string;
-  customerNickname: string;
 }
 
 /** 고객용 예약 내역 조회 응답 */
@@ -110,12 +101,6 @@ export interface AvailableDay {
   startTime: string;
   endTime: string;
   available: boolean;
-}
-
-/** 작가용 예약 상태 변경 요청 */
-export interface PatchReservationStatusParams {
-  reservationId: number;
-  status: ReservationStatus;
 }
 
 export interface PatchBookingStatusParams {

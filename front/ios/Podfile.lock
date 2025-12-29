@@ -2550,6 +2550,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - RNNotifee (9.1.8):
+    - React-Core
+    - RNNotifee/NotifeeCore (= 9.1.8)
+  - RNNotifee/NotifeeCore (9.1.8):
+    - React-Core
   - RNPermissions (5.4.4):
     - React-Core
   - RNReanimated (3.19.3):
@@ -2824,6 +2829,7 @@ DEPENDENCIES:
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
+  - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -3025,6 +3031,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNKeychain:
     :path: "../node_modules/react-native-keychain"
+  RNNotifee:
+    :path: "../node_modules/@notifee/react-native"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
   RNReanimated:
@@ -3138,6 +3146,7 @@ SPEC CHECKSUMS:
   RNFBMessaging: e25c512cfcf4718bcecb65090608c9c570f51826
   RNGestureHandler: 862ede35c4386c25d2f3e8da2318fd5e15d3acf3
   RNKeychain: b99c35dfec253e6fa08c68ed9d6925354fade996
+  RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNPermissions: 332264c8f0644d01137f11029bfc76786d92259f
   RNReanimated: 6426b1c515f1190913c04119bbe91c5ff6e33103
   RNScreens: 66511ce6211630d9fb1141bcd5b2ae269d8d1ccb

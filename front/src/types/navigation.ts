@@ -35,15 +35,17 @@ export type MainStackParamList = {
 
   // Reservation
   BookingHistory: undefined;
-  BookingDetails: { reservationId: number };
+  BookingDetails: { bookingId: number };
   Booking: { photographerId: string };
   BookingRequest: BookingFormData;
+  BookingReject: { bookingId: number };
+  BookingCancel: { bookingId: number };
 
   // Review
   Reviews: { photographerId: string };
   ReviewDetails: { reviewId: number; review: PhotographerReviewItem | MyReviewItem };
   ReviewPhotos: { photographerId: string };
-  WriteReview: { reservationId: number; review?: MyReviewItem };
+  WriteReview: { bookingId: number; review?: MyReviewItem };
   ViewPhotos: { reservationId: number };
   MyReviews: undefined;
 

@@ -5,7 +5,6 @@ import PortfolioOnboardingView, {
   PortfolioOnboardingFormData, Tag,
 } from '@/screens/photographer/PortfolioOnboarding/PortfolioOnboardingView.tsx';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { useConceptsQuery, useRegionsQuery } from '@/queries/meta.ts';
 import {
   useCreatePortfolioMutation,
@@ -93,7 +92,6 @@ const buildSchedulesFromForm = (
 };
 
 export default function PortfolioOnboardingContainer() {
-  const { userId } = useAuthStore();
   const { data: regions, isLoading: isLoadingRegions } = useRegionsQuery();
   const { data: concepts, isLoading: isLoadingConcepts } = useConceptsQuery();
 
@@ -118,36 +116,39 @@ export default function PortfolioOnboardingContainer() {
   } = useForm<PortfolioOnboardingFormData>({
     defaultValues: {
       description: '',
-      shootingRegions: [],
-      shootingTags: [],
-      shootingConcepts: [],
-      basePrice: '',
-      shootingDuration: null,
-      shootingPeople: null,
-      shootingDescription: '',
-      retouchingType: null,
-      provideRawFiles: false,
-      retouchingDuration: null,
-      retouchingSelectionRight: null,
+      regionIds: [],
+      conceptIds: [],
+      tagIds: [],
+      shootingProductName: '',
+      shootingProductBasePrice: '',
+      shootingProductPhotoTime: null,
+      shootingProductPersonnel: null,
+      shootingProductDescription: '',
+      shootingProductEditingType: null,
+      shootingProductProvidesRawFile: false,
+      shootingProductEditingDeadline: null,
+      shootingProductSelectionAuthority: null,
+      shootingProductProvidedEditCount: '',
       availableDays: [],
       daySchedules: {},
       unavailableDateDescription: '',
-      additionalOptions: [],
+      shootingProductOptions: [],
     },
     mode: 'onChange',
   });
 
   const watchedDescription = watch('description');
-  const watchedShootingRegions = watch('shootingRegions');
-  const watchedShootingTags = watch('shootingTags');
-  const watchedShootingConcepts = watch('shootingConcepts');
-  const watchedBasePrice = watch('basePrice');
-  const watchedShootingDuration = watch('shootingDuration');
-  const watchedShootingPeople = watch('shootingPeople');
-  const watchedAdditionalOptions = watch('additionalOptions');
-  const watchedRetouchingType = watch('retouchingType');
-  const watchedRetouchingDuration = watch('retouchingDuration');
-  const watchedRetouchingSelectionRight = watch('retouchingSelectionRight');
+  const watchedRegionIds = watch('regionIds');
+  const watchedTagIds = watch('tagIds');
+  const watchedConceptIds = watch('conceptIds');
+  const watchedShootingProductName = watch('shootingProductName');
+  const watchedShootingProductBasePrice = watch('shootingProductBasePrice');
+  const watchedShootingProductPhotoTime = watch('shootingProductPhotoTime');
+  const watchedShootingProductPersonnel = watch('shootingProductPersonnel');
+  const watchedShootingProductOptions = watch('shootingProductOptions');
+  const watchedShootingProductEditingType = watch('shootingProductEditingType');
+  const watchedShootingProductEditingDeadline = watch('shootingProductEditingDeadline');
+  const watchedShootingProductSelectionAuthority = watch('shootingProductSelectionAuthority');
   const watchedAvailableDays = watch('availableDays');
   const watchedDaySchedules = watch('daySchedules');
   const watchedUnavailableDateDescription = watch('unavailableDateDescription');
@@ -157,33 +158,34 @@ export default function PortfolioOnboardingContainer() {
       switch (step) {
         case 0:
           // Step1: 프로필 사진과 한 줄 소개
-          return watchedDescription.trim() !== '';
+          return profileImageURI !== undefined && watchedDescription.trim() !== '';
         case 1:
           // Step2: 포트폴리오 사진 (최소 1장)
           return photoURIs.length >= 1;
         case 2:
           // Step3: 활동 지역 (최소 1개)
-          return watchedShootingRegions.length >= 1;
+          return watchedRegionIds.length >= 1;
         case 3:
           // Step4: 활동 키워드 (최소 1개)
-          return watchedShootingTags.length >= 1;
+          return watchedTagIds.length >= 1;
         case 4:
           // Step5: 활동 컨셉 (최소 1개)
-          return watchedShootingConcepts.length >= 1;
+          return watchedConceptIds.length >= 1;
         case 5:
           // Step6: 촬영 정보
           return (
-            watchedBasePrice.trim() !== '' &&
-            watchedShootingDuration !== null &&
-            watchedShootingPeople !== null
+            watchedShootingProductName.trim() !== '' &&
+            watchedShootingProductBasePrice.trim() !== '' &&
+            watchedShootingProductPhotoTime !== null &&
+            watchedShootingProductPersonnel !== null
           );
         case 6: {
           // Step7: 추가 옵션
           // 추가 옵션 자체는 필수가 아님
-          if (watchedAdditionalOptions.length === 0) return true;
+          if (watchedShootingProductOptions.length === 0) return true;
 
           // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
-          return watchedAdditionalOptions.every(option => {
+          return watchedShootingProductOptions.every(option => {
             const hasAnyValue = option.name.trim() !== '' ||
                                 option.description.trim() !== '' ||
                                 option.price.trim() !== '';
@@ -203,13 +205,13 @@ export default function PortfolioOnboardingContainer() {
         }
         case 7:
           // Step8: 보정 정보
-          if (watchedRetouchingType === '제공하지 않음') {
+          if (watchedShootingProductEditingType === '제공하지 않음') {
             return true;
           }
           return (
-            watchedRetouchingType !== null &&
-            watchedRetouchingDuration !== null &&
-            watchedRetouchingSelectionRight !== null
+            watchedShootingProductEditingType !== null &&
+            watchedShootingProductEditingDeadline !== null &&
+            watchedShootingProductSelectionAuthority !== null
           );
         case 8:
           // Step9: 촬영 가능 일정
@@ -230,18 +232,20 @@ export default function PortfolioOnboardingContainer() {
       }
     },
     [
+      profileImageURI,
       photoURIs,
       watchedDescription,
-      watchedShootingRegions,
-      watchedShootingTags,
-      watchedShootingConcepts,
-      watchedBasePrice,
-      watchedShootingDuration,
-      watchedShootingPeople,
-      watchedAdditionalOptions,
-      watchedRetouchingType,
-      watchedRetouchingDuration,
-      watchedRetouchingSelectionRight,
+      watchedRegionIds,
+      watchedTagIds,
+      watchedConceptIds,
+      watchedShootingProductName,
+      watchedShootingProductBasePrice,
+      watchedShootingProductPhotoTime,
+      watchedShootingProductPersonnel,
+      watchedShootingProductOptions,
+      watchedShootingProductEditingType,
+      watchedShootingProductEditingDeadline,
+      watchedShootingProductSelectionAuthority,
       watchedAvailableDays,
       watchedDaySchedules,
     ]
@@ -250,27 +254,28 @@ export default function PortfolioOnboardingContainer() {
   const isStepValid = useMemo(() => {
     switch (currentStep) {
       case 0:
-        return watchedDescription.trim() !== '';
+        return profileImageURI !== undefined && watchedDescription.trim() !== '';
       case 1:
         return photoURIs.length >= 1;
       case 2:
-        return watchedShootingRegions.length >= 1;
+        return watchedRegionIds.length >= 1;
       case 3:
-        return watchedShootingTags.length >= 1;
+        return watchedTagIds.length >= 1;
       case 4:
-        return watchedShootingConcepts.length >= 1;
+        return watchedConceptIds.length >= 1;
       case 5:
         return (
-          watchedBasePrice.trim() !== '' &&
-          watchedShootingDuration !== null &&
-          watchedShootingPeople !== null
+          watchedShootingProductName.trim() !== '' &&
+          watchedShootingProductBasePrice.trim() !== '' &&
+          watchedShootingProductPhotoTime !== null &&
+          watchedShootingProductPersonnel !== null
         );
       case 6: {
         // 추가 옵션 자체는 필수가 아님
-        if (watchedAdditionalOptions.length === 0) return true;
+        if (watchedShootingProductOptions.length === 0) return true;
 
         // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
-        return watchedAdditionalOptions.every(option => {
+        return watchedShootingProductOptions.every(option => {
           const hasAnyValue = option.name.trim() !== '' ||
                               option.description.trim() !== '' ||
                               option.price.trim() !== '';
@@ -289,13 +294,13 @@ export default function PortfolioOnboardingContainer() {
         });
       }
       case 7:
-        if (watchedRetouchingType === '제공하지 않음') {
+        if (watchedShootingProductEditingType === '제공하지 않음') {
           return true;
         }
         return (
-          watchedRetouchingType !== null &&
-          watchedRetouchingDuration !== null &&
-          watchedRetouchingSelectionRight !== null
+          watchedShootingProductEditingType !== null &&
+          watchedShootingProductEditingDeadline !== null &&
+          watchedShootingProductSelectionAuthority !== null
         );
       case 8: {
         if (watchedAvailableDays.length < 1) return false;
@@ -316,18 +321,20 @@ export default function PortfolioOnboardingContainer() {
     }
   }, [
     currentStep,
+    profileImageURI,
     photoURIs,
     watchedDescription,
-    watchedShootingRegions,
-    watchedShootingTags,
-    watchedShootingConcepts,
-    watchedBasePrice,
-    watchedShootingDuration,
-    watchedShootingPeople,
-    watchedAdditionalOptions,
-    watchedRetouchingType,
-    watchedRetouchingDuration,
-    watchedRetouchingSelectionRight,
+    watchedRegionIds,
+    watchedTagIds,
+    watchedConceptIds,
+    watchedShootingProductName,
+    watchedShootingProductBasePrice,
+    watchedShootingProductPhotoTime,
+    watchedShootingProductPersonnel,
+    watchedShootingProductOptions,
+    watchedShootingProductEditingType,
+    watchedShootingProductEditingDeadline,
+    watchedShootingProductSelectionAuthority,
     watchedAvailableDays,
     watchedDaySchedules,
   ]);
@@ -428,52 +435,112 @@ export default function PortfolioOnboardingContainer() {
 
   const onSubmit = useCallback(
     async (data: PortfolioOnboardingFormData) => {
-      const portfolioData = {
-        ...data,
-        profileImageURI,
-        photoURIs,
-        userId,
+      // Helper function to convert time duration to minutes
+      const parsePhotoTime = (timeStr: string | null): number => {
+        if (!timeStr || timeStr.trim() === '') return 60; // default 1 hour
+        if (timeStr === '6시간 이상') return 360;
+
+        // Check if it's a numeric string (from dropdown: "1.5", "2", "6")
+        const numericValue = parseFloat(timeStr);
+        if (!isNaN(numericValue)) {
+          // It's a number in hours (e.g., 1.5 hours = 90 minutes)
+          return Math.round(numericValue * 60);
+        }
+
+        // Parse Korean format "X시간 Y분" or "X시간" or "X분"
+        const hourMatch = timeStr.match(/(\d+)시간/);
+        const minuteMatch = timeStr.match(/(\d+)분/);
+
+        const hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+        const minutes = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
+
+        return hours * 60 + minutes;
       };
 
-      const enhancedTime = (() => {
-        switch (portfolioData.retouchingDuration) {
-          case '당일 보정':
-            return '1일';
-          case '2일 이내':
-            return '2일';
-          case '3일 이내':
-            return '3일';
-          case '4일 이내':
-            return '4일';
-          case '5일 이내':
-            return '5일';
-          case '7일 이내':
-            return '7일';
-          default:
-            return '14일';
+      // Helper function to parse personnel
+      const parsePersonnel = (personnelStr: string | null): number => {
+        if (!personnelStr) return 1;
+        if (personnelStr === '6명 이상') return 6;
+
+        const match = personnelStr.match(/(\d+)명/);
+        return match ? parseInt(match[1]) : 1;
+      };
+
+      // Map editing type
+      const mapEditingType = (type: string | null): "FACIAL" | "COLOR" | "BOTH" | "NONE" => {
+        switch (type) {
+          case '얼굴 보정': return 'FACIAL';
+          case '색감 보정': return 'COLOR';
+          case '얼굴, 색감 보정': return 'BOTH';
+          case '제공하지 않음': return 'NONE';
+          default: return 'NONE';
         }
-      })();
+      };
+
+      // Map editing deadline
+      const mapEditingDeadline = (deadline: string | null): "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS" => {
+        switch (deadline) {
+          case '당일 보정': return 'SAME_DAY';
+          case '2일 이내': return 'WITHIN_2_DAYS';
+          case '3일 이내': return 'WITHIN_3_DAYS';
+          case '4일 이내': return 'WITHIN_4_DAYS';
+          case '5일 이내': return 'WITHIN_5_DAYS';
+          case '7일 이내': return 'WITHIN_7_DAYS';
+          default: return 'WITHIN_7_DAYS';
+        }
+      };
+
+      // Map selection authority
+      const mapSelectionAuthority = (authority: string | null): "PHOTOGRAPHER" | "CUSTOMER" | "BOTH" => {
+        switch (authority) {
+          case '작가 선택': return 'PHOTOGRAPHER';
+          case '고객 선택': return 'CUSTOMER';
+          case '작가와 고객 함께 선택': return 'BOTH';
+          default: return 'BOTH';
+        }
+      };
+
+      // Build shooting product
+      const shootingProduct = {
+        name: data.shootingProductName,
+        basePrice: parseInt(data.shootingProductBasePrice),
+        description: data.shootingProductDescription,
+        photoTime: parsePhotoTime(data.shootingProductPhotoTime),
+        personnel: parsePersonnel(data.shootingProductPersonnel),
+        providesRawFile: data.shootingProductProvidesRawFile,
+        editingType: mapEditingType(data.shootingProductEditingType),
+        editingDeadline: mapEditingDeadline(data.shootingProductEditingDeadline),
+        providedEditCount: parseInt(data.shootingProductProvidedEditCount) || 0,
+        selectionAuthority: mapSelectionAuthority(data.shootingProductSelectionAuthority),
+        options: data.shootingProductOptions
+          .filter(opt => opt.name.trim() !== '' && opt.description.trim() !== '' && opt.price.trim() !== '')
+          .map(opt => ({
+            name: opt.name,
+            description: opt.description,
+            price: parseInt(opt.price),
+            additionalTime: opt.time && opt.time.trim() !== '' ? parsePhotoTime(opt.time) : 0,
+          })),
+      };
 
       const params = {
-        description: portfolioData.description,
-        basePrice: parseInt(portfolioData.basePrice),
-        baseTime: portfolioData.shootingDuration !== null ? parseFloat(portfolioData.shootingDuration) : 1,
-        basePeople: portfolioData.shootingPeople !== undefined && portfolioData.shootingPeople !== null ? parseInt(portfolioData.shootingPeople.slice(0)) : 1,
-        regionId: portfolioData.shootingRegions,
-        conceptId: portfolioData.shootingConcepts,
-        schedules: buildSchedulesFromForm(portfolioData.availableDays, portfolioData.daySchedules),
-        isPublicHolidays: portfolioData.availableDays.includes("공휴일"),
-        isOriginal: portfolioData.provideRawFiles,
-        isEnhanced: portfolioData.retouchingType !== null ? portfolioData.retouchingType : '제공하지 않음',
-        enhancedTime,
-        enhancedPermission: portfolioData.retouchingSelectionRight !== null ? portfolioData.retouchingSelectionRight : '작가와 고객 함께 선택',
-      }
+        description: data.description,
+        regionIds: data.regionIds,
+        conceptIds: data.conceptIds,
+        schedules: buildSchedulesFromForm(data.availableDays, data.daySchedules),
+        isPublicHolidays: data.availableDays.includes("공휴일"),
+        tag: data.tagIds, // Array of tag IDs
+        shootingProduct,
+      };
+
+      console.log('=== PortfolioOnboarding API Request ===');
+      console.log(JSON.stringify(params, null, 2));
+      console.log('=======================================');
 
       signPhotographer(params, {
         onSuccess: () => {
           Alert.show({
-            title: '완료',
-            message: '등록이 완료되었습니다.',
+            title: '🎉프로필과 포트폴리오 등록이 완료되었어요!',
+            message: '프로필과 포트폴리오에 등록한 내용은 더보기-마이페이지에서 언제든지 추가,수정,변경이 가능해요.',
             buttons: [
               {
                 text: '확인',
@@ -488,12 +555,26 @@ export default function PortfolioOnboardingContainer() {
           });
         },
         onError: (e) => {
-          Alert.show({ title: '오류', message: '등록에 실패했습니다.' });
           console.error(e);
+          Alert.show({
+            title: '오류',
+            message: '등록에 실패했습니다.',
+            buttons: [
+              {
+                text: '확인',
+                onPress: () => {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                  });
+                },
+              },
+            ],
+          });
         },
       });
     },
-    [profileImageURI, photoURIs, userId, navigation, signPhotographer]
+    [navigation, signPhotographer]
   );
 
   const handleCamera = useCallback(async () => {
@@ -504,7 +585,9 @@ export default function PortfolioOnboardingContainer() {
         const options: CameraOptions = {
           mediaType: 'photo',
           saveToPhotos: true,
-          quality: 0.8,
+          quality: 0.3,
+          maxWidth: 600,
+          maxHeight: 600,
         };
 
         const response: ImagePickerResponse = await launchCamera(options);
@@ -550,7 +633,9 @@ export default function PortfolioOnboardingContainer() {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 1,
-          quality: 0.8,
+          quality: 0.2,
+          maxWidth: 400,
+          maxHeight: 400,
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -606,7 +691,9 @@ export default function PortfolioOnboardingContainer() {
         const options: ImageLibraryOptions = {
           mediaType: 'photo',
           selectionLimit: 0,
-          quality: 0.8,
+          quality: 0.3,
+          maxWidth: 800,
+          maxHeight: 800,
         };
 
         const response: ImagePickerResponse = await launchImageLibrary(options);
@@ -654,37 +741,37 @@ export default function PortfolioOnboardingContainer() {
 
   const handleToggleRegion = useCallback((id: number) => {
     setValue(
-      'shootingRegions',
-      watchedShootingRegions.includes(id)
-        ? watchedShootingRegions.filter((l) => l !== id)
-        : [...watchedShootingRegions, id]
+      'regionIds',
+      watchedRegionIds.includes(id)
+        ? watchedRegionIds.filter((l) => l !== id)
+        : [...watchedRegionIds, id]
     );
-  }, [setValue, watchedShootingRegions]);
+  }, [setValue, watchedRegionIds]);
 
   const handleToggleTag = useCallback((id: number) => {
     setValue(
-      'shootingTags',
-      watchedShootingTags.includes(id)
-        ? watchedShootingTags.filter((l) => l !== id)
-        : [...watchedShootingTags, id]
+      'tagIds',
+      watchedTagIds.includes(id)
+        ? watchedTagIds.filter((l) => l !== id)
+        : [...watchedTagIds, id]
     );
-  }, [setValue, watchedShootingTags]);
+  }, [setValue, watchedTagIds]);
 
   const handleToggleConcept = useCallback((id: number) => {
     setValue(
-      'shootingConcepts',
-      watchedShootingConcepts.includes(id)
-        ? watchedShootingConcepts.filter((c) => c !== id)
-        : [...watchedShootingConcepts, id]
+      'conceptIds',
+      watchedConceptIds.includes(id)
+        ? watchedConceptIds.filter((c) => c !== id)
+        : [...watchedConceptIds, id]
     );
-  }, [setValue, watchedShootingConcepts]);
+  }, [setValue, watchedConceptIds]);
 
   const handleDeleteOption = useCallback((index: number) => {
     setValue(
-      'additionalOptions',
-      [...watchedAdditionalOptions.filter((_, i) => i !== index)]
+      'shootingProductOptions',
+      [...watchedShootingProductOptions.filter((_, i) => i !== index)]
     );
-  }, [watchedAdditionalOptions, setValue]);
+  }, [watchedShootingProductOptions, setValue]);
 
   const handleToggleDay = useCallback((day: string) => {
     setValue(

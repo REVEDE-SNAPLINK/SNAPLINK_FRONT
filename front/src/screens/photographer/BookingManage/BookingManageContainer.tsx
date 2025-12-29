@@ -68,6 +68,10 @@ export default function BookingManageContainer() {
     navigation.navigate('BookingReject', { bookingId });
   };
 
+  const handlePressCancelBooking = (bookingId: number) => {
+    navigation.navigate('BookingCancel', { bookingId });
+  };
+
   const handlePressCompleteBooking = async (bookingId: number) => {
     Alert.show({
       title: '촬영 완료',
@@ -112,6 +116,7 @@ export default function BookingManageContainer() {
       onPressViewPhotos={handlePressViewPhotos}
       onPressConfirmBooking={handlePressConfirmBooking}
       onPressRejectBooking={handlePressRejectBooking}
+      onPressCancelBooking={handlePressCancelBooking}
       onPressCompleteBooking={handlePressCompleteBooking}
     />
   );

@@ -1,5 +1,5 @@
 import { GetPageable } from '@/api/community.ts';
-import { GetReservationListParams } from '@/api/reservations.ts';
+import { GetBookingListParams } from '@/api/reservations.ts';
 import type { SearchPhotographersBody } from '@/api/photographers';
 
 // Meta data (regions, concepts)
@@ -84,7 +84,7 @@ export const photographersQueryKeys = {
     [...photographersQueryKeys.all, 'scrap', 'status', photographerId] as const,
 };
 
-// Reservation
+// Reservation/Booking
 export const reservationsQueryKeys = {
   all: ['reservations'] as const,
 
@@ -93,23 +93,23 @@ export const reservationsQueryKeys = {
   userList: () => [...reservationsQueryKeys.lists(), 'user'] as const,
   photographerList: () => [...reservationsQueryKeys.lists(), 'photographer'] as const,
 
-  userListInfinite: (params: Omit<GetReservationListParams, 'page'>) =>
+  userListInfinite: (params: Omit<GetBookingListParams, 'page'>) =>
     [...reservationsQueryKeys.userList(), 'infinite', params] as const,
 
-  photographerListInfinite: (params: Omit<GetReservationListParams, 'page'>) =>
+  photographerListInfinite: (params: Omit<GetBookingListParams, 'page'>) =>
     [...reservationsQueryKeys.photographerList(), 'infinite', params] as const,
 
-  monthlySchedule: (photographerId: string, month: string) =>
-    [...reservationsQueryKeys.all, 'monthlySchedule', photographerId, month] as const,
+  monthlySchedule: (photographerId: string, year: string, month: string) =>
+    [...reservationsQueryKeys.all, 'monthlySchedule', photographerId, year, month] as const,
 
-  availableSlots: (photographerId: string, date: string) =>
-    [...reservationsQueryKeys.all, 'availableSlots', photographerId, date] as const,
+  availableDays: (photographerId: string, date: string) =>
+    [...reservationsQueryKeys.all, 'availableDays', photographerId, date] as const,
 
-  reservation: (reservationId: number) =>
-    [...reservationsQueryKeys.all, 'detail', reservationId] as const,
+  booking: (bookingId: number) =>
+    [...reservationsQueryKeys.all, 'detail', bookingId] as const,
 
   reservationPhotos: (reservationId: number) =>
-    [...reservationsQueryKeys.reservation(reservationId), 'photos'] as const,
+    [...reservationsQueryKeys.all, 'reservation', reservationId, 'photos'] as const,
 };
 
 // Reviews

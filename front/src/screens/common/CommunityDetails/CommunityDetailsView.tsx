@@ -10,7 +10,6 @@ import {
   NativeScrollEvent,
   Animated,
   Linking,
-  Keyboard,
 } from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
@@ -750,7 +749,6 @@ const MoreMenu = styled.View`
   shadow-offset: 0px 2px;
   shadow-opacity: 0.1;
   shadow-radius: 4px;
-  elevation: 3;
   z-index: 1000;
   min-width: 80px;
 `;

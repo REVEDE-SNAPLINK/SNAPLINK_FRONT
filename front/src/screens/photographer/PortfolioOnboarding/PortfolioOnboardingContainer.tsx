@@ -132,7 +132,6 @@ export default function PortfolioOnboardingContainer() {
       shootingProductProvidedEditCount: '',
       availableDays: [],
       daySchedules: {},
-      unavailableDateDescription: '',
       shootingProductOptions: [],
     },
     mode: 'onChange',
@@ -152,7 +151,6 @@ export default function PortfolioOnboardingContainer() {
   const watchedShootingProductSelectionAuthority = watch('shootingProductSelectionAuthority');
   const watchedAvailableDays = watch('availableDays');
   const watchedDaySchedules = watch('daySchedules');
-  const watchedUnavailableDateDescription = watch('unavailableDateDescription');
 
   const validateStep = useCallback(
     async (step: number): Promise<boolean> => {
@@ -532,10 +530,6 @@ export default function PortfolioOnboardingContainer() {
         tag: data.tagIds, // Array of tag IDs
         shootingProduct,
       };
-
-      console.log('=== PortfolioOnboarding API Request ===');
-      console.log(JSON.stringify(params, null, 2));
-      console.log('=======================================');
 
       signPhotographer(params, {
         onSuccess: () => {

@@ -4,6 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMonthlyScheduleQuery } from '@/queries/reservations.ts';
+import AddScheduleModal, { PersonalSchedule } from './AddScheduleModal';
+import ScheduleDetailModal from './ScheduleDetailModal';
 
 export default function BookingCalendarContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -15,12 +17,16 @@ export default function BookingCalendarContainer() {
   const [selectedDate, setSelectedDate] = useState<string>(
     today.toISOString().split('T')[0]
   );
-  const [currentMonth, setCurrentMonth] = useState<string>(
-    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
-  );
+
+  // Personal schedules state
+  const [personalSchedules, setPersonalSchedules] = useState<PersonalSchedule[]>([]);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<PersonalSchedule | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<PersonalSchedule | undefined>(undefined);
 
   // Fetch monthly schedule
-  const { data: monthlySchedule } = useMonthlyScheduleQuery(userId, currentMonth);
+  const { data: monthlySchedule } = useMonthlyScheduleQuery(userId, selectedDate.substring(0, 7));
 
   // TODO: 백엔드 API 추가 필요
   // GET /api/photographers/{photographerId}/calendar/{date}
@@ -43,18 +49,73 @@ export default function BookingCalendarContainer() {
       .map((schedule) => schedule.date);
   }, [monthlySchedule]);
 
+  // Get schedules for selected date
+  const selectedDateSchedules = useMemo(() => {
+    return personalSchedules.filter((schedule) => {
+      const scheduleDate = schedule.startDate.toISOString().split('T')[0];
+      return scheduleDate === selectedDate;
+    });
+  }, [personalSchedules, selectedDate]);
+
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressBookingItem = (reservationId: number) =>
-    navigation.navigate('BookingDetails', { reservationId });
+  const handlePressBookingItem = (bookingId: number) =>
+    navigation.navigate('BookingDetails', { bookingId });
+
+  const handlePressPersonalSchedule = (scheduleId: string) => {
+    const schedule = personalSchedules.find((s) => s.id === scheduleId);
+    if (schedule) {
+      setSelectedSchedule(schedule);
+      setIsDetailModalVisible(true);
+    }
+  };
 
   const handleSelectDate = (date: string) => {
     setSelectedDate(date);
   };
 
   const handleAddSchedule = () => {
-    // TODO: Navigate to Add Schedule screen or open modal
-    console.log('Add schedule clicked');
+    setEditingSchedule(undefined);
+    setIsAddModalVisible(true);
+  };
+
+  const handleSubmitSchedule = (schedule: Omit<PersonalSchedule, 'id'>) => {
+    if (editingSchedule) {
+      // Update existing schedule
+      setPersonalSchedules((prev) =>
+        prev.map((s) =>
+          s.id === editingSchedule.id ? { ...schedule, id: editingSchedule.id } : s
+        )
+      );
+    } else {
+      // Add new schedule
+      const newSchedule: PersonalSchedule = {
+        ...schedule,
+        id: `schedule_${Date.now()}`,
+      };
+      setPersonalSchedules((prev) => [...prev, newSchedule]);
+    }
+    setIsAddModalVisible(false);
+  };
+
+  const handleEditSchedule = (schedule: PersonalSchedule) => {
+    setEditingSchedule(schedule);
+    setIsDetailModalVisible(false);
+    setIsAddModalVisible(true);
+  };
+
+  const handleDeleteSchedule = (scheduleId: string) => {
+    setPersonalSchedules((prev) => prev.filter((s) => s.id !== scheduleId));
+  };
+
+  const handleDuplicateSchedule = (schedule: PersonalSchedule) => {
+    const newSchedule: PersonalSchedule = {
+      ...schedule,
+      id: `schedule_${Date.now()}`,
+      title: `${schedule.title} (복사)`,
+    };
+    setPersonalSchedules((prev) => [...prev, newSchedule]);
+    setIsDetailModalVisible(false);
   };
 
   // Calculate D-day from today to selected date
@@ -72,15 +133,33 @@ export default function BookingCalendarContainer() {
   }, [selectedDate, today]);
 
   return (
-    <BookingCalendarView
-      selectedDate={selectedDate}
-      bookings={bookingsData.bookings || []}
-      eventDates={eventDates}
-      dDayText={dDayText}
-      onPressBack={handlePressBack}
-      onPressBookingItem={handlePressBookingItem}
-      onSelectDate={handleSelectDate}
-      onPressAddSchedule={handleAddSchedule}
-    />
+    <>
+      <BookingCalendarView
+        selectedDate={selectedDate}
+        bookings={bookingsData.bookings || []}
+        personalSchedules={selectedDateSchedules}
+        eventDates={eventDates}
+        dDayText={dDayText}
+        onPressBack={handlePressBack}
+        onPressBookingItem={handlePressBookingItem}
+        onPressPersonalSchedule={handlePressPersonalSchedule}
+        onSelectDate={handleSelectDate}
+        onPressAddSchedule={handleAddSchedule}
+      />
+      <AddScheduleModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        onSubmit={handleSubmitSchedule}
+        initialSchedule={editingSchedule}
+      />
+      <ScheduleDetailModal
+        visible={isDetailModalVisible}
+        onClose={() => setIsDetailModalVisible(false)}
+        schedule={selectedSchedule}
+        onEdit={handleEditSchedule}
+        onDelete={handleDeleteSchedule}
+        onDuplicate={handleDuplicateSchedule}
+      />
+    </>
   );
 }

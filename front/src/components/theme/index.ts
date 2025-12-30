@@ -8,6 +8,7 @@ export {default as Typography} from './Typography';
 export {default as SubmitButton} from './SubmitButton';
 export {default as TextInput} from './TextInput';
 export {default as ToggleButton} from './ToggleButton';
+export {default as PrimaryToggleButton} from './PrimaryToggleButton';
 
 // Alert 관련
 export {Alert, AlertComponent} from './Alert';

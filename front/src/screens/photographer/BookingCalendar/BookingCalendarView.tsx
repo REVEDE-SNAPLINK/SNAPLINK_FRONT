@@ -6,14 +6,17 @@ import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { PhotographerBooking } from '@/api/photographers.ts';
+import { PersonalSchedule } from './AddScheduleModal';
 
 interface BookingCalendarViewProps {
   selectedDate: string;
   bookings: PhotographerBooking[];
+  personalSchedules: PersonalSchedule[];
   eventDates: string[];
   dDayText: string;
   onPressBack: () => void;
   onPressBookingItem: (reservationId: number) => void;
+  onPressPersonalSchedule: (scheduleId: string) => void;
   onSelectDate: (date: string) => void;
   onPressAddSchedule: () => void;
 }
@@ -21,10 +24,12 @@ interface BookingCalendarViewProps {
 export default function BookingCalendarView({
   selectedDate,
   bookings,
+  personalSchedules,
   eventDates,
   dDayText,
   onPressBack,
   onPressBookingItem,
+  onPressPersonalSchedule,
   onSelectDate,
   onPressAddSchedule,
 }: BookingCalendarViewProps) {
@@ -38,6 +43,9 @@ export default function BookingCalendarView({
     ];
     return `${month}월 ${day}일 ${dayOfWeek}`;
   };
+
+  const hasSchedules = bookings.length > 0 || personalSchedules.length > 0;
+
   return (
     <ScreenContainer
       headerShown={true}
@@ -62,7 +70,7 @@ export default function BookingCalendarView({
         </BookingContentHeader>
         <BookingContent>
           <BookingContentScrollView showsVerticalScrollIndicator={false}>
-            {bookings.length === 0 ? (
+            {!hasSchedules ? (
               <BookingItem disabled>
                 <BookingInfoWrapper>
                   <BookingEmptyBar />
@@ -72,24 +80,42 @@ export default function BookingCalendarView({
                 </BookingInfoWrapper>
               </BookingItem>
             ) : (
-              bookings.map((booking) => (
-                <BookingItem key={booking.id} onPress={() => onPressBookingItem(booking.id)}>
-                  <BookingInfoWrapper>
-                    <BookingBar />
-                    <BookingProfileImage
-                      source={
-                        booking.userProfileImage ? { uri: booking.userProfileImage } : undefined
-                      }
-                    />
-                    <Typography fontSize={14}>
-                      {booking.userNickname}ㆍ{booking.location}ㆍ{booking.shootingType}
-                    </Typography>
-                  </BookingInfoWrapper>
-                  <BookingDetailButton>
-                    <Typography fontSize={11}>상세보기</Typography>
-                  </BookingDetailButton>
-                </BookingItem>
-              ))
+              <>
+                {bookings.map((booking) => (
+                  <BookingItem key={`booking-${booking.id}`} onPress={() => onPressBookingItem(booking.id)}>
+                    <BookingInfoWrapper>
+                      <BookingBar />
+                      <BookingProfileImage
+                        source={
+                          booking.userProfileImage ? { uri: booking.userProfileImage } : undefined
+                        }
+                      />
+                      <Typography fontSize={14}>
+                        {booking.userNickname}ㆍ{booking.location}ㆍ{booking.shootingType}
+                      </Typography>
+                    </BookingInfoWrapper>
+                    <BookingDetailButton>
+                      <Typography fontSize={11}>상세보기</Typography>
+                    </BookingDetailButton>
+                  </BookingItem>
+                ))}
+                {personalSchedules.map((schedule) => (
+                  <BookingItem key={`schedule-${schedule.id}`} onPress={() => onPressPersonalSchedule(schedule.id)}>
+                    <BookingInfoWrapper>
+                      <PersonalScheduleBar />
+                      <BookingProfileImage />
+                      <Typography fontSize={14}>
+                        {schedule.customerName || '개인 일정'}
+                        {schedule.location && `ㆍ${schedule.location}`}
+                        {schedule.shootingType && `ㆍ${schedule.shootingType}`}
+                      </Typography>
+                    </BookingInfoWrapper>
+                    <BookingDetailButton>
+                      <Typography fontSize={11}>상세보기</Typography>
+                    </BookingDetailButton>
+                  </BookingItem>
+                ))}
+              </>
             )}
           </BookingContentScrollView>
         </BookingContent>
@@ -145,7 +171,8 @@ const BookingContent = styled.View`
 
 const BookingContentScrollView = styled.ScrollView`
   padding-top: 12px;
-  padding-horizontal: 17px;
+  padding-left: 17px;
+  padding-right: 17px;
 `
 
 const BookingItem = styled.TouchableOpacity`
@@ -161,6 +188,14 @@ const BookingBar = styled.View`
   border-radius: 100px;
   margin-right: 10px;
   background-color: ${theme.colors.primary};
+`
+
+const PersonalScheduleBar = styled.View`
+  width: 3px;
+  height: 40px;
+  border-radius: 100px;
+  margin-right: 10px;
+  background-color: ${theme.colors.textPrimary};
 `
 
 const BookingEmptyBar = styled.View`

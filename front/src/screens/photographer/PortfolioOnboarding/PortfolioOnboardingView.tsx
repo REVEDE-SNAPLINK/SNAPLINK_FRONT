@@ -48,7 +48,6 @@ export interface PortfolioOnboardingFormData {
   shootingProductProvidedEditCount: string;
   availableDays: string[];
   daySchedules: { [day: string]: DaySchedule };
-  unavailableDateDescription: string;
   shootingProductOptions: Option[];
 }
 
@@ -1082,28 +1081,6 @@ const PortfolioOnboardingStep9 = ({
             }}
           />
         ))}
-        <Typography
-          fontSize={16}
-          letterSpacing="-2.5%"
-          marginBottom={17}
-          marginTop={29}
-        >
-          특별히 예약이 불가능한 날짜를 알려주세요.
-        </Typography>
-        <Controller
-          control={control}
-          name="unavailableDateDescription"
-          render={({ field: { onChange, value } }) => (
-            <FormInput
-              placeholder="특정 요일, 시간에 대한 참고사항에 대해 최대한 자세하게 남겨주세요 *"
-              value={value}
-              onChangeText={onChange}
-              multiline
-              height={116}
-              style={{ textAlignVertical: 'top', paddingTop: 16 }}
-            />
-          )}
-        />
         <ScrollViewSpacer />
       </ScrollView>
     </>

@@ -6,21 +6,22 @@ import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
 import { formatReservationDateTime } from '@/utils/format';
-import { UserReservationListItem } from '@/api/reservations.ts';
+import { UserBookingListItem } from '@/api/reservations.ts';
 
 interface BookingHistoryViewProps {
   onPressBack: () => void;
-  reservations: UserReservationListItem[];
+  reservations: UserBookingListItem[];
   isLoading: boolean;
   isError: boolean;
   onLoadMore: () => void;
   isFetchingNextPage: boolean;
   hasNextPage?: boolean;
-  onPressBookingDetail: (reservationId: number) => void;
+  onPressBookingDetail: (bookingId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  onPressViewPhotos?: (reservationId: number) => void;
-  onPressWriteReview?: (reservationId: number) => void;
+  onPressViewPhotos?: (bookingId: number) => void;
+  onPressWriteReview?: (bookingId: number) => void;
+  onPressViewMyReivew?: (bookingId: number) => void;
 }
 
 export default function BookingHistoryView({
@@ -36,24 +37,30 @@ export default function BookingHistoryView({
   isRefreshing,
   onPressViewPhotos,
   onPressWriteReview,
+  onPressViewMyReivew,
 }: BookingHistoryViewProps) {
-  const renderItem = ({ item }: { item: UserReservationListItem }) => {
+  const renderItem = ({ item }: { item: UserBookingListItem }) => {
     return (
       <HistoryCard
-        onPress={() => onPressBookingDetail(item.reservationId)}
+        onPress={() => onPressBookingDetail(item.bookingId)}
         status={item.status}
         photographerNickName={item.photographerNickName || '작가'}
         photographerName={item.photographerName || '작가'}
         type={item.type}
-        datetime={formatReservationDateTime(item.reservedDate, item.startTime)}
+        datetime={formatReservationDateTime(item.shootingDate, item.startTime)}
         onPressViewPhotos={
-          item.status === 'DELIVERED' && onPressViewPhotos
-            ? () => onPressViewPhotos(item.reservationId)
+          (item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK') && onPressViewPhotos
+            ? () => onPressViewPhotos(item.bookingId)
             : undefined
         }
         onPressWriteReview={
-          (item.status === 'DELIVERED' || item.status === 'REVIEWED') && onPressWriteReview
-            ? () => onPressWriteReview(item.reservationId)
+          item.status === 'USER_PHOTO_CHECK' && onPressWriteReview
+            ? () => onPressWriteReview(item.bookingId)
+            : undefined
+        }
+        onPressViewMyReivew={
+          item.status === 'USER_PHOTO_CHECK' && item.isreview && onPressViewMyReivew
+            ? () => onPressViewMyReivew(item.bookingId)
             : undefined
         }
       />
@@ -101,7 +108,7 @@ export default function BookingHistoryView({
           testID="booking-history-list"
           data={reservations}
           renderItem={renderItem}
-          keyExtractor={(item) => item.reservationId.toString()}
+          keyExtractor={(item) => item.bookingId.toString()}
           contentContainerStyle={{
             paddingTop: 24,
             paddingHorizontal: 27,

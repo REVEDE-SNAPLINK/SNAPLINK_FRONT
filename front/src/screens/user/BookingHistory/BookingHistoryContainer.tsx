@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
-import { useUserReservationsInfiniteQuery } from '@/queries/reservations'
+import { useUserBookingsInfiniteQuery } from '@/queries/reservations'
 import { MainNavigationProp } from '@/types/navigation.ts';
 
 const PAGE_SIZE = 10;
@@ -18,15 +18,15 @@ export default function BookingHistoryContainer() {
     isLoading,
     isError,
     refetch,
-  } = useUserReservationsInfiniteQuery({
+  } = useUserBookingsInfiniteQuery({
     size: PAGE_SIZE,
     sort: ['reservedDate,desc'],
   })
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressBookingDetail = (reservationId: number) => {
-    navigation.navigate('BookingDetails', { reservationId });
+  const handlePressBookingDetail = (bookingId: number) => {
+    navigation.navigate('BookingDetails', { bookingId });
   };
 
   const handleLoadMore = () => {
@@ -35,9 +35,9 @@ export default function BookingHistoryContainer() {
     }
   };
 
-  const handlePressViewPhotos = (reservationId: number) => navigation.navigate('ViewPhotos', { reservationId })
+  const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { reservationId: bookingId })
 
-  const handlePressWriteReview = (reservationId: number) => navigation.navigate('WriteReview', { reservationId })
+  const handlePressWriteReview = (bookingId: number) => navigation.navigate('WriteReview', { bookingId })
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

@@ -27,7 +27,7 @@ import ServiceFormContainer from '@/screens/photographer/ServiceForm/ServiceForm
 import AIRecommdationFormContainer from '@/screens/common/AIRecommdationForm/AIRecommdationFormContainer.tsx';
 import AIRecommdationResultContainer from '@/screens/common/AIRecommdationResult/AIRecommdationResultContainer.tsx';
 import BookingRejectScreen from '@/screens/photographer/BookingReject/BookingRejectScreen.tsx';
-import BookingCancelScreen from '@/screens/user/BookingCancel/BookingCancelScreen.tsx';
+import BookingCancelScreen from '@/screens/photographer/BookingCancel/BookingCancelScreen.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 

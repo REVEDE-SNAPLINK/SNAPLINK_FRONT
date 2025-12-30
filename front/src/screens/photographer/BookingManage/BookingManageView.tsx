@@ -131,7 +131,7 @@ export default function BookingManageView({
           testID="booking-history-list"
           data={bookings}
           renderItem={renderItem}
-          keyExtractor={(item) => `${item.bookingId}`}
+          keyExtractor={(item) => item.bookingId.toString()}
           contentContainerStyle={{
             paddingTop: 24,
             paddingHorizontal: 27,

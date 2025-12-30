@@ -1,6 +1,6 @@
 import UserBookingDetailsView from '@/screens/user/BookingDetails/UserBookingDetailsView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useReservationDetailQuery } from '@/queries/reservations.ts';
+import { useReservationDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;

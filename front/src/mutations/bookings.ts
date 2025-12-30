@@ -2,10 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createBooking,
   CreateBookingRequest,
-  deleteReservationPhotos,
-  DeleteReservationPhotosRequest,
-  uploadReservationZip,
-  UploadReservationZipRequest,
+  deleteBookingPhotos,
+  DeleteBookingPhotosRequest,
+  uploadBookingZip,
+  UploadBookingZipRequest,
   approveBooking,
   rejectBooking,
   completeBooking,
@@ -13,8 +13,8 @@ import {
   deliverPhotos,
   PatchBookingStatusParams,
   RejectOrCancelBookingParams,
-} from '@/api/reservations.ts';
-import { reservationsQueryKeys } from '@/queries/keys.ts';
+} from '@/api/bookings.ts';
+import { bookingsQueryKeys } from '@/queries/keys.ts';
 
 export const useApproveBookingMutation = () => {
   const qc = useQueryClient();
@@ -23,9 +23,9 @@ export const useApproveBookingMutation = () => {
     mutationFn: (params: PatchBookingStatusParams) => approveBooking(params),
     onSuccess: async (_, vars) => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.photographerList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.booking(vars.bookingId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
       ]);
     },
   });
@@ -38,9 +38,9 @@ export const useRejectBookingMutation = () => {
     mutationFn: (params: RejectOrCancelBookingParams) => rejectBooking(params),
     onSuccess: async (_, vars) => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.photographerList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.booking(vars.bookingId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
       ]);
     },
   });
@@ -53,9 +53,9 @@ export const useCompleteBookingMutation = () => {
     mutationFn: (params: PatchBookingStatusParams) => completeBooking(params),
     onSuccess: async (_, vars) => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.photographerList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.booking(vars.bookingId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
       ]);
     },
   });
@@ -68,9 +68,9 @@ export const useCancelBookingMutation = () => {
     mutationFn: (params: RejectOrCancelBookingParams) => cancelBooking(params),
     onSuccess: async (_, vars) => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.photographerList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.booking(vars.bookingId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
       ]);
     },
   });
@@ -83,9 +83,9 @@ export const useDeliverPhotosMutation = () => {
     mutationFn: (params: PatchBookingStatusParams) => deliverPhotos(params),
     onSuccess: async (_, vars) => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.photographerList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.booking(vars.bookingId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
       ]);
     },
   });
@@ -98,36 +98,36 @@ export const useCreateBookingMutation = () => {
     mutationFn: (body: CreateBookingRequest) => createBooking(body),
     onSuccess: async () => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
       ]);
     },
   });
 };
 
-export const useDeleteReservationPhotosMutation = () => {
+export const useDeleteBookingPhotosMutation = () => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: DeleteReservationPhotosRequest) => deleteReservationPhotos(body),
+    mutationFn: (body: DeleteBookingPhotosRequest) => deleteBookingPhotos(body),
     onSuccess: async (_, vars) => {
       // 삭제 후 ZIP/사진 목록 갱신
       await qc.invalidateQueries({
-        queryKey: reservationsQueryKeys.reservationPhotos(vars.reservationId),
+        queryKey: bookingsQueryKeys.bookingPhotos(vars.bookingId),
       });
     },
   });
 };
 
-export const useUploadReservationZipMutation = () => {
+export const useUploadBookingZipMutation = () => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: UploadReservationZipRequest) => uploadReservationZip(params),
+    mutationFn: (params: UploadBookingZipRequest) => uploadBookingZip(params),
     onSuccess: async (_, vars) => {
       // 업로드 후 ZIP/사진 목록 갱신
       await qc.invalidateQueries({
-        queryKey: reservationsQueryKeys.reservationPhotos(vars.reservationId),
+        queryKey: bookingsQueryKeys.bookingPhotos(vars.bookingId),
       });
     },
   });

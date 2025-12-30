@@ -3,7 +3,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
 import { Alert } from '@/components/theme';
-import { useCreateReservationMutation } from '@/mutations/reservations.ts';
+import { useCreateReservationMutation } from '@/mutations/bookings.ts';
 
 type BookingRequestRouteProp = RouteProp<MainStackParamList, 'BookingRequest'>;
 

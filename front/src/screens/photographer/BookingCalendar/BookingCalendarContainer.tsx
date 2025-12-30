@@ -3,7 +3,7 @@ import BookingCalendarView from '@/screens/photographer/BookingCalendar/BookingC
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useAuthStore } from '@/store/authStore.ts';
-import { useMonthlyScheduleQuery } from '@/queries/reservations.ts';
+import { useMonthlyScheduleQuery } from '@/queries/bookings.ts';
 import AddScheduleModal, { PersonalSchedule } from './AddScheduleModal';
 import ScheduleDetailModal from './ScheduleDetailModal';
 

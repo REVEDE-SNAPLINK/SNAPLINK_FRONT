@@ -1,4 +1,4 @@
-// src/api/reservations.ts
+// src/api/bookings.ts
 import { API_BASE_URL } from '@/config/api';
 import { authFetch, authMultipartFetch } from '@/api/utils';
 import { GetPageable } from '@/api/community';
@@ -6,7 +6,7 @@ import { buildQuery } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 
 const BOOKINGS_BASE = `${API_BASE_URL}/api/bookings`
-const RESERVATIONS_BASE = `${API_BASE_URL}/api/reservations`;
+const PHOTOS_BASE = `${BOOKINGS_BASE}/photos`;
 const SCHEDULES_BASE = `${API_BASE_URL}/api/schedules`;
 
 
@@ -126,35 +126,35 @@ export interface CreateBookingRequest {
 }
 
 /** 예약 ZIP 정보 */
-export interface ReservationZip {
+export interface BookingZip {
   id: number;
   url: string;
   fileCount: number;
 }
 
 /** 예약 사진 아이템 */
-export interface ReservationPhoto {
+export interface BookingPhoto {
   id: number;
   url: string;
   sortOrder: number;
 }
 
 /** 예약 사진 및 ZIP 조회 응답 */
-export interface GetReservationPhotosResponse {
-  zip: ReservationZip | null;
-  photos: ReservationPhoto[];
+export interface GetBookingPhotosResponse {
+  zip: BookingZip | null;
+  photos: BookingPhoto[];
   photoConfirmed: boolean;
 }
 
 /** 예약 사진 일괄 삭제 요청 */
-export interface DeleteReservationPhotosRequest {
-  reservationId: number;
+export interface DeleteBookingPhotosRequest {
+  bookingId: number;
   photoIds: number[];
 }
 
 /** 예약 결과 ZIP 업로드 요청 (multipart/form-data) */
-export interface UploadReservationZipRequest {
-  reservationId: number;
+export interface UploadBookingZipRequest {
+  bookingId: number;
   zipFile: {
     uri: string;
     name: string;
@@ -347,33 +347,33 @@ export const createBooking = async (
 }
 
 /**
- * GET /api/reservations/{reservationId}/photos
+ * GET /api/bookings/photos/{bookingId}
  * 예약 사진 및 ZIP 조회
  * response: { zip, photos, photoConfirmed }
  */
-export const getReservationPhotos = async (
-  reservationId: number,
-): Promise<GetReservationPhotosResponse> => {
-  const response = await authFetch(`${RESERVATIONS_BASE}/${reservationId}/photos`, {
+export const getBookingPhotos = async (
+  bookingId: number,
+): Promise<GetBookingPhotosResponse> => {
+  const response = await authFetch(`${PHOTOS_BASE}/${bookingId}`, {
     method: 'GET',
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get reservation photos ${response.status}`);
+    throw new Error(`Failed to get booking photos ${response.status}`);
   }
 
   return response.json();
 };
 
 /**
- * DELETE /api/reservations/photos
+ * DELETE /api/booking/photos
  * 예약 ID + 사진 ID 리스트로 일괄 삭제하고 ZIP을 갱신
- * body: { reservationId, photoIds }
+ * body: { bookingId, photoIds }
  */
-export const deleteReservationPhotos = async (
-  body: DeleteReservationPhotosRequest,
+export const deleteBookingPhotos = async (
+  body: DeleteBookingPhotosRequest,
 ): Promise<void> => {
-  const response = await authFetch(`${RESERVATIONS_BASE}/photos`, {
+  const response = await authFetch(`${PHOTOS_BASE}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
@@ -382,20 +382,20 @@ export const deleteReservationPhotos = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete reservation photos ${response.status}`);
+    throw new Error(`Failed to delete booking photos ${response.status}`);
   }
 };
 
 /**
- * POST /api/reservations/{reservationId}/photos
+ * POST /api/bookings/photos/{bookingId}
  * 작가가 결과 ZIP 파일을 업로드(multipart/form-data)
  * form-data: zipFile
  */
-export const uploadReservationZip = async (
-  params: UploadReservationZipRequest,
+export const uploadBookingZip = async (
+  params: UploadBookingZipRequest,
 ): Promise<void> => {
   const response = await authMultipartFetch(
-    `${RESERVATIONS_BASE}/${params.reservationId}/photos`,
+    `${PHOTOS_BASE}/${params.bookingId}`,
     [
       {
         name: 'zipFile',
@@ -408,7 +408,7 @@ export const uploadReservationZip = async (
   );
 
   if (response.info().status >= 400) {
-    throw new Error(`Failed to upload reservation zip ${response.info().status}`);
+    throw new Error(`Failed to upload booking zip ${response.info().status}`);
   }
 };
 

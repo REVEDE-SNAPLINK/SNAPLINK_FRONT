@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import BookingManageView from '@/screens/photographer/BookingManage/BookingManageView.tsx';
 import { Alert } from '@/components/theme';
-import { usePhotographerBookingsInfiniteQuery } from '@/queries/reservations.ts';
-import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/reservations.ts';
+import { usePhotographerBookingsInfiniteQuery } from '@/queries/bookings.ts';
+import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/bookings.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 

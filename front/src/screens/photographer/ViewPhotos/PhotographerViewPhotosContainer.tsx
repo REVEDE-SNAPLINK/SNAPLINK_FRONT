@@ -3,12 +3,12 @@ import { pick, types } from '@react-native-documents/picker';
 import PhotographerViewPhotosView from '@/screens/photographer/ViewPhotos/PhotographerViewPhotosView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Alert } from '@/components/theme';
-import { useReservationPhotosQuery } from '@/queries/reservations.ts';
+import { useBookingPhotosQuery } from '@/queries/bookings.ts';
 import {
-  useUploadReservationZipMutation,
-  useDeleteReservationPhotosMutation,
+  useUploadBookingZipMutation,
+  useDeleteBookingPhotosMutation,
   usePatchReservationStatusMutation,
-} from '@/mutations/reservations.ts';
+} from '@/mutations/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 export default function PhotographerViewPhotosContainer() {
@@ -18,9 +18,9 @@ export default function PhotographerViewPhotosContainer() {
 
   const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
 
-  const { data, isLoading, refetch } = useReservationPhotosQuery(reservationId);
-  const { mutateAsync: uploadZip, isPending: isUploadPending } = useUploadReservationZipMutation();
-  const { mutateAsync: deletePhotos, isPending: isDeletePending } = useDeleteReservationPhotosMutation();
+  const { data, isLoading, refetch } = useBookingPhotosQuery(reservationId);
+  const { mutateAsync: uploadZip, isPending: isUploadPending } = useUploadBookingZipMutation();
+  const { mutateAsync: deletePhotos, isPending: isDeletePending } = useDeleteBookingPhotosMutation();
   const { mutateAsync: changeStatus, isPending: isChangePeading } = usePatchReservationStatusMutation();
 
   const handlePressBack = () => navigation.goBack();
@@ -45,7 +45,7 @@ export default function PhotographerViewPhotosContainer() {
         type: file.type,
       };
 
-      uploadZip({ reservationId, zipFile },{
+      uploadZip({ bookingId: reservationId, zipFile },{
         onSuccess: () => {
           refetch().finally(() => {
             changeStatus(({ reservationId, status: 'DELIVERED' }), {
@@ -86,7 +86,7 @@ export default function PhotographerViewPhotosContainer() {
         {
           text: '삭제',
           onPress: async () => {
-            await deletePhotos({ reservationId, photoIds: deletePhotoIds });
+            await deletePhotos({ bookingId: reservationId, photoIds: deletePhotoIds });
             setCheckedImages([]);
             Alert.show({
               title: '삭제 완료',

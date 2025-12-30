@@ -5,7 +5,7 @@ import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { SubmitButton, Typography, TextInput } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { useRejectBookingMutation } from '@/mutations/reservations.ts';
+import { useRejectBookingMutation } from '@/mutations/bookings.ts';
 
 type BookingRejectRouteProp = RouteProp<MainStackParamList, 'BookingReject'>;
 

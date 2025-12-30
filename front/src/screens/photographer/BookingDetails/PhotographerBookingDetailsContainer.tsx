@@ -1,5 +1,5 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useReservationDetailQuery } from '@/queries/reservations.ts';
+import { useReservationDetailQuery } from '@/queries/bookings.ts';
 import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetails/PhotographerBookingDetailsView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 

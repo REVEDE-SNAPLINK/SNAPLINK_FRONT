@@ -3,8 +3,8 @@ import type {
   PhotographerReservationListItem,
   PageResponse,
   ReservationDetail,
-  GetReservationPhotosResponse,
-} from '@/api/reservations';
+  GetBookingPhotosResponse,
+} from '@/api/bookings.ts';
 import { mockPhotographers } from './mockPhotographers';
 
 /**
@@ -100,7 +100,7 @@ const mockReservationDetails: Record<number, ReservationDetail> = {
 };
 
 // 예약 사진 데이터
-const mockReservationPhotos: Record<number, GetReservationPhotosResponse> = {
+const mockReservationPhotos: Record<number, GetBookingPhotosResponse> = {
   2: {
     zip: {
       id: 1,
@@ -202,7 +202,7 @@ export const getMockReservationDetail = (reservationId: number): ReservationDeta
 /**
  * 예약 사진 조회
  */
-export const getMockReservationPhotos = (reservationId: number): GetReservationPhotosResponse | null => {
+export const getMockReservationPhotos = (reservationId: number): GetBookingPhotosResponse | null => {
   return mockReservationPhotos[reservationId] || null;
 };
 

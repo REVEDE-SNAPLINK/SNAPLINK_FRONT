@@ -3,7 +3,7 @@ import Typography from '@/components/theme/Typography.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMemo } from 'react';
-import { BookingStatus } from '@/api/reservations.ts';
+import { BookingStatus } from '@/api/bookings.ts';
 
 interface HistoryCardProps {
   onPress: () => void;

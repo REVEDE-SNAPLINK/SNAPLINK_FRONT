@@ -6,7 +6,7 @@ import Typography from '@/components/theme/Typography.tsx';
 import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
 import { formatReservationDateTime } from '@/utils/format';
-import { UserBookingListItem } from '@/api/reservations.ts';
+import { UserBookingListItem } from '@/api/bookings.ts';
 
 interface BookingHistoryViewProps {
   onPressBack: () => void;

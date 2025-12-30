@@ -3,7 +3,7 @@ import UserViewPhotosView from '@/screens/user/ViewPhotos/UserViewPhotosView.tsx
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Alert } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { useReservationPhotosQuery } from '@/queries/reservations.ts';
+import { useBookingPhotosQuery } from '@/queries/bookings.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 
@@ -12,7 +12,7 @@ export default function UserViewPhotosContainer() {
   const route = useRoute<RouteProp<MainStackParamList, 'ViewPhotos'>>();
   const { reservationId } = route.params;
 
-  const { data, isLoading } = useReservationPhotosQuery(reservationId);
+  const { data, isLoading } = useBookingPhotosQuery(reservationId);
 
   const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
 

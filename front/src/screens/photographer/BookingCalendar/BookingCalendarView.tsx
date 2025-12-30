@@ -5,7 +5,6 @@ import { Typography } from '@/components/theme';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
-import { PhotographerBooking } from '@/api/photographers.ts';
 import { PersonalSchedule } from './AddScheduleModal';
 
 interface BookingCalendarViewProps {

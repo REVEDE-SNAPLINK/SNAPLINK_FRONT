@@ -10,7 +10,7 @@ import {
 } from '@/api/reviews';
 import { reviewsQueryKeys } from '@/queries/keys';
 import { photographersQueryKeys } from '@/queries/keys';
-import { reservationsQueryKeys } from '@/queries/keys'; // reservations 키가 keys.ts에 있으면
+import { bookingsQueryKeys } from '@/queries/keys'; // reservations 키가 keys.ts에 있으면
 
 /** 리뷰 답글 작성(작가 전용) */
 export const useCreateReviewReplyMutation = (photographerId?: string) => {
@@ -45,8 +45,8 @@ export const useCreateReservationReviewMutation = (photographerId?: string) => {
       // - 고객 예약 리스트/예약 상세(상태가 REVIEWED로 변할 수 있음)
       // - 작가 리뷰 목록/요약(새 리뷰가 추가됨)
       await Promise.all([
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.lists() }),
-        qc.invalidateQueries({ queryKey: reservationsQueryKeys.reservation(vars.reservationId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.lists() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.reservation(vars.reservationId) }),
         ...(photographerId
           ? [
             qc.invalidateQueries({ queryKey: photographersQueryKeys.reviews(photographerId) }),

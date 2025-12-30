@@ -6,7 +6,7 @@ import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
-import { ReservationStatus } from '@/api/reservations';
+import { ReservationStatus } from '@/api/bookings.ts';
 
 interface UserBookingDetailsViewProps {
   onPressBack: () => void;

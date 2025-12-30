@@ -4,6 +4,7 @@ import {
   getPhotographerReviewSummary,
   SearchPhotographersBody,
   searchPhotographers, getMyScrappedPhotographers,
+  getHolidays,
 } from '@/api/photographers.ts';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { photographersQueryKeys } from '@/queries/keys.ts';
@@ -142,4 +143,14 @@ export const useMyScrappedPhotographersInfiniteQuery = (
     queryFn: ({ pageParam }) =>
       getMyScrappedPhotographers({ ...pageableWithoutPage, page: pageParam }),
     getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.number + 1),
+  });
+
+/**
+ * 작가의 휴무일 목록 조회
+ */
+export const useHolidaysQuery = (enabled = true) =>
+  useQuery({
+    queryKey: photographersQueryKeys.holidays(),
+    queryFn: () => getHolidays(),
+    enabled,
   });

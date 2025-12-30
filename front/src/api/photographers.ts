@@ -3,8 +3,10 @@ import { API_BASE_URL } from '@/config/api';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
 import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
+import { EditingDeadline, EditingType, SelectionAuthority } from '@/api/shootings.ts';
 
 const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
+const HOLIDAYS_BASE = `${PHOTOGRAPHERS_BASE}/holidays`;
 
 /* ---------------------------------------------
  * Common: Spring Page types (재사용)
@@ -197,10 +199,10 @@ export interface ShootingProduct {
   photoTime: number;
   personnel: number;
   providesRawFile: boolean;
-  editingType: "FACIAL" | "COLOR" | "BOTH" | "NONE",
-  editingDeadline: "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS";
+  editingType: EditingType,
+  editingDeadline: EditingDeadline;
   providedEditCount: number;
-  selectionAuthority: "PHOTOGRAPHER" | "CUSTOMER" | "BOTH";
+  selectionAuthority: SelectionAuthority;
   options: ShootingOption[];
 }
 
@@ -486,3 +488,62 @@ export const togglePhotographerScrap = async (
   if (!response.ok) throw new Error(`Failed to toggle photographer scrap ${response.status}`);
   return response.json();
 };
+
+export const deleteHoliday = async (
+  holidayId: number
+) => {
+  const response = await authFetch(`${HOLIDAYS_BASE}/${holidayId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) throw new Error(`Failed to delete holiday ${response.status}`);
+}
+
+export interface GetHolidayResponse {
+  id: number;
+  holidayDate: string; // YYYY-MM-DD
+  reason: string;
+  photographerId: string;
+}
+
+export const getHolidays = async (): Promise<GetHolidayResponse[]> => {
+  const response = await authFetch(`${HOLIDAYS_BASE}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get holidays ${response.status}`);
+  return response.json();
+}
+
+export interface CreateHolidayRequest {
+  holidayDate: string;
+  reason: string;
+}
+
+export interface UpdateHolidayParam {
+  holidayId: number;
+}
+
+export const createHolidays = async (
+  body: CreateHolidayRequest
+): Promise<GetHolidayResponse> => {
+  const response = await authFetch(`${HOLIDAYS_BASE}`, {
+    method: 'POST',
+    json: body
+  });
+
+  if (!response.ok) throw new Error(`Failed to create holiday ${response.status}`);
+  return response.json();
+}
+
+export const updateHolidays = async (
+  param: UpdateHolidayParam, body: CreateHolidayRequest
+): Promise<GetHolidayResponse> => {
+  const response = await authFetch(`${HOLIDAYS_BASE}/${param.holidayId}`, {
+    method: 'PUT',
+    json: body
+  });
+
+  if (!response.ok) throw new Error(`Failed to update holiday ${response.status}`);
+  return response.json();
+}

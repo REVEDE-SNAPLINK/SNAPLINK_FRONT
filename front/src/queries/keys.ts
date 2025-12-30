@@ -1,6 +1,7 @@
 import { GetPageable } from '@/api/community.ts';
-import { GetBookingListParams } from '@/api/reservations.ts';
+import { GetBookingListParams } from '@/api/bookings.ts';
 import type { SearchPhotographersBody } from '@/api/photographers';
+import type { GetPhotographerMonthSchedulesParams, GetPhotographerDayDetailParams } from '@/api/schedules';
 
 // Meta data (regions, concepts)
 export const metaKeys = {
@@ -82,34 +83,37 @@ export const photographersQueryKeys = {
 
   scrapStatus: (photographerId: string) =>
     [...photographersQueryKeys.all, 'scrap', 'status', photographerId] as const,
+
+  // -------- holidays --------
+  holidays: () => [...photographersQueryKeys.all, 'holidays'] as const,
 };
 
-// Reservation/Booking
-export const reservationsQueryKeys = {
-  all: ['reservations'] as const,
+// Booking
+export const bookingsQueryKeys = {
+  all: ['bookings'] as const,
 
-  lists: () => [...reservationsQueryKeys.all, 'list'] as const,
+  lists: () => [...bookingsQueryKeys.all, 'list'] as const,
 
-  userList: () => [...reservationsQueryKeys.lists(), 'user'] as const,
-  photographerList: () => [...reservationsQueryKeys.lists(), 'photographer'] as const,
+  userList: () => [...bookingsQueryKeys.lists(), 'user'] as const,
+  photographerList: () => [...bookingsQueryKeys.lists(), 'photographer'] as const,
 
   userListInfinite: (params: Omit<GetBookingListParams, 'page'>) =>
-    [...reservationsQueryKeys.userList(), 'infinite', params] as const,
+    [...bookingsQueryKeys.userList(), 'infinite', params] as const,
 
   photographerListInfinite: (params: Omit<GetBookingListParams, 'page'>) =>
-    [...reservationsQueryKeys.photographerList(), 'infinite', params] as const,
+    [...bookingsQueryKeys.photographerList(), 'infinite', params] as const,
 
   monthlySchedule: (photographerId: string, year: string, month: string) =>
-    [...reservationsQueryKeys.all, 'monthlySchedule', photographerId, year, month] as const,
+    [...bookingsQueryKeys.all, 'monthlySchedule', photographerId, year, month] as const,
 
   availableDays: (photographerId: string, date: string) =>
-    [...reservationsQueryKeys.all, 'availableDays', photographerId, date] as const,
+    [...bookingsQueryKeys.all, 'availableDays', photographerId, date] as const,
 
   booking: (bookingId: number) =>
-    [...reservationsQueryKeys.all, 'detail', bookingId] as const,
+    [...bookingsQueryKeys.all, 'detail', bookingId] as const,
 
-  reservationPhotos: (reservationId: number) =>
-    [...reservationsQueryKeys.all, 'reservation', reservationId, 'photos'] as const,
+  bookingPhotos: (bookingId: number) =>
+    [...bookingsQueryKeys.all, 'reservation', bookingId, 'photos'] as const,
 };
 
 // Reviews
@@ -144,4 +148,37 @@ export const chatQueryKeys = {
   // infinite: pageParam으로 paging 처리하므로 page 제외
   messagesInfinite: (roomId: number, paramsWithoutPage: Omit<import('@/api/chat').GetChatMessagesParams, 'page'>) =>
     [...chatQueryKeys.room(roomId), 'messages', 'infinite', paramsWithoutPage] as const,
+};
+
+// Schedules
+export const schedulesQueryKeys = {
+  all: ['schedules'] as const,
+
+  photographerMonth: (params: GetPhotographerMonthSchedulesParams) =>
+    [...schedulesQueryKeys.all, 'photographer', 'month', params] as const,
+
+  photographerDay: (params: GetPhotographerDayDetailParams) =>
+    [...schedulesQueryKeys.all, 'photographer', 'day', params] as const,
+
+  availableDays: (params: GetPhotographerMonthSchedulesParams) =>
+    [...schedulesQueryKeys.all, 'availableDays', params] as const,
+
+  availableTimes: (params: GetPhotographerDayDetailParams) =>
+    [...schedulesQueryKeys.all, 'availableTimes', params] as const,
+};
+
+// Shootings
+export const shootingsQueryKeys = {
+  all: ['shootings'] as const,
+
+  // 내 촬영 상품 목록
+  me: () => [...shootingsQueryKeys.all, 'me'] as const,
+
+  // 특정 촬영 상품
+  shooting: (shootingId: number) =>
+    [...shootingsQueryKeys.all, 'shooting', shootingId] as const,
+
+  // 특정 촬영 상품의 옵션들
+  options: (productId: number) =>
+    [...shootingsQueryKeys.all, 'options', productId] as const,
 };

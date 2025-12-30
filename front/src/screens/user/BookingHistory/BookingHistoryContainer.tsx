@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
-import { useUserBookingsInfiniteQuery } from '@/queries/reservations'
+import { useUserBookingsInfiniteQuery } from '@/queries/bookings.ts'
 import { MainNavigationProp } from '@/types/navigation.ts';
 
 const PAGE_SIZE = 10;

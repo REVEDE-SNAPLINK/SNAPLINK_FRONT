@@ -2,7 +2,7 @@ import BookingView from '@/screens/user/Booking/BookingView.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMonthlyScheduleQuery, useAvailableSlotsQuery } from '@/queries/reservations.ts';
+import { useMonthlyScheduleQuery, useAvailableSlotsQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 type BookingRouteProp = RouteProp<MainStackParamList, 'Booking'>;

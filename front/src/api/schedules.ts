@@ -66,7 +66,7 @@ export const getPhotographerMonthSchedules = async (
 
 export const getPhotographerDayDetail = async (
   { photographerId, date }: GetPhotographerDayDetailParams
-): Promise<GetPhotographerDayDetailResponse[]> => {
+): Promise<GetPhotographerDayDetailResponse> => {
   const qs = buildQuery({ date });
   const url = `${SCHEDULES_BASE}/photographer/day/detail/${photographerId}?${qs}`;
 

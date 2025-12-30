@@ -6,10 +6,11 @@ import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { PersonalSchedule } from './AddScheduleModal';
+import { DayBookingDetail } from '@/api/schedules.ts';
 
 interface BookingCalendarViewProps {
   selectedDate: string;
-  bookings: PhotographerBooking[];
+  bookings: DayBookingDetail[];
   personalSchedules: PersonalSchedule[];
   eventDates: string[];
   dDayText: string;
@@ -81,16 +82,16 @@ export default function BookingCalendarView({
             ) : (
               <>
                 {bookings.map((booking) => (
-                  <BookingItem key={`booking-${booking.id}`} onPress={() => onPressBookingItem(booking.id)}>
+                  <BookingItem key={`booking-${booking.bookingId}`} onPress={() => onPressBookingItem(booking.bookingId)}>
                     <BookingInfoWrapper>
                       <BookingBar />
-                      <BookingProfileImage
-                        source={
-                          booking.userProfileImage ? { uri: booking.userProfileImage } : undefined
-                        }
-                      />
+                      {/*<BookingProfileImage*/}
+                      {/*  source={*/}
+                      {/*    booking.userProfileImage ? { uri: booking.userProfileImage } : undefined*/}
+                      {/*  }*/}
+                      {/*/>*/}
                       <Typography fontSize={14}>
-                        {booking.userNickname}ㆍ{booking.location}ㆍ{booking.shootingType}
+                        {booking.customerNickName}ㆍ{booking.startTime}-{booking.endTime}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>

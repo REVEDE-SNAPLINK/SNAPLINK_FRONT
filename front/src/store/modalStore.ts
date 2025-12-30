@@ -1,11 +1,35 @@
 import { create } from 'zustand';
 import { CommunityPost, CreateCommunityPostParams } from '@/api/community.ts';
 
+export interface PersonalSchedule {
+  id: string;
+  title: string;
+  startDate: Date;
+  endDate: Date;
+  isAllDay: boolean;
+  description?: string;
+  location?: string;
+}
+
 interface CommunityPostModalState {
   visible: boolean;
   initialPost?: CommunityPost;
   onSubmit?: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void;
   isLoading?: boolean;
+}
+
+interface AddScheduleModalState {
+  visible: boolean;
+  initialSchedule?: PersonalSchedule;
+  onSubmit?: (schedule: Omit<PersonalSchedule, 'id'>) => void;
+}
+
+interface ScheduleDetailModalState {
+  visible: boolean;
+  schedule?: PersonalSchedule;
+  onEdit?: (schedule: PersonalSchedule) => void;
+  onDelete?: (scheduleId: string) => void;
+  onDuplicate?: (schedule: PersonalSchedule) => void;
 }
 
 interface ModalStore {
@@ -16,6 +40,22 @@ interface ModalStore {
   ) => void;
   closeCommunityPostModal: () => void;
   setCommunityPostModalLoading: (isLoading: boolean) => void;
+
+  addScheduleModal: AddScheduleModalState;
+  openAddScheduleModal: (
+    onSubmit: (schedule: Omit<PersonalSchedule, 'id'>) => void,
+    initialSchedule?: PersonalSchedule,
+  ) => void;
+  closeAddScheduleModal: () => void;
+
+  scheduleDetailModal: ScheduleDetailModalState;
+  openScheduleDetailModal: (
+    schedule: PersonalSchedule,
+    onEdit: (schedule: PersonalSchedule) => void,
+    onDelete: (scheduleId: string) => void,
+    onDuplicate: (schedule: PersonalSchedule) => void,
+  ) => void;
+  closeScheduleDetailModal: () => void;
 }
 
 export const useModalStore = create<ModalStore>((set) => ({
@@ -50,4 +90,54 @@ export const useModalStore = create<ModalStore>((set) => ({
         isLoading,
       },
     })),
+
+  addScheduleModal: {
+    visible: false,
+    initialSchedule: undefined,
+    onSubmit: undefined,
+  },
+  openAddScheduleModal: (onSubmit, initialSchedule) =>
+    set({
+      addScheduleModal: {
+        visible: true,
+        onSubmit,
+        initialSchedule,
+      },
+    }),
+  closeAddScheduleModal: () =>
+    set({
+      addScheduleModal: {
+        visible: false,
+        initialSchedule: undefined,
+        onSubmit: undefined,
+      },
+    }),
+
+  scheduleDetailModal: {
+    visible: false,
+    schedule: undefined,
+    onEdit: undefined,
+    onDelete: undefined,
+    onDuplicate: undefined,
+  },
+  openScheduleDetailModal: (schedule, onEdit, onDelete, onDuplicate) =>
+    set({
+      scheduleDetailModal: {
+        visible: true,
+        schedule,
+        onEdit,
+        onDelete,
+        onDuplicate,
+      },
+    }),
+  closeScheduleDetailModal: () =>
+    set({
+      scheduleDetailModal: {
+        visible: false,
+        schedule: undefined,
+        onEdit: undefined,
+        onDelete: undefined,
+        onDuplicate: undefined,
+      },
+    }),
 }));

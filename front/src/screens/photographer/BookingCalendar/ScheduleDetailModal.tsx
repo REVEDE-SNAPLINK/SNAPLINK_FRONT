@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Animated, Dimensions } from 'react-native';
+import { Animated, Dimensions, Platform } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import IconButton from '@/components/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
@@ -7,12 +7,11 @@ import EditIcon from '@/assets/icons/edit.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import TimeCircleIcon from '@/assets/icons/time-circle.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
-import CameraIcon from '@/assets/icons/camera.svg';
 import LocationIcon from '@/assets/icons/location.svg';
 import { Typography, Alert } from '@/components/theme';
 import SlideModal from '@/components/theme/SlideModal';
 import { theme } from '@/theme';
-import { PersonalSchedule } from './AddScheduleModal';
+import { PersonalSchedule } from '@/store/modalStore';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -90,7 +89,7 @@ export default function ScheduleDetailModal({
         title: '일정을 삭제할까요?',
         message: '삭제한 일정은 복구할 수 없어요.',
         buttons: [
-          { text: '취소', type: 'cancel' },
+          { text: '취소', type: 'cancel', onPress: () => {} },
           {
             text: '삭제',
             type: 'destructive',
@@ -113,20 +112,21 @@ export default function ScheduleDetailModal({
   return (
     <>
       <Overlay>
-        <ModalContainer style={{ transform: [{ translateY: slideAnim }] }}>
+        <AnimatedContainer style={{ transform: [{ translateY: slideAnim }] }}>
           <Header>
-            <IconButton icon={CancelIcon} size={24} onPress={onClose} />
+            <IconButton Svg={CancelIcon} width={24} height={24} onPress={onClose} />
             <HeaderActions>
               <IconButton
-                icon={EditIcon}
-                size={24}
+                Svg={EditIcon}
+                width={24}
+                height={24}
                 onPress={handlePressEdit}
               />
               <IconButton
-                icon={MoreIcon}
-                size={24}
+                Svg={MoreIcon}
+                width={24}
+                height={24}
                 onPress={() => setIsEditModalVisible(true)}
-                style={{ marginRight: 10 }}
               />
             </HeaderActions>
           </Header>
@@ -154,13 +154,13 @@ export default function ScheduleDetailModal({
               </DetailContent>
             </DetailRow>
 
-            {schedule.customerName && (
+            {schedule.description && (
               <DetailRow>
                 <IconWrapper>
                   <DocumentIcon width={24} height={24} />
                 </IconWrapper>
                 <DetailContent>
-                  <Typography fontSize={16}>{schedule.customerName}</Typography>
+                  <Typography fontSize={16}>{schedule.description}</Typography>
                 </DetailContent>
               </DetailRow>
             )}
@@ -176,23 +176,8 @@ export default function ScheduleDetailModal({
               </DetailRow>
             )}
 
-            {schedule.shootingType && (
-              <DetailRow>
-                <IconWrapper>
-                  <CameraIcon width={24} height={24} />
-                </IconWrapper>
-                <DetailContent>
-                  <Typography fontSize={16}>{schedule.shootingType}</Typography>
-                  {schedule.shootingCategory && (
-                    <Typography fontSize={16} marginTop={4} color="#A4A4A4">
-                      {schedule.shootingCategory}
-                    </Typography>
-                  )}
-                </DetailContent>
-              </DetailRow>
-            )}
           </ScrollContainer>
-        </ModalContainer>
+        </AnimatedContainer>
       </Overlay>
 
       <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal}>
@@ -230,15 +215,14 @@ const Overlay = styled.View`
   z-index: 1000;
 `;
 
-const ModalContainer = styled(Animated.View)`
+const AnimatedContainer = styled(Animated.View)`
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: ${SCREEN_HEIGHT * 0.7}px;
-  background-color: white;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  height: 100%;
+  background-color: #fff;
+  ${Platform.OS === 'ios' ? `padding-top: 50px;` : ''};
 `;
 
 const Header = styled.View`

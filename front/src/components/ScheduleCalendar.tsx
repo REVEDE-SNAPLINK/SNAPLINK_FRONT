@@ -28,11 +28,11 @@ interface ScheduleCalendarProps {
 }
 
 export default function ScheduleCalendar({
-                                           selectedDate,
-                                           onSelectDate,
-                                           eventDates,
-                                           initialDate,
-                                         }: ScheduleCalendarProps) {
+  selectedDate,
+  onSelectDate,
+  eventDates,
+  initialDate,
+}: ScheduleCalendarProps) {
   // includes가 잦으면 Set이 유리해서 변환
   const eventDateSet = new Set(eventDates);
 

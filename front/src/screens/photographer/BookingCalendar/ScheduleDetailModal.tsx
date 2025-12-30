@@ -10,10 +10,9 @@ import DocumentIcon from '@/assets/icons/document.svg';
 import LocationIcon from '@/assets/icons/location.svg';
 import { Typography, Alert } from '@/components/theme';
 import SlideModal from '@/components/theme/SlideModal';
-import { theme } from '@/theme';
 import { PersonalSchedule } from '@/store/modalStore';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ScheduleDetailModalProps {
   visible: boolean;
@@ -133,7 +132,7 @@ export default function ScheduleDetailModal({
 
           <ScrollContainer>
             <DetailRow first>
-              <Typography fontSize={18} fontWeight="600">
+              <Typography fontSize={18}>
                 {schedule.title}
               </Typography>
             </DetailRow>

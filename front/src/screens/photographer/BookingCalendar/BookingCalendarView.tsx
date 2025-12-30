@@ -11,7 +11,7 @@ import { GetPhotographerDayDetailResponse } from '@/api/schedules';
 interface BookingCalendarViewProps {
   selectedDate: string;
   monthScheduleData: MonthScheduleData[];
-  dayDetailData: GetPhotographerDayDetailResponse[];
+  dayDetailData: GetPhotographerDayDetailResponse | null;
   personalSchedules: PersonalSchedule[];
   dDayText: string;
   onPressBack: () => void;
@@ -43,10 +43,9 @@ export default function BookingCalendarView({
     return `${month}월 ${day}일 ${dayOfWeek}`;
   };
 
-  const dayDetail = dayDetailData[0] || null;
-  const bookings = dayDetail?.bookings || [];
-  const hasPublicHoliday = dayDetail?.publicHolidayName;
-  const hasPhotographerHoliday = dayDetail?.photographerHolidayReason;
+  const bookings = dayDetailData?.bookings || [];
+  const hasPublicHoliday = dayDetailData?.publicHolidayName;
+  const hasPhotographerHoliday = dayDetailData?.photographerHolidayReason;
 
   const hasSchedules = bookings.length > 0 || personalSchedules.length > 0 || hasPublicHoliday || hasPhotographerHoliday;
 

@@ -129,7 +129,7 @@ export default function BookingCalendarContainer() {
     <BookingCalendarView
       selectedDate={selectedDate}
       monthScheduleData={monthScheduleData || []}
-      dayDetailData={dayDetailData || []}
+      dayDetailData={dayDetailData || null}
       personalSchedules={selectedDateSchedules}
       dDayText={dDayText}
       onPressBack={handlePressBack}

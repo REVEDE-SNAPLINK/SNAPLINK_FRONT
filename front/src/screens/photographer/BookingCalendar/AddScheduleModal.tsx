@@ -8,6 +8,7 @@ import DocumentIcon from '@/assets/icons/document.svg';
 import LocationIcon from '@/assets/icons/location.svg';
 import { Typography, Alert } from '@/components/theme';
 import PrimaryToggleButton from '@/components/theme/PrimaryToggleButton';
+import DatePicker from 'react-native-date-picker';
 import { theme } from '@/theme';
 import { PersonalSchedule } from '@/store/modalStore';
 
@@ -32,6 +33,9 @@ export default function AddScheduleModal({
   const [endDate, setEndDate] = useState(initialSchedule?.endDate || new Date());
   const [description, setDescription] = useState(initialSchedule?.description || '');
   const [location, setLocation] = useState(initialSchedule?.location || '');
+
+  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
+  const [endDatePickerVisible, setEndDatePickerVisible] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
@@ -166,7 +170,7 @@ export default function AddScheduleModal({
           </AllDaySection>
 
           <DateTimeSection>
-            <DateTimeRow>
+            <DateTimeRow onPress={() => setStartDatePickerVisible(true)}>
               <DateText>
                 <Typography fontSize={16}>{formatDate(startDate)}</Typography>
               </DateText>
@@ -178,7 +182,7 @@ export default function AddScheduleModal({
                 </TimeText>
               )}
             </DateTimeRow>
-            <DateTimeRow>
+            <DateTimeRow onPress={() => setEndDatePickerVisible(true)}>
               <DateText>
                 <Typography fontSize={16}>{formatDate(endDate)}</Typography>
               </DateText>
@@ -217,6 +221,34 @@ export default function AddScheduleModal({
           </InputRow>
         </ScrollContainer>
       </AnimatedContainer>
+
+      <DatePicker
+        modal
+        mode={isAllDay ? 'date' : 'datetime'}
+        open={startDatePickerVisible}
+        date={startDate}
+        onConfirm={(date) => {
+          setStartDate(date);
+          setStartDatePickerVisible(false);
+        }}
+        onCancel={() => setStartDatePickerVisible(false)}
+        locale="ko"
+        title="시작 날짜"
+      />
+
+      <DatePicker
+        modal
+        mode={isAllDay ? 'date' : 'datetime'}
+        open={endDatePickerVisible}
+        date={endDate}
+        onConfirm={(date) => {
+          setEndDate(date);
+          setEndDatePickerVisible(false);
+        }}
+        onCancel={() => setEndDatePickerVisible(false)}
+        locale="ko"
+        title="종료 날짜"
+      />
     </Overlay>
   );
 }
@@ -294,11 +326,12 @@ const DateTimeSection = styled.View`
   padding: 0 50px;
 `;
 
-const DateTimeRow = styled.View`
+const DateTimeRow = styled.TouchableOpacity`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 5px;
+  padding: 8px 0;
 `;
 
 const DateText = styled.View``;

@@ -6,6 +6,7 @@ import ArrowLeftIcon from '@/assets/icons/arrow-left2.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import dayjs from 'dayjs';
 import Icon from '@/components/Icon.tsx';
+import { useMemo } from 'react';
 
 LocaleConfig.locales['ko'] = {
   monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -16,13 +17,20 @@ LocaleConfig.locales['ko'] = {
 };
 LocaleConfig.defaultLocale = 'ko';
 
+export interface MonthScheduleData {
+  day: number;
+  hasBookings: boolean;
+  publicHoliday: boolean;
+  photographerHoliday: boolean;
+}
+
 interface ScheduleCalendarProps {
   /** 현재 선택된 날짜 (YYYY-MM-DD) */
   selectedDate: string;
   /** 날짜 선택 콜백 (YYYY-MM-DD) */
   onSelectDate: (date: string) => void;
-  /** 일정이 있는 날짜들 (YYYY-MM-DD) */
-  eventDates: string[];
+  /** 월별 일정 데이터 */
+  monthScheduleData?: MonthScheduleData[];
   /** 캘린더 최초 표시 날짜 (옵션) */
   initialDate?: string;
 }
@@ -30,11 +38,34 @@ interface ScheduleCalendarProps {
 export default function ScheduleCalendar({
   selectedDate,
   onSelectDate,
-  eventDates,
+  monthScheduleData = [],
   initialDate,
 }: ScheduleCalendarProps) {
-  // includes가 잦으면 Set이 유리해서 변환
-  const eventDateSet = new Set(eventDates);
+  // Create a map for quick lookup
+  const scheduleMap = useMemo(() => {
+    const map = new Map<number, MonthScheduleData>();
+    monthScheduleData.forEach(item => {
+      map.set(item.day, item);
+    });
+    return map;
+  }, [monthScheduleData]);
+
+  const getEventColor = (day: number) => {
+    const scheduleData = scheduleMap.get(day);
+    if (!scheduleData) return null;
+
+    // Priority: hasBookings > photographerHoliday > publicHoliday
+    if (scheduleData.hasBookings) {
+      return 'rgba(0, 169, 128, 0.2)'; // primary color
+    }
+    if (scheduleData.photographerHoliday) {
+      return 'rgba(255, 152, 0, 0.2)'; // orange for photographer holiday
+    }
+    if (scheduleData.publicHoliday) {
+      return 'rgba(158, 158, 158, 0.2)'; // gray for public holiday
+    }
+    return null;
+  };
 
   return (
     <RNCalendar
@@ -63,12 +94,13 @@ export default function ScheduleCalendar({
       dayComponent={({ date }) => {
         const dateString = date?.dateString ?? '';
         const isSelected = selectedDate === dateString;
-        const hasEvent = eventDateSet.has(dateString);
+        const day = date?.day ?? 0;
+        const eventColor = getEventColor(day);
 
         return (
           <DayWrapper
             selected={isSelected}
-            hasEvent={hasEvent}
+            eventColor={eventColor}
             onPress={() => onSelectDate(dateString)}
             activeOpacity={0.8}
           >
@@ -88,20 +120,20 @@ export default function ScheduleCalendar({
   );
 }
 
-const DayWrapper = styled.TouchableOpacity<{ selected: boolean; hasEvent: boolean }>`
+const DayWrapper = styled.TouchableOpacity<{ selected: boolean; eventColor: string | null }>`
   width: 37.57px;
   height: 42px;
   justify-content: center;
   align-items: center;
   border-radius: 100px;
 
-  ${({ hasEvent, selected }) =>
-  hasEvent && !selected
-    ? `background-color: rgba(0, 169, 128, 0.2);`
-    : ''}
+  ${({ eventColor, selected }) =>
+    eventColor && !selected
+      ? `background-color: ${eventColor};`
+      : ''}
 
   ${({ selected }) =>
-  selected
-    ? `background-color: ${theme.colors.primary};`
-    : ''}
+    selected
+      ? `background-color: ${theme.colors.primary};`
+      : ''}
 `;

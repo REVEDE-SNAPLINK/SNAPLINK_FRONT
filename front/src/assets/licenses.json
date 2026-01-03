@@ -1747,6 +1747,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native-async-storage/async-storage",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native-async-storage/async-storage/LICENSE"
   },
+  "@react-native-camera-roll/camera-roll@7.10.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/react-native-cameraroll/react-native-cameraroll",
+    "publisher": "Bartol Karuza",
+    "email": "bartol.k@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native-camera-roll/camera-roll",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native-camera-roll/camera-roll/LICENCE"
+  },
   "@react-native-community/cli-clean@20.0.0": {
     "licenses": "MIT",
     "repository": "https://github.com/react-native-community/cli",
@@ -2285,6 +2293,12 @@
     "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@types/semver",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@types/semver/LICENSE"
+  },
+  "@types/sockjs-client@1.5.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@types/sockjs-client",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@types/sockjs-client/LICENSE"
   },
   "@types/stack-utils@2.0.3": {
     "licenses": "MIT",
@@ -6037,6 +6051,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native/dev-middleware/node_modules/open",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native/dev-middleware/node_modules/open/license"
   },
+  "opencollective-postinstall@2.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/opencollective/opencollective-postinstall",
+    "publisher": "Xavier Damman",
+    "url": "@xdamman",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/opencollective-postinstall",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/opencollective-postinstall/LICENSE"
+  },
   "optionator@0.9.4": {
     "licenses": "MIT",
     "repository": "https://github.com/gkz/optionator",
@@ -6544,6 +6566,13 @@
     "url": "Johan-dutoit",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/react-native-image-picker",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/react-native-image-picker/LICENSE.md"
+  },
+  "react-native-inappbrowser-reborn@3.7.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/proyecto26/react-native-inappbrowser",
+    "publisher": "Juan David Nicholls Cardona",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/react-native-inappbrowser-reborn",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/react-native-inappbrowser-reborn/LICENSE"
   },
   "react-native-is-edge-to-edge@1.1.7": {
     "licenses": "MIT",
@@ -7576,6 +7605,14 @@
     "email": "ben@npmjs.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/test-exclude",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/test-exclude/LICENSE.txt"
+  },
+  "text-encoding@0.7.0": {
+    "licenses": "(Unlicense OR Apache-2.0)",
+    "repository": "https://github.com/inexorabletash/text-encoding",
+    "publisher": "Joshua Bell",
+    "email": "inexorabletash@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/text-encoding",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/text-encoding/LICENSE.md"
   },
   "text-table@0.2.0": {
     "licenses": "MIT",

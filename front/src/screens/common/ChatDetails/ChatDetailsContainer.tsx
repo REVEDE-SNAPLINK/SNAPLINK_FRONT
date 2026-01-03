@@ -497,13 +497,13 @@ export default function ChatDetailsContainer() {
   const handlePressReport = () => {
     Alert.show({
       title: '사용자 신고',
-      message: '해당 사용자를 신고하시겠습니까?',
+      message: '해당 사용자를 신고하시겠습니까?\n모든 과정은 익명으로 처리됩니다.',
       buttons: [
         { text: '취소', onPress: () => {}, type: 'cancel' },
         { text: '신고', onPress: () => {
             Alert.show({
-              title: '신고 완료',
-              message: '해당 사용자가 신고되었습니다.',
+              title: '신고 완료가 완료되었습니다.',
+              message: '보내주신 소중한 의견으로 신고가 접수되었습니다.',
               buttons: [
                 { text: '확인', onPress: () => navigation.goBack()}
               ]

@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { chatQueryKeys } from '@/queries/keys.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
+import { Alert } from '@/components/theme';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
@@ -177,8 +178,25 @@ export default function PhotographerDetailsContainer() {
   }
 
   const handlePressReport = (type: string) => {
-    // TODO: 신고하기 기능
     console.log(type);
+    Alert.show({
+      title: '작가 신고',
+      message: '해당 작가를 신고하시겠습니까? 모든 과정은 익명으로 처리됩니다.',
+      buttons: [
+        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '신고', onPress: () => {
+          Alert.show({
+            title: '소중한 의견 감사합니다',
+            message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.',
+            buttons: [
+              { text: '확인', onPress: () => {
+                navigation.goBack();
+                } },
+            ]
+          })
+        }},
+      ]
+    })
   }
 
   return (

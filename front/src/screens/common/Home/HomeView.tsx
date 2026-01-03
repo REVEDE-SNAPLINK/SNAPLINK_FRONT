@@ -10,6 +10,7 @@ import LogoIcon from '@/assets/icons/logo-icon.svg'
 import AIButtonIcon from '@/assets/icons/ai-button.svg'
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import NotificationButton from '@/components/theme/NotificationButton.tsx';
+import { Dimensions } from 'react-native';
 
 interface HomeViewProps {
   onPressAI:  () => void;
@@ -24,6 +25,10 @@ interface HomeViewProps {
   popularPhotographerItems: PhotographerSearchItem[];
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CONTAINER_MARGIN = 26;
+const LIST_WIDTH = SCREEN_WIDTH - CONTAINER_MARGIN * 2;
+
 export default function HomeView({
   onPressAI,
   onPressAllPhotographer,
@@ -37,7 +42,7 @@ export default function HomeView({
   onSubmitSearchKey,
 }: HomeViewProps) {
   return (
-    <ScreenContainer headerShown={false} paddingHorizontal={26}>
+    <ScreenContainer headerShown={false} paddingHorizontal={CONTAINER_MARGIN}>
       <Header>
         <LogoWrapper>
           <Icon
@@ -81,8 +86,6 @@ export default function HomeView({
       </SearchFormWrapper>
       <ScrollContainer
         persistentScrollbar={false}
-        nestedScrollEnabled
-        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <Banner items={bannerItems} height={264} autoPlay autoPlayInterval={3000} />
@@ -92,12 +95,14 @@ export default function HomeView({
           title="스냅링크 전체 작가"
           onPressTitle={onPressAllPhotographer}
           onPressItem={onPressAllPhotographerItem}
+          width={LIST_WIDTH}
         />
         <PhotographerList
           items={popularPhotographerItems}
           marginTop={15}
           title="지금 가장 인기있는 작가"
           onPressItem={onPressPopularPhotographerItem}
+          width={LIST_WIDTH}
         />
         <ScrollSpacer />
       </ScrollContainer>
@@ -112,6 +117,7 @@ const Header = styled.View`
   justify-content: space-between;
   height: 30px;
   margin-bottom: 24px;
+  margin-top: 24px;
 `;
 
 const LogoWrapper = styled.View`
@@ -151,6 +157,7 @@ const ScrollContainer = styled.ScrollView`
   scroll-behavior: smooth;
   scrollbar-width: none;
   flex-grow: 1;
+  width: 100%;
 `
 
 const ScrollSpacer = styled.View`

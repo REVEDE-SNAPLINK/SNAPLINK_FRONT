@@ -7,11 +7,17 @@ import Icon from '@/components/Icon.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg';
 import { useAuthStore } from '@/store/authStore.ts';
 import { Alert, Typography } from '@/components/theme';
+import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
+import { useActivePhotographerMutation, useInactivePhotographerMutation } from '@/mutations/photographers.ts';
 
 export default function AccountManageScreen() {
   const navigation = useNavigation<MainNavigationProp>();
 
-  const { signOut, withdraw } = useAuthStore();
+  const { signOut, withdraw, userType } = useAuthStore();
+
+  const { data: photographerStatus } = usePhotographerStatusQuery();
+  const activeMutation = useActivePhotographerMutation();
+  const inactiveMutation = useInactivePhotographerMutation();
 
   const handlePressBack = () => navigation.goBack();
 
@@ -32,6 +38,84 @@ export default function AccountManageScreen() {
         },
       ],
     });
+  }
+
+  const handleChangePrivate = async () => {
+    const isActive = photographerStatus === 'ACTIVE';
+    const isInactive = photographerStatus === 'INACTIVE';
+
+    if (isActive) {
+      Alert.show({
+        title: '계정 비공개',
+        message: '계정을 비공개 처리하면 검색되지 않고 예약이 닫힙니다.\n계속하시겠습니까?',
+        buttons: [
+          {
+            text: '취소',
+            onPress: () => {},
+            type: 'cancel',
+          },
+          {
+            text: '비공개 전환',
+            onPress: async () => {
+
+              // 비공개 전환
+              inactiveMutation.mutate(undefined, {
+                onSuccess: () => {
+                  Alert.show({
+                    title: '비공개 전환 완료',
+                    message: '계정이 비공개 처리되었습니다.',
+                  });
+                },
+                onError: () => {
+                  Alert.show({
+                    title: '비공개 전환 실패',
+                    message: '승인된 예약이 있어 계정을 비공개 처리할 수 없습니다. 모든 예약이 완료된 후 다시 시도해주세요.',
+                  });
+                },
+              });
+            },
+            type: 'destructive',
+          },
+        ],
+      });
+    } else if (isInactive) {
+      // INACTIVE -> ACTIVE로 전환 (공개)
+      Alert.show({
+        title: '계정 공개',
+        message: '계정을 공개 처리하면 검색되고 예약을 받을 수 있습니다.\n계속하시겠습니까?',
+        buttons: [
+          {
+            text: '취소',
+            onPress: () => {},
+            type: 'cancel',
+          },
+          {
+            text: '공개 전환',
+            onPress: () => {
+              activeMutation.mutate(undefined, {
+                onSuccess: () => {
+                  Alert.show({
+                    title: '공개 전환 완료',
+                    message: '계정이 공개 처리되었습니다.',
+                  });
+                },
+                onError: () => {
+                  Alert.show({
+                    title: '공개 전환 실패',
+                    message: '계정 공개 처리에 실패했습니다.',
+                  });
+                },
+              });
+            },
+          },
+        ],
+      });
+    } else {
+      Alert.show({
+        title: '알림',
+        message: '현재 계정 상태에서는 이 작업을 수행할 수 없습니다.',
+      });
+    }
   }
 
   const handlePressWithdraw = async () => {
@@ -62,6 +146,12 @@ export default function AccountManageScreen() {
     >
       <InfoContainer>
         <InfoButton onPress={handlePressLogout} name="계정 로그아웃" />
+        {userType === 'photographer' && (
+          <InfoButton
+            onPress={handleChangePrivate}
+            name={photographerStatus === 'ACTIVE' ? '계정 비공개' : photographerStatus === 'INACTIVE' ? '계정 공개' : '계정 상태 관리'}
+          />
+        )}
         <InfoButton onPress={handlePressWithdraw} name="계정 탈퇴하기" isLast />
       </InfoContainer>
     </ScreenContainer>

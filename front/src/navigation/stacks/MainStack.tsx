@@ -10,13 +10,13 @@ import BookingDetailsContainer from '@/screens/common/BookingDetails/BookingDeta
 import WriteReviewContainer from '@/screens/user/WriteReview/WriteReviewContainer.tsx';
 import ViewPhotosContainer from '@/screens/common/ViewPhotos/ViewPhotosContainer.tsx';
 import PortfolioOnboardingContainer from '@/screens/photographer/PortfolioOnboarding/PortfolioOnboardingContainer.tsx';
+import PortfolioFormContainer from '@/screens/photographer/PortfolioForm/PortfolioFormContainer.tsx';
 import BookingRequestContainer from '@/screens/user/BookingRequest/BookingRequestContainer.tsx';
 import MyPostsContainer from '@/screens/common/MyPosts/MyPostsContainer.tsx';
 import ReviewsContainer from '@/screens/common/Reviews/ReviewsContainer.tsx';
 import ReviewDetailsContainer from '@/screens/common/ReviewDetails/ReviewDetailsContainer.tsx';
 import ReviewPhotosContainer from '@/screens/common/ReviewPhotos/ReviewPhotosContainer.tsx';
 import CommunityDetailsContainer from '@/screens/common/CommunityDetails/CommunityDetailsContainer.tsx';
-import BookingCalendarContainer from '@/screens/photographer/BookingCalendar/BookingCalendarContainer.tsx';
 import NotificationContainer from '@/screens/common/Notification/NotificationContainer.tsx';
 import MyReviewsContainer from '@/screens/user/MyReviews/MyReviewsContainer.tsx';
 import NicknameEditScreen from '@/screens/common/NicknameEditScreen.tsx';
@@ -24,10 +24,16 @@ import AccountManageScreen from '@/screens/common/AccountManageScreen.tsx';
 import EmailEditScreen from '@/screens/common/EmailEditScreen.tsx';
 import ShootingManageContainer from '@/screens/photographer/ShootingManage/ShootingManageContainer.tsx';
 import ServiceFormContainer from '@/screens/photographer/ServiceForm/ServiceFormContainer.tsx';
+import HolidayManageContainer from '@/screens/photographer/HolidayManage/HolidayManageContainer.tsx';
 import AIRecommdationFormContainer from '@/screens/common/AIRecommdationForm/AIRecommdationFormContainer.tsx';
 import AIRecommdationResultContainer from '@/screens/common/AIRecommdationResult/AIRecommdationResultContainer.tsx';
 import BookingRejectScreen from '@/screens/photographer/BookingReject/BookingRejectScreen.tsx';
 import BookingCancelScreen from '@/screens/photographer/BookingCancel/BookingCancelScreen.tsx';
+import OpenSourceLicensesScreen from '@/screens/common/OpenSourceLicenseScreen.tsx';
+import NotificationSettingContainer from '@/screens/common/NotificationSetting/NotificationSettingContainer.tsx';
+import BookingManageContainer from '@/screens/photographer/BookingManage/BookingManageContainer.tsx';
+import ScheduleFormContainer from '@/screens/photographer/ScheduleForm/ScheduleFormContainer.tsx';
+import PostDetailContainer from '@/screens/common/PostDetail/PostDetailContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -44,6 +50,7 @@ export default function MainStack() {
       <Stack.Screen name="PhotographerDetails" component={PhotographerDetailsContainer} />
       <Stack.Screen name="AIRecommdationForm" component={AIRecommdationFormContainer} />
       <Stack.Screen name="AIRecommdationResult" component={AIRecommdationResultContainer} />
+      <Stack.Screen name="PostDetail" component={PostDetailContainer} />
 
       {/* Community */}
       <Stack.Screen name="CommunityDetails" component={CommunityDetailsContainer} />
@@ -54,10 +61,14 @@ export default function MainStack() {
 
       {/* For Photographer */}
       <Stack.Screen name="PortfolioOnboarding" component={PortfolioOnboardingContainer} />
+      <Stack.Screen name="PortfolioForm" component={PortfolioFormContainer} />
       <Stack.Screen name="ShootingManage" component={ShootingManageContainer} />
       <Stack.Screen name="ServiceForm" component={ServiceFormContainer} />
+      <Stack.Screen name="HolidayManage" component={HolidayManageContainer} />
       <Stack.Screen name="BookingReject" component={BookingRejectScreen} />
       <Stack.Screen name="BookingCancel" component={BookingCancelScreen} />
+      <Stack.Screen name="BookingManage" component={BookingManageContainer} />
+      <Stack.Screen name="ScheduleForm" component={ScheduleFormContainer} />
 
       <Stack.Screen name="NicknameEdit" component={NicknameEditScreen} />
       <Stack.Screen name="EmailEdit" component={EmailEditScreen} />
@@ -72,8 +83,9 @@ export default function MainStack() {
       <Stack.Screen name="Reviews" component={ReviewsContainer} />
       <Stack.Screen name="ReviewDetails" component={ReviewDetailsContainer} />
       <Stack.Screen name="ReviewPhotos" component={ReviewPhotosContainer} />
-      <Stack.Screen name="BookingCalendar" component={BookingCalendarContainer} />
       <Stack.Screen name="MyReviews" component={MyReviewsContainer} />
+      <Stack.Screen name="OpenSourceLicense" component={OpenSourceLicensesScreen} />
+      <Stack.Screen name="NotificationSetting" component={NotificationSettingContainer} />
     </Stack.Navigator>
   )
 }

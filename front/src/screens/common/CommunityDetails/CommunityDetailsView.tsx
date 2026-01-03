@@ -9,7 +9,6 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Animated,
-  Linking,
 } from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
@@ -17,25 +16,18 @@ import { Typography } from '@/components/theme';
 import HeartIcon from '@/assets/icons/heart-black.svg';
 import HeartRedIcon from '@/assets/icons/heart-red.svg';
 import ChatIcon from '@/assets/icons/chat-blank-black.svg';
-import MoreCircleIcon from '@/assets/icons/more-circle.svg';
+import MoreCircleIcon from '@/assets/icons/more-circle-white.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import SendIcon from '@/assets/icons/send.svg';
 import { theme } from '@/theme';
-import { Comment, CommunityPost } from '@/api/community.ts';
+import { Comment, CommunityPost, CommunityPostImage } from '@/api/community.ts';
 import ServerImage from '@/components/ServerImage.tsx';
 import LinearGradient from 'react-native-linear-gradient';
 import ArrowLeftIcon from '@/assets/icons/arrow-left-white.svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SlideModal from '@/components/theme/SlideModal.tsx';
-import Icon from '@/components/Icon.tsx';
-import UploadBlackIcon from '@/assets/icons/upload.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-export interface ShareLink {
-  name: string;
-  url: string;
-}
 
 interface CommunityDetailsViewProps {
   post?: CommunityPost;
@@ -44,13 +36,11 @@ interface CommunityDetailsViewProps {
   userId: string;
   isCommentModalVisible: boolean;
   isEditModalVisible: boolean;
-  isShareModalVisible: boolean;
   commentInput: string;
   commentInputRef: RefObject<TextInput | null>;
   replyTo: { parentId: number; nickname: string } | null;
-  editingCommentId: string | null;
+  editingCommentId: number | null;
   onChangeCommentInput: (text: string) => void;
-  shareLinks: ShareLink[];
   onPressBack: () => void;
   onPressShare: () => void;
   onPressLike: () => void;
@@ -61,7 +51,6 @@ interface CommunityDetailsViewProps {
   onSubmitComment: () => void;
   onPressMore: () => void;
   onCloseEditModal: () => void;
-  onCloseShreModal: () => void;
   onPressEdit: () => void;
   onPressDelete: () => void;
   onPressReply: (commentId: number, nickname: string) => void;
@@ -71,7 +60,7 @@ interface CommunityDetailsViewProps {
 }
 
 // Image Carousel Component
-function ImageCarousel({ imageUrls }: { imageUrls: string[] }) {
+function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -81,7 +70,7 @@ function ImageCarousel({ imageUrls }: { imageUrls: string[] }) {
     setCurrentIndex(index);
   };
 
-  if (imageUrls.length === 0) {
+  if (images.length === 0) {
     return (
       <ImageSlide>
         <PostImage />
@@ -102,16 +91,16 @@ function ImageCarousel({ imageUrls }: { imageUrls: string[] }) {
         snapToInterval={SCREEN_WIDTH}
         snapToAlignment="start"
       >
-        {imageUrls.map((uri, index) => (
+        {images.map((img, index) => (
           <ImageSlide key={index}>
-            <PostImage uri={uri} />
+            <PostImage uri={img.urls} />
           </ImageSlide>
         ))}
       </ScrollView>
 
-      {imageUrls.length > 1 && (
+      {images.length > 1 && (
         <DotContainer>
-          {imageUrls.map((_, index) => (
+          {images.map((_, index) => (
             <AnimatedDot key={index} index={index} activeIndex={currentIndex} />
           ))}
         </DotContainer>
@@ -152,28 +141,36 @@ function AnimatedDot({ index, activeIndex }: { index: number; activeIndex: numbe
   );
 }
 
-// Comment Item Component with more menu
+// Comment Item Component with more menu and replies
 function CommentItemWithMenu({
   comment,
+  replies,
   userId,
   onPressReply,
   onPressEditComment,
   onPressDeleteComment,
 }: {
   comment: Comment;
+  replies: Comment[];
   userId: string;
   onPressReply: (commentId: number, nickname: string) => void;
   onPressEditComment: (commentId: number, content: string) => void;
   onPressDeleteComment: (commentId: number) => void;
 }) {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
   const isMyComment = comment.userId === userId;
+  const isReply = comment.parentId !== null;
+
+  // Do not render deleted comments
+  if (comment.isDeleted) return null;
+  const visibleReplies = (replies || []).filter(r => !r.isDeleted);
 
   return (
-    <CommentItem>
+    <CommentItem isReply={isReply} showMoreMenu={showMoreMenu}>
       <CommentContentWrapper>
         <CommentAuthorProfileImage
-          {...(comment.profileImageUrl !== undefined ? { uri: comment.profileImageUrl } : {})}
+          uri={comment?.profileImageUrl || ''}
         />
 
         <CommentContent>
@@ -222,14 +219,46 @@ function CommentItemWithMenu({
           </MoreButtonWrapper>
         )}
       </CommentContentWrapper>
-      <ReplyButton onPress={() => onPressReply(comment.id, comment.nickname)}>
-        <Typography
-          fontSize={12}
-          style={{ textDecorationLine: 'underline' }}
-        >
-          답글 달기
-        </Typography>
-      </ReplyButton>
+
+      <ReplyActionsWrapper>
+        {!isReply && visibleReplies.length > 0 && (
+          <ViewRepliesButton onPress={() => setShowReplies(!showReplies)}>
+            <Typography
+              fontSize={12}
+              style={{ textDecorationLine: 'underline' }}
+            >
+              {showReplies ? '답글 숨기기' : `답글 ${visibleReplies.length}개 보기`}
+            </Typography>
+          </ViewRepliesButton>
+        )}
+        {!isReply && (
+          <ReplyButton onPress={() => onPressReply(comment.id, comment.nickname)}>
+            <Typography
+              fontSize={12}
+              style={{ textDecorationLine: 'underline' }}
+            >
+              답글 달기
+            </Typography>
+          </ReplyButton>
+        )}
+      </ReplyActionsWrapper>
+
+      {/* Show replies if not a reply itself and showReplies is true */}
+      {!isReply && showReplies && visibleReplies.length > 0 && (
+        <RepliesContainer>
+          {visibleReplies.map(reply => (
+            <CommentItemWithMenu
+              key={reply.id}
+              comment={reply}
+              replies={reply.replies || []}
+              userId={userId}
+              onPressReply={onPressReply}
+              onPressEditComment={onPressEditComment}
+              onPressDeleteComment={onPressDeleteComment}
+            />
+          ))}
+        </RepliesContainer>
+      )}
     </CommentItem>
   );
 }
@@ -241,13 +270,11 @@ export default function CommunityDetailsView({
   userId,
   isCommentModalVisible,
   isEditModalVisible,
-  isShareModalVisible,
   commentInput,
   commentInputRef,
   replyTo,
   editingCommentId,
   onChangeCommentInput,
-  shareLinks,
   onPressBack,
   onPressShare,
   onPressLike,
@@ -258,7 +285,6 @@ export default function CommunityDetailsView({
   onSubmitComment,
   onPressMore,
   onCloseEditModal,
-  onCloseShreModal,
   onPressEdit,
   onPressDelete,
   onPressReply,
@@ -278,6 +304,12 @@ export default function CommunityDetailsView({
   }
 
   const hasInput = commentInput.trim().length > 0;
+
+  // ✅ 서버가 top-level comment 아래에 replies 트리로 내려줌
+  const topLevelComments = comments.filter(c => c.parentId === null && !c.isDeleted);
+
+  // 프리뷰 영역(상단 3개)은 top-level만 보여주기
+  const filteredComments = topLevelComments;
 
   // Handle @ mention deletion
   const handleKeyPress = ({ nativeEvent }: any) => {
@@ -317,7 +349,7 @@ export default function CommunityDetailsView({
               ]}
               locations={[0, 0.3, 1]}
             />
-            <ImageCarousel imageUrls={post.imageUrls} />
+            <ImageCarousel images={post.images} />
           </PostImageWrapper>
           <PostHeader statusBarHeight={statusBarHeight}>
             <IconButton
@@ -425,11 +457,11 @@ export default function CommunityDetailsView({
               >
                 댓글 {post.commentCount}
               </Typography>
-              {comments.slice(0, 3).map(comment => (
+              {filteredComments.slice(0, 3).map(comment => (
                 <CommentItem key={comment.id}>
                   <CommentContentWrapper>
                     <CommentAuthorProfileImage
-                      {...(comment.profileImageUrl !== undefined ? { uri: comment.profileImageUrl } : {})}
+                      uri={comment.profileImageUrl || ''}
                     />
                     <CommentContent>
                       <Typography
@@ -477,6 +509,7 @@ export default function CommunityDetailsView({
             </CommentSectionWrapper>
           </ContentContainer>
         </ContentWrapper>
+        <ScrollSpacer />
       </Container>
 
       {/* Comment Modal */}
@@ -489,6 +522,7 @@ export default function CommunityDetailsView({
         scrollable
         autoGrowToMax
         maxHeight={SCREEN_HEIGHT * 0.8}
+        minHeight={SCREEN_HEIGHT * 0.8}
         footerHeight={75}
         keyboardAvoid
         footer={
@@ -520,10 +554,11 @@ export default function CommunityDetailsView({
           </CommentInputWrapper>
         }
       >
-        {comments.map(comment => (
+        {topLevelComments.map(comment => (
           <CommentItemWithMenu
             key={comment.id}
             comment={comment}
+            replies={comment.replies || []}
             userId={userId}
             onPressReply={onPressReply}
             onPressEditComment={onPressEditComment}
@@ -536,6 +571,8 @@ export default function CommunityDetailsView({
       <SlideModal
         visible={isEditModalVisible}
         onClose={onCloseEditModal}
+        showHeader={false}
+        scrollable={false}
       >
         <EditModalWrapper>
           <EditModalButton onPress={onPressEdit}>
@@ -557,36 +594,6 @@ export default function CommunityDetailsView({
           </EditModalButton>
         </EditModalWrapper>
       </SlideModal>
-
-      <SlideModal
-        visible={isShareModalVisible}
-        onClose={onCloseShreModal}
-        title="Links"
-        minHeight={SCREEN_HEIGHT * 0.25}
-      >
-        {shareLinks.map((v, i) => (
-          <ShareLink
-            key={i}
-            onPress={() => {
-              (async () => {
-                const supported = await Linking.canOpenURL(v.url);
-
-                if (supported) {
-                  Linking.openURL(v.url);
-                }
-              })();
-            }}
-          >
-            <Icon width={18} height={18} Svg={UploadBlackIcon} />
-            <Typography
-              fontSize={14}
-              marginLeft={15}
-            >
-              카카오톡 오픈 채팅
-            </Typography>
-          </ShareLink>
-        ))}
-      </SlideModal>
     </>
   );
 }
@@ -595,6 +602,10 @@ const Container = styled.ScrollView`
   flex: 1;
   background-color: #fff;
 `;
+
+const ScrollSpacer = styled.View`
+  height: 50px;
+`
 
 const ContentWrapper = styled.View`
   position: relative;
@@ -712,8 +723,11 @@ const CommentSectionWrapper = styled.View`
   width: 100%;
 `;
 
-const CommentItem = styled.View`
+const CommentItem = styled.View<{ isReply?: boolean; showMoreMenu?: boolean }>`
+  position: relative;
   margin-bottom: 15px;
+  ${({ isReply }) => isReply && 'margin-left: 42px;'}
+  ${({ showMoreMenu }) => showMoreMenu && 'z-index: 1000; elevation: 5;'}
 `;
 
 const CommentContentWrapper = styled.View`
@@ -763,9 +777,20 @@ const MoreMenuDivider = styled.View`
   background-color: #e0e0e0;
 `;
 
-const ReplyButton = styled.TouchableOpacity`
-  padding-left: 30px;
-`
+const ReplyActionsWrapper = styled.View`
+  flex-direction: row;
+  padding-left: 42px;
+  margin-top: 8px;
+  gap: 16px;
+`;
+
+const ViewRepliesButton = styled.TouchableOpacity``;
+
+const ReplyButton = styled.TouchableOpacity``;
+
+const RepliesContainer = styled.View`
+  margin-top: 12px;
+`;
 
 const MoreCommentsButton = styled.TouchableOpacity`
   width: 100%;
@@ -792,6 +817,7 @@ const EditModalWrapper = styled.View`
   width: 100%;
   border: 1px solid #EAEAEA;
   border-radius: 4px;
+  margin-vertical: 20px;
 `
 
 const EditModalButton = styled.TouchableOpacity`
@@ -803,9 +829,3 @@ const EditModalDivider = styled.View`
   height: 1px;
   background-color: #e0e0e0;
 `;
-
-const ShareLink = styled.Pressable`
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 15px;
-`

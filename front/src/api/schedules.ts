@@ -2,8 +2,10 @@ import { API_BASE_URL } from '@/config/api.ts';
 import { buildQuery } from '@/utils/format.ts';
 import { authFetch } from '@/api/utils.ts';
 import { BookingStatus } from '@/api/bookings.ts';
+import { DayOfWeek, PhotographerScheduleItem } from '@/api/photographers.ts';
 
 const SCHEDULES_BASE = `${API_BASE_URL}/api/schedules`;
+const PERSONAL_BASE = `${API_BASE_URL}/api/photographer/personal/schedules`;
 
 export interface GetPhotographerMonthSchedulesParams {
   photographerId: string;
@@ -13,7 +15,7 @@ export interface GetPhotographerMonthSchedulesParams {
 
 export interface GetPhotographerMonthScheduleResponse {
   day: number;
-  hasBookings: boolean;
+  hasBooking: boolean;
   publicHoliday: boolean;
   photographerHoliday: boolean;
 }
@@ -98,4 +100,82 @@ export const getAvailableBookingTimes = async (
   if (!response.ok) throw new Error(`Failed to get available time ${response.status}`);
 
   return response.json();
+}
+
+export interface GetWeeklyScheduleRespnose {
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+}
+
+export const getWeeklySchedule = async (
+  photographerId: string,
+): Promise<GetWeeklyScheduleRespnose[]> => {
+  const response = await authFetch(`${SCHEDULES_BASE}/photographer/weekly/${photographerId}`, {
+    method: 'GET'
+  });
+
+  if (!response.ok) throw new Error(`Failed to get weekly schedule ${response.status}`);
+
+  return response.json();
+}
+
+export const updateWeeklySchedule = async (
+  photographerId: string, body: { schedules: PhotographerScheduleItem[] }
+)=> {
+  const response = await authFetch(`${SCHEDULES_BASE}/photographer/weekly/${photographerId}`, {
+    method: 'POST',
+    json: body
+  });
+
+  if (!response.ok) throw new Error(`Failed to update weekly schedule ${response.status}`);
+}
+
+export const deletePersonalSchedule = async (id: number) => {
+  const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
+    method: 'DELETE'
+  });
+
+  if (!response.ok) throw new Error(`Failed to delete personal schedule ${response.status}`);
+}
+
+export interface PersonalSchedule {
+  id: number;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  title: string;
+  content: string;
+}
+
+export const getPersonalSchedule = async (id: number): Promise<PersonalSchedule> => {
+  const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
+    method: 'GET'
+  });
+
+  if (!response.ok) throw new Error(`Failed to get personal schedule ${response.status}`);
+
+  return response.json();
+}
+
+export const createPersonalSchedule = async (body: PersonalSchedule): Promise<number> => {
+  const response = await authFetch(`${PERSONAL_BASE}`, {
+    method: 'POST',
+    json: body
+  });
+
+  if (!response.ok) throw new Error(`Failed to create personal schedule ${response.status}`);
+
+  return response.json();
+}
+
+export const updatePersonalSchedule = async (id: number, body: PersonalSchedule) => {
+  const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
+    method: 'PUT',
+    json: body
+  });
+
+  if (!response.ok) throw new Error(`Failed to update personal schedule ${response.status}`);
+
 }

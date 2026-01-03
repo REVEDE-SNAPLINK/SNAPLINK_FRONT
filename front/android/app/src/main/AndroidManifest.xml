@@ -39,6 +39,15 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="snap.lnk" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                        android:scheme="https"
+                        android:host="link.snaplink.run"
+                        android:pathPrefix="/post" />
+            </intent-filter>
         </activity>
         <activity
                 android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"

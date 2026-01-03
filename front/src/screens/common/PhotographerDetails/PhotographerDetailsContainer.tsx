@@ -6,6 +6,10 @@ import { usePhotographerProfileInfiniteQuery, usePhotographerReviewSummaryQuery 
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { LatestReviewSummaryItem } from '@/api/photographers.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
+import { useQueryClient } from '@tanstack/react-query';
+import { chatQueryKeys } from '@/queries/keys.ts';
+import { useAuthStore } from '@/store/authStore.ts';
+import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
@@ -16,13 +20,23 @@ const shareLinks: ShareLink[] = [
   }
 ];
 
+const ReportType = [
+  '저작권 침해가 우려돼요',
+  '정보가 부정확해요',
+  '명예를 훼손하는 내용이에요',
+  '욕설, 비방 및 폭언이 심해요.'
+]
+
 export default function PhotographerDetailsContainer() {
   const route = useRoute<PhotographerDetailsRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
   const { photographerId } = route.params;
+  const queryClient = useQueryClient();
+  const { userId, userType, isExpertMode } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews'>('portfolio');
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
 
   // Fetch photographer profile (includes portfolio thumbnails)
   const {
@@ -32,6 +46,34 @@ export default function PhotographerDetailsContainer() {
     hasNextPage,
     isFetchingNextPage,
   } = usePhotographerProfileInfiniteQuery(photographerId, { size: 18 });
+
+  const {
+    data: shootingData,
+    isLoading: isLoadingShooting,
+  } = useShootingsQuery(photographerId);
+
+  // Find the first default shooting product, or the first product if no default
+  const defaultShootingId = useMemo(() => {
+    if (!shootingData || shootingData.length === 0) return undefined;
+    const defaultShooting = shootingData.find((s) => s.isDefault);
+    return defaultShooting?.id || shootingData[0]?.id;
+  }, [shootingData]);
+
+  // Fetch shooting options for the default product
+  const { data: shootingOptionsData } = useShootingOptionsQuery(defaultShootingId);
+
+  // Extract option names as string array
+  const shootingOptionNames = useMemo(() => {
+    if (!shootingOptionsData || shootingOptionsData.length === 0) return [];
+    return shootingOptionsData.map((option) => option.name);
+  }, [shootingOptionsData]);
+
+  // Get the default shooting product for display, or the first product if no default
+  const defaultShootingProduct = useMemo(() => {
+    if (!shootingData || shootingData.length === 0) return undefined;
+    const defaultShooting = shootingData.find((s) => s.isDefault);
+    return defaultShooting || shootingData[0];
+  }, [shootingData]);
 
   // Fetch review summary
   const { data: reviewSummary } = usePhotographerReviewSummaryQuery(photographerId);
@@ -72,14 +114,18 @@ export default function PhotographerDetailsContainer() {
   const handlePressInquiry = useCallback(() => {
     chatMutation.mutate({ receiverId: photographerId }, {
       onSuccess: (response) => {
+        // Invalidate chat rooms to refresh the list
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
+
+        // Navigate to ChatDetails with photographer info
         navigation.navigate('ChatDetails', {
-          chatRoomId: response.roomId,
-          opponentId: photographerId,
-          profileImageURI: profileData.profileImageURI
-        })
+          roomId: response.roomId,
+          opponentNickname: profileData?.nickname,
+          opponentProfileImageURI: profileData?.profileImageUrl,
+        });
       }
     });
-  }, [chatMutation, photographerId, navigation, profileData.profileImageURI]);
+  }, [chatMutation, photographerId, navigation, queryClient, profileData]);
 
   const handlePressReservation = useCallback(() => {
     navigation.navigate('Booking', { photographerId });
@@ -95,9 +141,9 @@ export default function PhotographerDetailsContainer() {
     setActiveTab(tab);
   }, []);
 
-  const handlePressPortfolioImage = useCallback((imageId: number) => {
-    console.log(imageId);
-  }, []);
+  const handlePressPortfolioImage = useCallback((id: number) => {
+    navigation.navigate('PostDetail', { postId: id, profileImageURI: profileData?.profileImageUrl || '' });
+  }, [navigation, profileData]);
 
   const handlePressShowAllReviews = useCallback(() => {
     navigation.navigate('Reviews', { photographerId });
@@ -118,11 +164,33 @@ export default function PhotographerDetailsContainer() {
       }))
       : [];
 
+  const handlePressAddPortfolio = useCallback(() => {
+    navigation.navigate('PortfolioForm');
+  }, [navigation]);
+
+  const handlePressMore = () => {
+    setIsMoreModalVisible(true);
+  }
+
+  const handleCloseMoreModal = () => {
+    setIsMoreModalVisible(false);
+  }
+
+  const handlePressReport = (type: string) => {
+    // TODO: 신고하기 기능
+    console.log(type);
+  }
+
   return (
     <PhotographerDetailsView
       photographer={profileData}
+      isPhotographer={userType === 'photographer' && isExpertMode}
+      isMyProfile={userId === photographerId}
+      shootingData={defaultShootingProduct}
+      shootingOptions={shootingOptionNames}
+      onPressAddPortfolio={handlePressAddPortfolio}
       portfolioImages={allPortfolios}
-      isLoadingPhotographer={isLoadingPhotographer}
+      isLoadingPhotographer={isLoadingPhotographer || isLoadingShooting}
       isFetchingNextPage={isFetchingNextPage}
       activeTab={activeTab}
       portfolioCount={profileData?.portfolioCount || 0}
@@ -132,6 +200,11 @@ export default function PhotographerDetailsContainer() {
       reviews={reviews}
       isScrapped={profileData?.scrapped || false}
       isShareModalVisible={isShareModalVisible}
+      isMoreModalVisible={isMoreModalVisible}
+      reportType={ReportType}
+      onPressReport={handlePressReport}
+      onCloseMoreModal={handleCloseMoreModal}
+      onPressMore={handlePressMore}
       shareLinks={shareLinks}
       onPressBack={handlePressBack}
       onPressShare={handlePressShare}

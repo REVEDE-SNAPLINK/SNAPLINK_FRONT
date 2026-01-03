@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
-import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
+import { authFetch, authMultipartFetch, MultipartPart, toBlobPath } from '@/api/utils';
 import { buildQuery } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 
@@ -44,6 +44,16 @@ export interface GetChatMessagesParams {
 export const getChatRooms = async (): Promise<ChatRoomItem[]> => {
   const response = await authFetch(`${CHAT_BASE}/rooms`, { method: 'GET' });
   if (!response.ok) throw new Error(`Failed to get chat rooms ${response.status}`);
+  return response.json();
+};
+
+/**
+ * GET /api/chat/rooms/{roomId}/messages
+ * 특정 채팅방 정보 조회
+ */
+export const getChatRoom = async (roomId: number): Promise<ChatRoomItem> => {
+  const response = await authFetch(`${CHAT_BASE}/rooms/${roomId}/messages`, { method: 'GET' });
+  if (!response.ok) throw new Error(`Failed to get chat room ${response.status}`);
   return response.json();
 };
 
@@ -105,12 +115,17 @@ export interface UploadChatFileParams {
 export const uploadChatFile = async (
   params: UploadChatFileParams,
 ): Promise<string> => {
+  const path = await toBlobPath(params.file.uri);
+
+  // 디버깅/안정성: 실제 존재 확인(문Suggest 문제가 있으면 여기서 바로 잡힘)
+  await RNBlobUtil.fs.stat(path);
+
   const parts: MultipartPart[] = [
     {
       name: 'file',
-      filename: params.file.name,
-      type: params.file.type,
-      data: RNBlobUtil.wrap(params.file.uri.replace('file://', '')),
+      filename: params.file.name ?? 'file',
+      type: params.file.type ?? 'application/octet-stream',
+      data: RNBlobUtil.wrap(path),
     },
   ];
 
@@ -127,8 +142,7 @@ export const uploadChatFile = async (
   // 서버가 plain text URL 또는 JSON string으로 반환할 수 있음
   try {
     return JSON.parse(response.data);
-  } catch (e) {
-    // JSON 파싱 실패하면 plain text URL로 간주
+  } catch {
     console.log('[uploadChatFile] Response is plain text URL:', response.data);
     return response.data;
   }

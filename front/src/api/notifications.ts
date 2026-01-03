@@ -12,6 +12,31 @@ export interface NotificationItem {
   createdAt: string; // ISO date-time
 }
 
+export type NotificationCategory = '일정' | '게시글' | '리뷰';
+
+export interface Notification {
+  id: string;
+  category: NotificationCategory;
+  type: string;
+  message: string;
+  time?: string;
+  relatedId?: string;
+
+  // 게시글 알림 관련
+  postMessage?: string;
+  commentCount?: number;
+  relatedImage?: string;
+
+  // 일정 알림 관련 (유저)
+  photographerNickname?: string;
+
+  // 일정 알림 관련 (작가)
+  userNickname?: string;
+
+  bookingType?: string;
+  datetime?: string;
+}
+
 /**
  * GET /api/notifications
  * 최근 알림 20개 조회

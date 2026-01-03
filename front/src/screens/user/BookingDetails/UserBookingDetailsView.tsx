@@ -6,7 +6,6 @@ import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
-import { ReservationStatus } from '@/api/bookings.ts';
 
 interface UserBookingDetailsViewProps {
   onPressBack: () => void;
@@ -14,7 +13,6 @@ interface UserBookingDetailsViewProps {
   bookingOption: string;
   datetime: string;
   additionalRequest: string;
-  status: ReservationStatus;
   onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
   onPressShowMyReview?: () => void;
@@ -27,7 +25,6 @@ export default function UserBookingDetailsView({
   bookingOption,
   datetime,
   additionalRequest,
-  status,
   onPressViewPhotos,
   onPressWriteReview,
   onPressShowMyReview,
@@ -65,7 +62,7 @@ export default function UserBookingDetailsView({
         <Description name="촬영 일시" value={datetime} />
         <Description name="요청 사항" value={additionalRequest} />
       </InfoContainer>
-      {(status === 'DELIVERED' || status === 'REVIEWED') && onPressViewPhotos && (
+      {onPressViewPhotos && (
         <ViewPhotosButton onPress={onPressViewPhotos}>
           <Typography
             fontSize={16}
@@ -79,8 +76,8 @@ export default function UserBookingDetailsView({
           <Icon width={24} height={24} Svg={ArrowRightIcon} />
         </ViewPhotosButton>
       )}
-      {status === 'REVIEWED' && onPressShowMyReview && (
-        <ViewPhotosButton onPress={onPressViewPhotos}>
+      {onPressShowMyReview && (
+        <ViewPhotosButton onPress={onPressShowMyReview}>
           <Typography
             fontSize={16}
             fontWeight="semiBold"
@@ -93,7 +90,7 @@ export default function UserBookingDetailsView({
           <Icon width={24} height={24} Svg={ArrowRightIcon} />
         </ViewPhotosButton>
       )}
-      {status === 'DELIVERED' && onPressWriteReview && (
+      {onPressWriteReview && (
         <WriteReviewButtonWrapper>
           <SubmitButton
             text="촬영 후기 작성"

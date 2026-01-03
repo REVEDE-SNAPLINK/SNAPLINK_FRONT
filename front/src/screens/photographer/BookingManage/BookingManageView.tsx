@@ -20,6 +20,7 @@ interface BookingManageViewProps {
   onPressBookingDetail: (bookingId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onPressBack: () => void;
   onPressViewPhotos?: (bookingId: number) => void;
   onPressConfirmBooking?: (bookingId: number) => void;
   onPressRejectBooking?: (bookingId: number) => void;
@@ -38,6 +39,7 @@ export default function BookingManageView({
   onPressBookingDetail,
   onRefresh,
   isRefreshing,
+  onPressBack,
   onPressViewPhotos,
   onPressConfirmBooking,
   onPressRejectBooking,
@@ -61,7 +63,7 @@ export default function BookingManageView({
         photographerNickName={photographerProfile.nickname || '작가'}
         photographerName={photographerProfile.name || '작가'}
         type={item.type}
-        datetime={formatReservationDateTime(item.shootingDate, item.startTime)}
+        datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
         onPressViewPhotos={
           (item.status === 'COMPLETED' || item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK') && onPressViewPhotos
             ? () => onPressViewPhotos(item.bookingId)
@@ -125,6 +127,7 @@ export default function BookingManageView({
     <ScreenContainer
       headerTitle="촬영 예약 관리"
       headerShown={true}
+      onPressBack={onPressBack}
     >
       <ContentContainer>
         <FlatList

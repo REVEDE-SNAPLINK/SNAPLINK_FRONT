@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import CommunityView from '@/screens/common/Community/CommunityView.tsx';
+import CommunityView, { SortByKey } from '@/screens/common/Community/CommunityView.tsx';
 import { CreateCommunityPostParams, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
 import { useModalStore } from '@/store/modalStore.ts';
 import {
@@ -9,13 +9,14 @@ import {
   useToggleLikeMutation,
 } from '@/mutations/community.ts';
 import { useCommunityPostsQuery } from '@/queries/community.ts';
+import { Alert } from '@/components/theme';
 
 export default function CommunityContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading } = useModalStore();
 
   const [selectedCategory, setSelectedCategory] = useState<COMMUNITY_CATEGORY_ENUM>('DAILY');
-  const [sortBy, setSortBy] = useState<'recommended' | 'latest'>('recommended');
+  const [sortBy, setSortBy] = useState<SortByKey>('LATEST');
   const [searchKey, setSearchKey] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -24,7 +25,7 @@ export default function CommunityContainer() {
   const listParams = useMemo(
     () => ({
       size: pageSize,
-      sort: [sortBy === 'latest' ? 'createdAt,desc' : 'likeCount,desc'],
+      sort: [sortBy === 'LATEST' ? 'createdAt,desc' : 'likeCount,desc'],
     }),
     [sortBy]
   );
@@ -73,7 +74,7 @@ export default function CommunityContainer() {
 
   const totalCount = posts.length;
 
-  const handlePressPost = (postId: string) => {
+  const handlePressPost = (postId: number) => {
     navigation.navigate('CommunityDetails', { postId });
   };
 
@@ -81,15 +82,15 @@ export default function CommunityContainer() {
     setSelectedCategory(category);
   };
 
-  const handleToggleSort = () => {
-    setSortBy((prev) => (prev === 'recommended' ? 'latest' : 'recommended'));
+  const handleChangeSortBy = (key: SortByKey) => {
+    setSortBy(key);
   };
 
   const handleSubmitSearch = () => {
     setSearchQuery(searchKey);
   };
 
-  const handlePressLike = (postId: string) => {
+  const handlePressLike = (postId: number) => {
     toggleLikeMutation.mutate(postId);
   };
 
@@ -100,7 +101,26 @@ export default function CommunityContainer() {
   const handleCreatePost = (params: CreateCommunityPostParams) => {
     createPostMutation(params, {
       onSuccess: () => {
-        closeCommunityPostModal();
+        Alert.show({
+          title: '완료',
+          message: '게시글이 등록되었습니다.',
+          buttons: [
+            {
+              text: '확인',
+              onPress: () => {
+                closeCommunityPostModal();
+              },
+            },
+          ],
+        });
+      },
+      onError: (error: Error) => {
+        console.error('Failed to create post:', error);
+        Alert.show({
+          title: '오류',
+          message: '게시글 등록에 실패했습니다.',
+          buttons: [{ text: '확인', onPress: () => {} }],
+        });
       },
     });
   };
@@ -123,7 +143,7 @@ export default function CommunityContainer() {
       onChangeSearchKey={setSearchKey}
       onSubmitSearch={handleSubmitSearch}
       onPressTab={handlePressTab}
-      onToggleSort={handleToggleSort}
+      onChangeSortBy={handleChangeSortBy}
       onPressPost={handlePressPost}
       onPressLike={handlePressLike}
       onPressWritePost={handleOpenModal}

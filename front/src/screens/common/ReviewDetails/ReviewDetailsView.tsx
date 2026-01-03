@@ -3,17 +3,35 @@ import Typography from '../../../components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import ActiveStarIcon from '@/assets/icons/star-color.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg';
+import EditIcon from '@/assets/icons/edit.svg';
+import DeleteIcon from '@/assets/icons/delete.svg';
 import React from 'react';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { PhotographerReviewItem } from '@/api/photographers.ts';
+import { MyReviewItem } from '@/api/reviews.ts';
 import ServerImage from '@/components/ServerImage.tsx';
 
 interface ReviewDetailsViewProps {
-  review?: PhotographerReviewItem;
   onPressBack: () => void;
+  review: PhotographerReviewItem | MyReviewItem;
+  nickname: string;
+  profileImage: string;
+  photos: string[];
+  isEditable: boolean;
+  onPressEdit?: () => void;
+  onPressDelete?: () => void;
 }
 
-export default function ReviewDetailsView({ review, onPressBack }: ReviewDetailsViewProps) {
+export default function ReviewDetailsView({
+  onPressBack,
+  review,
+  nickname,
+  profileImage,
+  photos,
+  isEditable,
+  onPressEdit,
+  onPressDelete,
+}: ReviewDetailsViewProps) {
   if (!review) {
     return <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰">{null}</ScreenContainer>;
   }
@@ -40,27 +58,39 @@ export default function ReviewDetailsView({ review, onPressBack }: ReviewDetails
     <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰">
       <ReviewDetailsContainer showsVerticalScrollIndicator={false}>
         <ReviewItemHeader>
-          <ReviewWriterProfileImage
-            {...(review.writerProfileKey ? { uri: review.writerProfileKey } : {})}
-          />
-          <ReviewWriterInfoWrapper>
-            <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
-              {review.writerNickname}
-            </Typography>
-            <ReviewInfoWrapper>
-              {renderStars(review.rating)}
-              <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
-                {formattedDate}
+          <ReviewWriterWrapper>
+            <ReviewWriterProfileImage
+              uri={profileImage}
+            />
+            <ReviewWriterInfoWrapper>
+              <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
+                {nickname}
               </Typography>
-            </ReviewInfoWrapper>
-          </ReviewWriterInfoWrapper>
+              <ReviewInfoWrapper>
+                {renderStars(review.rating)}
+                <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
+                  {formattedDate}
+                </Typography>
+              </ReviewInfoWrapper>
+            </ReviewWriterInfoWrapper>
+          </ReviewWriterWrapper>
+          {isEditable && onPressEdit && onPressDelete && (
+            <ActionButtonsWrapper>
+              <ActionButton onPress={onPressEdit}>
+                <Icon width={20} height={20} Svg={EditIcon} />
+              </ActionButton>
+              <ActionButton onPress={onPressDelete}>
+                <Icon width={20} height={20} Svg={DeleteIcon} />
+              </ActionButton>
+            </ActionButtonsWrapper>
+          )}
         </ReviewItemHeader>
         <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
           {review.shootingTag}
         </Typography>
-        {review.photoKeys.length > 0 && (
+        {photos.length > 0 && (
           <ReviewImageWrapper horizontal showsHorizontalScrollIndicator={false}>
-            {review.photoKeys.map((key, index) => (
+            {photos.map((key, index) => (
               <ReviewImage key={index} uri={key} />
             ))}
           </ReviewImageWrapper>
@@ -88,7 +118,14 @@ const RatingStarWrapper = styled.View`
 const ReviewItemHeader = styled.View`
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
+`
+
+const ReviewWriterWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
 `
 
 const ReviewWriterProfileImage = styled(ServerImage)`
@@ -99,6 +136,7 @@ const ReviewWriterProfileImage = styled(ServerImage)`
 
 const ReviewWriterInfoWrapper = styled.View`
   margin-left: 10px;
+  flex: 1;
 `
 
 const ReviewInfoWrapper = styled.View`
@@ -115,4 +153,14 @@ const ReviewImage = styled(ServerImage)`
   width: 100px;
   height: 100px;
   margin-right: 10px;
+`
+
+const ActionButtonsWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+`
+
+const ActionButton = styled.TouchableOpacity`
+  padding: 5px;
 `

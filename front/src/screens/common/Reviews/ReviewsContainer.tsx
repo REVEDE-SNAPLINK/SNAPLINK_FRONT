@@ -40,7 +40,7 @@ export default function ReviewsContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressReview = (review: PhotographerReviewItem) => {
-    navigation.navigate('ReviewDetails', { reviewId: review.reviewId, review });
+    navigation.navigate('ReviewDetails', { review });
   };
 
   const handlePressAllPhotos = () => {

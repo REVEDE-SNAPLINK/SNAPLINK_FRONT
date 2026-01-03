@@ -13,6 +13,7 @@ interface PhotographerViewPhotosViewProps {
   setCheckedImages: (index: number) => void;
   onUploadPhotos: () => void;
   onDeletePhotos: () => void;
+  onAddImages?: () => void;
   isLoading?: boolean;
 }
 
@@ -23,6 +24,7 @@ export default function PhotographerViewPhotosView({
   setCheckedImages,
   onUploadPhotos,
   onDeletePhotos,
+  onAddImages,
   isLoading = false,
 }: PhotographerViewPhotosViewProps) {
   const getButtonText = () => {
@@ -32,6 +34,14 @@ export default function PhotographerViewPhotosView({
   const handleButtonPress = () => {
     if (imageURIs.length > 0) {
       onDeletePhotos();
+    } else {
+      onUploadPhotos();
+    }
+  };
+
+  const handleAddImage = () => {
+    if (onAddImages) {
+      onAddImages();
     } else {
       onUploadPhotos();
     }
@@ -61,8 +71,8 @@ export default function PhotographerViewPhotosView({
             imageURIs={imageURIs}
             checkedImages={checkedImages}
             setCheckedImage={setCheckedImages}
-            addable={!isLoading}
-            onPressAddImage={onUploadPhotos}
+            addable={imageURIs.length > 0 && !isLoading}
+            onPressAddImage={handleAddImage}
             width={332}
           />
         </ContentContainer>

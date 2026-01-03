@@ -6,23 +6,28 @@ import { SvgProps } from 'react-native-svg';
 import { ComponentType } from 'react';
 import Icon from '@/components/Icon.tsx';
 import Logo from '@/assets/imgs/logo-black.svg'
+import MoreCircleIcon from '@/assets/icons/more-circle.svg'
 
 interface HeaderWithBackButtonProps {
   onPressBack?: () => void;
   onPressTool?: () => void;
+  onPressMore?: () => void;
   title: string;
   ToolIcon?: ComponentType<SvgProps>;
   isShowLogo?: boolean;
   height?: number;
+  iconSize?: number;
 }
 
 export default function HeaderWithBackButton({
   onPressBack,
   onPressTool,
+  onPressMore,
   title,
   ToolIcon,
   isShowLogo = false,
   height = 100,
+  iconSize = 24,
 }: HeaderWithBackButtonProps) {
   return (
     <Container height={height}>
@@ -46,11 +51,16 @@ export default function HeaderWithBackButton({
       <ToolButtonWrapper>
         {ToolIcon !== undefined && onPressTool && (
           <IconButton
-            width={24}
-            height={24}
+            width={iconSize}
+            height={iconSize}
             Svg={ToolIcon}
             onPress={onPressTool}
           />
+        )}
+        {onPressMore && (
+          <MoreButtonWrapper onPress={onPressMore}>
+            <Icon width={24} height={24} Svg={MoreCircleIcon} />
+          </MoreButtonWrapper>
         )}
       </ToolButtonWrapper>
     </Container>
@@ -79,5 +89,10 @@ const ToolButtonWrapper = styled.View`
   right: 20px;
   top: 0;
   height: 100%;
-  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+`
+
+const MoreButtonWrapper = styled.Pressable`
+  margin-left: 10px;
 `

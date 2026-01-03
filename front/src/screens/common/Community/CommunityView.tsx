@@ -3,7 +3,6 @@ import Icon from '@/components/Icon.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
-import SwapIcon from '@/assets/icons/swap.svg';
 import SearchIcon from '@/assets/icons/search-white.svg';
 import IconButton from '@/components/IconButton.tsx';
 import { Dimensions, FlatList, RefreshControl } from 'react-native';
@@ -14,21 +13,35 @@ import CrossIcon from '@/assets/icons/cross-white.svg';
 import { CommunityPost, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
 import ServerImage from '@/components/ServerImage.tsx';
 import NotificationButton from '@/components/theme/NotificationButton.tsx';
+import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
+
+export const SORT_BY_ENUM = {
+  'LATEST': '최신순',
+  'LIKES': '좋아요 순',
+};
+
+export type SortByKey = keyof typeof SORT_BY_ENUM;
+
+const SORT_OPTIONS: SortOption<SortByKey>[] = [
+  { key: 'LATEST', label: '최신순' },
+  { key: 'LIKES', label: '좋아요 순' },
+];
+
 
 interface CommunityViewProps {
   posts: CommunityPost[];
   totalCount: number;
   selectedCategory: COMMUNITY_CATEGORY_ENUM | undefined;
-  sortBy: 'recommended' | 'latest';
+  sortBy: SortByKey;
   searchKey: string;
   isLoadingMore?: boolean;
   isRefreshing?: boolean;
   onChangeSearchKey: (key: string) => void;
   onSubmitSearch: () => void;
   onPressTab: (category: COMMUNITY_CATEGORY_ENUM) => void;
-  onToggleSort: () => void;
-  onPressPost: (postId: string) => void;
-  onPressLike: (postId: string) => void;
+  onChangeSortBy: (key: SortByKey) => void;
+  onPressPost: (postId: number) => void;
+  onPressLike: (postId: number) => void;
   onPressWritePost: () => void;
   onLoadMore?: () => void;
   onRefresh?: () => void;
@@ -50,7 +63,7 @@ export default function CommunityView({
   onChangeSearchKey,
   onSubmitSearch,
   onPressTab,
-  onToggleSort,
+  onChangeSortBy,
   onPressPost,
   onPressLike,
   onPressWritePost,
@@ -96,18 +109,11 @@ export default function CommunityView({
         <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color={theme.colors.disabled}>
           {selectedCategory ? `${COMMUNITY_CATEGORIES[selectedCategory]} ${totalCount}개` : `최근 인기글🔥`}
         </Typography>
-        <SortButton onPress={onToggleSort}>
-          <Typography
-            fontSize={12}
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color={theme.colors.disabled}
-            marginRight={1.5}
-          >
-            {sortBy === 'recommended' ? '추천순' : '최신순'}
-          </Typography>
-          <Icon width={14} height={14} Svg={SwapIcon} />
-        </SortButton>
+        <SortButton
+          options={SORT_OPTIONS}
+          selectedKey={sortBy}
+          onSelect={onChangeSortBy}
+        />
       </SearchResultHeader>
       <FlatList
         data={displayPosts}
@@ -121,8 +127,8 @@ export default function CommunityView({
 
           return (
             <PostItem onPress={() => onPressPost(item.id)}>
-              {item.imageUrls.length > 0 ? (
-                <PostImage uri={item.imageUrls[0]} />
+              {item.images?.length > 0 ? (
+                <PostImage uri={item.images[0].urls} />
               ) : (
                 <PostImage />
               )}
@@ -134,22 +140,23 @@ export default function CommunityView({
                     <PostWriterProfileImage />
                   )
                   }
-                  <Typography fontSize={10} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
+                  <Typography fontSize={12} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
                     {item.author.nickname}
                   </Typography>
                 </PostHeader>
-                <Typography fontSize={10} lineHeight="140%" letterSpacing="-2.5%" numberOfLines={2}>
+                <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" numberOfLines={2}>
                   {item.title}
                 </Typography>
                 <PostInfoWrapper>
                   <IconButton
-                    width={10}
-                    height={10}
+                    width={13}
+                    height={12}
+                    disabled={true}
                     Svg={item.isLiked ? HeartRedIcon : HeartIcon}
                     onPress={() => onPressLike(item.id)}
                   />
                   <Typography
-                    fontSize={9}
+                    fontSize={12}
                     letterSpacing="-2.5%"
                     color="textSecondary"
                     marginLeft={2}
@@ -157,8 +164,8 @@ export default function CommunityView({
                   >
                     {item.likeCount}
                   </Typography>
-                  <Icon width={10} height={10} Svg={ChatIcon} />
-                  <Typography fontSize={9} letterSpacing="-2.5%" color="textSecondary" marginLeft={2}>
+                  <Icon width={13} height={12} Svg={ChatIcon} />
+                  <Typography fontSize={12} letterSpacing="-2.5%" color="textSecondary" marginLeft={2}>
                     {item.commentCount}
                   </Typography>
                 </PostInfoWrapper>
@@ -211,6 +218,7 @@ const Header = styled.View`
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
+  margin-top: 24px;
 `;
 
 const SearchInputWrapper = styled.View`
@@ -265,11 +273,8 @@ const SearchResultHeader = styled.View`
   width: 100%;
   margin-top: 21px;
   margin-bottom: 15px;
-`;
-
-const SortButton = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
+  position: relative;
+  z-index: 1000;
 `;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -290,7 +295,7 @@ const EmptyPostItem = styled.View`
 
 const PostImage = styled(ServerImage)`
   width: ${ITEM_WIDTH}px;
-  height: ${ITEM_WIDTH}px;
+  height: 218px;
   background-color: #ccc;
 `;
 
@@ -303,7 +308,7 @@ const PostContent = styled.View`
 const PostHeader = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: 7px;
 `;
 
 const PostWriterProfileImage = styled(ServerImage)`
@@ -315,9 +320,8 @@ const PostWriterProfileImage = styled(ServerImage)`
 `;
 
 const PostInfoWrapper = styled.View`
-  margin-top: 5px;
+  margin-top: 9px;
   flex-direction: row;
-  justify-content: flex-end;
 `;
 
 const LoadingIndicator = styled.View`

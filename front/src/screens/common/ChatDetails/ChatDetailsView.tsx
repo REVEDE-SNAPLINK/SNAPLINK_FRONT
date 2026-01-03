@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import { useState, useRef } from 'react';
+import { KeyboardAvoidingView, Platform, FlatList, Dimensions, Modal } from 'react-native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
@@ -8,10 +8,27 @@ import { theme } from '@/theme';
 import CrossBlackIcon from '@/assets/icons/cross-black.svg';
 import SendIcon from '@/assets/icons/send.svg';
 import IconButton from '@/components/IconButton.tsx';
-import ImageIcon from '@/assets/icons/image.svg'
-import PaperPlusIcon from '@/assets/icons/paper-plus.svg'
+import ImageIcon from '@/assets/icons/image.svg';
+import PaperPlusIcon from '@/assets/icons/paper-plus.svg';
 import { ChatMessage } from '@/api/chat.ts';
 import { formatChatDayjs } from '@/utils/format.ts';
+import MoreIcon from '@/assets/icons/more.svg';
+import SlideModal from '@/components/theme/SlideModal.tsx';
+import ServerImage from '@/components/ServerImage.tsx';
+import FileDownloadButton from '@/components/FileDownloadButton.tsx';
+import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
+import DownloadIcon from '@/assets/icons/download.svg';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+export interface FileDownloadState {
+  isDownloaded: boolean;
+  isDownloading: boolean;
+  localPath?: string;
+  fileName?: string;
+  fileSize?: string;
+  downloadKey?: string;
+}
 
 interface ChatDetailsViewProps {
   partnerNickname: string;
@@ -19,15 +36,30 @@ interface ChatDetailsViewProps {
   opponentProfileImageURI: string;
   messages: ChatMessage[];
   messageInput: string;
+  isModalVisible: boolean;
   onChangeMessageInput: (text: string) => void;
   onPressSend: () => void;
   onPressBack: () => void;
   recommendedMessages: string[];
   onPressRecommendedMessage: (message: string) => void;
+  onCloseModal: () => void;
+  onPressBlock: () => void;
+  onPressReport: () => void;
+  onPressTool: () => void;
   onPressAlbum?: () => void;
   onPressFile?: () => void;
   onLoadMore?: () => void;
   isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  fileDownloadStates: Record<string, FileDownloadState>;
+  onPressFileDownload: (messageId: number, fileUrl: string) => void;
+  onPressImage: (imageUrl: string, imageUrls: string[]) => void;
+  onDownloadImage: (imageUrl: string) => void;
+  imagePreviewVisible: boolean;
+  imagePreviewUrls: string[];
+  imagePreviewIndex: number;
+  onChangeImagePreviewIndex: (index: number) => void;
+  onCloseImagePreview: () => void;
 }
 
 export default function ChatDetailsView({
@@ -36,17 +68,37 @@ export default function ChatDetailsView({
   opponentProfileImageURI,
   messages,
   messageInput,
+  isModalVisible,
   onChangeMessageInput,
   onPressSend,
   onPressBack,
   recommendedMessages,
   onPressRecommendedMessage,
+  onPressTool,
+  onCloseModal,
+  onPressBlock,
+  onPressReport,
   onPressAlbum,
   onPressFile,
   onLoadMore,
   isFetchingNextPage,
+  fileDownloadStates,
+  onPressFileDownload,
+  onPressImage,
+  onDownloadImage,
+  imagePreviewVisible,
+  imagePreviewUrls,
+  imagePreviewIndex,
+  onChangeImagePreviewIndex,
+  onCloseImagePreview,
+  hasNextPage,
 }: ChatDetailsViewProps) {
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const flatListRef = useRef<FlatList<any>>(null);
+
+  // Refs for end-reached throttling
+  const endReachedLockRef = useRef(false);
+  const lastEndReachedAtRef = useRef(0);
 
   const hasRecommendedMessages = recommendedMessages.length > 0;
   const hasInputValue = messageInput.trim().length > 0;
@@ -55,9 +107,130 @@ export default function ChatDetailsView({
     setShowExtraButtons(!showExtraButtons);
   };
 
+
   const renderMessage = ({ item }: { item: ChatMessage }) => {
-    if (opponentId !== item.senderId) {
-      // 내 메시지
+    const isMyMessage = opponentId !== item.senderId;
+
+    // FILE 타입 메시지
+    if (item.type === 'FILE') {
+      // 다운로드 상태는 messageId가 아니라 fileUrl 기반(downloadKey)로 추적
+      const downloadKey = encodeURIComponent(String(item.content ?? '').replace(/^\/+/, ''));
+
+      // (하위 호환) 과거 messageId 키로 저장된 상태가 있으면 fallback
+      const fileState =
+        fileDownloadStates[downloadKey] ||
+        fileDownloadStates[String(item.messageId)] || {
+          isDownloaded: false,
+          isDownloading: false,
+        };
+
+      if (isMyMessage) {
+        return (
+          <MyMessageContainer>
+            <MessageTime fontSize={10} color="#AAAAAA">
+              {formatChatDayjs(item.sentAt)}
+            </MessageTime>
+            <MessageContentWrapper isMyMessage={true}>
+              <FileDownloadButton
+                fileName={fileState.fileName || '파일'}
+                fileSize={fileState.fileSize}
+                isDownloaded={fileState.isDownloaded}
+                isDownloading={fileState.isDownloading}
+                onPress={() => onPressFileDownload(item.messageId, item.content)}
+              />
+            </MessageContentWrapper>
+          </MyMessageContainer>
+        );
+      } else {
+        return (
+          <PartnerMessageContainer>
+            <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
+            <PartnerMessageContent>
+              <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
+                {item.senderNickname}
+              </Typography>
+              <PartnerMessageRow>
+                <PartnerContentWrapper>
+                  <FileDownloadButton
+                    fileName={fileState.fileName || '파일'}
+                    fileSize={fileState.fileSize}
+                    isDownloaded={fileState.isDownloaded}
+                    isDownloading={fileState.isDownloading}
+                    onPress={() => onPressFileDownload(item.messageId, item.content)}
+                  />
+                </PartnerContentWrapper>
+                <MessageTime fontSize={10} color="#AAAAAA">
+                  {formatChatDayjs(item.sentAt)}
+                </MessageTime>
+              </PartnerMessageRow>
+            </PartnerMessageContent>
+          </PartnerMessageContainer>
+        );
+      }
+    }
+
+    // IMAGE 타입 메시지
+    if (item.type === 'IMAGE') {
+      // content를 JSON 배열로 파싱 (또는 단일 URL)
+      let imageUrls: string[] = [];
+      try {
+        const parsed = JSON.parse(item.content);
+        imageUrls = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        // JSON 파싱 실패시 단일 URL로 간주
+        imageUrls = [item.content];
+      }
+
+      const imageCount = imageUrls.length;
+      const resolvedImageUrls = imageUrls;
+
+      if (isMyMessage) {
+        return (
+          <MyMessageContainer>
+            <MessageTime fontSize={10} color="#AAAAAA">
+              {formatChatDayjs(item.sentAt)}
+            </MessageTime>
+            <MessageContentWrapper isMyMessage={true}>
+              <ImageList imageCount={imageCount} isMyMessage={isMyMessage}>
+                {imageUrls.map((imageUrl: string, index: number) => (
+                  <ImageWrapper key={index} onPress={() => onPressImage(imageUrl, resolvedImageUrls)}>
+                    <UploadImage uri={imageUrl} />
+                  </ImageWrapper>
+                ))}
+              </ImageList>
+            </MessageContentWrapper>
+          </MyMessageContainer>
+        );
+      } else {
+        return (
+          <PartnerMessageContainer>
+            <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
+            <PartnerMessageContent>
+              <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
+                {item.senderNickname}
+              </Typography>
+              <PartnerMessageRow>
+                <PartnerContentWrapper>
+                  <ImageList imageCount={imageCount} isMyMessage={isMyMessage}>
+                    {imageUrls.map((imageUrl: string, index: number) => (
+                      <ImageWrapper key={index} onPress={() => onPressImage(imageUrl, resolvedImageUrls)}>
+                        <UploadImage uri={imageUrl} />
+                      </ImageWrapper>
+                    ))}
+                  </ImageList>
+                </PartnerContentWrapper>
+                <MessageTime fontSize={10} color="#AAAAAA">
+                  {formatChatDayjs(item.sentAt)}
+                </MessageTime>
+              </PartnerMessageRow>
+            </PartnerMessageContent>
+          </PartnerMessageContainer>
+        );
+      }
+    }
+
+    // TEXT 타입 메시지 (기본)
+    if (isMyMessage) {
       return (
         <MyMessageContainer>
           <MessageTime fontSize={10} color="#AAAAAA">
@@ -70,8 +243,7 @@ export default function ChatDetailsView({
           </MyMessageBubble>
         </MyMessageContainer>
       );
-    } else {
-      // 상대방 메시지
+      } else {
       return (
         <PartnerMessageContainer>
           <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
@@ -96,92 +268,195 @@ export default function ChatDetailsView({
   };
 
   return (
-    <ScreenContainer
-      headerShown={true}
-      headerTitle={partnerNickname}
-      onPressBack={onPressBack}
-    >
-      <KeyboardAvoidingView
-        style={{ flex: 1, width: "100%" }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+    <>
+      <ScreenContainer
+        headerShown={true}
+        headerTitle={partnerNickname}
+        onPressBack={onPressBack}
+        headerToolIcon={MoreIcon}
+        onPressTool={onPressTool}
       >
-        {/* 채팅 내역 */}
-        <MessagesContainer>
-          <FlatList
-            data={messages}
-            keyExtractor={(item, index) => `${item.senderId}-${item.sentAt}-${index}`}
-            renderItem={renderMessage}
-            contentContainerStyle={{ padding: 16 }}
-            onEndReached={onLoadMore}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <LoadingContainer>
-                  <Typography fontSize={12} color="#AAAAAA">
-                    로딩 중...
-                  </Typography>
-                </LoadingContainer>
-              ) : null
-            }
+        <KeyboardAvoidingView
+          style={{ flex: 1, width: "100%" }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+        >
+          {/* 채팅 내역 */}
+          <MessagesContainer>
+            <FlatList
+              ref={flatListRef}
+              data={messages.filter((v) => v.messageId !== null)}
+              keyExtractor={(item, index) => String((item as any).messageId ?? `${item.senderId}-${item.sentAt}-${index}`)}
+              renderItem={renderMessage}
+              contentContainerStyle={{ padding: 16 }}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <LoadingContainer>
+                    <Typography fontSize={12} color="#AAAAAA">
+                      로딩 중...
+                    </Typography>
+                  </LoadingContainer>
+                ) : null
+              }
+              onScroll={(e) => {
+                if (!onLoadMore) return;
+                if (isFetchingNextPage) return;
+                if (hasNextPage === false) return;
+
+                const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+                // when close to top, load older messages
+                if (y > 60) return;
+
+                const now = Date.now();
+                if (endReachedLockRef.current) return;
+                if (now - lastEndReachedAtRef.current < 800) return;
+
+                endReachedLockRef.current = true;
+                lastEndReachedAtRef.current = now;
+                onLoadMore();
+
+                setTimeout(() => {
+                  endReachedLockRef.current = false;
+                }, 500);
+              }}
+              scrollEventThrottle={16}
+            />
+          </MessagesContainer>
+
+          {/* 하단 입력 영역 */}
+          <InputContainer>
+            {/* 추천 메시지 버튼들 */}
+            {hasRecommendedMessages && (
+              <RecommendedMessagesContainer>
+                {recommendedMessages.slice(0, 8).map((msg, index) => (
+                  <RecommendedMessageButton
+                    key={index}
+                    onPress={() => onPressRecommendedMessage(msg)}
+                  >
+                    <RecommendedMessageText fontSize={12} color="#fff">
+                      {msg}
+                    </RecommendedMessageText>
+                  </RecommendedMessageButton>
+                ))}
+              </RecommendedMessagesContainer>
+            )}
+
+
+            {/* 입력 줄 */}
+            <InputRow>
+              <CrossButton onPress={handlePressCross} showExtraButtons={showExtraButtons}>
+                <Icon width={20} height={20} Svg={CrossBlackIcon} />
+              </CrossButton>
+              <MessageInputWrapper hasInputValue={hasInputValue}>
+                <MessageInput
+                  value={messageInput}
+                  onChangeText={onChangeMessageInput}
+                  onSubmitEditing={onPressSend}
+                />
+                <IconButton width={20} height={20} Svg={SendIcon} onPress={onPressSend} disabled={!hasInputValue} />
+              </MessageInputWrapper>
+            </InputRow>
+
+            {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
+            {showExtraButtons && (
+              <ExtraButtonsContainer>
+                <ExtraButtonWrapper onPress={onPressAlbum}>
+                  <ExtraButton>
+                    <Icon width={24} height={24} Svg={ImageIcon} />
+                  </ExtraButton>
+                  <Typography fontSize={9} color="#000" lineHeight={20}>앨범</Typography>
+                </ExtraButtonWrapper>
+                <ExtraButtonWrapper onPress={onPressFile}>
+                  <ExtraButton>
+                    <Icon width={24} height={24} Svg={PaperPlusIcon} />
+                  </ExtraButton>
+                  <Typography fontSize={9} color="#000" lineHeight={20}>파일</Typography>
+                </ExtraButtonWrapper>
+              </ExtraButtonsContainer>
+            )}
+
+          </InputContainer>
+        </KeyboardAvoidingView>
+      </ScreenContainer>
+
+      <SlideModal
+        visible={isModalVisible}
+        onClose={onCloseModal}
+        showHeader={false}
+        minHeight={160}
+        scrollable={false}
+      >
+        <EditModalWrapper>
+          <EditModalButton onPress={onPressBlock}>
+            <Typography fontSize={16} letterSpacing="-2.5%">
+              차단하기
+            </Typography>
+          </EditModalButton>
+          <EditModalDivider />
+          <EditModalButton onPress={onPressReport}>
+            <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
+              신고하기
+            </Typography>
+          </EditModalButton>
+        </EditModalWrapper>
+      </SlideModal>
+
+      {/* 이미지 프리뷰 모달 */}
+      <Modal
+        visible={imagePreviewVisible}
+        transparent={true}
+        onRequestClose={onCloseImagePreview}
+        animationType="fade"
+      >
+        <ImagePreviewContainer>
+          <ImagePreviewHeader>
+            <CloseButton onPress={onCloseImagePreview}>
+              <Icon width={24} height={24} Svg={CrossWhiteIcon} />
+            </CloseButton>
+            <ImageCounter>
+              <Typography fontSize={16} color="#fff" fontWeight="semiBold">
+                {Math.min(imagePreviewIndex + 1, Math.max(imagePreviewUrls.length, 1))} / {imagePreviewUrls.length}
+              </Typography>
+            </ImageCounter>
+            <DownloadButton
+              onPress={() => {
+                const target = imagePreviewUrls[imagePreviewIndex];
+                if (target) onDownloadImage(target);
+              }}
+            >
+              <Icon width={24} height={24} Svg={DownloadIcon} />
+            </DownloadButton>
+          </ImagePreviewHeader>
+
+          <ImagePreviewList
+            data={imagePreviewUrls}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e: any) => {
+              const x = e?.nativeEvent?.contentOffset?.x ?? 0;
+              const next = Math.round(x / SCREEN_WIDTH);
+              if (Number.isFinite(next)) onChangeImagePreviewIndex(next);
+            }}
+            onScrollToIndexFailed={() => {
+              // no-op: prevents red screen when list not measured yet
+            }}
+            keyExtractor={(item: string, index: number) => `preview-${index}`}
+            renderItem={({ item }: { item: string }) => (
+              <ImagePreviewWrapper>
+                <PreviewImage uri={item} />
+              </ImagePreviewWrapper>
+            )}
+            initialScrollIndex={imagePreviewUrls.length > 0 ? imagePreviewIndex : 0}
+            getItemLayout={(data: any, index: number) => ({
+              length: SCREEN_WIDTH,
+              offset: SCREEN_WIDTH * index,
+              index,
+            })}
           />
-        </MessagesContainer>
-
-        {/* 하단 입력 영역 */}
-        <InputContainer>
-          {/* 추천 메시지 버튼들 */}
-          {hasRecommendedMessages && (
-            <RecommendedMessagesContainer>
-              {recommendedMessages.slice(0, 8).map((msg, index) => (
-                <RecommendedMessageButton
-                  key={index}
-                  onPress={() => onPressRecommendedMessage(msg)}
-                >
-                  <RecommendedMessageText fontSize={12} color="#fff">
-                    {msg}
-                  </RecommendedMessageText>
-                </RecommendedMessageButton>
-              ))}
-            </RecommendedMessagesContainer>
-          )}
-
-
-          {/* 입력 줄 */}
-          <InputRow>
-            <CrossButton onPress={handlePressCross} showExtraButtons={showExtraButtons}>
-              <Icon width={20} height={20} Svg={CrossBlackIcon} />
-            </CrossButton>
-            <MessageInputWrapper hasInputValue={hasInputValue}>
-              <MessageInput
-                value={messageInput}
-                onChangeText={onChangeMessageInput}
-                onSubmitEditing={onPressSend}
-              />
-              <IconButton width={20} height={20} Svg={SendIcon} onPress={onPressSend} disabled={!hasInputValue} />
-            </MessageInputWrapper>
-          </InputRow>
-
-          {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
-          {showExtraButtons && (
-            <ExtraButtonsContainer>
-              <ExtraButtonWrapper onPress={onPressAlbum}>
-                <ExtraButton>
-                  <Icon width={24} height={24} Svg={ImageIcon} />
-                </ExtraButton>
-                <Typography fontSize={9} color="#000" lineHeight={20}>앨범</Typography>
-              </ExtraButtonWrapper>
-              <ExtraButtonWrapper onPress={onPressFile}>
-                <ExtraButton>
-                  <Icon width={24} height={24} Svg={PaperPlusIcon} />
-                </ExtraButton>
-                <Typography fontSize={9} color="#000" lineHeight={20}>파일</Typography>
-              </ExtraButtonWrapper>
-            </ExtraButtonsContainer>
-          )}
-
-        </InputContainer>
-      </KeyboardAvoidingView>
-    </ScreenContainer>
+        </ImagePreviewContainer>
+      </Modal>
+    </>
   );
 }
 
@@ -300,6 +575,17 @@ const MessageTime = styled(Typography)`
 const MessageText = styled(Typography)`
 `;
 
+const MessageContentWrapper = styled.View<{ isMyMessage: boolean }>`
+  /* TEXT bubble has no extra top gap; keep FILE/IMAGE aligned with the time the same way */
+  margin-top: 0px;
+  ${({ isMyMessage }) => (isMyMessage ? 'margin-left: 5px;' : '')}
+`;
+
+const PartnerContentWrapper = styled.View`
+  /* Keep same spacing as TEXT between bubble and time */
+  margin-right: 5px;
+`;
+
 const PartnerMessageContainer = styled.View`
   flex-direction: row;
   align-items: flex-start;
@@ -335,4 +621,101 @@ const LoadingContainer = styled.View`
   padding: 16px;
   align-items: center;
   justify-content: center;
+`;
+
+const EditModalWrapper = styled.View`
+  width: 100%;
+  border: 1px solid #EAEAEA;
+  border-radius: 4px;
+  margin-vertical: 20px;
+`
+
+const EditModalButton = styled.TouchableOpacity`
+  padding: 18px;
+  align-items: center;
+`;
+
+const EditModalDivider = styled.View`
+  height: 1px;
+  background-color: #e0e0e0;
+`;
+
+const ImageList = styled.View<{ imageCount: number; isMyMessage: boolean }>`
+  flex-direction: row;
+  flex-wrap: wrap;
+  ${({ imageCount, isMyMessage }) => {
+    // 2개 이하일 때는 좌우 정렬
+    if (imageCount <= 2) {
+      return `
+        justify-content: ${isMyMessage ? 'flex-end' : 'flex-start'};
+      `;
+    }
+    // 3개 이상일 때는 그리드 (한줄에 3개)
+    return `
+      width: 200px;
+    `;
+  }}
+  gap: 5px;
+`
+
+const ImageWrapper = styled.TouchableOpacity`
+  width: 60px;
+  height: 60px;
+  border-radius: 5px;
+  overflow: hidden;
+`
+
+const UploadImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
+`
+
+const ImagePreviewContainer = styled.View`
+  flex: 1;
+  background-color: rgba(0, 0, 0, 0.95);
+`;
+
+const ImagePreviewHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  padding-top: 60px;
+  background-color: rgba(0, 0, 0, 0.5);
+`;
+
+const CloseButton = styled.TouchableOpacity`
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+  transform: rotate(45deg);
+`;
+
+const ImageCounter = styled.View`
+  flex: 1;
+  align-items: center;
+`;
+
+const DownloadButton = styled.TouchableOpacity`
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ImagePreviewList = styled.FlatList`
+  flex: 1;
+` as unknown as typeof FlatList;
+
+const ImagePreviewWrapper = styled.View`
+  width: ${SCREEN_WIDTH}px;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+`;
+
+const PreviewImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
 `;

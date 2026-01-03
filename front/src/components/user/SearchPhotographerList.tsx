@@ -7,6 +7,7 @@ import { FlatList, TouchableOpacity, RefreshControl, ScrollView } from 'react-na
 import Loading from '@/components/Loading.tsx';
 import AIIcon from '@/assets/icons/ai-button-small.svg';
 import StarIcon from '@/assets/icons/star-review.svg';
+import ServerImage from '@/components/ServerImage.tsx';
 
 interface SearchPhotographerListProps {
   photographers: PhotographerSearchItem[];
@@ -93,7 +94,7 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
         >
           {photographer.portfolioImages.map((item, index) => (
             <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
-              <PhotofolioImage source={{ uri: item }} />
+              <PhotofolioImage uri={item} />
             </PhotofolioImageWrapper>
           ))}
         </ScrollView>
@@ -141,7 +142,7 @@ const PhotofolioImageWrapper = styled.View`
   margin-right: 5px;
 `
 
-const PhotofolioImage = styled.Image`
+const PhotofolioImage = styled(ServerImage)`
   width: 101px;
   height: 101px;
   resize-mode: cover;

@@ -19,8 +19,6 @@ import ActiveProfileIcon from '@/assets/icons/profile-white.svg';
 
 type AIRecommendationResultRouteProp = RouteProp<MainStackParamList, 'AIRecommdationResult'>;
 
-const PAGE_SIZE = 50; // 충분히 많은 데이터를 가져와서 클라이언트에서 필터링
-
 export default function AIRecommdationResultContainer() {
   const route = useRoute<AIRecommendationResultRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
@@ -73,6 +71,11 @@ export default function AIRecommdationResultContainer() {
 
   // API search body
   const searchBody = useMemo<SearchPhotographersBody>(() => ({
+    gender: null,
+    regionIds: null,
+    conceptIds: null,
+    maxPrice: null,
+    minPrice: null,
     query: prompt,
   }), [prompt]);
 
@@ -85,7 +88,7 @@ export default function AIRecommdationResultContainer() {
     refetch,
     isRefetching,
   } = useSearchPhotographersInfiniteQuery(
-    { size: PAGE_SIZE },
+    { size: 3 },
     searchBody,
   );
 

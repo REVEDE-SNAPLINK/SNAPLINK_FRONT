@@ -72,12 +72,17 @@ export const createCommunityPost = async (data: CreateCommunityPostParams) => {
   }
 }
 
+export interface CommunityPostImage {
+  Id: number;
+  urls: string;
+}
+
 export interface CommunityPost {
-  id: string;
+  id: number;
   categoryLabel: COMMUNITY_CATEGORY_VALUE;
   title: string;
   content: string;
-  imageUrls: string[];
+  images: CommunityPostImage[];
   author: {
     userId: string;
     nickname: string;
@@ -139,18 +144,58 @@ export interface PageResponse<T> {
 
 export type GetCommunityPostsResponse = PageResponse<CommunityPost>;
 
+export interface SortInfo {
+  unsorted: boolean;
+  sorted: boolean;
+  empty: boolean;
+}
+
+export interface CommentPageableInfo {
+  pageNumber: number;
+  pageSize: number;
+  sort: SortInfo;
+  offset: number;
+  paged: boolean;
+  unpaged: boolean;
+}
+
+export interface CommentPageResponse<T> {
+  totalPages?: number;
+  totalElements?: number;
+
+  pageable: CommentPageableInfo;
+
+  numberOfElements: number;
+  size: number;
+  number: number;
+
+  // ✅ 배열이 아니라 객체
+  sort: SortInfo;
+
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+
+  content: T[];
+}
+
 export interface Comment {
   id: number;
+  parentId: number | null;
   content: string;
-  userId: string;
+
+  userId: string | null;
   nickname: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
+
   createdAt: string;
   replyCount: number;
   isDeleted: boolean;
+
+  replies: Comment[];
 }
 
-export type GetCommentsResponse = PageResponse<Comment>;
+export type GetCommentsResponse = CommentPageResponse<Comment>;
 
 export const getCommunityPosts = async (params: GetPageable): Promise<GetCommunityPostsResponse> => {
   const qs = buildQuery(params);
@@ -164,7 +209,7 @@ export const getCommunityPosts = async (params: GetPageable): Promise<GetCommuni
   return response.json();
 }
 
-export const getCommunityPost = async (postId: string): Promise<CommunityPost> => {
+export const getCommunityPost = async (postId: number): Promise<CommunityPost> => {
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {
     method: 'GET',
   })
@@ -183,7 +228,7 @@ export const getMyPosts = async (pageable: GetPageable): Promise<GetCommunityPos
   return response.json();
 };
 
-export const deletePost = async (postId: string) => {
+export const deletePost = async (postId: number) => {
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {
     method: 'DELETE',
   })
@@ -192,12 +237,12 @@ export const deletePost = async (postId: string) => {
 }
 
 export interface UpdateCommunityPostParams {
-  postId: string;
+  postId: number;
   request: {
     category: COMMUNITY_CATEGORY_ENUM;
     title: string;
     content: string;
-    deletePhotoIds: string[];
+    deletePhotoIds: number[];
   };
   images: UploadImageParams[];
 }
@@ -234,7 +279,7 @@ export const updatePost = async (params: UpdateCommunityPostParams) => {
   }
 }
 
-export const getComments = async (postId: string, pageable: GetPageable): Promise<GetCommentsResponse> => {
+export const getComments = async (postId: number, pageable: GetPageable): Promise<GetCommentsResponse> => {
   const qs = buildQuery(pageable);
 
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments${qs}`, {
@@ -246,7 +291,7 @@ export const getComments = async (postId: string, pageable: GetPageable): Promis
   return response.json();
 }
 
-export const createComment = async (postId: string, content: string, parentId: number) => {
+export const createComment = async (postId: number, content: string, parentId: number | null) => {
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments`, {
     method: 'POST',
     json: {
@@ -258,7 +303,7 @@ export const createComment = async (postId: string, content: string, parentId: n
   if (!response.ok) throw new Error(`Failed to create comment ${response.status}`);
 }
 
-export const updateComment = async (commentId: string, content: string) => {
+export const updateComment = async (commentId: number, content: string) => {
   const response = await authFetch(`${COMMUNITY_BASE}/comments/${commentId}`, {
     method: 'PATCH',
     json: {
@@ -269,7 +314,7 @@ export const updateComment = async (commentId: string, content: string) => {
   if (!response.ok) throw new Error(`Failed to update comment ${response.status}`);
 }
 
-export const deleteComment = async (commentId: string) => {
+export const deleteComment = async (commentId: number) => {
   const response = await authFetch(`${COMMUNITY_BASE}/comments/${commentId}`, {
     method: 'DELETE',
   })
@@ -277,7 +322,7 @@ export const deleteComment = async (commentId: string) => {
   if (!response.ok) throw new Error(`Failed to delete comment ${response.status}`);
 }
 
-export const toggleLike = async (postId: string) => {
+export const toggleLike = async (postId: number) => {
   const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/like`, {
     method: 'POST',
   });

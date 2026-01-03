@@ -6,6 +6,7 @@ import CrossIcon from '@/assets/icons/cross-black.svg';
 import { theme } from '@/theme';
 
 export interface Option {
+  id?: number; // ID for existing options (used in edit mode)
   name: string;
   description: string;
   price: string;

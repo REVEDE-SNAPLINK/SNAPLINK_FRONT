@@ -5,7 +5,15 @@ import {
   patchPhotographerProfileImage,
   PatchPhotographerProfileImageParams,
   PhotographerSignRequest,
-  signPhotographer, togglePhotographerScrap,
+  signPhotographer,
+  togglePhotographerScrap,
+  createHolidays,
+  CreateHolidayRequest,
+  updateHolidays,
+  UpdateHolidayParam,
+  deleteHoliday,
+  activePhotographer,
+  inactivePhotographer,
 } from '@/api/photographers.ts';
 import { photographersQueryKeys } from '@/queries/keys.ts';
 
@@ -71,6 +79,69 @@ export const useTogglePhotographerScrapMutation = (photographerId: string) => {
       qc.invalidateQueries({ queryKey: photographersQueryKeys.search() });
       qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) });
       // 리뷰요약/리뷰목록은 보통 영향 없음. (scrapped 필드가 그쪽에 없으니까)
+    },
+  });
+};
+
+/** 휴가 생성 */
+export const useCreateHolidayMutation = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: CreateHolidayRequest) => createHolidays(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.holidays() });
+    },
+  });
+};
+
+/** 휴가 수정 */
+export const useUpdateHolidayMutation = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ holidayId, body }: { holidayId: number; body: CreateHolidayRequest }) =>
+      updateHolidays({ holidayId }, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.holidays() });
+    },
+  });
+};
+
+/** 휴가 삭제 */
+export const useDeleteHolidayMutation = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (holidayId: number) => deleteHoliday(holidayId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.holidays() });
+    },
+  });
+};
+
+/** 작가 계정 활성화 (공개 전환) */
+export const useActivePhotographerMutation = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => activePhotographer(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.statusMe() });
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.all });
+    },
+  });
+};
+
+/** 작가 계정 비활성화 (비공개 전환) */
+export const useInactivePhotographerMutation = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => inactivePhotographer(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.statusMe() });
+      qc.invalidateQueries({ queryKey: photographersQueryKeys.all });
     },
   });
 };

@@ -2,8 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createBooking,
   CreateBookingRequest,
-  deleteBookingPhotos,
-  DeleteBookingPhotosRequest,
+  updateBookingPhotos,
+  UpdateBookingPhotosRequest,
   uploadBookingZip,
   UploadBookingZipRequest,
   approveBooking,
@@ -105,15 +105,15 @@ export const useCreateBookingMutation = () => {
   });
 };
 
-export const useDeleteBookingPhotosMutation = () => {
+export const useUpdateBookingPhotosMutation = (bookingId: number) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: DeleteBookingPhotosRequest) => deleteBookingPhotos(body),
-    onSuccess: async (_, vars) => {
-      // 삭제 후 ZIP/사진 목록 갱신
+    mutationFn: (body: UpdateBookingPhotosRequest) => updateBookingPhotos(bookingId, body),
+    onSuccess: async (_, ) => {
+      // 이미지 추가 및 삭제 후 ZIP/사진 목록 갱신
       await qc.invalidateQueries({
-        queryKey: bookingsQueryKeys.bookingPhotos(vars.bookingId),
+        queryKey: bookingsQueryKeys.bookingPhotos(bookingId),
       });
     },
   });

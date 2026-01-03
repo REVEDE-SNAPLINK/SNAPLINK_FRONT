@@ -1,5 +1,5 @@
 import ScreenContainer from '@/components/common/ScreenContainer.tsx';
-import ScheduleCalendar, { MonthScheduleData } from '@/components/ScheduleCalendar.tsx';
+import ScheduleCalendar, { EnhancedScheduleData } from '@/components/ScheduleCalendar.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
 import { theme } from '@/theme';
@@ -7,31 +7,33 @@ import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { PersonalSchedule } from '@/store/modalStore';
 import { GetPhotographerDayDetailResponse } from '@/api/schedules';
+import { formatTime } from '@/utils/format.ts';
+import { useMemo } from 'react';
 
 interface BookingCalendarViewProps {
   selectedDate: string;
-  monthScheduleData: MonthScheduleData[];
+  scheduleData: EnhancedScheduleData[];
   dayDetailData: GetPhotographerDayDetailResponse | null;
   personalSchedules: PersonalSchedule[];
   dDayText: string;
-  onPressBack: () => void;
   onPressBookingItem: (bookingId: number) => void;
   onPressPersonalSchedule: (scheduleId: string) => void;
   onSelectDate: (date: string) => void;
   onPressAddSchedule: () => void;
+  onMonthChange: (yearMonth: string) => void;
 }
 
 export default function BookingCalendarView({
   selectedDate,
-  monthScheduleData,
+  scheduleData,
   dayDetailData,
   personalSchedules,
   dDayText,
-  onPressBack,
   onPressBookingItem,
   onPressPersonalSchedule,
   onSelectDate,
   onPressAddSchedule,
+  onMonthChange,
 }: BookingCalendarViewProps) {
   const formatDateToKorean = (dateString: string) => {
     const date = new Date(dateString);
@@ -43,7 +45,13 @@ export default function BookingCalendarView({
     return `${month}월 ${day}일 ${dayOfWeek}`;
   };
 
-  const bookings = dayDetailData?.bookings || [];
+  const bookings = useMemo(() => {
+    if (!dayDetailData?.bookings) return [];
+
+    return [...dayDetailData.bookings].sort((a, b) => {
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [dayDetailData?.bookings]);
   const hasPublicHoliday = dayDetailData?.publicHolidayName;
   const hasPhotographerHoliday = dayDetailData?.photographerHolidayReason;
 
@@ -53,14 +61,15 @@ export default function BookingCalendarView({
     <ScreenContainer
       headerShown={true}
       headerTitle="촬영 일정 관리"
-      onPressBack={onPressBack}
       alignItemsCenter={false}
+      backgroundColor="#EAEAEA"
     >
       <ScheduleCalendar
         initialDate={selectedDate}
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
-        monthScheduleData={monthScheduleData}
+        scheduleData={scheduleData}
+        onMonthChange={onMonthChange}
       />
       <BookingContentContainer>
         <BookingSlideBarWrapper>
@@ -84,13 +93,22 @@ export default function BookingCalendarView({
               </BookingItem>
             ) : (
               <>
+                {hasPublicHoliday && (
+                  <BookingItem disabled>
+                    <BookingInfoWrapper>
+                      <PublicHolidayBar />
+                      <Typography fontSize={14}>
+                        공휴일ㆍ{hasPublicHoliday}
+                      </Typography>
+                    </BookingInfoWrapper>
+                  </BookingItem>
+                )}
                 {bookings.map((booking) => (
                   <BookingItem key={`booking-${booking.bookingId}`} onPress={() => onPressBookingItem(booking.bookingId)}>
                     <BookingInfoWrapper>
                       <BookingBar />
-                      <BookingProfileImage />
                       <Typography fontSize={14}>
-                        {booking.customerNickName}ㆍ{booking.startTime}~{booking.endTime}
+                        {booking.customerNickName}ㆍ{formatTime(booking.startTime)}~{formatTime(booking.endTime)}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
@@ -114,10 +132,8 @@ export default function BookingCalendarView({
                   <BookingItem key={`schedule-${schedule.id}`} onPress={() => onPressPersonalSchedule(schedule.id)}>
                     <BookingInfoWrapper>
                       <PersonalScheduleBar />
-                      <BookingProfileImage />
                       <Typography fontSize={14}>
                         {schedule.title}
-                        {schedule.location && `ㆍ${schedule.location}`}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
@@ -125,17 +141,6 @@ export default function BookingCalendarView({
                     </BookingDetailButton>
                   </BookingItem>
                 ))}
-
-                {hasPublicHoliday && (
-                  <BookingItem disabled>
-                    <BookingInfoWrapper>
-                      <PublicHolidayBar />
-                      <Typography fontSize={14}>
-                        공휴일ㆍ{hasPublicHoliday}
-                      </Typography>
-                    </BookingInfoWrapper>
-                  </BookingItem>
-                )}
               </>
             )}
           </BookingContentScrollView>
@@ -158,7 +163,6 @@ export default function BookingCalendarView({
 const BookingContentContainer = styled.View`
   flex: 1;
   width: 100%;
-  background-color: #EAEAEA;
 `
 
 const BookingSlideBarWrapper = styled.View`
@@ -186,7 +190,6 @@ const BookingContentHeader = styled.View`
 
 const BookingContent = styled.View`
   flex: 1;
-  height: 100%;
   width: 100%;
 `
 
@@ -232,7 +235,7 @@ const PublicHolidayBar = styled.View`
   height: 40px;
   border-radius: 100px;
   margin-right: 10px;
-  background-color: #9E9E9E;
+  background-color: #FFB23F;
 `
 
 const BookingEmptyBar = styled.View`
@@ -248,14 +251,6 @@ const BookingInfoWrapper = styled.View`
   align-items: center;
 `
 
-const BookingProfileImage = styled.View`
-  width: 30px;
-  height: 30px;
-  border-radius: 30px;
-  background-color: #ccc;
-  margin-right: 6px;
-`
-
 const BookingDetailButton = styled.View`
   height: 21px;
   padding: 0 5px;
@@ -267,7 +262,7 @@ const BookingDetailButton = styled.View`
 const ScheduleToolButtonWrapper = styled.View`
   align-items: center;
   position: absolute;
-  bottom: 57px;
+  bottom: 10px;
   left: 0;
   width: 100%;
 `

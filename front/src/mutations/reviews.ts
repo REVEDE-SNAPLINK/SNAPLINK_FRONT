@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  createReservationReview,
+  createBookingReview,
   createReviewReply,
   CreateReservationReviewParams,
   CreateReviewReplyParams,
@@ -39,14 +39,14 @@ export const useCreateReservationReviewMutation = (photographerId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: CreateReservationReviewParams) => createReservationReview(params),
+    mutationFn: (params: CreateReservationReviewParams) => createBookingReview(params),
     onSuccess: async (_, vars) => {
       // 리뷰 작성 후 바뀌는 것들:
       // - 고객 예약 리스트/예약 상세(상태가 REVIEWED로 변할 수 있음)
       // - 작가 리뷰 목록/요약(새 리뷰가 추가됨)
       await Promise.all([
         qc.invalidateQueries({ queryKey: bookingsQueryKeys.lists() }),
-        qc.invalidateQueries({ queryKey: bookingsQueryKeys.reservation(vars.reservationId) }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
         ...(photographerId
           ? [
             qc.invalidateQueries({ queryKey: photographersQueryKeys.reviews(photographerId) }),

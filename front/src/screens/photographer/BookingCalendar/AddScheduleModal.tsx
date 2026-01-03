@@ -5,12 +5,14 @@ import IconButton from '@/components/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
 import TimeCircleIcon from '@/assets/icons/time-circle.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
-import LocationIcon from '@/assets/icons/location.svg';
 import { Typography, Alert } from '@/components/theme';
 import PrimaryToggleButton from '@/components/theme/PrimaryToggleButton';
 import DatePicker from 'react-native-date-picker';
 import { theme } from '@/theme';
 import { PersonalSchedule } from '@/store/modalStore';
+import { usePersonalScheduleQuery } from '@/queries/schedules';
+import { useCreatePersonalScheduleMutation, useUpdatePersonalScheduleMutation } from '@/mutations/schedules';
+import { PersonalSchedule as APIPersonalSchedule } from '@/api/schedules';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -19,6 +21,8 @@ interface AddScheduleModalProps {
   onClose: () => void;
   onSubmit: (schedule: Omit<PersonalSchedule, 'id'>) => void;
   initialSchedule?: PersonalSchedule;
+  isDuplicate?: boolean; // 복사 모드 여부
+  scheduleId?: number; // API로부터 불러올 스케줄 ID (수정 모드)
 }
 
 export default function AddScheduleModal({
@@ -26,18 +30,26 @@ export default function AddScheduleModal({
   onClose,
   onSubmit,
   initialSchedule,
+  isDuplicate = false,
+  scheduleId,
 }: AddScheduleModalProps) {
-  const [title, setTitle] = useState(initialSchedule?.title || '');
-  const [isAllDay, setIsAllDay] = useState(initialSchedule?.isAllDay || false);
-  const [startDate, setStartDate] = useState(initialSchedule?.startDate || new Date());
-  const [endDate, setEndDate] = useState(initialSchedule?.endDate || new Date());
-  const [description, setDescription] = useState(initialSchedule?.description || '');
-  const [location, setLocation] = useState(initialSchedule?.location || '');
+  const [title, setTitle] = useState('');
+  const [isAllDay, setIsAllDay] = useState(false);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
 
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [endDatePickerVisible, setEndDatePickerVisible] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const previousStartDateRef = useRef<Date>(new Date());
+
+  // API hooks
+  const { data: apiScheduleData } = usePersonalScheduleQuery(scheduleId, visible && !!scheduleId);
+  const createMutation = useCreatePersonalScheduleMutation();
+  const updateMutation = useUpdatePersonalScheduleMutation();
 
   const isDirty =
     title !== '' ||
@@ -52,6 +64,40 @@ export default function AddScheduleModal({
     setDescription('');
     setLocation('');
   };
+
+  // Load initial schedule data when modal opens
+  useEffect(() => {
+    if (visible && apiScheduleData) {
+      // API 데이터를 로드 (수정 모드)
+      const { startDate: startDateStr, endDate: endDateStr, startTime, endTime, title: apiTitle, content } = apiScheduleData;
+
+      // YYYY-MM-DD와 HH:mm을 Date 객체로 변환
+      const startDateTime = new Date(`${startDateStr}T${startTime}`);
+      const endDateTime = new Date(`${endDateStr}T${endTime}`);
+
+      // 종일 여부 판단 (00:00 ~ 23:59 or 00:00 ~ 00:00)
+      const isAllDaySchedule = startTime === '00:00' && (endTime === '23:59' || endTime === '00:00');
+
+      setTitle(apiTitle);
+      setIsAllDay(isAllDaySchedule);
+      setStartDate(startDateTime);
+      setEndDate(endDateTime);
+      setDescription(content || '');
+      previousStartDateRef.current = startDateTime;
+    } else if (visible && initialSchedule) {
+      // 로컬 데이터를 로드
+      setTitle(initialSchedule.title);
+      setIsAllDay(initialSchedule.isAllDay);
+      setStartDate(initialSchedule.startDate);
+      setEndDate(initialSchedule.endDate);
+      setDescription(initialSchedule.description || '');
+      previousStartDateRef.current = initialSchedule.startDate;
+    } else if (visible && !initialSchedule && !apiScheduleData) {
+      resetModal();
+      const now = new Date();
+      previousStartDateRef.current = now;
+    }
+  }, [visible, initialSchedule, apiScheduleData]);
 
   useEffect(() => {
     if (visible) {
@@ -107,16 +153,104 @@ export default function AddScheduleModal({
       return;
     }
 
-    onSubmit({
+    // 복사 모드에서 날짜가 변경되지 않았으면 저장 불가
+    if (isDuplicate && initialSchedule) {
+      const isSameStartDate =
+        startDate.getFullYear() === initialSchedule.startDate.getFullYear() &&
+        startDate.getMonth() === initialSchedule.startDate.getMonth() &&
+        startDate.getDate() === initialSchedule.startDate.getDate();
+
+      const isSameEndDate =
+        endDate.getFullYear() === initialSchedule.endDate.getFullYear() &&
+        endDate.getMonth() === initialSchedule.endDate.getMonth() &&
+        endDate.getDate() === initialSchedule.endDate.getDate();
+
+      if (isSameStartDate && isSameEndDate) {
+        Alert.show({
+          title: '날짜를 변경해주세요',
+          message: '일정을 복사하려면 날짜를 변경해야 합니다.',
+          buttons: [{ text: '확인', onPress: () => {} }],
+        });
+        return;
+      }
+    }
+
+    // Date 객체를 API 형식으로 변환
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const formatTime = (date: Date) => {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+
+    const apiSchedule: Omit<APIPersonalSchedule, 'id'> = {
       title: title.trim(),
-      startDate,
-      endDate,
-      isAllDay,
-      description: description.trim() || undefined,
-      location: location.trim() || undefined,
-    });
-    resetModal();
-    onClose();
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      startTime: isAllDay ? '00:00' : formatTime(startDate),
+      endTime: isAllDay ? '23:59' : formatTime(endDate),
+      content: description.trim() || '',
+    };
+
+    if (scheduleId) {
+      // 수정 모드
+      updateMutation.mutate(
+        { id: scheduleId, body: { ...apiSchedule, id: scheduleId } },
+        {
+          onSuccess: () => {
+            // 로컬 상태 업데이트를 위해 onSubmit 호출
+            onSubmit({
+              title: title.trim(),
+              startDate,
+              endDate,
+              isAllDay,
+              description: description.trim() || undefined,
+            });
+            resetModal();
+            onClose();
+          },
+          onError: () => {
+            Alert.show({
+              title: '일정 수정 실패',
+              message: '일정 수정에 실패했습니다. 다시 시도해주세요.',
+              buttons: [{ text: '확인', onPress: () => {} }],
+            });
+          },
+        }
+      );
+    } else {
+      // 생성 모드
+      createMutation.mutate(
+        { ...apiSchedule, id: 0 }, // id는 서버에서 생성
+        {
+          onSuccess: () => {
+            // 로컬 상태 업데이트를 위해 onSubmit 호출
+            onSubmit({
+              title: title.trim(),
+              startDate,
+              endDate,
+              isAllDay,
+              description: description.trim() || undefined,
+            });
+            resetModal();
+            onClose();
+          },
+          onError: () => {
+            Alert.show({
+              title: '일정 생성 실패',
+              message: '일정 생성에 실패했습니다. 다시 시도해주세요.',
+              buttons: [{ text: '확인', onPress: () => {} }],
+            });
+          },
+        }
+      );
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -133,6 +267,16 @@ export default function AddScheduleModal({
     const period = hours >= 12 ? '오후' : '오전';
     const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
     return `${period} ${displayHours}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const handleStartDateChange = (date: Date) => {
+    const timeDiff = date.getTime() - previousStartDateRef.current.getTime();
+    const newEndDate = new Date(endDate.getTime() + timeDiff);
+
+    setStartDate(date);
+    setEndDate(newEndDate);
+    setStartDatePickerVisible(false);
+    previousStartDateRef.current = date;
   };
 
   if (!visible) return null;
@@ -209,16 +353,6 @@ export default function AddScheduleModal({
               textAlignVertical="top"
             />
           </InputRow>
-
-          <InputRow noBorder>
-            <LocationIcon width={24} height={24} />
-            <Input
-              placeholder="위치 추가"
-              value={location}
-              onChangeText={setLocation}
-              placeholderTextColor="#A4A4A4"
-            />
-          </InputRow>
         </ScrollContainer>
       </AnimatedContainer>
 
@@ -227,10 +361,7 @@ export default function AddScheduleModal({
         mode={isAllDay ? 'date' : 'datetime'}
         open={startDatePickerVisible}
         date={startDate}
-        onConfirm={(date) => {
-          setStartDate(date);
-          setStartDatePickerVisible(false);
-        }}
+        onConfirm={handleStartDateChange}
         onCancel={() => setStartDatePickerVisible(false)}
         locale="ko"
         title="시작 날짜"
@@ -241,6 +372,7 @@ export default function AddScheduleModal({
         mode={isAllDay ? 'date' : 'datetime'}
         open={endDatePickerVisible}
         date={endDate}
+        minimumDate={startDate}
         onConfirm={(date) => {
           setEndDate(date);
           setEndDatePickerVisible(false);
@@ -309,7 +441,7 @@ const AllDaySection = styled.View`
   align-items: center;
   justify-content: space-between;
   margin-top: 26px;
-  padding: 0 25px;
+  padding: 0 21px;
 `;
 
 const AllDayLeft = styled.View`
@@ -331,7 +463,7 @@ const DateTimeRow = styled.TouchableOpacity`
   align-items: center;
   justify-content: space-between;
   margin-bottom: 5px;
-  padding: 8px 0;
+  padding-vertical: 8px;
 `;
 
 const DateText = styled.View``;
@@ -355,12 +487,6 @@ const InputRow = styled.View<{ noBorder?: boolean }>`
   border-bottom-color: #C8C8C8;
 `;
 
-const Input = styled.TextInput`
-  flex: 1;
-  font-size: 16px;
-  color: ${theme.colors.textPrimary};
-  margin-left: 7px;
-`;
 
 const DescriptionInput = styled.TextInput`
   flex: 1;

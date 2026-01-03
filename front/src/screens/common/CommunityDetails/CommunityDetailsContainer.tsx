@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { TextInput } from 'react-native';
+import { Share, TextInput } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import CommunityDetailsView, { ShareLink } from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
+import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import { CreateCommunityPostParams } from '@/api/community.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
@@ -15,30 +15,24 @@ import {
   useUpdatePostMutation,
   useDeletePostMutation,
 } from '@/mutations/community.ts';
+import { Alert } from '@/components/theme';
 
 type CommunityDetailsRouteProp = RouteProp<MainStackParamList, 'CommunityDetails'>;
-
-const shareLinks: ShareLink[] = [
-  {
-    name: '카카오톡 오픈 채팅',
-    url: 'https://pf.kakao.com/_KasSn/chat'
-  }
-]
 
 export default function CommunityDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<CommunityDetailsRouteProp>();
   const { userId } = useAuthStore();
-  const { openCommunityPostModal, closeCommunityPostModal } = useModalStore();
+  const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading } = useModalStore();
 
   const { postId } = route.params;
 
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  // const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [replyTo, setReplyTo] = useState<{ parentId: number; nickname: string } | null>(null);
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
 
   const commentInputRef = useRef<TextInput | null>(null);
 
@@ -54,15 +48,25 @@ export default function CommunityDetailsContainer() {
   const createCommentMutation = useCreateCommentMutation(postId);
   const updateCommentMutation = useUpdateCommentMutation();
   const deleteCommentMutation = useDeleteCommentMutation();
-  const updatePostMutation = useUpdatePostMutation();
+  const { mutate: updatePostMutation, isPending: isUpdatePostPending } = useUpdatePostMutation();
   const deletePostMutation = useDeletePostMutation();
+
+  // Update modal loading state
+  useEffect(() => {
+    setCommunityPostModalLoading(isUpdatePostPending);
+  }, [isUpdatePostPending, setCommunityPostModalLoading]);
 
   const handlePressBack = () => {
     navigation.goBack();
   };
 
   const handlePressShare = () => {
-    setIsShareModalVisible(true);
+    // setIsShareModalVisible(true);
+    if (post) {
+      Share.share({
+        message: `${post.title}\nhttps://link.snaplink.run/post/${post.id}`,
+      });
+    }
   };
 
   const handlePressLike = () => {
@@ -111,11 +115,20 @@ export default function CommunityDetailsContainer() {
         }
       );
     } else {
+      // Remove @nickname mention from content if replying
+      let content = commentInput.trim();
+      if (replyTo) {
+        const mentionText = `@${replyTo.nickname} `;
+        if (content.startsWith(mentionText)) {
+          content = content.substring(mentionText.length).trim();
+        }
+      }
+
       // Create new comment or reply
       createCommentMutation.mutate(
         {
-          content: commentInput.trim(),
-          parentId: replyTo ? replyTo.parentId : 0, // 0 for top-level comments
+          content,
+          parentId: replyTo !== null ? replyTo.parentId : null, // 0 for top-level comments
         },
         {
           onSuccess: () => {
@@ -135,14 +148,10 @@ export default function CommunityDetailsContainer() {
     setIsEditModalVisible(false);
   };
 
-  const handleCloseShareModal = () => {
-    setIsShareModalVisible(false);
-  };
-
-  const handleUpdatePost = (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => {
+  const handleUpdatePost = (params: CreateCommunityPostParams & { deletePhotoIds?: number[] }) => {
     if (!post) return;
 
-    updatePostMutation.mutate(
+    updatePostMutation(
       {
         postId: post.id,
         request: {
@@ -155,10 +164,26 @@ export default function CommunityDetailsContainer() {
       },
       {
         onSuccess: () => {
-          closeCommunityPostModal();
+          Alert.show({
+            title: '완료',
+            message: '게시글이 수정되었습니다.',
+            buttons: [
+              {
+                text: '확인',
+                onPress: () => {
+                  closeCommunityPostModal();
+                },
+              },
+            ],
+          });
         },
         onError: (error: Error) => {
           console.error('Failed to update post:', error);
+          Alert.show({
+            title: '오류',
+            message: '게시글 수정에 실패했습니다.',
+            buttons: [{ text: '확인', onPress: () => {} }],
+          });
         },
       }
     );
@@ -173,14 +198,30 @@ export default function CommunityDetailsContainer() {
 
   const handlePressDelete = () => {
     setIsEditModalVisible(false);
-    deletePostMutation.mutate(postId, {
-      onSuccess: () => {
-        navigation.goBack();
-      },
-    });
+    Alert.show({
+      title: '삭제하시겠습니까?',
+      message: '삭제 하시면 다시 복구할 수 없습니다.',
+      buttons: [
+        { text: '취소', onPress: () => { }, type: 'cancel' },
+        { text: '삭제', onPress: () => {
+            deletePostMutation.mutate(postId, {
+              onSuccess: () => {
+                Alert.show({
+                  title: '삭제 완료',
+                  message: '삭제되었습니다.',
+                  buttons: [
+                    { text: '완료', onPress: () => navigation.goBack()},
+                  ]
+                })
+              },
+            });
+          } },
+      ]
+    })
   };
 
   const handlePressReply = (commentId: number, nickname: string) => {
+    console.log(commentId, nickname);
     setReplyTo({ parentId: commentId, nickname });
     setCommentInput(`@${nickname} `);
     setTimeout(() => {
@@ -189,7 +230,7 @@ export default function CommunityDetailsContainer() {
   };
 
   const handlePressEditComment = (commentId: number, content: string) => {
-    setEditingCommentId(commentId.toString());
+    setEditingCommentId(commentId);
     setCommentInput(content);
     setReplyTo(null);
     setTimeout(() => {
@@ -198,7 +239,7 @@ export default function CommunityDetailsContainer() {
   };
 
   const handlePressDeleteComment = (commentId: number) => {
-    deleteCommentMutation.mutate(commentId.toString(), {
+    deleteCommentMutation.mutate(commentId, {
       onSuccess: () => {
         // Comment deleted successfully
       },
@@ -222,13 +263,11 @@ export default function CommunityDetailsContainer() {
       userId={userId}
       isCommentModalVisible={isCommentModalVisible}
       isEditModalVisible={isEditModalVisible}
-      isShareModalVisible={isShareModalVisible}
       commentInput={commentInput}
       commentInputRef={commentInputRef}
       replyTo={replyTo}
       editingCommentId={editingCommentId}
       onChangeCommentInput={setCommentInput}
-      shareLinks={shareLinks}
       onPressBack={handlePressBack}
       onPressShare={handlePressShare}
       onPressLike={handlePressLike}
@@ -236,7 +275,6 @@ export default function CommunityDetailsContainer() {
       onPressMoreComments={handlePressMoreComments}
       onPressWriteComment={handlePressWriteComment}
       onCloseCommentModal={handleCloseCommentModal}
-      onCloseShreModal={handleCloseShareModal}
       onCloseEditModal={handleCloseEditModal}
       onSubmitComment={handleSubmitComment}
       onPressMore={handlePressMore}

@@ -80,6 +80,7 @@ export default function RootNavigator() {
         onClose={handleCloseAddScheduleModal}
         onSubmit={handleSubmitAddSchedule}
         initialSchedule={addScheduleModal.initialSchedule}
+        isDuplicate={addScheduleModal.isDuplicate}
       />
 
       <ScheduleDetailModal

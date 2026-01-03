@@ -22,6 +22,7 @@ export interface DaySchedule {
 }
 
 export interface ServiceFormData {
+  shootingProductName: string;
   basePrice: string;
   shootingDuration: string | null;
   shootingPeople: string | null;
@@ -30,9 +31,7 @@ export interface ServiceFormData {
   provideRawFiles: boolean;
   retouchingDuration: string | null;
   retouchingSelectionRight: string | null;
-  availableDays: string[];
-  daySchedules: { [day: string]: DaySchedule };
-  unavailableDateDescription: string;
+  shootingProductProvidedEditCount: string;
   additionalOptions: Option[];
 }
 
@@ -45,7 +44,6 @@ interface ServiceFormViewProps {
   isSubmitDisabled: boolean;
   submitButtonText: string;
   onDeleteOption: (index: number) => void;
-  onToggleDay: (day: string) => void;
   isEditMode: boolean;
 }
 
@@ -57,7 +55,6 @@ export default function ServiceFormView({
   isSubmitDisabled,
   submitButtonText,
   onDeleteOption,
-  onToggleDay,
   isEditMode,
 }: ServiceFormViewProps) {
   const opacity = useSharedValue(1);
@@ -79,11 +76,9 @@ export default function ServiceFormView({
       case 0:
         return <ServiceFormStep1 control={control} />;
       case 1:
-        return <ServiceFormStep2 control={control} onDeleteOption={onDeleteOption} />;
+        return <ServiceFormStep2 control={control} onDeleteOption={onDeleteOption} isEditMode={isEditMode} />;
       case 2:
         return <ServiceFormStep3 control={control} />;
-      case 3:
-        return <ServiceFormStep4 control={control} onToggleDay={onToggleDay} />;
       default:
         return null;
     }
@@ -151,6 +146,25 @@ const ServiceFormStep1 = ({
         fontSize={16}
         letterSpacing="-2.5%"
         marginBottom={10}
+      >
+        기본 촬영 서비스명
+      </Typography>
+      <Controller
+        control={control}
+        name="shootingProductName"
+        render={({ field: { onChange, value } }) => (
+          <FormInput
+            placeholder="판매할 서비스 이름을 입력해주세요 *"
+            value={value}
+            onChangeText={onChange}
+          />
+        )}
+      />
+      <Typography
+        fontSize={16}
+        letterSpacing="-2.5%"
+        marginBottom={10}
+        marginTop={25}
       >
         기본 촬영 비용
       </Typography>
@@ -294,11 +308,13 @@ const ServiceFormStep1 = ({
 interface ServiceFormStep2Props {
   control: Control<ServiceFormData>;
   onDeleteOption: (index: number) => void;
+  isEditMode: boolean;
 }
 
 const ServiceFormStep2 = ({
   control,
   onDeleteOption,
+  isEditMode,
 }: ServiceFormStep2Props) => {
   return (
     <>
@@ -318,94 +334,98 @@ const ServiceFormStep2 = ({
 
           return (
             <>
-              {/* 첫 번째 추가 옵션 (항상 표시) */}
-              <Typography
-                fontSize={16}
-                letterSpacing="-2.5%"
-                marginBottom={10}
-              >
-                추가 옵션
-              </Typography>
-              <FormInput
-                placeholder="추가 옵션명 *"
-                value={firstOption.name}
-                onChangeText={(name: string) => {
-                  const newOptions = [...optionList];
-                  if (newOptions.length === 0) {
-                    newOptions.push({ name, description: '', price: '', time: '' });
-                  } else {
-                    newOptions[0] = { ...newOptions[0], name };
-                  }
-                  onChange(newOptions);
-                }}
-              />
-              <Typography
-                fontSize={16}
-                letterSpacing="-2.5%"
-                marginBottom={10}
-                marginTop={21}
-              >
-                추가 옵션 시간
-              </Typography>
-              <FormInput
-                placeholder="시간을 추가로 판매할 경우 입력해주세요."
-                value={firstOption.time || ''}
-                onChangeText={(time: string) => {
-                  const newOptions = [...optionList];
-                  if (newOptions.length === 0) {
-                    newOptions.push({ name: '', description: '', price: '', time });
-                  } else {
-                    newOptions[0] = { ...newOptions[0], time };
-                  }
-                  onChange(newOptions);
-                }}
-              />
-              <Typography
-                fontSize={16}
-                letterSpacing="-2.5%"
-                marginBottom={10}
-                marginTop={21}
-              >
-                추가 옵션 설명
-              </Typography>
-              <FormInput
-                placeholder="입력해주세요 *"
-                value={firstOption.description}
-                onChangeText={(description: string) => {
-                  const newOptions = [...optionList];
-                  if (newOptions.length === 0) {
-                    newOptions.push({ name: '', description, price: '', time: '' });
-                  } else {
-                    newOptions[0] = { ...newOptions[0], description };
-                  }
-                  onChange(newOptions);
-                }}
-                multiline
-                height={116}
-                style={{ textAlignVertical: 'top', paddingTop: 16 }}
-              />
-              <Typography
-                fontSize={16}
-                letterSpacing="-2.5%"
-                marginBottom={10}
-                marginTop={21}
-              >
-                추가 옵션 비용
-              </Typography>
-              <FormInput
-                placeholder="원 *"
-                value={firstOption.price}
-                onChangeText={(price: string) => {
-                  const newOptions = [...optionList];
-                  if (newOptions.length === 0) {
-                    newOptions.push({ name: '', description: '', price, time: '' });
-                  } else {
-                    newOptions[0] = { ...newOptions[0], price };
-                  }
-                  onChange(newOptions);
-                }}
-                keyboardType="numeric"
-              />
+              {/* 신규 등록 모드: 첫 번째 추가 옵션 인라인 폼 (항상 표시) */}
+              {!isEditMode && (
+                <>
+                  <Typography
+                    fontSize={16}
+                    letterSpacing="-2.5%"
+                    marginBottom={10}
+                  >
+                    추가 옵션
+                  </Typography>
+                  <FormInput
+                    placeholder="추가 옵션명 *"
+                    value={firstOption.name}
+                    onChangeText={(name: string) => {
+                      const newOptions = [...optionList];
+                      if (newOptions.length === 0) {
+                        newOptions.push({ name, description: '', price: '', time: '' });
+                      } else {
+                        newOptions[0] = { ...newOptions[0], name };
+                      }
+                      onChange(newOptions);
+                    }}
+                  />
+                  <Typography
+                    fontSize={16}
+                    letterSpacing="-2.5%"
+                    marginBottom={10}
+                    marginTop={21}
+                  >
+                    추가 옵션 시간
+                  </Typography>
+                  <FormInput
+                    placeholder="시간을 추가로 판매할 경우 입력해주세요."
+                    value={firstOption.time || ''}
+                    onChangeText={(time: string) => {
+                      const newOptions = [...optionList];
+                      if (newOptions.length === 0) {
+                        newOptions.push({ name: '', description: '', price: '', time });
+                      } else {
+                        newOptions[0] = { ...newOptions[0], time };
+                      }
+                      onChange(newOptions);
+                    }}
+                  />
+                  <Typography
+                    fontSize={16}
+                    letterSpacing="-2.5%"
+                    marginBottom={10}
+                    marginTop={21}
+                  >
+                    추가 옵션 설명
+                  </Typography>
+                  <FormInput
+                    placeholder="입력해주세요 *"
+                    value={firstOption.description}
+                    onChangeText={(description: string) => {
+                      const newOptions = [...optionList];
+                      if (newOptions.length === 0) {
+                        newOptions.push({ name: '', description, price: '', time: '' });
+                      } else {
+                        newOptions[0] = { ...newOptions[0], description };
+                      }
+                      onChange(newOptions);
+                    }}
+                    multiline
+                    height={116}
+                    style={{ textAlignVertical: 'top', paddingTop: 16 }}
+                  />
+                  <Typography
+                    fontSize={16}
+                    letterSpacing="-2.5%"
+                    marginBottom={10}
+                    marginTop={21}
+                  >
+                    추가 옵션 비용
+                  </Typography>
+                  <FormInput
+                    placeholder="원 *"
+                    value={firstOption.price}
+                    onChangeText={(price: string) => {
+                      const newOptions = [...optionList];
+                      if (newOptions.length === 0) {
+                        newOptions.push({ name: '', description: '', price, time: '' });
+                      } else {
+                        newOptions[0] = { ...newOptions[0], price };
+                      }
+                      onChange(newOptions);
+                    }}
+                    keyboardType="numeric"
+                  />
+                </>
+              )}
 
               {/* 옵션 추가 버튼 */}
               <AddOptionButton
@@ -423,10 +443,44 @@ const ServiceFormStep2 = ({
                 </Typography>
               </AddOptionButton>
 
-              {/* 추가된 옵션들 */}
-              {restOptions.map((option: Option, index: number) => (
+              {/* 수정 모드: 모든 옵션을 OptionItem으로 표시 */}
+              {isEditMode && optionList.map((option: Option, index: number) => (
                 <OptionItem
                   key={index}
+                  id={option.id}
+                  name={option.name}
+                  description={option.description}
+                  price={option.price}
+                  time={option.time}
+                  setName={(name: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index] = { ...newOptions[index], name };
+                    onChange(newOptions);
+                  }}
+                  setDescription={(description: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index] = { ...newOptions[index], description };
+                    onChange(newOptions);
+                  }}
+                  setPrice={(price: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index] = { ...newOptions[index], price };
+                    onChange(newOptions);
+                  }}
+                  setTime={(time: string) => {
+                    const newOptions = [...optionList];
+                    newOptions[index] = { ...newOptions[index], time };
+                    onChange(newOptions);
+                  }}
+                  onDelete={() => onDeleteOption(index)}
+                />
+              ))}
+
+              {/* 신규 등록 모드: 두 번째 이후 옵션들만 OptionItem으로 표시 */}
+              {!isEditMode && restOptions.map((option: Option, index: number) => (
+                <OptionItem
+                  key={index}
+                  id={option.id}
                   name={option.name}
                   description={option.description}
                   price={option.price}
@@ -542,6 +596,26 @@ const ServiceFormStep3 = ({
                 />
               )}
             />
+            <Typography
+              fontSize={16}
+              letterSpacing="-2.5%"
+              marginBottom={10}
+              marginTop={25}
+            >
+              제공하는 사진 장수
+            </Typography>
+            <Controller
+              control={control}
+              name="shootingProductProvidedEditCount"
+              render={({ field: { onChange, value } }) => (
+                <FormInput
+                  placeholder="입력해주세요 *"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="numeric"
+                />
+              )}
+            />
           </>
         )}
         <ScrollViewSpacer />
@@ -550,170 +624,6 @@ const ServiceFormStep3 = ({
   );
 };
 
-const days = [
-  '월요일',
-  '화요일',
-  '수요일',
-  '목요일',
-  '금요일',
-  '토요일',
-  '일요일',
-  '공휴일',
-];
-
-interface ServiceFormStep4Props {
-  control: Control<ServiceFormData>;
-  onToggleDay: (day: string) => void;
-}
-
-const ServiceFormStep4 = ({
-  control,
-  onToggleDay,
-}: ServiceFormStep4Props) => {
-  const timeOptions = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, '0')}:00`
-  );
-
-  const availableDays = useWatch({ control, name: 'availableDays' }) || [];
-  const selectedWeekdays = availableDays.filter((day: string) => day !== '공휴일');
-
-  const getEndTimeOptions = (startTime: Date | null) => {
-    if (!startTime) return timeOptions;
-    const startHour = startTime.getHours();
-    return timeOptions.filter((time) => {
-      const hour = parseInt(time.split(':')[0], 10);
-      return hour > startHour;
-    });
-  };
-
-  return (
-    <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
-          촬영 가능한 일정
-        </Typography>
-        을 자세히 알려주세요.
-      </Typography>
-      <Typography
-        fontSize={12}
-        marginBottom={10}
-        color="#767676"
-      >
-        *중복 선택 가능
-      </Typography>
-      <ScrollView>
-        <Controller
-          control={control}
-          name="availableDays"
-          render={({ field: { value } }) => (
-            <>
-              {days.map((day, i) => (
-                <CheckOptionWrapper key={i}>
-                  <Checkbox
-                    isChecked={value.includes(day)}
-                    onPress={() => onToggleDay(day)}
-                  />
-                  <Typography
-                    fontSize={12}
-                    color="#767676"
-                    marginLeft={12}
-                  >
-                    {day}
-                  </Typography>
-                </CheckOptionWrapper>
-              ))}
-            </>
-          )}
-        />
-        {selectedWeekdays.map((day: string) => (
-          <Controller
-            key={day}
-            control={control}
-            name="daySchedules"
-            render={({ field: { onChange, value } }) => {
-              const daySchedule = value?.[day] || { startTime: null, endTime: null };
-              const startTime = daySchedule.startTime;
-              const endTimeOptions = getEndTimeOptions(startTime);
-
-              return (
-                <DayScheduleSection key={day}>
-                  <Typography
-                    fontSize={16}
-                    letterSpacing="-2.5%"
-                    marginBottom={17}
-                    marginTop={29}
-                  >
-                    {day} 촬영 가능 시간대
-                  </Typography>
-                  <TimeOptionWrapper>
-                    <TimeDropDownInputWrapper>
-                      <DropDownInput
-                        placeholder="시작 시간"
-                        options={timeOptions}
-                        value={startTime ? `${String(startTime.getHours()).padStart(2, '0')}:00` : undefined}
-                        onChange={(timeStr) => {
-                          const [hours] = timeStr.split(':').map(Number);
-                          const date = new Date();
-                          date.setHours(hours, 0, 0, 0);
-                          onChange({
-                            ...value,
-                            [day]: { ...daySchedule, startTime: date }
-                          });
-                        }}
-                      />
-                    </TimeDropDownInputWrapper>
-                    <TimeBarWrapper>
-                      <TimeBar />
-                    </TimeBarWrapper>
-                    <TimeDropDownInputWrapper>
-                      <DropDownInput
-                        placeholder="종료 시간"
-                        options={endTimeOptions}
-                        value={daySchedule.endTime ? `${String(daySchedule.endTime.getHours()).padStart(2, '0')}:00` : undefined}
-                        onChange={(timeStr) => {
-                          const [hours] = timeStr.split(':').map(Number);
-                          const date = new Date();
-                          date.setHours(hours, 0, 0, 0);
-                          onChange({
-                            ...value,
-                            [day]: { ...daySchedule, endTime: date }
-                          });
-                        }}
-                      />
-                    </TimeDropDownInputWrapper>
-                  </TimeOptionWrapper>
-                </DayScheduleSection>
-              );
-            }}
-          />
-        ))}
-        <Typography
-          fontSize={16}
-          letterSpacing="-2.5%"
-          marginBottom={17}
-          marginTop={29}
-        >
-          특별히 예약이 불가능한 날짜를 알려주세요.
-        </Typography>
-        <Controller
-          control={control}
-          name="unavailableDateDescription"
-          render={({ field: { onChange, value } }) => (
-            <FormInput
-              placeholder="특정 요일, 시간에 대한 참고사항에 대해 최대한 자세하게 남겨주세요 *"
-              value={value}
-              onChangeText={onChange}
-              multiline
-              height={116}
-              style={{ textAlignVertical: 'top', paddingTop: 16 }}
-            />
-          )}
-        />
-        <ScrollViewSpacer />
-      </ScrollView>
-    </>
-  );
-};
 
 const Footer = styled.View`
   width: 100%;
@@ -743,32 +653,6 @@ const DurationWrapper = styled.View`
 
 const DurationDropdownWrapper = styled.View`
   flex: 1;
-`;
-
-const TimeOptionWrapper = styled.View`
-  width: 100%;
-  flex-direction: row;
-  justify-content: space-between;
-`;
-
-const TimeBarWrapper = styled.View`
-  height: 50px;
-  justify-content: center;
-`;
-
-const TimeBar = styled.View`
-  width: 16px;
-  height: 2px;
-  margin: 0 10px;
-  background-color: #C8C8C8;
-`;
-
-const TimeDropDownInputWrapper = styled.View`
-  width: 130px;
-`;
-
-const DayScheduleSection = styled.View`
-  width: 100%;
 `;
 
 const AddOptionButton = styled.TouchableOpacity`

@@ -4,7 +4,8 @@ import { theme } from '@/theme';
 import { Typography } from '@/components/theme';
 import Icon from '@/components/Icon.tsx';
 import MoreCircleIcon from '@/assets/icons/more-circle.svg';
-import { Notification, NotificationCategory } from '@/api/notifications.ts';
+import SettingsIcon from '@/assets/icons/settings.svg';
+import { Notification, NotificationCategory } from '@/api/notifications';
 
 interface NotificationViewProps {
   notifications: Notification[];
@@ -13,6 +14,7 @@ interface NotificationViewProps {
   onPressTab: (category: NotificationCategory) => void;
   onPressNotification: (notificationId: string, relatedId?: string) => void;
   onPressDelete: (notificationId: string) => void;
+  onPressSetting: () => void;
 }
 
 const CATEGORIES: NotificationCategory[] = ['일정', '게시글', '리뷰'];
@@ -24,12 +26,15 @@ export default function NotificationView({
   onPressTab,
   onPressNotification,
   onPressDelete,
+  onPressSetting
 }: NotificationViewProps) {
   return (
     <ScreenContainer
       headerShown={true}
       headerTitle="알림"
       onPressBack={onPressBack}
+      onPressTool={onPressSetting}
+      headerToolIcon={SettingsIcon}
     >
       <TabNavigator>
         {CATEGORIES.map((category) => (

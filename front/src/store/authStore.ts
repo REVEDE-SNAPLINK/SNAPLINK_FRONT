@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { signInApi, refreshApi, signUpApi, SignUpFormData, logoutApi, withdrawApi } from '@/api/auth';
-import { saveRefreshToken, loadRefreshToken, clearRefreshToken } from '@/auth/tokenStore.ts';
+import {
+  saveRefreshToken,
+  loadRefreshToken,
+  clearRefreshToken,
+  saveUserId,
+  loadUserId,
+  clearUserId,
+  saveUserType,
+  loadUserType,
+  clearUserType,
+} from '@/auth/tokenStore.ts';
 import messaging from '@react-native-firebase/messaging';
 import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
 import { login } from '@react-native-kakao/user';
@@ -90,7 +100,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await saveRefreshToken(refreshed.refreshToken);
       }
 
-      set({ accessToken: refreshed.accessToken, status: 'authed', bootstrapped: true });
+      // Load userId and userType from persistent storage
+      const [savedUserId, savedUserType] = await Promise.all([
+        loadUserId(),
+        loadUserType(),
+      ]);
+
+      console.log('[AuthStore] Loaded userId:', savedUserId, 'userType:', savedUserType);
+
+      set({
+        accessToken: refreshed.accessToken,
+        status: 'authed',
+        userId: savedUserId || '',
+        userType: savedUserType || 'user',
+        bootstrapped: true,
+      });
       console.log('[AuthStore] Bootstrap completed successfully');
     } catch (e) {
       console.error('[AuthStore] Bootstrap failed:', e);
@@ -118,17 +142,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await signInApi(provider, token);
 
       if (response.status === 'LOGIN_SUCCESS') {
-        await saveRefreshToken(response.tokens.refreshToken);
+        const userType = response.role === 'USER' ? 'user' : 'photographer';
+
+        // Save tokens and user data to persistent storage
+        await Promise.all([
+          saveRefreshToken(response.tokens.refreshToken),
+          saveUserId(response.userId),
+          saveUserType(userType),
+        ]);
 
         set({
           status: 'authed',
           accessToken: response.tokens.accessToken,
           userId: response.userId,
-          userType: response.role === 'USER' ? 'user' : 'photographer',
+          userType,
         });
 
         await safeRegisterFcmDevice();
       } else {
+        // Save userId even in needs_signup state
+        await saveUserId(response.userId);
+
         set({
           status: 'needs_signup',
           userId: response.userId,
@@ -145,8 +179,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   async signOut() {
     set({ status: 'anon', accessToken: null, userId: '' });
 
-    // refreshToken은 로컬에서 무조건 제거
-    await clearRefreshToken().catch(() => {});
+    // Clear all persistent storage
+    await Promise.allSettled([
+      clearRefreshToken(),
+      clearUserId(),
+      clearUserType(),
+    ]);
 
     // Query 캐시 초기화
     queryClient.clear();
@@ -164,12 +202,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await signUpApi(formData);
 
       if (response.status === 'LOGIN_SUCCESS') {
-        await saveRefreshToken(response.tokens.refreshToken);
+        const userType = response.role === 'USER' ? 'user' : 'photographer';
+
+        // Save tokens and user data to persistent storage
+        await Promise.all([
+          saveRefreshToken(response.tokens.refreshToken),
+          saveUserId(response.userId),
+          saveUserType(userType),
+        ]);
 
         set({
           status: 'authed',
           accessToken: response.tokens.accessToken,
           userId: response.userId,
+          userType,
         });
 
         await safeRegisterFcmDevice();
@@ -187,8 +233,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       (e) => ({ ok: false as const, e }),
     );
 
-    // 로컬 정리는 항상 수행
-    await clearRefreshToken().catch(() => {});
+    // Clear all persistent storage
+    await Promise.allSettled([
+      clearRefreshToken(),
+      clearUserId(),
+      clearUserType(),
+    ]);
+
     set({ status: 'anon', accessToken: null, userId: '' });
 
     // Query 캐시 초기화

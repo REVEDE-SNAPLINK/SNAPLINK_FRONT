@@ -47,6 +47,17 @@ export type EditingType = "FACIAL" | "COLOR" | "BOTH" | "NONE";
 export type EditingDeadline = "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS";
 export type SelectionAuthority = "PHOTOGRAPHER" | "CUSTOMER" | "BOTH";
 
+export const mappingEditDeadline = (editingDeadline: EditingDeadline) => {
+  switch (editingDeadline) {
+    case "SAME_DAY": return 1;
+    case "WITHIN_2_DAYS": return 2;
+    case "WITHIN_3_DAYS": return 3;
+    case "WITHIN_4_DAYS": return 4;
+    case "WITHIN_5_DAYS": return 5;
+    case "WITHIN_7_DAYS": return 8;
+  }
+}
+
 export interface GetShootingResponse {
   id: number;
   isDefault: boolean;
@@ -85,7 +96,7 @@ export interface CreateShootingOptionRequest {
   additionalTime: number; // minute
 }
 
-export const getShootings = async () : Promise<GetShootingResponse[]> => {
+export const getMyShootings = async () : Promise<GetShootingResponse[]> => {
   const response = await authFetch(`${SHOOTINGS_BASE}/me`, {
     method: 'GET',
   });
@@ -134,10 +145,21 @@ export const updateShootingOption = async (
   optionId: number, body: CreateShootingOptionRequest
 ): Promise<GetShootingOptionResponse> => {
   const response = await authFetch(`${SHOOTINGS_BASE}/options/${optionId}`, {
-    method: 'POST',
+    method: 'PUT',
     json: body
   });
 
   if (!response.ok) throw new Error(`Failed to update shooting option ${response.status}`);
+  return response.json();
+}
+
+export const getShootings = async (
+  photographerId: string
+) : Promise<GetShootingResponse[]> => {
+  const response = await authFetch(`${SHOOTINGS_BASE}/${photographerId}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get shootings ${response.status}`);
   return response.json();
 }

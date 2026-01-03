@@ -1,28 +1,39 @@
 import UserBookingDetailsView from '@/screens/user/BookingDetails/UserBookingDetailsView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useReservationDetailQuery } from '@/queries/bookings.ts';
+import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import { useState, useEffect } from 'react';
+import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
 export default function UserBookingDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingDetailsRouteProp>();
-  const { reservationId } = route.params;
+  const { bookingId } = route.params;
+  const [shouldFetchReview, setShouldFetchReview] = useState(false);
 
-  const { data: reservationDetails, isLoading } = useReservationDetailQuery(reservationId);
+  const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
+  const { data: bookingReview } = useBookingReviewMeQuery(shouldFetchReview ? bookingId : undefined);
+
+  useEffect(() => {
+    if (bookingReview && shouldFetchReview) {
+      navigation.navigate('ReviewDetails', { review: bookingReview });
+      setShouldFetchReview(false);
+    }
+  }, [bookingReview, shouldFetchReview, navigation]);
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { reservationId });
+  const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { bookingId });
 
-  const handlePressWriteReview = () => navigation.navigate('WriteReview', { reservationId });
+  const handlePressWriteReview = () => navigation.navigate('WriteReview', { bookingId });
 
   const handlePressShowMyReview = () => {
-    // TODO: api 추가 후 연결
+    setShouldFetchReview(true);
   }
 
-  if (!reservationDetails) {
+  if (!bookingDetails) {
     return (
       <UserBookingDetailsView
         onPressBack={handlePressBack}
@@ -30,28 +41,22 @@ export default function UserBookingDetailsContainer() {
         bookingOption=""
         datetime=""
         additionalRequest=""
-        status="REQUESTED"
         isLoading={isLoading}
       />
     );
   }
 
-  const canViewPhotos = reservationDetails.status === 'DELIVERED' || reservationDetails.status === 'REVIEWED';
-  const canWriteReview = reservationDetails.status === 'DELIVERED';
-  const canShowMyReview = reservationDetails.status === 'REVIEWED';
-  const shootingOptions =
-    Array.isArray(reservationDetails.shootingOptions)
-      ? reservationDetails.shootingOptions.join(', ')
-      : '';
+  const canViewPhotos = bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
+  const canWriteReview = !bookingDetails.isreview && bookingDetails.status === 'USER_PHOTO_CHECK';
+  const canShowMyReview = bookingDetails.isreview;
 
   return (
     <UserBookingDetailsView
       onPressBack={handlePressBack}
-      name={reservationDetails.photographerName}
-      bookingOption={shootingOptions}
-      datetime={reservationDetails.shootingDateTime}
-      additionalRequest={reservationDetails.requirement}
-      status={reservationDetails.status}
+      name={bookingDetails.photographerName}
+      bookingOption={bookingDetails.shootingItems}
+      datetime={bookingDetails.shootingDate}
+      additionalRequest={bookingDetails.requestDetails}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       onPressWriteReview={canWriteReview ? handlePressWriteReview : undefined}
       onPressShowMyReview={canShowMyReview ? handlePressShowMyReview : undefined}

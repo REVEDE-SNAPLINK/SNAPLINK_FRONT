@@ -7,17 +7,17 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { SignUpFormData } from '@/api/auth.ts';
 import { requestPermission } from '@/utils/permissions.ts'
 import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp, RootNavigationProp } from '@/types/navigation.ts';
+import { RootNavigationProp } from '@/types/navigation.ts';
 import { Linking } from 'react-native';
 import { Alert } from '@/components/theme';
+import { checkEmail, checkNickname } from '@/api/user.ts';
 
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
 const TOTAL_STEPS = 6;
 
 export default function UserOnboardingContainer() {
   const rootNavigation = useNavigation<RootNavigationProp>();
-  const authNavigation = useNavigation<AuthNavigationProp>();
-  const { userId, userType, signUp, setIsFirst, setUserType } = useAuthStore();
+  const { userId, userType, signUp, setIsFirst, setUserType, signOut } = useAuthStore();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [agreedTerms, setAgreedTerms] = useState<string[]>([]);
@@ -54,9 +54,9 @@ export default function UserOnboardingContainer() {
     setNicknameError(null);
   }, [watchedNickname]);
 
-  const handlePressBack = () => {
+  const handlePressBack = async () => {
     if (currentStep === 0) {
-      authNavigation.goBack();
+      await signOut();
     } else {
       setCurrentStep((prev) => prev - 1);
     }
@@ -105,24 +105,12 @@ export default function UserOnboardingContainer() {
     });
   }, []);
 
-  const checkEmailDuplicate = useCallback(async (nickname: string): Promise<boolean> => {
-    // TODO: API 호출로 변경
-    // const response = await checkNicknameAPI(nickname);
-    // return response.isDuplicate;
-
-    // 임시: 테스트용 중복 닉네임 목록
-    const duplicateEmails = ['테스트', 'admin', 'test', '관리자'];
-    return duplicateEmails.includes(nickname.trim());
+  const checkEmailDuplicate = useCallback(async (email: string): Promise<boolean> => {
+    return await checkEmail(email);
   }, []);
 
   const checkNicknameDuplicate = useCallback(async (nickname: string): Promise<boolean> => {
-    // TODO: API 호출로 변경
-    // const response = await checkNicknameAPI(nickname);
-    // return response.isDuplicate;
-
-    // 임시: 테스트용 중복 닉네임 목록
-    const duplicateNicknames = ['테스트', 'admin', 'test', '관리자'];
-    return duplicateNicknames.includes(nickname.trim());
+    return await checkNickname(nickname);
   }, []);
 
   const validateStep = useCallback(

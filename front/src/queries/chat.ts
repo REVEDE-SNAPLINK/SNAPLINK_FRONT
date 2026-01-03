@@ -3,25 +3,59 @@ import {
   createOrGetChatRoom,
   getChatMessages,
   getChatRooms,
+  getChatRoom,
   uploadChatFile,
   type CreateOrGetRoomRequest,
   type GetChatMessagesParams,
   type UploadChatFileParams,
 } from '@/api/chat';
 import { chatQueryKeys } from '@/queries/keys';
-import { withMockData, withMockMutation } from '@/__dev__';
 
 /** 채팅방 목록 */
 export const useChatRoomsQuery = () =>
   useQuery({
     queryKey: chatQueryKeys.rooms(),
-    // queryFn: () => withMockData(
-    //   () => getMockChatRooms(),
-    //   () => getChatRooms(),
-    // ),
     queryFn: () => getChatRooms(),
     staleTime: 1000 * 10,
   });
+
+/** 특정 채팅방 조회 (캐시 우선, 없으면 API 호출) */
+export const useChatRoomQuery = (roomId: number | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: roomId ? chatQueryKeys.room(roomId) : [],
+    queryFn: async () => {
+      if (!roomId) throw new Error('roomId is required');
+
+      // 먼저 rooms 캐시에서 찾기
+      const roomsData = queryClient.getQueryData<Awaited<ReturnType<typeof getChatRooms>>>(
+        chatQueryKeys.rooms()
+      );
+      const cachedRoom = roomsData?.find((r) => r.roomId === roomId);
+
+      if (cachedRoom) {
+        return cachedRoom;
+      }
+
+      // 캐시에 없으면 rooms API 호출하여 전체 목록 가져오기
+      const rooms = await getChatRooms();
+      // rooms 캐시에 저장
+      queryClient.setQueryData(chatQueryKeys.rooms(), rooms);
+
+      // 해당 roomId 찾기
+      const room = rooms.find((r) => r.roomId === roomId);
+      if (room) {
+        return room;
+      }
+
+      // 전체 목록에도 없으면 개별 API 호출
+      return getChatRoom(roomId);
+    },
+    enabled: typeof roomId === 'number',
+    staleTime: 1000 * 60, // 1 minute
+  });
+};
 
 /**
  * 채팅방 메시지 기록 infinite
@@ -31,16 +65,11 @@ export const useChatMessagesInfiniteQuery = (
   roomId: number | undefined,
   paramsWithoutPage: Omit<GetChatMessagesParams, 'page'> = { size: 20 },
 ) => {
-  const { getMockChatMessages } = require('@/__dev__');
-
   return useInfiniteQuery({
     queryKey: roomId ? chatQueryKeys.messagesInfinite(roomId, paramsWithoutPage) : [],
     enabled: typeof roomId === 'number',
     initialPageParam: 0,
-    queryFn: ({ pageParam }) => withMockData(
-      () => getMockChatMessages(roomId!, pageParam, paramsWithoutPage.size || 20),
-      () => getChatMessages(roomId!, { ...paramsWithoutPage, page: pageParam }),
-    ),
+    queryFn: ({ pageParam }) => getChatMessages(roomId!, { ...paramsWithoutPage, page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
       const size = paramsWithoutPage.size ?? 20;
       // lastPage가 size보다 작으면 더 이상 없음
@@ -65,12 +94,7 @@ export const useCreateOrGetChatRoomMutation = () => {
 
 /** 채팅 파일 업로드 -> url 반환 */
 export const useUploadChatFileMutation = () => {
-  const { uploadMockChatFile } = require('@/__dev__');
-
   return useMutation({
-    mutationFn: (params: UploadChatFileParams) => withMockMutation(
-      () => uploadMockChatFile(params.roomId),
-      () => uploadChatFile(params),
-    ),
+    mutationFn: (params: UploadChatFileParams) => uploadChatFile(params),
   });
 };

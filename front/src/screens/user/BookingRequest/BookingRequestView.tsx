@@ -6,7 +6,6 @@ import TextInput from '@/components/theme/TextInput.tsx';
 
 interface BookingRequestViewProps {
   onPressBack: () => void;
-  nickname: string;
   onSubmit: () => void;
   isSubmitDisabled: boolean;
   additionalRequest: string;
@@ -15,7 +14,6 @@ interface BookingRequestViewProps {
 
 export default function BookingRequestView({
   onPressBack,
-  nickname,
   onSubmit,
   isSubmitDisabled,
   additionalRequest,
@@ -23,7 +21,7 @@ export default function BookingRequestView({
 }: BookingRequestViewProps) {
 
   return (
-    <ScreenContainer onPressBack={onPressBack} headerTitle={nickname} alignItemsCenter={false}>
+    <ScreenContainer onPressBack={onPressBack} headerTitle="예약하기" alignItemsCenter={false}>
       <ScrollContainer showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
         <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#000" marginBottom={16}>
           요청사항을 작성해주세요 <Typography fontSize={12} letterSpacing="-2.5%" color="textSecondary">(최소 15자)</Typography>

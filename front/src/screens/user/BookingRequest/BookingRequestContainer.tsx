@@ -3,56 +3,47 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
 import { Alert } from '@/components/theme';
-import { useCreateReservationMutation } from '@/mutations/bookings.ts';
+import { useCreateBookingMutation } from '@/mutations/bookings.ts';
 
 type BookingRequestRouteProp = RouteProp<MainStackParamList, 'BookingRequest'>;
 
 interface BookingRequestFormInputs {
-  additionalRequest: string;
+  requestDetails: string;
 }
 
 export default function BookingRequestContainer() {
   const route = useRoute<BookingRequestRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
-  const bookingData = route.params;
+  const { photographerId, productId, options, shootingDate, startTime } = route.params;
 
   const { control, handleSubmit, watch, formState: { isValid } } = useForm<BookingRequestFormInputs>({
     mode: 'onChange',
     defaultValues: {
-      additionalRequest: '',
+      requestDetails: '',
     },
   });
 
-  const watchedRequest = watch('additionalRequest');
+  const watchedRequest = watch('requestDetails');
 
-  const createReservationMutation = useCreateReservationMutation();
+  const createBookingMutation = useCreateBookingMutation();
 
   const onSubmit = (data: BookingRequestFormInputs) => {
-    // Combine date and time to create ISO shootingDate
-    const shootingDate = new Date(`${bookingData.date}T${bookingData.time}:00`).toISOString();
-
-    // Only include required option in API transmission
-    // optionalOptions are used for display and price calculation only
-    const options: number[] = [];
-
-    // Add required option if checked
-    if (bookingData.requiredOptionChecked && bookingData.requiredOptionId) {
-      options.push(bookingData.requiredOptionId);
-    }
-
-    createReservationMutation.mutate({
-      photographerId: bookingData.photographerId,
-      shootingDate,
+    createBookingMutation.mutate({
+      photographerId,
+      productId,
       options,
-      requirement: data.additionalRequest,
-      totalAmount: bookingData.totalPrice,
+      shootingDate, // Already ISO string from Booking screen
+      startTime, // HH:mm format
+      requestDetails: data.requestDetails,
     }, {
       onSuccess: () => {
         Alert.show({
           title: '📸 스냅 사진 예약이 완료되었습니다.',
           message: '작가님과의 스냅사진 촬영 예약이 완료되었습니다. 자세한 예약 내역은 마이페이지 내 촬영내역에서도 확인할 수 있어요!',
           buttons: [
-            { text: '확인', onPress: () => navigation.navigate('BookingHistory') },
+            { text: '확인', onPress: () => {
+              navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
+              } },
           ]
         });
       },
@@ -75,7 +66,7 @@ export default function BookingRequestContainer() {
   return (
     <Controller
       control={control}
-      name="additionalRequest"
+      name="requestDetails"
       rules={{
         required: true,
         minLength: 15,
@@ -83,9 +74,8 @@ export default function BookingRequestContainer() {
       render={({ field: { onChange, value } }) => (
         <BookingRequestView
           onPressBack={handlePressBack}
-          nickname={bookingData.photographerNickname}
           onSubmit={handleSubmit(onSubmit)}
-          isSubmitDisabled={!isFormValid || createReservationMutation.isPending}
+          isSubmitDisabled={!isFormValid || createBookingMutation.isPending}
           additionalRequest={value}
           onChangeAdditionalRequest={onChange}
         />

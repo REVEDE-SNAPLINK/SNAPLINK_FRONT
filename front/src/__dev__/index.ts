@@ -4,12 +4,8 @@
  * 모든 API의 더미 데이터를 한 곳에서 import하여 사용
  */
 
-export * from './mockReviews';
 export * from './mockPhotographers';
-export * from './mockReservations';
-export * from './mockCommunity';
 export * from './mockNotifications';
-export * from './mockChat';
 
 /**
  * 개발 모드 플래그

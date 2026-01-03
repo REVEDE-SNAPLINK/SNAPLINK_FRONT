@@ -54,11 +54,11 @@ export const useToggleLikeMutation = () => {
   });
 };
 
-export const useCreateCommentMutation = (postId: string) => {
+export const useCreateCommentMutation = (postId: number) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ content, parentId }: { content: string; parentId: number }) =>
+    mutationFn: ({ content, parentId }: { content: string; parentId: number | null }) =>
       createComment(postId, content, parentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: communityKeys.post(postId) });
@@ -71,7 +71,7 @@ export const useUpdateCommentMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
+    mutationFn: ({ commentId, content }: { commentId: number; content: string }) =>
       updateComment(commentId, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: communityKeys.all });

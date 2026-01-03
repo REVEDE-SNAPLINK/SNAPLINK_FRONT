@@ -8,7 +8,7 @@ import ServerImage from '@/components/ServerImage.tsx';
 interface MyPostsViewProps {
   posts: CommunityPost[];
   onPressBack: () => void;
-  onPressPost: (postId: string) => void;
+  onPressPost: (postId: number) => void;
 }
 
 export default function MyPostsView({
@@ -39,10 +39,10 @@ export default function MyPostsView({
                   {formattedDate}
                 </Typography>
               </PostInfoWrapper>
-              {post.imageUrls.length > 0 && (
+              {post.images.length > 0 && (
                 <PostImageWrapper>
-                  {post.imageUrls.slice(0, 3).map((img, index) => (
-                    <PostImage key={index} uri={img} />
+                  {post.images.slice(0, 3).map((img, index) => (
+                    <PostImage key={index} uri={img.urls} />
                   ))}
                 </PostImageWrapper>
               )}
@@ -70,9 +70,7 @@ const PostContainer = styled(ScrollView)`
 
 const PostItem = styled.Pressable`
   width: 100%;
-  padding-horizontal: 20px;
-  padding-top: 10px;
-  padding-bottom: 30px;
+  padding: 20px;
   border-bottom-width: 1px;
   border-bottom-color: #C8C8C8;
   border-bottom-style: solid;

@@ -5,20 +5,60 @@ export const navigationRef = createNavigationContainerRef();
 
 const linking = {
   prefixes: [
-    'snaplink://', // native URI scheme
-    'https://snap.lnk' // domain for redirection
+    'snaplink://',
+    'https://link.snaplink.run',
   ],
   config: {
     screens: {
-      Auth: {
+      Main: {
         screens: {
-          Login: 'auth/login',
-          SelectType: 'auth/select',
-        }
-      }
-    }
-  }
-}
+          CommunityDetails: {
+            path: 'post/:postId',
+            parse: {
+              postId: Number,
+            },
+          },
+          PhotographerDetails: {
+            path: 'photographer/:photographerId',
+            parse: {
+              photographerId: Number,
+            },
+          },
+          BookingManage: {
+            path: 'bookings/photographer'
+          },
+          BookingHistory: {
+            path: 'bookings/user',
+          },
+          ViewPhotos: {
+            path: 'booking/:bookingId/photos',
+            parse: {
+              bookingId: Number,
+            }
+          },
+          WriteReview: {
+            path: 'booking/:bookingId/writeReview',
+            parse: {
+              bookingId: Number,
+            }
+          },
+          BookingDetails: {
+            path: 'booking/:bookingId',
+            parse: {
+              bookingId: Number,
+            }
+          },
+          ChatDetails: {
+            path: 'chat/:roomId',
+            parse: {
+              roomId: Number,
+            }
+          }
+        },
+      },
+    },
+  },
+};
 
 export default function AppNavigator() {
   return (

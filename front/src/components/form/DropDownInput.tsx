@@ -89,6 +89,8 @@ export default function DropDownInput({
         >
           <ScrollView
             showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
+            scrollEventThrottle={16}
           >
             {options.map((option, index) => (
               <OptionRow

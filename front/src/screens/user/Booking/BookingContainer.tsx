@@ -1,51 +1,20 @@
 import BookingView from '@/screens/user/Booking/BookingView.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { schedulesQueryKeys } from '@/queries/keys.ts';
+import { getAvailableBookingTimes } from '@/api/schedules.ts';
 import { useForm } from 'react-hook-form';
-import { useMonthlyScheduleQuery, useAvailableSlotsQuery } from '@/queries/bookings.ts';
+import { useAvailableBookingDaysQuery, useAvailableBookingTimesQuery } from '@/queries/schedules.ts';
+import { useShootingsQuery, useShootingOptionsQuery } from '@/queries/shootings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
 type BookingRouteProp = RouteProp<MainStackParamList, 'Booking'>;
 
-export interface ShootingOption {
-  id: number;
-  name: string;
-  price: number;
-}
-
-export interface BookingFormData {
-  photographerId: string;
-  shootingDate: string;
-  concept: number;
-  options: number[];
-  totalAmount: number;
-}
-
 interface BookingFormInputs {
   date: string;
   time: string;
-  concept: number;
-}
-
-function toUtcIsoString(date: string, time: string) {
-  // date: '2025-12-25'
-  // time: '10:24'
-
-  const [year, month, day] = date.split('-').map(Number);
-  const [hour, minute] = time.split(':').map(Number);
-
-  // ⚠️ month는 0-based
-  const utcDate = new Date(Date.UTC(
-    year,
-    month - 1,
-    day,
-    hour,
-    minute,
-    0,
-    0,
-  ));
-
-  return utcDate.toISOString();
+  productId: number;
 }
 
 export default function BookingContainer() {
@@ -58,39 +27,134 @@ export default function BookingContainer() {
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       time: '',
-      concept: 0,
+      productId: 0,
     },
   });
 
-  const watchedFields = watch();
+  const selectedDate = watch('date');
+  const selectedTime = watch('time');
+  const selectedProductIdField = watch('productId');
+  const isInitialDateSet = useRef(false);
 
-  const [currentMonth, setCurrentMonth] = useState<string>(
-    new Date().toISOString().slice(0, 7) // YYYY-MM
-  );
+  // State for option quantities
+  const [optionQuantities, setOptionQuantities] = useState<Record<number, number>>({});
+  const [today, setToday] = useState(() => new Date());
 
-  // Fetch monthly schedule
-  const { data: monthlySchedule } = useMonthlyScheduleQuery(photographerId, currentMonth);
+  useEffect(() => {
+    const tick = () => setToday(new Date());
 
-  // Fetch available slots for selected date
-  const { data: availableSlots } = useAvailableSlotsQuery(
-    photographerId,
-    watchedFields.date,
-  );
-
-  const requiredOptions = { id: 1, name: '기본 촬영', price: 50000 };
-
-  // 임시 데이터 (API 구현 전까지)
-  const reservationOptions = useMemo(() => {
-    return {
-      requiredOptions: [
-        { id: 1, name: '기본 촬영', price: 50000 }
-      ],
-      optionalOptions: [
-        { id: 2, name: '추가 인원 (1명당)', price: 10000 },
-        { id: 3, name: '추가 시간 (30분)', price: 15000 },
-      ],
-    }
+    // 1) 앱이 켜져있는 동안 주기적으로 체크(가벼움)
+    const id = setInterval(tick, 60_000); // 1분마다
+    return () => clearInterval(id);
   }, []);
+
+  // Fetch shooting products
+  const {
+    data: shootingProducts,
+    isFetching: isFetchingProducts,
+    isError: isProductsError,
+    refetch: refetchProducts,
+  } = useShootingsQuery(photographerId);
+
+  // Fetch shooting options for selected product
+  const {
+    data: shootingOptions,
+    isFetching: isFetchingOptions,
+    isError: isOptionsError,
+    refetch: refetchOptions,
+  } = useShootingOptionsQuery(
+    selectedProductIdField,
+    !!selectedProductIdField,
+  );
+
+  // Calculate booking range (today ~ 3 months from today)
+  const maxBookingDate = useMemo(() => {
+    const date = new Date(today);
+    date.setMonth(date.getMonth() + 3);
+    return date;
+  }, [today]);
+
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  });
+
+  // Helper function to get previous/next month
+  const getPrevMonth = (year: number, month: number) => {
+    if (month === 1) return { year: year - 1, month: 12 };
+    return { year, month: month - 1 };
+  };
+
+  const getNextMonth = (year: number, month: number) => {
+    if (month === 12) return { year: year + 1, month: 1 };
+    return { year, month: month + 1 };
+  };
+
+  const prevMonth = getPrevMonth(currentMonth.year, currentMonth.month);
+  const nextMonth = getNextMonth(currentMonth.year, currentMonth.month);
+
+  // Check if a month is within the allowed range (today ~ 3 months from today)
+  const isMonthInRange = (year: number, month: number) => {
+    const targetMonth = new Date(year, month - 1, 1);
+    const minMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const maxMonth = new Date(maxBookingDate.getFullYear(), maxBookingDate.getMonth(), 1);
+    return targetMonth >= minMonth && targetMonth <= maxMonth;
+  };
+
+  // Fetch available days for current, previous, and next month
+  const { data: currentMonthDays } = useAvailableBookingDaysQuery(
+    {
+      photographerId,
+      year: currentMonth.year,
+      month: currentMonth.month,
+    },
+    isMonthInRange(currentMonth.year, currentMonth.month),
+  );
+
+  const { data: prevMonthDays } = useAvailableBookingDaysQuery(
+    {
+      photographerId,
+      year: prevMonth.year,
+      month: prevMonth.month,
+    },
+    isMonthInRange(prevMonth.year, prevMonth.month),
+  );
+
+  const { data: nextMonthDays } = useAvailableBookingDaysQuery(
+    {
+      photographerId,
+      year: nextMonth.year,
+      month: nextMonth.month,
+    },
+    isMonthInRange(nextMonth.year, nextMonth.month),
+  );
+
+  // Fetch available times for selected date
+  const {
+    data: availableTimes,
+    isFetching: isFetchingTimes,
+    isError: isTimesError,
+    refetch: refetchTimes,
+  } = useAvailableBookingTimesQuery(
+    {
+      photographerId,
+      date: selectedDate,
+    },
+    !!selectedDate, // Only fetch when date is selected
+  );
+  const queryClient = useQueryClient();
+
+  const prefetchTimes = useCallback(
+    (date: string) => {
+      if (!photographerId || !date) return;
+      queryClient.prefetchQuery({
+        queryKey: schedulesQueryKeys.availableTimes({ photographerId, date }),
+        queryFn: () => getAvailableBookingTimes({ photographerId, date }),
+        staleTime: 1000 * 60 * 2,
+      });
+    },
+    [queryClient, photographerId]
+  );
 
   const handlePressBack = () => {
     navigation.goBack();
@@ -99,81 +163,249 @@ export default function BookingContainer() {
   const handleChangeDate = (date: string) => {
     setValue('date', date);
     setValue('time', '');
-    setCurrentMonth(date.slice(0, 7));
+
+    // Prefetch times for this date
+    prefetchTimes(date);
+
+    // Prefetch times for next available date (best-effort)
+    if (availableDates && availableDates.length > 0) {
+      const idx = availableDates.indexOf(date);
+      const next = idx >= 0 ? availableDates[idx + 1] : availableDates[0];
+      if (next) prefetchTimes(next);
+    }
+
+    // Update currentMonth when date changes
+    const [year, month] = date.split('-').map(Number);
+    setCurrentMonth({ year, month });
   };
 
-  const handleSelectTime = (time: string) => {
-    setValue('time', time);
+  const handleMonthChange = (year: number, month: number) => {
+    // Prevent navigating to months outside the allowed range
+    const targetMonth = new Date(year, month - 1, 1);
+    const minMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const maxMonth = new Date(maxBookingDate.getFullYear(), maxBookingDate.getMonth(), 1);
+
+    // Only allow months within the range
+    if (targetMonth < minMonth || targetMonth > maxMonth) {
+      return;
+    }
+
+    setCurrentMonth({ year, month });
   };
 
-  const handlePressRequiredOption = (optionId: number) => {
-    setValue('concept', optionId);
+  // Transform available times to time slots
+  const timeSlots = useMemo(() => {
+    if (!availableTimes) return [];
+
+    const now = new Date();
+
+    // Local "today" string (YYYY-MM-DD)
+    const yyyy = now.getFullYear().toString();
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    const isToday = selectedDate === todayStr;
+
+    return availableTimes.filter((slot) => {
+      // 1) Never allow unavailable slots
+      if (!slot.available) return false;
+
+      // 2) If booking for today, disallow past (or same-minute) times
+      if (isToday) {
+        const [hour, minute] = slot.startTime.split(':').map(Number);
+        const slotTime = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          hour,
+          minute,
+          0,
+          0,
+        );
+        return slotTime.getTime() > now.getTime();
+      }
+
+      return true;
+    });
+  }, [availableTimes, selectedDate]);
+
+  const handleSelectTime = useCallback(
+    (time: string) => {
+      // Defensive: ignore invalid selections even if UI allows the tap
+      const slot = timeSlots.find((s) => s.startTime === time);
+      if (!slot) return;
+
+      setValue('time', time);
+    },
+    [setValue, timeSlots],
+  );
+
+  const handlePressShootingProduct = (productId: number) => {
+    setValue('productId', productId);
+    // Reset option quantities when product changes
+    setOptionQuantities({});
+
+    // Best-effort prefetch options happens naturally via query;
+    // keepPreviousData prevents UI flash.
+  };
+
+  const handleOptionQuantityChange = (optionId: number, quantity: number) => {
+    setOptionQuantities((prev) => ({
+      ...prev,
+      [optionId]: quantity,
+    }));
   };
 
   // Calculate total price
   const totalPrice = useMemo(() => {
     let total = 0;
 
-    total += requiredOptions.price;
+    // Add base price from selected product
+    if (selectedProductIdField && shootingProducts) {
+      const selectedProduct = shootingProducts.find((p) => p.id === selectedProductIdField);
+      if (selectedProduct) {
+        total += selectedProduct.basePrice;
+      }
+    }
+
+    // Add option prices (price × quantity)
+    if (shootingOptions) {
+      shootingOptions.forEach((option) => {
+        const quantity = optionQuantities[option.id] || 0;
+        total += option.price * quantity;
+      });
+    }
 
     return total;
-  }, [requiredOptions.price]);
+  }, [selectedProductIdField, shootingProducts, shootingOptions, optionQuantities]);
 
   const onSubmit = (data: BookingFormInputs) => {
+    // Collect selected options with quantities (only options with quantity > 0)
+    const options = Object.entries(optionQuantities)
+      .filter(([_, quantity]) => quantity > 0)
+      .map(([optionId, count]) => ({
+        id: Number(optionId),
+        count,
+      }));
+
     // Navigate to BookingRequest with form data
     navigation.navigate('BookingRequest', {
       photographerId,
-      shootingDate: toUtcIsoString(data.date, data.time),
-      concept: data.concept,
-      options: [], // TODO: 나중에 구현,
-      totalAmount: totalPrice,
+      productId: data.productId,
+      options,
+      shootingDate: data.date,
+      startTime: data.time, // HH:mm format
     });
   };
 
-  // Transform monthly schedule to available dates
+  // Transform available days to date strings (YYYY-MM-DD)
   const availableDates = useMemo(() => {
-    if (!monthlySchedule) return [];
-    return monthlySchedule
-      .filter((schedule) => schedule.available)
-      .map((schedule) => schedule.date);
-  }, [monthlySchedule]);
+    const dates: string[] = [];
+    const todayStr = today.toISOString().split('T')[0];
+    const maxDateStr = maxBookingDate.toISOString().split('T')[0];
 
-  // Transform available slots to time slots
-  const timeSlots = useMemo(() => {
-    if (!availableSlots) return [];
-    return availableSlots
-      .filter((slot) => slot.available)
-      .map((slot) => slot.time);
-  }, [availableSlots]);
+    // Helper to format date string
+    const formatDate = (year: number, month: number, day: number) => {
+      const yyyy = year.toString();
+      const mm = month.toString().padStart(2, '0');
+      const dd = day.toString().padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    // Helper to check if date is within allowed range
+    const isDateInRange = (dateStr: string) => {
+      return dateStr >= todayStr && dateStr <= maxDateStr;
+    };
+
+    // Add available dates from previous month
+    if (prevMonthDays) {
+      prevMonthDays
+        .filter((d) => d.available)
+        .forEach((d) => {
+          const dateStr = formatDate(prevMonth.year, prevMonth.month, d.day);
+          if (isDateInRange(dateStr)) {
+            dates.push(dateStr);
+          }
+        });
+    }
+
+    // Add available dates from current month
+    if (currentMonthDays) {
+      currentMonthDays
+        .filter((d) => d.available)
+        .forEach((d) => {
+          const dateStr = formatDate(currentMonth.year, currentMonth.month, d.day);
+          if (isDateInRange(dateStr)) {
+            dates.push(dateStr);
+          }
+        });
+    }
+
+    // Add available dates from next month
+    if (nextMonthDays) {
+      nextMonthDays
+        .filter((d) => d.available)
+        .forEach((d) => {
+          const dateStr = formatDate(nextMonth.year, nextMonth.month, d.day);
+          if (isDateInRange(dateStr)) {
+            dates.push(dateStr);
+          }
+        });
+    }
+
+    return dates;
+  }, [currentMonthDays, prevMonthDays, nextMonthDays, currentMonth, prevMonth, nextMonth, today, maxBookingDate]);
 
   // Set initial date to first available date if current date is not available
   useEffect(() => {
-    if (availableDates && availableDates.length > 0) {
+    if (availableDates && availableDates.length > 0 && !isInitialDateSet.current) {
       const formattedInitialDate = new Date().toISOString().split('T')[0];
       if (!availableDates.includes(formattedInitialDate)) {
         setValue('date', availableDates[0]);
       } else {
         setValue('date', formattedInitialDate);
       }
+      isInitialDateSet.current = true;
     }
-  }, [availableDates, setValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableDates]);
 
   // Check if form is valid: date and time must be selected
-  const isFormValid = isValid && !!watchedFields.date && !!watchedFields.time;
+  const isFormValid = isValid && !!selectedDate && !!selectedTime;
+
+  // Format min and max dates for calendar
+  const minDateStr = today.toISOString().split('T')[0];
+  const maxDateStr = maxBookingDate.toISOString().split('T')[0];
 
   return (
     <BookingView
       onPressBack={handlePressBack}
       onChangeDate={handleChangeDate}
-      initialDate={watchedFields.date}
-      currentDate={watchedFields.date}
+      onMonthChange={handleMonthChange}
+      initialDate={selectedDate}
+      currentDate={selectedDate}
       availableDates={availableDates}
+      minDate={minDateStr}
+      maxDate={maxDateStr}
       timeSlots={timeSlots}
-      selectedTime={watchedFields.time}
+      selectedTime={selectedTime}
       onSelectTime={handleSelectTime}
-      requiredOptions={requiredOptions}
-      concept={watchedFields.concept}
-      onPressRequiredOption={handlePressRequiredOption}
+      shootingProducts={shootingProducts ?? []}
+      isFetchingProducts={isFetchingProducts}
+      isProductsError={isProductsError}
+      onRetryProducts={refetchProducts}
+      shootingOptions={shootingOptions ?? []}
+      isFetchingOptions={isFetchingOptions}
+      isOptionsError={isOptionsError}
+      onRetryOptions={refetchOptions}
+      optionalQuantities={optionQuantities}
+      onOptionalQuantityChange={handleOptionQuantityChange}
+      selectedProductId={selectedProductIdField}
+      onPressShootingProduct={handlePressShootingProduct}
+      isFetchingTimes={isFetchingTimes}
+      isTimesError={isTimesError}
+      onRetryTimes={refetchTimes}
       totalPrice={totalPrice}
       onSubmit={handleSubmit(onSubmit)}
       isSubmitDisabled={!isFormValid}

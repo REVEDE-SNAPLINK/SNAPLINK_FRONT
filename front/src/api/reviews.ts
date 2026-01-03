@@ -2,9 +2,10 @@
 import { API_BASE_URL } from '@/config/api';
 import { authFetch, authMultipartFetch } from '@/api/utils';
 import RNBlobUtil from 'react-native-blob-util';
+import type { GetPageable, PageResponse } from '@/api/photographers.ts';
+import { buildQuery } from '@/utils/format.ts';
 
 const REVIEWS_BASE = `${API_BASE_URL}/api/reviews`;
-const RESERVATIONS_BASE = `${API_BASE_URL}/api/reservations`;
 
 /** 리뷰 답글 작성(작가 전용) */
 export interface CreateReviewReplyParams {
@@ -47,20 +48,20 @@ export interface UploadImageFile {
 
 /** 촬영 리뷰 작성(고객 전용) */
 export interface CreateReservationReviewParams {
-  reservationId: number;
+  bookingId: number;
   request: CreateReservationReviewRequest;
   images: UploadImageFile[];
 }
 
 /**
- * POST /api/reservations/{reservationId}/reviews
+ * POST /api/reviews/{bookingId}
  * 촬영 리뷰 작성 (고객 전용)
  *
  * multipart/form-data:
  * - request: JSON 문자열
  * - images: array(files)
  */
-export const createReservationReview = async (
+export const createBookingReview = async (
   params: CreateReservationReviewParams,
 ): Promise<void> => {
   const parts = [
@@ -78,7 +79,7 @@ export const createReservationReview = async (
   ];
 
   const response = await authMultipartFetch(
-    `${RESERVATIONS_BASE}/${params.reservationId}/reviews`,
+    `${REVIEWS_BASE}/${params.bookingId}`,
     parts,
     'POST',
   );
@@ -101,11 +102,6 @@ export interface MyReview {
   imageUrls: string[];
   createdAt: string;
   // 리뷰에 title이 있다면 추가, 없으면 shootingTag 사용
-}
-
-export interface GetMyReviewsResponse {
-  reviews: MyReview[];
-  totalCount: number;
 }
 
 /** 리뷰 수정 요청 */
@@ -166,4 +162,60 @@ export const deleteReview = async (reviewId: number): Promise<void> => {
   });
 
   if (!response.ok) throw new Error(`Failed to delete review ${response.status}`);
+};
+
+
+export interface GetBookingReviewMeResponse {
+  reviewId: number;
+  writerNickname: string;
+  writerProfileKey: string;
+  rating: number;
+  createdAt: string;
+  shootingTag: string;
+  content: string;
+  photoKeys: string[];
+  reply: {
+    content: string;
+    createdAt: string;
+  }
+}
+
+export const getBookingReviewMe = async (bookingId: number): Promise<GetBookingReviewMeResponse> => {
+  const response = await authFetch(`${REVIEWS_BASE}/${bookingId}/me`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get booking review ${response.status}`);
+
+  return response.json();
+}
+
+export interface MyReviewPhoto {
+  photoId: number;
+  url: string;
+}
+
+export interface MyReviewItem {
+  reviewId: number;
+  photographerNickname: string;
+  photographerProfileImage: string;
+  rating: number;
+  content: string;
+  shootingTag: string;
+  photos: MyReviewPhoto[];
+  createdAt: string;
+}
+
+export type GetMyReviewsResponse = PageResponse<MyReviewItem>;
+
+export const getMyReviews = async (
+  pageable: GetPageable,
+): Promise<GetMyReviewsResponse> => {
+  const qs = buildQuery(pageable ?? {});
+  const url = qs ? `${REVIEWS_BASE}/me?${qs}` : `${REVIEWS_BASE}/me`;
+
+  const response = await authFetch(url, { method: 'GET' });
+  if (!response.ok)
+    throw new Error(`Failed to get my reviews ${response.status}`);
+  return response.json();
 };

@@ -11,6 +11,8 @@ interface DateInputProps {
   errorMessage?: string;
   value: Date;
   onChange?: (date: Date) => void;
+  minimumDate?: Date;
+  maximumDate?: Date;
 }
 
 export interface DateInputRef {
@@ -43,17 +45,20 @@ const FormErrorMessageSpacer = styled.View`
 `;
 
 const DateInput = forwardRef<DateInputRef, DateInputProps>(
-  ({ placeholder, errorMessage, value, onChange }, ref) => {
+  ({ placeholder, errorMessage, value, onChange, minimumDate, maximumDate }, ref) => {
     const [isPickerVisible, setIsPickerVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-    const minimumDate = new Date('1900-01-01')
-
-    const maximumDate = (() => {
+    // Default minimumDate and maximumDate for age verification (14+ years old)
+    const defaultMinimumDate = new Date('1900-01-01');
+    const defaultMaximumDate = (() => {
       const today = new Date();
       const thisYear = today.getFullYear();
       return new Date(`${thisYear - 14}-12-31`);
     })();
+
+    const pickerMinimumDate = minimumDate ?? defaultMinimumDate;
+    const pickerMaximumDate = maximumDate ?? defaultMaximumDate;
 
     useEffect(() => {
       setSelectedDate(value);
@@ -106,8 +111,8 @@ const DateInput = forwardRef<DateInputRef, DateInputProps>(
         <DatePicker
           modal
           mode="date"
-          minimumDate={minimumDate}
-          maximumDate={maximumDate}
+          minimumDate={pickerMinimumDate}
+          maximumDate={pickerMaximumDate}
           open={isPickerVisible}
           onCancel={() => setIsPickerVisible(false)}
           onConfirm={(date) => {

@@ -3,6 +3,8 @@ import {Modal, Animated} from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
+import Icon from '@/components/Icon.tsx';
+import MultiplyIcon from '@/assets/icons/multiply.svg';
 
 export interface AlertButton {
   text: string;
@@ -99,6 +101,12 @@ export function AlertComponent({
             opacity: opacityAnim,
           }}
         >
+          {(!buttons || buttons.length === 0) && (
+            <CloseButton onPress={onClose}>
+              <Icon width={24} height={24} Svg={MultiplyIcon} />
+            </CloseButton>
+          )}
+
           <ContentWrapper>
             <Typography
               fontSize={16}
@@ -123,28 +131,30 @@ export function AlertComponent({
             )}
           </ContentWrapper>
 
-          <ButtonWrapper buttonCount={buttons.length}>
-            {buttons.map((button, index) => (
-              <ButtonContainer
-                key={index}
-                buttonCount={buttons.length}
-                isLastButton={index === buttons.length - 1}
-              >
-                <SubmitButton
-                  type={button.type === 'cancel' ? 'cancel' : 'submit'}
-                  width="100%"
-                  size="small"
-                  text={button.text}
-                  onPress={async () => {
-                    onClose();
-                    // Alert 닫기 애니메이션을 위한 딜레이
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    button.onPress();
-                  }}
-                />
-              </ButtonContainer>
-            ))}
-          </ButtonWrapper>
+          {buttons && buttons.length > 0 && (
+            <ButtonWrapper buttonCount={buttons.length}>
+              {buttons.map((button, index) => (
+                <ButtonContainer
+                  key={index}
+                  buttonCount={buttons.length}
+                  isLastButton={index === buttons.length - 1}
+                >
+                  <SubmitButton
+                    type={button.type === 'cancel' ? 'cancel' : 'submit'}
+                    width="100%"
+                    size="small"
+                    text={button.text}
+                    onPress={async () => {
+                      onClose();
+                      // Alert 닫기 애니메이션을 위한 딜레이
+                      await new Promise(resolve => setTimeout(resolve, 100));
+                      button.onPress();
+                    }}
+                  />
+                </ButtonContainer>
+              ))}
+            </ButtonWrapper>
+          )}
         </AnimatedModalContainer>
       </Container>
     </Modal>
@@ -240,4 +250,12 @@ const ButtonContainer = styled.View<{
   ${({buttonCount}) => (buttonCount === 1 ? 'min-width: 285px;' : 'flex: 1;')}
   margin-right: ${({isLastButton, buttonCount}) =>
     !isLastButton && buttonCount > 1 ? '9px' : '0'};
+`;
+
+const CloseButton = styled.TouchableOpacity`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  padding: 4px;
 `;

@@ -15,15 +15,19 @@ const CONTENT_MAX_LENGTH = 1000;
 export default function WriteReviewContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
-  const { reservationId, review } = route.params;
+  const { bookingId, review } = route.params;
 
   // Determine if we're in edit mode
   const isEditMode = !!review;
 
   // Form state - initialize with existing review data if editing
   const [rating, setRating] = useState(review?.rating || 0);
-  const [images, setImages] = useState<(UploadImageFile | string)[]>(
-    review?.photos?.map((photo) => photo.url) || []
+  const [images, setImages] = useState<UploadImageFile[]>(
+    review?.photos?.map((photo, index) => ({
+      uri: photo.url,
+      name: `review_image_${index}.${photo.url.split(',')[0]}`,
+      type: 'image/jpeg'
+    })) || []
   );
   const [shootingType, setShootingType] = useState(review?.shootingTag || '');
   const [content, setContent] = useState(review?.content || '');
@@ -101,11 +105,13 @@ export default function WriteReviewContainer() {
           },
         }
       );
-    } else {
+    }
+
+    if (bookingId) {
       // Create new review
       createMutation.mutate(
         {
-          reservationId,
+          bookingId,
           request: {
             rating,
             shootingTag: shootingType,

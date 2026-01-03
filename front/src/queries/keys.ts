@@ -3,11 +3,12 @@ import { GetBookingListParams } from '@/api/bookings.ts';
 import type { SearchPhotographersBody } from '@/api/photographers';
 import type { GetPhotographerMonthSchedulesParams, GetPhotographerDayDetailParams } from '@/api/schedules';
 
-// Meta data (regions, concepts)
+// Meta data (regions, concepts, tags)
 export const metaKeys = {
   all: ['meta'] as const,
   regions: () => [...metaKeys.all, 'regions'] as const,
   concepts: () => [...metaKeys.all, 'concepts'] as const,
+  tags: () => [...metaKeys.all, 'tags'] as const,
 };
 
 // Community
@@ -16,8 +17,8 @@ export const communityKeys = {
   posts: () => [...communityKeys.all, 'posts'] as const,
   postsList: (params: Omit<GetPageable, 'page'>) =>
     [...communityKeys.posts(), 'infinite', params] as const,
-  post: (postId: string) => [...communityKeys.posts(), 'detail', postId] as const,
-  comments: (postId: string, params?: GetPageable) =>
+  post: (postId: number) => [...communityKeys.posts(), 'detail', postId] as const,
+  comments: (postId: number, params?: GetPageable) =>
     [...communityKeys.post(postId), 'comments', params] as const,
   myPosts: () => [...communityKeys.all, 'posts', 'me'] as const,
   myPostsInfinite: (pageableWithoutPage: Omit<GetPageable, 'page'>) =>
@@ -52,10 +53,14 @@ export const photographersQueryKeys = {
     pageableWithoutPage: Omit<GetPageable, 'page'>,
   ) => [...photographersQueryKeys.profile(photographerId), 'infinite', pageableWithoutPage] as const,
 
+  // -------- portfolio --------
+  portfolio: (postId: number) =>
+    [...photographersQueryKeys.all, 'portfolio', postId] as const,
+
   // -------- search (infinite) --------
   search: () => [...photographersQueryKeys.all, 'search'] as const,
 
-  searchMainTop3: (sort: 'createdAt,DESC' | 'averageRating,DESC') =>
+  searchMainTop3: (sort?: 'averageRating,desc') =>
     [
       ...photographersQueryKeys.search(),
       'mainTop3',
@@ -83,6 +88,9 @@ export const photographersQueryKeys = {
 
   scrapStatus: (photographerId: string) =>
     [...photographersQueryKeys.all, 'scrap', 'status', photographerId] as const,
+
+  // -------- status --------
+  statusMe: () => [...photographersQueryKeys.all, 'status', 'me'] as const,
 
   // -------- holidays --------
   holidays: () => [...photographersQueryKeys.all, 'holidays'] as const,
@@ -124,6 +132,7 @@ export const reviewsQueryKeys = {
     [...reviewsQueryKeys.myReviews(), 'infinite', pageableWithoutPage] as const,
   // 특정 작가의 리뷰 목록/요약은 photographers 쪽 키를 이미 쓰고 있다면 그쪽 invalidate도 가능
   review: (reviewId: number) => [...reviewsQueryKeys.all, 'detail', reviewId] as const,
+  bookingReviewMe: (bookingId: number) => [...reviewsQueryKeys.all, 'booking', bookingId, 'me'] as const,
 };
 
 // Notifications
@@ -165,6 +174,12 @@ export const schedulesQueryKeys = {
 
   availableTimes: (params: GetPhotographerDayDetailParams) =>
     [...schedulesQueryKeys.all, 'availableTimes', params] as const,
+
+  weeklySchedule: (photographerId: string) =>
+    [...schedulesQueryKeys.all, 'weekly', photographerId] as const,
+
+  personalSchedule: (id: number) =>
+    [...schedulesQueryKeys.all, 'personal', id] as const,
 };
 
 // Shootings
@@ -173,6 +188,10 @@ export const shootingsQueryKeys = {
 
   // 내 촬영 상품 목록
   me: () => [...shootingsQueryKeys.all, 'me'] as const,
+
+  // 특정 작가의 촬영 상품 목록
+  shootings: (photographerId: string) =>
+    [...shootingsQueryKeys.all, 'photographer', photographerId] as const,
 
   // 특정 촬영 상품
   shooting: (shootingId: number) =>

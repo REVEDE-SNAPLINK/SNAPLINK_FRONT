@@ -14,7 +14,7 @@ type LoginSuccessResponse = {
 };
 
 type SignupRequiredResponse = {
-  status: 'NEED_SIGNUP'
+  status: 'SIGNUP_REQUIRED'
   userId: string;
 };
 

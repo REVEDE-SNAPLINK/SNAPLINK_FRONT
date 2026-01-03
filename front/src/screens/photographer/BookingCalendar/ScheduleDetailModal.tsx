@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Animated, Dimensions, Platform } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import IconButton from '@/components/IconButton';
@@ -7,10 +7,11 @@ import EditIcon from '@/assets/icons/edit.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import TimeCircleIcon from '@/assets/icons/time-circle.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
-import LocationIcon from '@/assets/icons/location.svg';
 import { Typography, Alert } from '@/components/theme';
 import SlideModal from '@/components/theme/SlideModal';
 import { PersonalSchedule } from '@/store/modalStore';
+import { usePersonalScheduleQuery } from '@/queries/schedules';
+import { useDeletePersonalScheduleMutation } from '@/mutations/schedules';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -21,6 +22,7 @@ interface ScheduleDetailModalProps {
   onEdit: (schedule: PersonalSchedule) => void;
   onDelete: (scheduleId: string) => void;
   onDuplicate: (schedule: PersonalSchedule) => void;
+  scheduleId?: number; // API로부터 불러올 스케줄 ID
 }
 
 export default function ScheduleDetailModal({
@@ -30,9 +32,38 @@ export default function ScheduleDetailModal({
   onEdit,
   onDelete,
   onDuplicate,
+  scheduleId,
 }: ScheduleDetailModalProps) {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+  // API hooks
+  const { data: apiScheduleData } = usePersonalScheduleQuery(scheduleId, visible && !!scheduleId);
+  const deleteMutation = useDeletePersonalScheduleMutation();
+
+  // API 데이터를 로컬 형식으로 변환
+  const displaySchedule = useMemo<PersonalSchedule | null>(() => {
+    if (apiScheduleData) {
+      const { id, startDate: startDateStr, endDate: endDateStr, startTime, endTime, title, content } = apiScheduleData;
+
+      // YYYY-MM-DD와 HH:mm을 Date 객체로 변환
+      const startDateTime = new Date(`${startDateStr}T${startTime}`);
+      const endDateTime = new Date(`${endDateStr}T${endTime}`);
+
+      // 종일 여부 판단
+      const isAllDay = startTime === '00:00' && (endTime === '23:59' || endTime === '00:00');
+
+      return {
+        id: String(id), // number -> string 변환
+        title,
+        startDate: startDateTime,
+        endDate: endDateTime,
+        isAllDay,
+        description: content || undefined,
+      };
+    }
+    return schedule;
+  }, [apiScheduleData, schedule]);
 
   useEffect(() => {
     if (visible) {
@@ -69,21 +100,21 @@ export default function ScheduleDetailModal({
 
   const handlePressEdit = () => {
     setIsEditModalVisible(false);
-    if (schedule) {
-      onEdit(schedule);
+    if (displaySchedule) {
+      onEdit(displaySchedule);
     }
   };
 
   const handlePressDuplicate = () => {
     setIsEditModalVisible(false);
-    if (schedule) {
-      onDuplicate(schedule);
+    if (displaySchedule) {
+      onDuplicate(displaySchedule);
     }
   };
 
   const handlePressDelete = () => {
     setIsEditModalVisible(false);
-    if (schedule) {
+    if (displaySchedule) {
       Alert.show({
         title: '일정을 삭제할까요?',
         message: '삭제한 일정은 복구할 수 없어요.',
@@ -93,8 +124,26 @@ export default function ScheduleDetailModal({
             text: '삭제',
             type: 'destructive',
             onPress: () => {
-              onDelete(schedule.id);
-              onClose();
+              if (scheduleId) {
+                // API를 통한 삭제
+                deleteMutation.mutate(scheduleId, {
+                  onSuccess: () => {
+                    onDelete(displaySchedule.id);
+                    onClose();
+                  },
+                  onError: () => {
+                    Alert.show({
+                      title: '일정 삭제 실패',
+                      message: '일정 삭제에 실패했습니다. 다시 시도해주세요.',
+                      buttons: [{ text: '확인', onPress: () => {} }],
+                    });
+                  },
+                });
+              } else {
+                // 로컬 삭제
+                onDelete(displaySchedule.id);
+                onClose();
+              }
             },
           },
         ],
@@ -106,7 +155,7 @@ export default function ScheduleDetailModal({
     setIsEditModalVisible(false);
   };
 
-  if (!visible || !schedule) return null;
+  if (!visible || !displaySchedule) return null;
 
   return (
     <>
@@ -133,7 +182,7 @@ export default function ScheduleDetailModal({
           <ScrollContainer>
             <DetailRow first>
               <Typography fontSize={18}>
-                {schedule.title}
+                {displaySchedule.title}
               </Typography>
             </DetailRow>
 
@@ -143,34 +192,23 @@ export default function ScheduleDetailModal({
               </IconWrapper>
               <DetailContent>
                 <Typography fontSize={16}>
-                  {formatDate(schedule.startDate)}
-                  {!schedule.isAllDay && ` ${formatTime(schedule.startDate)}~`}
+                  {formatDate(displaySchedule.startDate)}
+                  {!displaySchedule.isAllDay && ` ${formatTime(displaySchedule.startDate)}~`}
                 </Typography>
                 <Typography fontSize={16} marginTop={4}>
-                  {formatDate(schedule.endDate)}
-                  {!schedule.isAllDay && ` ${formatTime(schedule.endDate)}`}
+                  {formatDate(displaySchedule.endDate)}
+                  {!displaySchedule.isAllDay && ` ${formatTime(displaySchedule.endDate)}`}
                 </Typography>
               </DetailContent>
             </DetailRow>
 
-            {schedule.description && (
+            {displaySchedule.description && (
               <DetailRow>
                 <IconWrapper>
                   <DocumentIcon width={24} height={24} />
                 </IconWrapper>
                 <DetailContent>
-                  <Typography fontSize={16}>{schedule.description}</Typography>
-                </DetailContent>
-              </DetailRow>
-            )}
-
-            {schedule.location && (
-              <DetailRow>
-                <IconWrapper>
-                  <LocationIcon width={24} height={24} />
-                </IconWrapper>
-                <DetailContent>
-                  <Typography fontSize={16}>{schedule.location}</Typography>
+                  <Typography fontSize={16}>{displaySchedule.description}</Typography>
                 </DetailContent>
               </DetailRow>
             )}
@@ -179,7 +217,7 @@ export default function ScheduleDetailModal({
         </AnimatedContainer>
       </Overlay>
 
-      <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal}>
+      <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal} showHeader={false}>
         <EditModalWrapper>
           <EditModalButton onPress={handlePressDuplicate}>
             <Typography fontSize={16} letterSpacing="-2.5%">
@@ -245,7 +283,7 @@ const ScrollContainer = styled.ScrollView`
 `;
 
 const DetailRow = styled.View<{ first?: boolean }>`
-  padding: 16px 0;
+  padding-vertical: 16px;
   flex-direction: row;
   align-items: flex-start;
   margin-top: ${({ first }) => (first ? 0 : 8)}px;
@@ -261,7 +299,9 @@ const DetailContent = styled.View`
 `;
 
 const EditModalWrapper = styled.View`
-  padding: 20px 0;
+  margin-vertical: 20px;
+  border: 1px solid #E5E5E5;
+  border-radius: 5px;
 `;
 
 const EditModalButton = styled.TouchableOpacity`

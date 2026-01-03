@@ -4,8 +4,8 @@ import Icon from '@/components/Icon.tsx';
 import { formatNumber } from '@/utils/format.ts';
 import { useMemo } from 'react';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import { Dimensions } from 'react-native';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg'
+import ServerImage from '@/components/ServerImage.tsx';
 
 interface Props {
   items: PhotographerSearchItem[],
@@ -13,7 +13,10 @@ interface Props {
   title: string,
   onPressTitle?: () => void;
   onPressItem: (id: string) => void;
+  width: number;
 }
+
+const ITEM_MARGIN = 10;
 
 export default function PhotographerList ({
   items,
@@ -21,9 +24,12 @@ export default function PhotographerList ({
   title,
   onPressTitle,
   onPressItem,
+  width,
 }: Props) {
+  const itemWidth = (width - ITEM_MARGIN * 2) / 3;
+
   return (
-    <>
+    <Container>
       <PhotographerListHeader marginTop={marginTop}>
         <PhotographerListTitle title={title} onPress={onPressTitle} />
       </PhotographerListHeader>
@@ -32,13 +38,14 @@ export default function PhotographerList ({
           {items.map((item: PhotographerSearchItem) => (
             <PhotographerItem
               key={item.id}
+              width={itemWidth}
               item={item}
               onPress={onPressItem}
             />
           ))}
         </PhotographerListWrapper>
       ) : (
-        <EmptyStateWrapper>
+        <EmptyStateWrapper size={width}>
           <Typography
             fontSize={14}
             fontWeight="regular"
@@ -50,9 +57,14 @@ export default function PhotographerList ({
           </Typography>
         </EmptyStateWrapper>
       )}
-    </>
+    </Container>
   )
 }
+
+const Container = styled.View`
+  width: 100%;
+  flex: 1;
+`
 
 const PhotographerListHeader = styled.View<{ marginTop: number }>`
   width: 100%;
@@ -71,13 +83,13 @@ const PhotographerListTitleWrapper = styled.TouchableOpacity`
 const PhotographerListTitle = ({ title, onPress }: { title: string, onPress?:() => void }) => {
 
   const Title = useMemo(() => (
-        <Typography
-        fontSize={16}
-        fontWeight="semiBold"
-        lineHeight="140%"
-        letterSpacing="-2.5%"
-        marginRight={7.75}
-      >{title}</Typography>
+    <Typography
+      fontSize={16}
+      fontWeight="semiBold"
+      lineHeight="140%"
+      letterSpacing="-2.5%"
+      marginRight={7.75}
+    >{title}</Typography>
   ), [title])
 
   if (onPress !== undefined) {
@@ -96,10 +108,6 @@ const PhotographerListTitle = ({ title, onPress }: { title: string, onPress?:() 
   )
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const ITEM_MARGIN = 10;
-const ITEM_SIZE = (SCREEN_WIDTH - ITEM_MARGIN * 2) / 3;
-
 const PhotographerListWrapper = styled.View`
   flex-direction: row;
   justify-content: space-between;
@@ -108,20 +116,22 @@ const PhotographerListWrapper = styled.View`
   width: 100%;
 `
 
-const PhotographerItemWrapper = styled.TouchableOpacity<{ isLastItem?: boolean }>`
-  width: ${ITEM_SIZE}px;
+const PhotographerItemWrapper = styled.TouchableOpacity<{ width: number, isLastItem?: boolean }>`
+  width: ${({ width }) => width}px;
   ${({ isLastItem }) => isLastItem !== undefined || !isLastItem ? `margin-right: ${ITEM_MARGIN}px;` : ``}
 `
 
-const SampleSnapImageWrapper = styled.View`
-  width: 100%;
-  height: ${ITEM_SIZE}px;
+const SampleSnapImageWrapper = styled.View<{ size: number }>`
   margin-bottom: 8px;
   overflow: hidden;
   border-radius: 5px;
+  ${({ size }) => `
+    width: ${size}px;
+    height: ${size}px;
+  `}
 `
 
-const SampleSnapImage = styled.Image`
+const SampleSnapImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
   background-color: #ccc;
@@ -130,17 +140,19 @@ const SampleSnapImage = styled.Image`
 interface PhotographerItemProps {
   item: PhotographerSearchItem;
   onPress: (id: string) => void;
+  width: number;
 }
 
 const PhotographerItem = ({
   item,
   onPress,
+  width,
 }: PhotographerItemProps) => {
   return (
-    <PhotographerItemWrapper onPress={() => onPress(item.id)}>
-      <SampleSnapImageWrapper>
+    <PhotographerItemWrapper width={width} onPress={() => onPress(item.id)}>
+      <SampleSnapImageWrapper size={width}>
         {item.portfolioImages.length > 0 !== undefined ? (
-          <SampleSnapImage source={{ uri: item.portfolioImages[0] }} />
+          <SampleSnapImage uri={item.portfolioImages[0]} />
         ) : (
           <SampleSnapImage />
           )
@@ -163,9 +175,12 @@ const PhotographerItem = ({
   )
 }
 
-const EmptyStateWrapper = styled.View`
-  width: 100%;
-  height: ${ITEM_SIZE}px;
+const EmptyStateWrapper = styled.View<{ size: number }>`
+  ${({ size }) => `
+    width: ${size}px;
+  `}
+  min-height: 120px;
+  padding-vertical: 16px;
   justify-content: center;
   align-items: center;
-`
+`;

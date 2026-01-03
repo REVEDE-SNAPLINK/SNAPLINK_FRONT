@@ -21,6 +21,11 @@ import ActiveStarIcon from '@/assets/icons/star-color.svg'
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import { GetPhotographerProfileResponse, PhotographerPortfolioThumb } from '@/api/photographers.ts';
 import SlideModal from '@/components/theme/SlideModal.tsx';
+import ServerImage from '@/components/ServerImage.tsx';
+import CrossIcon from '@/assets/icons/cross-white.svg';
+import { GetShootingResponse, mappingEditDeadline } from '@/api/shootings.ts';
+import { formatNumber } from '@/utils/format.ts';
+import TickSquareIcon from '@/assets/icons/tick-square.svg';
 
 export interface ShareLink {
   name: string;
@@ -47,6 +52,11 @@ interface Review {
 
 interface PhotographerDetailsViewProps {
   photographer: GetPhotographerProfileResponse | null;
+  isPhotographer: boolean;
+  isMyProfile: boolean;
+  shootingData: GetShootingResponse | undefined;
+  shootingOptions: string[];
+  onPressAddPortfolio: () => void;
   portfolioImages: PhotographerPortfolioThumb[];
   isLoadingPhotographer: boolean;
   isFetchingNextPage: boolean;
@@ -58,6 +68,11 @@ interface PhotographerDetailsViewProps {
   reviews: Review[];
   isScrapped: boolean;
   isShareModalVisible: boolean;
+  isMoreModalVisible: boolean;
+  onCloseMoreModal: () => void;
+  onPressMore: () => void;
+  reportType: string[];
+  onPressReport: (type: string) => void;
   shareLinks: ShareLink[];
   onPressBack: () => void;
   onPressShare: () => void;
@@ -67,13 +82,18 @@ interface PhotographerDetailsViewProps {
   onPressReservation: () => void;
   onEndReached: () => void;
   onTabChange: (tab: 'portfolio' | 'reviews') => void;
-  onPressPortfolioImage: (imageId: number) => void;
+  onPressPortfolioImage: (id: number) => void;
   onPressShowAllReviews: () => void;
   onPressShowAllReviewPhotos: () => void;
 }
 
 export default function PhotographerDetailsView({
   photographer,
+  isPhotographer,
+  isMyProfile,
+  shootingData,
+  shootingOptions,
+  onPressAddPortfolio,
   portfolioImages,
   isLoadingPhotographer,
   isFetchingNextPage,
@@ -85,6 +105,11 @@ export default function PhotographerDetailsView({
   reviews,
   isScrapped,
   isShareModalVisible,
+  isMoreModalVisible,
+  onCloseMoreModal,
+  onPressMore,
+  reportType,
+  onPressReport,
   shareLinks,
   onPressBack,
   onPressShare,
@@ -102,19 +127,25 @@ export default function PhotographerDetailsView({
 
   const renderPortfolioItem = ({ item }: { item: PhotographerPortfolioThumb }) => (
     <PortfolioImageWrapper onPress={() => onPressPortfolioImage(item.id)}>
-      <PortfolioImage source={{ uri: item.thumbnailUrl }} />
+      <PortfolioImage uri={item.thumbnailUrl} />
     </PortfolioImageWrapper>
   );
 
   const renderHeader = () => {
     if (!photographer) return null;
 
+    const safeResponseRate = Math.max(0, Math.min(100,
+      typeof photographer.responseRate === 'number'
+        ? photographer.responseRate
+        : Number(photographer.responseRate) || 0
+    ));
+
     return (
       <>
         <DefaultInfoWrapper>
           <ProfileImageWrapper>
             {photographer.profileImageUrl && (
-              <ProfileImage source={{ uri: photographer.profileImageUrl }} />
+              <ProfileImage uri={photographer.profileImageUrl} />
             )}
           </ProfileImageWrapper>
           <ProfileInfoWrapper>
@@ -148,18 +179,18 @@ export default function PhotographerDetailsView({
               lineHeight="140%"
               letterSpacing="-2.5%"
             >
-              메시지 응답률 {photographer.responseTime}%
+              메시지 응답률 {safeResponseRate}%
             </Typography>
             <Typography
               fontSize={11}
               lineHeight="140%"
               letterSpacing="-2.5%"
             >
-              채팅 {photographer.responseTime}
+              {photographer.responseTime.includes("null") ? '' : `채팅 ${photographer.responseTime}`}
             </Typography>
           </ResponseRateDescription>
           <ResponseRateProgressBar>
-            <ResponseRateProgressFill width={photographer.responseRate} />
+            <ResponseRateProgressFill width={safeResponseRate} />
           </ResponseRateProgressBar>
         </ResponseRateContainer>
         <TabHeader>
@@ -192,6 +223,56 @@ export default function PhotographerDetailsView({
             </Typography>
           </TabButton>
         </TabHeader>
+        {activeTab === 'portfolio' && shootingData !== undefined && (
+          <PhotographerPortfolioInfo>
+            <PhotographerPortfolioRow>
+              <Typography
+                fontSize={12}
+              >
+                {shootingData?.shoootingName}/{photoHour}시간{photoMinute === 0 ? '' : ` ${photoMinute}분`}
+              </Typography>
+              <Typography
+                fontSize={12}
+              >
+                {formatNumber(shootingData?.basePrice)}원
+              </Typography>
+            </PhotographerPortfolioRow>
+            {shootingData.providesRawFile && (
+              <PhotographerPortfolioRow>
+                <Typography
+                  fontSize={12}
+                >
+                  원본 파일 제공
+                </Typography>
+                <Icon width={20} height={20} Svg={TickSquareIcon} />
+              </PhotographerPortfolioRow>
+            )}
+            {shootingOptions.length > 0 && (
+              <PhotographerPortfolioRow>
+                <Typography
+                  fontSize={12}
+                >
+                  {shootingOptions.join(', ')}
+                </Typography>
+                <Icon width={20} height={20} Svg={TickSquareIcon} />
+              </PhotographerPortfolioRow>
+            )}
+            {shootingData.editingType !== 'NONE' && (
+              <PhotographerPortfolioRow>
+                <Typography
+                  fontSize={12}
+                >
+                  보정 작업일
+                </Typography>
+                <Typography
+                  fontSize={12}
+                >
+                  {mappingEditDeadline(shootingData.editingDeadline)}일
+                </Typography>
+              </PhotographerPortfolioRow>
+            )}
+          </PhotographerPortfolioInfo>
+        )}
       </>
     );
   };
@@ -245,7 +326,7 @@ export default function PhotographerDetailsView({
                   key={index}
                   style={[index % 4 !== 3 && { 'marginRight': REVIEW_GRID_MARGIN }]}
                 >
-                  <ReviewPreviewImage source={{ uri: imageUrl }} />
+                  <ReviewPreviewImage uri={imageUrl} />
                   {isLastItem && (
                     <ShowAllPreviewButton onPress={onPressShowAllReviewPhotos}>
                       <Typography
@@ -267,7 +348,7 @@ export default function PhotographerDetailsView({
         {reviews.map((review) => (
           <ReviewWrapper key={review.id}>
             <ReviewImageWrapper>
-              <ReviewImage source={{ uri: review.imageUrl }} />
+              <ReviewImage uri={review.imageUrl} />
             </ReviewImageWrapper>
             <ReviewContent>
               <ReviewContentText
@@ -323,6 +404,9 @@ export default function PhotographerDetailsView({
     );
   }
 
+  const photoHour = shootingData !== undefined ? ~~(shootingData?.photoTime / 60) : 0;
+  const photoMinute = shootingData !== undefined ? shootingData?.photoTime : 0;
+
   return (
     <>
       <ScreenContainer
@@ -331,24 +415,27 @@ export default function PhotographerDetailsView({
         onPressBack={onPressBack}
         headerToolIcon={UploadIcon}
         onPressTool={onPressShare}
+        onPressMore={onPressMore}
       >
 
         <ContentContainer>
         {activeTab === 'portfolio' ? (
-          <FlatList
-            key="portfolio-list"
-            data={portfolioImages}
-            renderItem={renderPortfolioItem}
-            keyExtractor={(item) => item.id.toString()}
-            numColumns={GRID_COLUMNS}
-            ListHeaderComponent={renderHeader}
-            ListFooterComponent={renderFooter}
-            onEndReached={onEndReached}
-            onEndReachedThreshold={0.5}
-            showsVerticalScrollIndicator={false}
-            columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: 17 }}
-            contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
-          />
+          <>
+            <FlatList
+              key="portfolio-list"
+              data={portfolioImages}
+              renderItem={renderPortfolioItem}
+              keyExtractor={(item) => item.id.toString()}
+              numColumns={GRID_COLUMNS}
+              ListHeaderComponent={renderHeader}
+              ListFooterComponent={renderFooter}
+              onEndReached={onEndReached}
+              onEndReachedThreshold={0.5}
+              showsVerticalScrollIndicator={false}
+              columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: 17 }}
+              contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
+            />
+          </>
         ) : (
           <>
             <FlatList
@@ -365,19 +452,32 @@ export default function PhotographerDetailsView({
       </ContentContainer>
 
       {/* Bottom Action Buttons */}
-      <BottomActionContainer style={{ paddingBottom: 22 + insets.bottom }}>
+      <BottomActionContainer>
         {activeTab === 'portfolio' ? (
           <>
-            <ActionButton
-              onPress={onPressFavorite}
-              backgroundColor={isScrapped ? theme.colors.primary : '#C8C8C8'}
-            >
-              <Icon width={24} height={24} Svg={BookmarkIcon} />
-            </ActionButton>
-            <ActionButton onPress={onPressInquiry}>
-              <Icon width={24} height={24} Svg={ChatIcon} />
-            </ActionButton>
-            <SubmitButton text="예약하기" onPress={onPressReservation} />
+            {
+              isPhotographer ?
+                isMyProfile &&
+                  (
+                    <FloatingButton onPress={onPressAddPortfolio}>
+                    <Icon width={20} height={20} Svg={CrossIcon} />
+                    </FloatingButton>
+                  )
+                : (
+                <>
+                  <ActionButton
+                    onPress={onPressFavorite}
+                    backgroundColor={isScrapped ? theme.colors.primary : '#C8C8C8'}
+                  >
+                    <Icon width={24} height={24} Svg={BookmarkIcon} />
+                  </ActionButton>
+                  <ActionButton onPress={onPressInquiry}>
+                    <Icon width={24} height={24} Svg={ChatIcon} />
+                  </ActionButton>
+                  <SubmitButton text="예약하기" onPress={onPressReservation} />
+                </>
+              )
+            }
           </>
         ) : (
           <ShowReviewButton onPress={onPressShowAllReviews}>
@@ -424,6 +524,23 @@ export default function PhotographerDetailsView({
         </ShareLinkButton>
       ))}
     </SlideModal>
+
+      <SlideModal
+        visible={isMoreModalVisible}
+        onClose={onCloseMoreModal}
+        title="신고하기"
+        minHeight={276}
+      >
+        {reportType.map((v, i) => (
+          <ReportButton isFirst={i === 0} onPress={() => onPressReport(v)}>
+            <Typography
+              fontSize={12}
+            >
+              {v}
+            </Typography>
+          </ReportButton>
+        ))}
+      </SlideModal>
   </>
   );
 }
@@ -441,14 +558,14 @@ const DefaultInfoWrapper = styled.View`
 const ProfileImageWrapper = styled.View`
   width: 88px;
   height: 88px;
-  border-radius: 50%;
+  border-radius: 88px;
   overflow: hidden;
   justify-content: center;
   align-items: center;
   background-color: #F4F4F4;
 `;
 
-const ProfileImage = styled.Image`
+const ProfileImage = styled(ServerImage)`
   max-width: 100%;
   max-height: 100%;
   resize-mode: cover;
@@ -526,7 +643,7 @@ const PortfolioImageWrapper = styled.TouchableOpacity`
   background-color: #F4F4F4;
 `;
 
-const PortfolioImage = styled.Image`
+const PortfolioImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
 `;
@@ -558,7 +675,7 @@ const ReviewPreviewImageContainer = styled.View`
 `
 
 const ReviewPreviewImageList = styled.View`
-  width: ${REVIEW_GRID_CONTAINER_WIDTH};
+  width: ${REVIEW_GRID_CONTAINER_WIDTH}px;
   flex-direction: row;
   flex-wrap: wrap;
 `
@@ -574,7 +691,7 @@ const ReviewPreviewImageWrapper = styled.View`
   background-color: #ccc;
 `
 
-const ReviewPreviewImage = styled.Image`
+const ReviewPreviewImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
 `
@@ -608,7 +725,7 @@ const ReviewImageWrapper = styled.View`
   background-color: #ccc;
 `
 
-const ReviewImage = styled.Image`
+const ReviewImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
 `
@@ -628,6 +745,7 @@ const BottomActionContainer = styled.View`
   padding-horizontal: 17px;
   padding-top: 22px;
   justify-content: space-between;
+  padding-bottom: 20px;
 `;
 
 const ActionButton = styled.TouchableOpacity<{ backgroundColor?: string }>`
@@ -653,4 +771,40 @@ const ShareLinkButton = styled.Pressable`
   flex-direction: row;
   align-items: center;
   margin-bottom: 15px;
+`
+
+const FloatingButton = styled.TouchableOpacity`
+  width: 38px;
+  height: 38px;
+  border-radius: 38px;
+  background-color: ${theme.colors.primary};
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  bottom: 20px;
+  right: 19px;
+  z-index: 1000;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+`
+
+const PhotographerPortfolioInfo = styled.View`
+  width: 100%;
+  background-color: #C8C8C8;
+  padding-top: 10px;
+  padding-bottom: 7px;
+  padding-horizontal: 25px;
+  margin-bottom: 13px;
+  justify-content: space-between;
+`
+
+const PhotographerPortfolioRow = styled.View`
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+`
+
+const ReportButton = styled.TouchableOpacity<{ isFirst: boolean }>`
+  ${({ isFirst }) => !isFirst && `margin-top: 25px;`}
 `

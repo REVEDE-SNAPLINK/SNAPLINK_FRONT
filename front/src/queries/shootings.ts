@@ -1,20 +1,30 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { shootingsQueryKeys } from '@/queries/keys.ts';
 import {
-  getShootings,
+  getMyShootings,
   getShootingOptions,
+  getShootings,
 } from '@/api/shootings.ts';
 
-export const useShootingsQuery = (enabled = true) =>
+export const useMyShootingsQuery = (enabled = true) =>
   useQuery({
     queryKey: shootingsQueryKeys.me(),
-    queryFn: () => getShootings(),
+    queryFn: () => getMyShootings(),
     enabled,
   });
 
-export const useShootingOptionsQuery = (productId: number, enabled = true) =>
+export const useShootingsQuery = (photographerId?: string, enabled = true) =>
   useQuery({
-    queryKey: shootingsQueryKeys.options(productId),
-    queryFn: () => getShootingOptions(productId),
-    enabled,
+    queryKey: photographerId ? shootingsQueryKeys.shootings(photographerId) : [],
+    queryFn: () => getShootings(photographerId!),
+    enabled: enabled && !!photographerId,
+  });
+
+export const useShootingOptionsQuery = (productId?: number, enabled = true) =>
+  useQuery({
+    queryKey: productId ? shootingsQueryKeys.options(productId) : [],
+    queryFn: () => getShootingOptions(productId!),
+    enabled: enabled && !!productId,
+    staleTime: 1000 * 60 * 5, // 5분 캐시
+    placeholderData: keepPreviousData,
   });

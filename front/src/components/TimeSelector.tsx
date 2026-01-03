@@ -1,7 +1,12 @@
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
-import { TimeSlot } from '@/api/photographer.ts';
+import { GetAvailableBookingTimeResponse } from '@/api/schedules.ts';
+
+const formatTime = (time: string) => {
+  const timeItems = time.split(':');
+  return timeItems[0]+":"+timeItems[1];
+}
 
 const TimeWrapper = styled.TouchableOpacity<{ isSelected: boolean; isDisabled: boolean }>`
   width: 57px;
@@ -48,27 +53,57 @@ const TimeListWrapper = styled.View`
 `;
 
 interface TimeSelectorProps {
-  timeSlots: TimeSlot[];
+  timeSlots: GetAvailableBookingTimeResponse[];
   selectedTime: string | null;
   onSelectTime: (time: string) => void;
+  currentDate?: string; // YYYY-MM-DD
 }
 
-export const TimeSelector = ({ timeSlots, selectedTime, onSelectTime }: TimeSelectorProps) => {
+export const TimeSelector = ({ timeSlots, selectedTime, onSelectTime, currentDate }: TimeSelectorProps) => {
   if (!timeSlots || timeSlots.length === 0) {
     return null;
   }
 
+  const now = new Date();
+  const yyyy = now.getFullYear().toString();
+  const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+  const dd = now.getDate().toString().padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+  const isToday = !!currentDate && currentDate === todayStr;
+
+  const isPastTimeToday = (startTime: string) => {
+    if (!isToday) return false;
+    const [hour, minute] = startTime.split(':').map(Number);
+    const slotTime = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      hour,
+      minute,
+      0,
+      0
+    );
+    return slotTime.getTime() <= now.getTime();
+  };
+
   return (
     <TimeListWrapper>
-      {timeSlots.map((slot) => (
-        <SelectTime
-          key={slot.time}
-          time={slot.time}
-          isSelected={selectedTime === slot.time}
-          isDisabled={slot.isReserved}
-          onPress={() => onSelectTime(slot.time)}
-        />
-      ))}
+      {timeSlots.map((slot) => {
+        const disabled = !slot.available || isPastTimeToday(slot.startTime);
+
+        return (
+          <SelectTime
+            key={slot.startTime}
+            time={formatTime(slot.startTime)}
+            isSelected={selectedTime === slot.startTime}
+            isDisabled={disabled}
+            onPress={() => {
+              if (disabled) return;
+              onSelectTime(slot.startTime);
+            }}
+          />
+        );
+      })}
     </TimeListWrapper>
   );
 };

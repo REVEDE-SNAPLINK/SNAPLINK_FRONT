@@ -9,24 +9,40 @@ import SlideModal from '@/components/theme/SlideModal.tsx';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg'
+import {
+  EditingDeadline,
+  EditingType,
+  GetShootingOptionResponse,
+  GetShootingResponse,
+  SelectionAuthority,
+} from '@/api/shootings.ts';
+
+interface ShootingWithOptions extends GetShootingResponse {
+  optionalOptions?: GetShootingOptionResponse[];
+}
 
 interface ShootingManageViewProps {
   onPressBack: () => void;
-  onPressCreateOption: () => void;
-  onPressEditOption: (optionId: number) => void;
-  onPressDeleteOption: (optionId: number) => void;
-  shootingOptions: ShootingOptionResponse[];
+  onPressCreateProduct: () => void;
+  onPressEditProduct: (productId: number) => void;
+  onPressDeleteProduct: (productId: number) => void;
+  onPressEditSchedule: () => void;
+  shootings: ShootingWithOptions[];
+  days: string;
 }
 
 export default function ShootingManageView({
   onPressBack,
-  onPressCreateOption,
-  onPressEditOption,
-  onPressDeleteOption,
-  shootingOptions
+  onPressCreateProduct,
+  onPressEditProduct,
+  onPressDeleteProduct,
+  onPressEditSchedule,
+  shootings,
+  days
 }: ShootingManageViewProps) {
-  const [optionId, setOptionId] = useState<number | null>(null);
+  const [productId, setProductId] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [scheduleModalVisible, setScheduleModalVisible] = useState<boolean>(false);
 
   return (
     <>
@@ -36,32 +52,67 @@ export default function ShootingManageView({
         onPressBack={onPressBack}
       >
         <ScrollContainer>
-          {shootingOptions.length > 0 &&
-            shootingOptions.map(option => (
+          <ShootingOptionContainer>
+            <ShootingOptionHeader>
+              <Typography fontSize={16} fontWeight="semiBold">
+                촬영 일정
+              </Typography>
+              <IconButton
+                width={24}
+                height={24}
+                Svg={MoreIcon}
+                onPress={() => setScheduleModalVisible(true)}
+              />
+            </ShootingOptionHeader>
+            <ShootingOptionContent>
+              <Typography
+                fontSize={12}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                color="#C8C8C8"
+              >
+                촬영 요일
+              </Typography>
+              <ShootingOptionValueWrapper>
+                <Typography
+                  fontSize={12}
+                  lineHeight="140%"
+                  letterSpacing="-2.5%"
+                  color="textSecondary"
+                >
+                  {days}
+                </Typography>
+              </ShootingOptionValueWrapper>
+            </ShootingOptionContent>
+          </ShootingOptionContainer>
+          {shootings.length > 0 &&
+            shootings.map(shooting => (
               <ShootingOption
-                key={option.id}
-                id={option.id}
+                key={shooting.id}
+                id={shooting.id}
                 onPressMore={() => {
-                  setOptionId(option.id);
+                  setProductId(shooting.id);
                   setModalVisible(true);
                 }}
-                name={option.name}
-                days={option.days}
-                type={option.type}
-                baseTime={option.baseTime}
-                basePrice={option.basePrice}
-                isEnhanced={option.isEnhanced}
-                isOriginal={option.isOriginal}
-                enhancedPermission={option.enhancedPermission}
-                optionalOptions={
-                  option.optionalOptions && option.optionalOptions.length > 0
-                    ? option.optionalOptions
+                name={shooting.shoootingName}
+                // days={''}
+                type={`${shooting.personnel}인 ${shooting.isDefault ? '기본 ' : ''}촬영`}
+                photoTime={shooting.photoTime}
+                basePrice={shooting.basePrice}
+                providesRawFile={shooting.providesRawFile}
+                editingType={shooting.editingType}
+                editingDeadline={shooting.editingDeadline}
+                selectionAuthority={shooting.selectionAuthority}
+                providedEditCount={shooting.providedEditCount}
+                options={
+                  shooting.optionalOptions && shooting.optionalOptions.length > 0
+                    ? shooting.optionalOptions
                     : []
                 }
               />
             ))}
         </ScrollContainer>
-        <FloatingButton onPress={onPressCreateOption}>
+        <FloatingButton onPress={onPressCreateProduct}>
           <Icon width={20} height={20} Svg={CrossIcon} />
         </FloatingButton>
       </ScreenContainer>
@@ -74,8 +125,9 @@ export default function ShootingManageView({
         <EditModalWrapper>
           <EditModalButton
             onPress={() => {
-              if (optionId !== null) {
-                onPressEditOption(optionId);
+              if (productId !== null) {
+                onPressEditProduct(productId);
+                setModalVisible(false);
               }
             }}
           >
@@ -85,8 +137,9 @@ export default function ShootingManageView({
           </EditModalButton>
           <EditModalDivider />
           <EditModalButton onPress={() => {
-            if (optionId !== null) {
-              onPressDeleteOption(optionId)
+            if (productId !== null) {
+              onPressDeleteProduct(productId)
+              setModalVisible(false)
             }
           }}>
             <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
@@ -95,6 +148,31 @@ export default function ShootingManageView({
           </EditModalButton>
           <EditModalDivider />
           <EditModalButton onPress={() => setModalVisible(false)}>
+            <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
+              닫기
+            </Typography>
+          </EditModalButton>
+        </EditModalWrapper>
+      </SlideModal>
+      <SlideModal
+        visible={scheduleModalVisible}
+        onClose={() => setScheduleModalVisible(false)}
+        showHeader={false}
+        minHeight={150}
+      >
+        <EditModalWrapper>
+          <EditModalButton
+            onPress={() => {
+              setScheduleModalVisible(false);
+              onPressEditSchedule();
+            }}
+          >
+            <Typography fontSize={16} letterSpacing="-2.5%">
+              수정
+            </Typography>
+          </EditModalButton>
+          <EditModalDivider />
+          <EditModalButton onPress={() => setScheduleModalVisible(false)}>
             <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
               닫기
             </Typography>
@@ -129,7 +207,6 @@ const ShootingOptionHeader = styled.View`
 const ShootingOptionContent = styled.View`
   width: 100%;
   flex-direction: row;
-  align-items: center;
   margin-top: 12px;
 `
 
@@ -140,37 +217,39 @@ const ShootingOptionValueWrapper = styled.View`
 export interface ShootingOptionResponse {
   id: number;
   name: string;
-  days: string[];
+  // days: string[];
   type: string;
-  baseTime: number;
+  photoTime: number;
   basePrice: number;
-  isEnhanced: string;
-  isOriginal: boolean;
-  enhancedPermission: string;
-  optionalOptions?: OptionalOption[];
+  providesRawFile: boolean;
+  editingType: EditingType;
+  editingDeadline: EditingDeadline;
+  selectionAuthority: SelectionAuthority;
+  providedEditCount: number;
+  options?: GetShootingOptionResponse[];
 }
 
 interface ShootingOptionProps extends ShootingOptionResponse{
   onPressMore: () => void;
 }
 
-interface OptionalOption {
-  name: string;
-  price: number;
-}
-
 const ShootingOption = ({
   onPressMore,
   name,
-  days,
+  // days,
   type,
-  baseTime,
+  photoTime,
   basePrice,
-  isEnhanced,
-  isOriginal,
-  enhancedPermission,
-  optionalOptions
+  providesRawFile,
+  editingType,
+  editingDeadline,
+  selectionAuthority,
+  providedEditCount,
+  options
 }: ShootingOptionProps) => {
+  const photoHour = ~~(photoTime / 60);
+  const photoMinute = photoTime % 60;
+
   return (
     <ShootingOptionContainer>
       <ShootingOptionHeader>
@@ -179,26 +258,6 @@ const ShootingOption = ({
         </Typography>
         <IconButton width={24} height={24} Svg={MoreIcon} onPress={onPressMore} />
       </ShootingOptionHeader>
-      <ShootingOptionContent>
-        <Typography
-          fontSize={12}
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          color="#C8C8C8"
-        >
-          촬영 일정
-        </Typography>
-        <ShootingOptionValueWrapper>
-          <Typography
-            fontSize={12}
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="textSecondary"
-          >
-            {days.length > 0 ? days.join(',') : ''}
-          </Typography>
-        </ShootingOptionValueWrapper>
-      </ShootingOptionContent>
       <ShootingOptionContent>
         <Typography
           fontSize={12}
@@ -235,7 +294,7 @@ const ShootingOption = ({
             letterSpacing="-2.5%"
             color="textSecondary"
           >
-            {baseTime}시간
+            {`${photoHour}시간 ${photoMinute === 0 ? '' : photoMinute + '분'}`}
           </Typography>
         </ShootingOptionValueWrapper>
       </ShootingOptionContent>
@@ -259,7 +318,7 @@ const ShootingOption = ({
           </Typography>
         </ShootingOptionValueWrapper>
       </ShootingOptionContent>
-      {(isOriginal || isEnhanced !== '제공하지 않음') && (
+      {(providesRawFile || editingType !== 'NONE') && (
         <ShootingOptionContent>
           <Typography
             fontSize={12}
@@ -270,15 +329,7 @@ const ShootingOption = ({
             제공 항목
           </Typography>
           <ShootingOptionValueWrapper>
-            <Typography
-              fontSize={12}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              color="textSecondary"
-            >
-              {enhancedPermission}
-            </Typography>
-            {isOriginal && (
+            {providesRawFile && (
               <Typography
                 fontSize={12}
                 lineHeight="140%"
@@ -288,11 +339,42 @@ const ShootingOption = ({
                 원본 파일
               </Typography>
             )}
-            {/*  TODO: 보정 사진 선택 권한 옵션 입력 추가 */}
+            <Typography
+              fontSize={12}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="textSecondary"
+            >
+              {editingType === 'FACIAL' ? '얼굴 보정' : editingType === 'COLOR' ? '색감 보정' : '얼굴, 색감 보정'}
+            </Typography>
+            <Typography
+              fontSize={12}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="textSecondary"
+            >
+              {editingDeadline === 'SAME_DAY' ? '당일 보정' : `${editingDeadline === 'WITHIN_2_DAYS' ? '2' : editingDeadline === 'WITHIN_3_DAYS' ? '3' : editingDeadline === 'WITHIN_4_DAYS' ? '4' : editingDeadline === 'WITHIN_5_DAYS' ? '5' : '7' }일 이내`}
+            </Typography>
+            <Typography
+              fontSize={12}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="textSecondary"
+            >
+              {selectionAuthority === 'PHOTOGRAPHER' ? '보정 사진 작가만 선택 가능' : selectionAuthority === 'CUSTOMER' ? '보정 사진 고객만 선택 가능' : '보정 사진 작가, 고객 둘다 선택 가능'}
+            </Typography>
+            <Typography
+              fontSize={12}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="textSecondary"
+            >
+              제공 사진 {providedEditCount}개
+            </Typography>
           </ShootingOptionValueWrapper>
         </ShootingOptionContent>
       )}
-      {optionalOptions && optionalOptions.length > 0 && (
+      {options && options.length > 0 && (
         <ShootingOptionContent>
           <Typography
             fontSize={12}
@@ -303,7 +385,7 @@ const ShootingOption = ({
             부가 옵션
           </Typography>
           <ShootingOptionValueWrapper>
-            {optionalOptions.map((v, i) => (
+            {options.map((v, i) => (
               <Typography
                 key={i}
                 fontSize={12}
@@ -311,7 +393,7 @@ const ShootingOption = ({
                 letterSpacing="-2.5%"
                 color="textSecondary"
               >
-                {v.name} @{formatNumber(v.price)}원
+                {v.name}{v.additionalTime === 0 ? '' : `(${v.additionalTime}분)`} @{formatNumber(v.price)}원
               </Typography>
             ))}
           </ShootingOptionValueWrapper>

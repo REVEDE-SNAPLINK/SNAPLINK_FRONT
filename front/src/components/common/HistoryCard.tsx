@@ -49,8 +49,6 @@ export default function HistoryCard({
 
   const isUserMode = userType === 'user' || !isExpertMode;
 
-  console.log(status);
-
   const headerTitle = (() => {
     switch (status) {
       case 'CANCELLED':
@@ -106,7 +104,7 @@ export default function HistoryCard({
             </Typography>
           </ConfirmButton>
         )}
-        {onPressWriteReview && (
+        {!isreview && onPressWriteReview && (
           <CancelButton onPress={onPressWriteReview}>
             <Typography
               fontSize={12}

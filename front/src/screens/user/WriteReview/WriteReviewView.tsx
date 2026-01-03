@@ -19,7 +19,7 @@ interface WriteReviewViewProps {
   // Form values
   rating: number;
   onRatingChange: (rating: number) => void;
-  images: (UploadImageFile | string)[];
+  images: UploadImageFile[];
   maxImages: number;
   onRemoveImage: (index: number) => void;
   onAddImages: (newImages: UploadImageFile[]) => void;

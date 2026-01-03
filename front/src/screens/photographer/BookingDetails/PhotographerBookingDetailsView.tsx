@@ -5,7 +5,7 @@ import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
-import { ReservationStatus } from '@/api/bookings.ts';
+import { BookingStatus } from '@/api/bookings.ts';
 
 interface PhotographerBookingDetailsViewProps {
   onPressBack: () => void;
@@ -13,7 +13,7 @@ interface PhotographerBookingDetailsViewProps {
   bookingOption: string;
   datetime: string;
   additionalRequest: string;
-  status: ReservationStatus;
+  status: BookingStatus;
   onPressViewPhotos?: () => void;
   isLoading?: boolean;
 }

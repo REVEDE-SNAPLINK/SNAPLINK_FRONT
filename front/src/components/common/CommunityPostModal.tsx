@@ -31,7 +31,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 interface CommunityPostModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void;
+  onSubmit: (params: CreateCommunityPostParams & { deletePhotoIds?: number[] }) => void;
   initialPost?: CommunityPost;
   isLoading: boolean;
 }
@@ -43,18 +43,14 @@ export default function CommunityPostModal({
   initialPost,
   isLoading,
 }: CommunityPostModalProps) {
-  const [selectedCategory, setSelectedCategory] =
-    useState<COMMUNITY_CATEGORY_ENUM | null>(
-      getCategoryEnumByValue(initialPost?.categoryLabel)
-    );
-  const [title, setTitle] = useState(initialPost?.title || '');
-  const [content, setContent] = useState(initialPost?.content || '');
+  const [selectedCategory, setSelectedCategory] = useState<COMMUNITY_CATEGORY_ENUM | null>(null);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [images, setImages] = useState<UploadImageParams[]>([]);
-  const [serverImages, setServerImages] = useState<string[]>(initialPost?.imageUrls || []);
-  const [deletePhotoIds, setDeletePhotoIds] = useState<string[]>([]);
+  const [deletedImageIndices, setDeletedImageIndices] = useState<number[]>([]);
   const [isTopicListVisible, setIsTopicListVisible] = useState(false);
 
-  const isDirty = selectedCategory !== null || title !== '' || content !== '' || images.length > 0 || serverImages.length > 0;
+  const isDirty = selectedCategory !== null || title !== '' || content !== '' || images.length > 0 || (initialPost && deletedImageIndices.length > 0);
 
   // Sliding animation
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -64,9 +60,21 @@ export default function CommunityPostModal({
     setTitle('');
     setContent('');
     setImages([]);
-    setServerImages([]);
-    setDeletePhotoIds([]);
+    setDeletedImageIndices([]);
   }
+
+  // Load initial post data when modal opens
+  useEffect(() => {
+    if (visible && initialPost) {
+      setSelectedCategory(getCategoryEnumByValue(initialPost.categoryLabel));
+      setTitle(initialPost.title);
+      setContent(initialPost.content);
+      setImages([]);
+      setDeletedImageIndices([]);
+    } else if (visible && !initialPost) {
+      resetModal();
+    }
+  }, [visible, initialPost]);
 
   useEffect(() => {
     if (visible) {
@@ -247,7 +255,7 @@ export default function CommunityPostModal({
       title: title.trim(),
       content: content.trim(),
       images,
-      deletePhotoIds: initialPost ? deletePhotoIds : undefined,
+      deletePhotoIds: initialPost ? deletedImageIndices : undefined,
     });
   };
 
@@ -320,18 +328,21 @@ export default function CommunityPostModal({
               />
               <PostImageList>
                 {/* Server images */}
-                {serverImages.length > 0 &&
-                  serverImages.map((imageUrl, index) => (
-                    <ServerPostImageView
-                      key={`server-${index}`}
-                      uri={imageUrl}
-                      onDelete={() => {
-                        // TODO: 실제로는 photoId를 받아야 하지만 현재 API에는 없어서 임시로 URL 사용
-                        setDeletePhotoIds([...deletePhotoIds, imageUrl]);
-                        setServerImages(serverImages.filter((_, i) => i !== index));
-                      }}
-                    />
-                  ))
+                {initialPost?.images &&
+                  initialPost.images.map((image, _) => {
+                    // 삭제된 이미지는 렌더링하지 않음 (Id로 체크)
+                    if (deletedImageIndices.includes(image.Id)) return null;
+
+                    return (
+                      <ServerPostImageView
+                        key={`server-${image.Id}`}
+                        uri={image.urls}
+                        onDelete={() => {
+                          setDeletedImageIndices([...deletedImageIndices, image.Id]);
+                        }}
+                      />
+                    );
+                  })
                 }
                 {/* New uploaded images */}
                 {images.length > 0 &&
@@ -402,6 +413,8 @@ const Header = styled.View`
   padding-left: 15px;
   padding-right: 20px;
   justify-content: space-between;
+  position: relative;
+  z-index: 999;
 `
 
 const ConfirmButton = styled.TouchableOpacity<{ disabled?: boolean }>`
@@ -414,6 +427,8 @@ const TopicSelector = styled.View`
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: #C8C8C8;
+  position: relative;
+  z-index: 999;
 `
 
 const TopicWrapper = styled.TouchableOpacity`
@@ -432,7 +447,8 @@ const TopicList = styled.View<{ length: number }>`
   position: absolute;
   left: 0;
   top: 62px;
-  z-index: 10;
+  z-index: 1001;
+  background-color: #FAFAFA;
 `
 
 const TopicItem = styled.TouchableOpacity`
@@ -445,6 +461,8 @@ const TopicItem = styled.TouchableOpacity`
   border-bottom-style: solid;
   border-bottom-color: #C8C8C8;
   background-color: #FAFAFA;
+  position: relative;
+  z-index: 1001;
 `
 
 const TitleInput = styled.TextInput`

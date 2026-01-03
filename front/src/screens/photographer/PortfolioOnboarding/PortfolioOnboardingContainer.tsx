@@ -2,10 +2,11 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation} from '@react-navigation/native';
 import PortfolioOnboardingView, {
-  PortfolioOnboardingFormData, Tag,
+  PortfolioOnboardingFormData,
 } from '@/screens/photographer/PortfolioOnboarding/PortfolioOnboardingView.tsx';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import { useConceptsQuery, useRegionsQuery } from '@/queries/meta.ts';
+import { useConceptsQuery, useRegionsQuery, useTagsQuery } from '@/queries/meta.ts';
+import { useMeQuery } from '@/queries/user.ts';
 import {
   useCreatePortfolioMutation,
   usePatchPhotographerProfileImageMutation,
@@ -21,36 +22,9 @@ import {
 } from 'react-native-image-picker';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import { generateImageFilename } from '@/utils/format.ts';
-import { UploadImageParams } from '@/types/image.ts';
 import { DayOfWeek, PhotographerScheduleItem, UploadImageFile } from '@/api/photographers.ts';
-
-// TODO: API 연결 후 삭제
-const dummyTags: Tag[] = [
-  { id: 1, keyword: '프로필' },
-  { id: 2, keyword: '스튜디오' },
-  { id: 3, keyword: '인물스냅' },
-  { id: 4, keyword: '패션' },
-  { id: 5, keyword: '헤어' },
-  { id: 6, keyword: '광고/협찬' },
-  { id: 7, keyword: '컨셉' },
-  { id: 8, keyword: '일상' },
-  { id: 9, keyword: '여행' },
-  { id: 10, keyword: '커플' },
-  { id: 11, keyword: '우정' },
-  { id: 12, keyword: '웨딩' },
-  { id: 13, keyword: '이벤트' },
-  { id: 14, keyword: '한복' },
-  { id: 15, keyword: '반려동물' },
-  { id: 16, keyword: '풍경' },
-  { id: 17, keyword: '자연광' },
-  { id: 18, keyword: '야간' },
-  { id: 19, keyword: '코스프레' },
-  { id: 20, keyword: '특수분장' },
-  { id: 21, keyword: '음식' },
-  { id: 22, keyword: '제품' },
-  { id: 23, keyword: '영상' },
-  { id: 24, keyword: '기타' },
-];
+import { isLocalUri } from '@/components/ServerImage.tsx';
+import { hasForbiddenWords } from '@/utils/hasForbiddenWords.ts';
 
 const TOTAL_STEPS = 9;
 
@@ -95,6 +69,8 @@ const buildSchedulesFromForm = (
 export default function PortfolioOnboardingContainer() {
   const { data: regions, isLoading: isLoadingRegions } = useRegionsQuery();
   const { data: concepts, isLoading: isLoadingConcepts } = useConceptsQuery();
+  const { data: tags, isLoading: isLoadingTags } = useTagsQuery();
+  const { data: meData } = useMeQuery();
 
   const navigation = useNavigation<MainNavigationProp>();
 
@@ -108,6 +84,17 @@ export default function PortfolioOnboardingContainer() {
   const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
   const [pendingNextStep, setPendingNextStep] = useState<null | 2 | 3 | 4>(null);
 
+  // Load profile image from getMe on mount
+  useEffect(() => {
+    if (meData?.profileImageURI && !profileImageURI) {
+      setProfileImageURI({
+        uri: meData.profileImageURI,
+        type: 'image/jpeg',
+        name: 'profile.jpg',
+      });
+    }
+  }, [meData, profileImageURI]);
+
   const {
     control,
     handleSubmit,
@@ -117,6 +104,9 @@ export default function PortfolioOnboardingContainer() {
   } = useForm<PortfolioOnboardingFormData>({
     defaultValues: {
       description: '',
+      portfolioTitle: '',
+      portfolioDescription: '',
+      portfolioIsLinked: false,
       regionIds: [],
       conceptIds: [],
       tagIds: [],
@@ -138,10 +128,14 @@ export default function PortfolioOnboardingContainer() {
   });
 
   const watchedDescription = watch('description');
+  const watchedPortfolioTitle = watch('portfolioTitle');
+  const watchedPortfolioDescription = watch('portfolioDescription');
+  const watchedPortfolioIsLinked = watch('portfolioIsLinked');
   const watchedRegionIds = watch('regionIds');
   const watchedTagIds = watch('tagIds');
   const watchedConceptIds = watch('conceptIds');
   const watchedShootingProductName = watch('shootingProductName');
+  const watchedShootingProductDescription = watch('shootingProductDescription');
   const watchedShootingProductBasePrice = watch('shootingProductBasePrice');
   const watchedShootingProductPhotoTime = watch('shootingProductPhotoTime');
   const watchedShootingProductPersonnel = watch('shootingProductPersonnel');
@@ -159,8 +153,14 @@ export default function PortfolioOnboardingContainer() {
           // Step1: 프로필 사진과 한 줄 소개
           return profileImageURI !== undefined && watchedDescription.trim() !== '';
         case 1:
-          // Step2: 포트폴리오 사진 (최소 1장)
-          return photoURIs.length >= 1;
+          // Step2: 포트폴리오 사진 (최소 1장), 커뮤니티 게시 체크 시 제목/내용 필수
+          const hasPhotos = photoURIs.length >= 1;
+          const hasTitleAndDescription = watchedPortfolioTitle.trim() !== '' && watchedPortfolioDescription.trim() !== '';
+
+          if (watchedPortfolioIsLinked) {
+            return hasPhotos && hasTitleAndDescription;
+          }
+          return hasPhotos && hasTitleAndDescription;
         case 2:
           // Step3: 활동 지역 (최소 1개)
           return watchedRegionIds.length >= 1;
@@ -234,6 +234,9 @@ export default function PortfolioOnboardingContainer() {
       profileImageURI,
       photoURIs,
       watchedDescription,
+      watchedPortfolioTitle,
+      watchedPortfolioDescription,
+      watchedPortfolioIsLinked,
       watchedRegionIds,
       watchedTagIds,
       watchedConceptIds,
@@ -254,8 +257,15 @@ export default function PortfolioOnboardingContainer() {
     switch (currentStep) {
       case 0:
         return profileImageURI !== undefined && watchedDescription.trim() !== '';
-      case 1:
-        return photoURIs.length >= 1;
+      case 1: {
+        const hasPhotos = photoURIs.length >= 1;
+        const hasTitleAndDescription = watchedPortfolioTitle.trim() !== '' && watchedPortfolioDescription.trim() !== '';
+
+        if (watchedPortfolioIsLinked) {
+          return hasPhotos && hasTitleAndDescription;
+        }
+        return hasPhotos && hasTitleAndDescription;
+      }
       case 2:
         return watchedRegionIds.length >= 1;
       case 3:
@@ -323,6 +333,9 @@ export default function PortfolioOnboardingContainer() {
     profileImageURI,
     photoURIs,
     watchedDescription,
+    watchedPortfolioTitle,
+    watchedPortfolioDescription,
+    watchedPortfolioIsLinked,
     watchedRegionIds,
     watchedTagIds,
     watchedConceptIds,
@@ -360,6 +373,10 @@ export default function PortfolioOnboardingContainer() {
     }
   }
 
+  const handlePressClose = () => {
+    navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+  }
+
   const handlePressSubmit = async () => {
     if (!isStepValid) return;
 
@@ -367,19 +384,30 @@ export default function PortfolioOnboardingContainer() {
     if (!isValid) return;
 
     if (currentStep < TOTAL_STEPS - 1) {
-      if (currentStep === 0 && profileImageURI !== undefined) {
-        uploadProfile({
-          image: {
-            uri: profileImageURI.uri,
-            name: generateImageFilename(profileImageURI.type, 'photographer_profile'),
-            type: profileImageURI.type,
-          }
-        });
+      if (currentStep === 0) {
+        if (hasForbiddenWords(watchedDescription)) {
+          Alert.show({
+            title: "잠깐만요! 기업/행사 촬영은 스냅링크가 안전하게 보호해 드립니다.",
+            message: "해당 키워드는 '기업 및 행사' 범주로, 노쇼 및 정산 리스크 방지를 위해 스냅링크 정식 매칭 시스템으로만 운영됩니다.\n개별 등록 시 법적 보호가 어려우며, 서비스 이용이 제한될 수 있습니다. 작가님의 포트폴리오를 바탕으로 전달될 스냅링크의 안전한 행사 촬영 제안을 기다려 주세요!",
+          });
+          return;
+        }
+        if (profileImageURI !== undefined && isLocalUri(profileImageURI.uri)) {
+          uploadProfile({
+            image: {
+              uri: profileImageURI.uri,
+              name: generateImageFilename(profileImageURI.type, 'photographer_profile'),
+              type: profileImageURI.type,
+            }
+          });
+        }
       }
 
       if (currentStep === 1 && photoURIs.length >= 1) {
         uploadPortfolio({
-          request: { content: "" },
+          title: watchedPortfolioTitle,
+          content: watchedPortfolioDescription,
+          isLinked: watchedPortfolioIsLinked,
           images: photoURIs
         });
       }
@@ -388,16 +416,44 @@ export default function PortfolioOnboardingContainer() {
         setPendingNextStep(2);
         return;
       }
-      // TODO: API 연결 후 추가
-      // if (currentStep === 3) {
-      //   setPendingNextStep(3);
-      //   return;
-      // }
+      if (currentStep === 3) {
+        setPendingNextStep(3);
+        return;
+      }
       if (currentStep === 4) {
         setPendingNextStep(4);
         return;
       }
+
+      if (currentStep === 5) {
+        if (hasForbiddenWords(watchedShootingProductName) || hasForbiddenWords(watchedShootingProductDescription)) {
+          Alert.show({
+            title: "잠깐만요! 기업/행사 촬영은 스냅링크가 안전하게 보호해 드립니다.",
+            message: "해당 키워드는 '기업 및 행사' 범주로, 노쇼 및 정산 리스크 방지를 위해 스냅링크 정식 매칭 시스템으로만 운영됩니다.\n개별 등록 시 법적 보호가 어려우며, 서비스 이용이 제한될 수 있습니다. 작가님의 포트폴리오를 바탕으로 전달될 스냅링크의 안전한 행사 촬영 제안을 기다려 주세요!",
+          });
+          return;
+        }
+      }
+
+      if (currentStep === 6) {
+        let flag = false;
+        watchedShootingProductOptions.forEach((option) => {
+          if (hasForbiddenWords(option.name) || hasForbiddenWords(option.description)) {
+            flag = true;
+          }
+        });
+        if (flag) {
+          Alert.show({
+            title: "잠깐만요! 기업/행사 촬영은 스냅링크가 안전하게 보호해 드립니다.",
+            message: "해당 키워드는 '기업 및 행사' 범주로, 노쇼 및 정산 리스크 방지를 위해 스냅링크 정식 매칭 시스템으로만 운영됩니다.\n개별 등록 시 법적 보호가 어려우며, 서비스 이용이 제한될 수 있습니다. 작가님의 포트폴리오를 바탕으로 전달될 스냅링크의 안전한 행사 촬영 제안을 기다려 주세요!",
+          });
+          return;
+        }
+      }
+
+
       setCurrentStep((prev) => prev + 1);
+
 
     } else {
       await handleSubmit(onSubmit)();
@@ -413,15 +469,14 @@ export default function PortfolioOnboardingContainer() {
     }
   }, [pendingNextStep, isLoadingRegions, regions]);
 
-  // TODO: API 연결 후 추가 (tags)
-  // useEffect(() => {
-  //   if (pendingNextStep === 3) {
-  //     if (!isLoadingRegions && regions) {
-  //       setPendingNextStep(null);
-  //       setCurrentStep(4);
-  //     }
-  //   }
-  // }, [pendingNextStep, isLoadingRegions, regions]);
+  useEffect(() => {
+    if (pendingNextStep === 3) {
+      if (!isLoadingTags && tags) {
+        setPendingNextStep(null);
+        setCurrentStep(4);
+      }
+    }
+  }, [pendingNextStep, isLoadingTags, tags]);
 
   useEffect(() => {
     if (pendingNextStep === 4) {
@@ -702,78 +757,18 @@ export default function PortfolioOnboardingContainer() {
     });
   }, [handleCamera, handleGalleryForProfile]);
 
-  const handlePhotoUpload = useCallback(async () => {
-    requestPermission(
-      'photo',
-      async () => {
-        // 권한 허용됨 - 갤러리 열기
-        const options: ImageLibraryOptions = {
-          mediaType: 'photo',
-          selectionLimit: 0,
-        };
-
-        const response: ImagePickerResponse = await launchImageLibrary(options);
-
-        if (response.didCancel) return;
-        if (response.errorCode) {
-          Alert.show({
-            title: '갤러리 오류',
-            message: response.errorMessage || '알 수 없는 오류',
-          });
-          return;
-        }
-        if (response.assets && response.assets.length > 0) {
-          try {
-            const compressedImages = await Promise.all(
-              response.assets
-                .filter(
-                  (asset): asset is UploadImageParams =>
-                    !!asset.uri && !!asset.fileName && !!asset.type,
-                )
-                .map(async (asset) => {
-                  const compressedUri = await ImageCompressor.compress(asset.uri!, {
-                    compressionMethod: 'auto',
-                    maxWidth: 1000,
-                    maxHeight: 1000,
-                    quality: 0.7,
-                  });
-
-                  return {
-                    uri: compressedUri,
-                    name: generateImageFilename(asset.type, 'photographer_portfolio'),
-                    type: asset.type!,
-                  };
-                })
-            );
-
-            setPhotoURIs([...photoURIs, ...compressedImages]);
-            setCheckedImages([...checkedImages, ...Array(compressedImages.length).fill(false)]);
-          } catch (error) {
-            console.error('Portfolio image compression failed:', error);
-            Alert.show({
-              title: '이미지 압축 실패',
-              message: '이미지 압축 중 오류가 발생했습니다.',
-            });
-          }
-        }
-      }
-    );
+  const handleRemoveImage = useCallback((index: number) => {
+    const newPhotoURIs = photoURIs.filter((_, i) => i !== index);
+    const newCheckedImages = checkedImages.filter((_, i) => i !== index);
+    setPhotoURIs(newPhotoURIs);
+    setCheckedImages(newCheckedImages);
   }, [photoURIs, checkedImages]);
 
-  const handleCheckedImages = (index: number) => {
-    setCheckedImages([...checkedImages.slice(0, index), !checkedImages[index], ...checkedImages.slice(index + 1)]);
-  }
-
-  const handleDeletePhotos = () => {
-    const newPhotoURIs = [];
-    if (checkedImages.length > 0) {
-      for (let i = 0; i < checkedImages.length; i++) {
-        if (!checkedImages[i]) newPhotoURIs.push(photoURIs[i]);
-      }
-    }
-    setPhotoURIs(newPhotoURIs);
-    setCheckedImages([...Array(newPhotoURIs.length).fill(false)]);
-  }
+  const handleAddImages = useCallback(async (newImages: UploadImageFile[]) => {
+    console.log(newImages);
+    setPhotoURIs([...photoURIs, ...newImages]);
+    setCheckedImages([...checkedImages, ...Array(newImages.length).fill(false)]);
+  }, [photoURIs, checkedImages]);
 
   const handleToggleRegion = useCallback((id: number) => {
     setValue(
@@ -826,19 +821,18 @@ export default function PortfolioOnboardingContainer() {
       control={control}
       errors={errors}
       onPressBack={handlePressBack}
+      onPressClose={handlePressClose}
       onPressSubmit={handlePressSubmit}
       isSubmitDisabled={!isStepValid}
       submitButtonText={submitButtonText}
       progress={progress}
       profileImageURI={profileImageURI?.uri || ''}
       onProfileImageUpload={handleProfileImageUpload}
-      photoURIs={photoURIs.length ? photoURIs.map((v) => v.uri) : []}
-      onPhotoUpload={handlePhotoUpload}
-      checkedPhotos={checkedImages}
-      setCheckedPhotos={handleCheckedImages}
-      onDeletePhotos={handleDeletePhotos}
+      photoURIs={photoURIs}
+      onRemoveImage={handleRemoveImage}
+      onAddImages={handleAddImages}
       regions={regions ?? []}
-      tags={dummyTags ?? []}
+      tags={tags ?? []}
       concepts={concepts ?? []}
       onToggleRegion={handleToggleRegion}
       onToggleTag={handleToggleTag}

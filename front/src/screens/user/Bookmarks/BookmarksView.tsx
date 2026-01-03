@@ -3,9 +3,12 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import { theme } from '@/theme';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import { FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { FlatList, TouchableOpacity, RefreshControl, Pressable } from 'react-native';
 import Icon from '@/components/Icon.tsx';
 import Loading from '@/components/Loading.tsx';
+import ServerImage from '@/components/ServerImage.tsx';
+import StarIcon from '@/assets/icons/star-review.svg';
+import BookmarkColorIcon from '@/assets/icons/bookmark-color.svg';
 
 interface BookmarksViewProps {
   photographers: PhotographerSearchItem[];
@@ -15,6 +18,7 @@ interface BookmarksViewProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
+  onToggleBookmark: (photographerId: string) => void;
 }
 
 export default function BookmarksView({
@@ -25,6 +29,7 @@ export default function BookmarksView({
   onRefresh,
   isRefreshing,
   isFetchingNextPage,
+  onToggleBookmark,
 }: BookmarksViewProps) {
   const hasBookmarks = photographers.length > 0;
 
@@ -61,6 +66,7 @@ export default function BookmarksView({
                 <BookmarkedPhotographerItem
                   photographer={item}
                   onPress={() => onPressPhotographer(item.id)}
+                  onToggleBookmark={() => onToggleBookmark(item.id)}
                 />
               )}
               onEndReached={onLoadMore}
@@ -85,11 +91,13 @@ export default function BookmarksView({
 interface BookmarkedPhotographerItemProps {
   photographer: PhotographerSearchItem;
   onPress: () => void;
+  onToggleBookmark: () => void;
 }
 
 const BookmarkedPhotographerItem = ({
   photographer,
   onPress,
+  onToggleBookmark,
 }: BookmarkedPhotographerItemProps) => {
   const formatPrice = (price: number) => {
     return price.toLocaleString();
@@ -115,11 +123,19 @@ const BookmarkedPhotographerItem = ({
             keyExtractor={(item, index) => `${photographer.id}-${index}`}
             renderItem={({ item }) => (
               <PhotofolioImageWrapper>
-                <PhotofolioImage source={{ uri: item }} />
+                <PhotofolioImage uri={item} />
               </PhotofolioImageWrapper>
             )}
             style={{ marginBottom: 5 }}
           />
+          <BookmarkButton
+            onPress={(e) => {
+              e.stopPropagation();
+              onToggleBookmark();
+            }}
+          >
+            <Icon width={24} height={24} Svg={BookmarkColorIcon} />
+          </BookmarkButton>
         </PortfolioImagesWrapper>
         <PhotographerInfoWrapper>
           <Typography
@@ -131,9 +147,9 @@ const BookmarkedPhotographerItem = ({
           >
             {photographer.nickname}
           </Typography>
-          <Icon width={13} height={12} source={require('@/assets/icons/star-review.png')} />
+          <Icon width={13} height={12} Svg={StarIcon} />
           <Typography fontSize={11} lineHeight="140%" letterSpacing="-2.5%" color="textSecondary">
-            {photographer.averageRating.toFixed(1)} ({photographer.reviewCount})
+            {photographer.averageRating} ({photographer.reviewCount})
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerInfoWrapper>
@@ -179,6 +195,13 @@ const PortfolioImagesWrapper = styled.View`
   position: relative;
 `;
 
+const BookmarkButton = styled(Pressable)`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+`;
+
 const PhotofolioImageWrapper = styled.View`
   width: 101px;
   height: 101px;
@@ -187,7 +210,7 @@ const PhotofolioImageWrapper = styled.View`
   margin-right: 5px;
 `;
 
-const PhotofolioImage = styled.Image`
+const PhotofolioImage = styled(ServerImage)`
   width: 101px;
   height: 101px;
   resize-mode: cover;

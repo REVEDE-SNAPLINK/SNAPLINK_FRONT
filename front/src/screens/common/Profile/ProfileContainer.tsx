@@ -27,12 +27,11 @@ export default function ProfileContainer () {
 
   const isPhotographer = userType === 'photographer';
 
-  console.log(isPhotographer);
-
   const { data: userProfile, isSuccess } = useMeQuery();
 
   useEffect(() => {
     if (isSuccess && userProfile?.profileImageURI) {
+      console.log('Profile image uri: ', userProfile.profileImageURI);
       setProfileImageURI(userProfile.profileImageURI);
     }
   }, [isSuccess, userProfile?.profileImageURI]);
@@ -217,13 +216,7 @@ export default function ProfileContainer () {
 
   const handlePressMyPosts = () => navigation.navigate('MyPosts');
 
-  const handlePressNotificationSettings = () => {
-    // TODO: Navigate to NotificationSettings screen
-    Alert.show({
-      title: '준비중',
-      message: '알림 설정 페이지를 준비중입니다.',
-    });
-  };
+  const handlePressNotificationSettings = () => navigation.navigate('NotificationSetting')
 
   const handlePressEditNickname = () => navigation.navigate('NicknameEdit');
 
@@ -243,7 +236,7 @@ export default function ProfileContainer () {
       });
       return;
     }
-    navigation.navigate('BookingCalendar');
+    navigation.navigate('BookingManage');
   }
 
   const handlePressManagePortfolio = () => {
@@ -268,6 +261,17 @@ export default function ProfileContainer () {
     navigation.navigate('ShootingManage');
   }
 
+  const handlePressManageHolidays = () => {
+    if (!isPhotographer) {
+      Alert.show({
+        title: '권한 없음',
+        message: '작가만 사용 가능한 기능입니다.'
+      });
+      return;
+    }
+    navigation.navigate('HolidayManage');
+  }
+
   const handlePressCustomerCenter = () => {
     openTermUrl();
   };
@@ -285,11 +289,7 @@ export default function ProfileContainer () {
   };
 
   const handlePressOpenSource = () => {
-    // TODO: Navigate to Terms screen
-    Alert.show({
-      title: '준비중',
-      message: '약관 및 정책 페이지를 준비중입니다.',
-    });
+    navigation.navigate('OpenSourceLicense');
   };
 
   return (
@@ -307,6 +307,7 @@ export default function ProfileContainer () {
       onPressManageBooking={handlePressManageBooking}
       onPressManageShootService={handlePressShootService}
       onPressManagePortfolio={handlePressManagePortfolio}
+      onPressManageHolidays={handlePressManageHolidays}
       onPressNotice={handlePressNotice}
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}

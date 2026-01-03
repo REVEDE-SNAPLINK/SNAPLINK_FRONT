@@ -16,7 +16,7 @@ export default function MyPostsContainer() {
     navigation.goBack();
   };
 
-  const handlePressPost = (postId: string) => {
+  const handlePressPost = (postId: number) => {
     navigation.navigate('CommunityDetails', { postId });
   };
 

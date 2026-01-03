@@ -19,12 +19,15 @@ interface Props {
   onPressBack?: () => void;
   headerToolIcon?: ComponentType<SvgProps>;
   onPressTool?: () => void;
+  onPressMore?: () => void;
+  iconSize?: number;
 }
 
 export default function ScreenContainer({
   children,
   onPressBack,
   onPressTool,
+  onPressMore,
   barBackgroundColor = "#fff",
   backgroundColor = "#fff",
   paddingHorizontal,
@@ -34,9 +37,10 @@ export default function ScreenContainer({
   headerHeight,
   isShowLogo = false,
   headerToolIcon,
+  iconSize
 }: Props) {
   return (
-    <StyledSafeAreaView>
+    <StyledSafeAreaView backgroundColor={backgroundColor}>
       <StatusBar barStyle="dark-content" backgroundColor={barBackgroundColor} />
       {headerShown && (
         <HeaderWithBackButton
@@ -46,6 +50,8 @@ export default function ScreenContainer({
           ToolIcon={headerToolIcon}
           isShowLogo={isShowLogo}
           height={headerHeight}
+          iconSize={iconSize}
+          onPressMore={onPressMore}
         />
       )}
       <Container
@@ -59,10 +65,11 @@ export default function ScreenContainer({
   )
 }
 
-const StyledSafeAreaView = styled(SafeAreaView)`
+const StyledSafeAreaView = styled(SafeAreaView)<{ backgroundColor: string }>`
   flex: 1;
   box-sizing: border-box;
-`
+  background-color: ${({ backgroundColor }) => backgroundColor};
+`;
 
 const Container = styled.View<{
   paddingHorizontal?: number,

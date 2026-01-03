@@ -28,8 +28,10 @@ export default function BookingManageContainer() {
     refetch,
   } = usePhotographerBookingsInfiniteQuery({
     size: PAGE_SIZE,
-    sort: ['reservedDate,desc'],
+    sort: ['shootingDate,desc'],
   });
+
+  const handlePressBack = () => navigation.goBack();
 
   const handlePressBookingDetail = (bookingId: number) => {
     navigation.navigate('BookingDetails', { bookingId });
@@ -41,7 +43,7 @@ export default function BookingManageContainer() {
     }
   };
 
-  const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { reservationId: bookingId })
+  const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { bookingId })
 
   const handlePressConfirmBooking = async (bookingId: number) => {
     Alert.show({
@@ -107,12 +109,13 @@ export default function BookingManageContainer() {
       photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '' }}
       isLoading={isLoading}
       isError={isError}
-      onLoadMore={handleLoadMore}
       isFetchingNextPage={isFetchingNextPage}
       hasNextPage={hasNextPage}
-      onPressBookingDetail={handlePressBookingDetail}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
+      onLoadMore={handleLoadMore}
+      onPressBack={handlePressBack}
+      onPressBookingDetail={handlePressBookingDetail}
       onPressViewPhotos={handlePressViewPhotos}
       onPressConfirmBooking={handlePressConfirmBooking}
       onPressRejectBooking={handlePressRejectBooking}

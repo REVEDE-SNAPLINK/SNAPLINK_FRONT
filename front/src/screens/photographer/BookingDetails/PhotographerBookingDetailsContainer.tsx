@@ -1,5 +1,5 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useReservationDetailQuery } from '@/queries/bookings.ts';
+import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetails/PhotographerBookingDetailsView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 
@@ -8,15 +8,15 @@ type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 export default function PhotographerBookingDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingDetailsRouteProp>();
-  const { reservationId } = route.params;
+  const { bookingId } = route.params;
 
-  const { data: reservationDetails, isLoading } = useReservationDetailQuery(reservationId);
+  const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { reservationId });
+  const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { bookingId });
 
-  if (!reservationDetails) {
+  if (!bookingDetails) {
     return (
       <PhotographerBookingDetailsView
         onPressBack={handlePressBack}
@@ -24,26 +24,22 @@ export default function PhotographerBookingDetailsContainer() {
         bookingOption=""
         datetime=""
         additionalRequest=""
-        status="REQUESTED"
+        status="WAITING_FOR_APPROVAL"
         isLoading={isLoading}
       />
     );
   }
 
-  const canViewPhotos = reservationDetails.status === 'COMPLETED' || reservationDetails.status === 'DELIVERED' || reservationDetails.status === 'REVIEWED';
-  const bookingOption =
-    Array.isArray(reservationDetails.shootingOptions)
-      ? reservationDetails.shootingOptions.join(', ')
-      : '';
+  const canViewPhotos = bookingDetails.status === 'COMPLETED' || bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
 
   return (
     <PhotographerBookingDetailsView
       onPressBack={handlePressBack}
-      customerName={reservationDetails.customerName}
-      bookingOption={bookingOption}
-      datetime={reservationDetails.shootingDateTime}
-      additionalRequest={reservationDetails.requirement}
-      status={reservationDetails.status}
+      customerName={bookingDetails.customerName}
+      bookingOption={bookingDetails.shootingItems}
+      datetime={bookingDetails.shootingDate}
+      additionalRequest={bookingDetails.requestDetails}
+      status={bookingDetails.status}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       isLoading={isLoading}
     />

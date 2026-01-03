@@ -6,7 +6,7 @@ import ArrowLeftIcon from '@/assets/icons/arrow-left2.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import dayjs from 'dayjs';
 import Icon from '@/components/Icon.tsx';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 LocaleConfig.locales['ko'] = {
   monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -22,6 +22,15 @@ export interface MonthScheduleData {
   hasBookings: boolean;
   publicHoliday: boolean;
   photographerHoliday: boolean;
+  hasPersonalSchedule?: boolean;
+}
+
+export interface EnhancedScheduleData {
+  date: string; // YYYY-MM-DD
+  hasBooking: boolean;
+  publicHoliday: boolean;
+  photographerHoliday: boolean;
+  hasPersonalSchedule?: boolean;
 }
 
 interface ScheduleCalendarProps {
@@ -29,40 +38,51 @@ interface ScheduleCalendarProps {
   selectedDate: string;
   /** 날짜 선택 콜백 (YYYY-MM-DD) */
   onSelectDate: (date: string) => void;
-  /** 월별 일정 데이터 */
-  monthScheduleData?: MonthScheduleData[];
+  /** 날짜별 일정 데이터 (이전/현재/다음 달 포함) */
+  scheduleData?: EnhancedScheduleData[];
   /** 캘린더 최초 표시 날짜 (옵션) */
   initialDate?: string;
+  /** 월 변경 콜백 (YYYY-MM) */
+  onMonthChange?: (yearMonth: string) => void;
 }
 
 export default function ScheduleCalendar({
   selectedDate,
   onSelectDate,
-  monthScheduleData = [],
+  scheduleData = [],
   initialDate,
+  onMonthChange,
 }: ScheduleCalendarProps) {
-  // Create a map for quick lookup
+  // Track currently displayed month (YYYY-MM)
+  const [displayedYearMonth, setDisplayedYearMonth] = useState(() =>
+    dayjs(initialDate ?? selectedDate).format('YYYY-MM')
+  );
+
+  // Create a map for quick lookup by date string
   const scheduleMap = useMemo(() => {
-    const map = new Map<number, MonthScheduleData>();
-    monthScheduleData.forEach(item => {
-      map.set(item.day, item);
+    const map = new Map<string, EnhancedScheduleData>();
+    scheduleData.forEach(item => {
+      map.set(item.date, item);
     });
     return map;
-  }, [monthScheduleData]);
+  }, [scheduleData]);
 
-  const getEventColor = (day: number) => {
-    const scheduleData = scheduleMap.get(day);
-    if (!scheduleData) return null;
+  const getEventColor = (dateString: string) => {
+    const scheduleItem = scheduleMap.get(dateString);
+    if (!scheduleItem) return null;
 
-    // Priority: hasBookings > photographerHoliday > publicHoliday
-    if (scheduleData.hasBookings) {
+    // Priority: hasBookings > photographerHoliday > hasPersonalSchedule > publicHoliday
+    if (scheduleItem.hasBooking) {
       return 'rgba(0, 169, 128, 0.2)'; // primary color
     }
-    if (scheduleData.photographerHoliday) {
+    if (scheduleItem.photographerHoliday) {
       return 'rgba(255, 152, 0, 0.2)'; // orange for photographer holiday
     }
-    if (scheduleData.publicHoliday) {
-      return 'rgba(158, 158, 158, 0.2)'; // gray for public holiday
+    if (scheduleItem.hasPersonalSchedule) {
+      return `${theme.colors.textPrimary}33`; // textPrimary with 20% opacity
+    }
+    if (scheduleItem.publicHoliday) {
+      return 'rgba(255, 178, 63, 0.2)'; // #FFB23F with 20% opacity
     }
     return null;
   };
@@ -70,6 +90,13 @@ export default function ScheduleCalendar({
   return (
     <RNCalendar
       initialDate={initialDate ?? selectedDate}
+      onMonthChange={(date) => {
+        const yearMonth = dayjs(date.dateString).format('YYYY-MM');
+        setDisplayedYearMonth(yearMonth);
+        if (onMonthChange) {
+          onMonthChange(yearMonth);
+        }
+      }}
       theme={{
         textSectionTitleColor: theme.colors.textPrimary,
         textDayHeaderFontFamily: 'Pretendard-SemiBold',
@@ -94,8 +121,20 @@ export default function ScheduleCalendar({
       dayComponent={({ date }) => {
         const dateString = date?.dateString ?? '';
         const isSelected = selectedDate === dateString;
-        const day = date?.day ?? 0;
-        const eventColor = getEventColor(day);
+
+        // Check if the date is in the currently displayed month
+        const dateYearMonth = dayjs(dateString).format('YYYY-MM');
+        const isCurrentMonth = dateYearMonth === displayedYearMonth;
+
+        // Show event color for all dates (including prev/next month)
+        const eventColor = getEventColor(dateString);
+
+        // Text color: selected = white, other month = disabled, current month = textPrimary
+        const textColor = isSelected
+          ? '#fff'
+          : isCurrentMonth
+          ? theme.colors.textPrimary
+          : theme.colors.disabled;
 
         return (
           <DayWrapper
@@ -109,7 +148,7 @@ export default function ScheduleCalendar({
               fontWeight="semiBold"
               lineHeight="140%"
               letterSpacing="-2.5%"
-              color={isSelected ? '#fff' : theme.colors.textPrimary}
+              color={textColor}
             >
               {date?.day}
             </Typography>

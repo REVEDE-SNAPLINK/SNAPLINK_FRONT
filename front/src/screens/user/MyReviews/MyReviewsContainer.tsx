@@ -3,8 +3,8 @@ import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
 import { Alert } from '@/components/theme';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
-import type { GetMyReviewsResponse, MyReviewItem } from '@/api/me';
 import { MainNavigationProp } from '@/types/navigation.ts';
+import { GetMyReviewsResponse, MyReviewItem } from '@/api/reviews.ts';
 
 export default function MyReviewsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -15,17 +15,9 @@ export default function MyReviewsContainer() {
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressReview = (review: MyReviewItem) => {
-    navigation.navigate('ReviewDetails', { reviewId: review.reviewId, review });
-  };
+  const handlePressReview = (review: MyReviewItem) => navigation.navigate('ReviewDetails', { review })
 
-  const handlePressEdit = (review: MyReviewItem) => {
-    // Navigate to WriteReview with review data for editing
-    // Note: WriteReview expects reservationId, but we only have reviewId from MyReviewItem
-    // We'll pass the review object which contains the reservationId field
-    const reservationId = (review as any).reservationId || 0; // Type assertion as MyReviewItem might not have this yet
-    navigation.navigate('WriteReview', { reservationId, review });
-  };
+  const handlePressEdit = (review: MyReviewItem) => navigation.navigate('WriteReview', { review })
 
   const handlePressDelete = (reviewId: number) => {
     Alert.show({

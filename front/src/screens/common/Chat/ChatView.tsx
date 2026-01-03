@@ -7,7 +7,7 @@ import { formatTimeAgo } from '@/utils/format';
 
 interface ChatViewProps {
   chatRooms: ChatRoomItem[];
-  onPressChatRoom: (chatRoomId: number, opponentId: string) => void;
+  onPressChatRoom: (roomId: number, opponentNickname: string, opponentProfileImageURI: string) => void;
 }
 
 export default function ChatView({
@@ -22,7 +22,7 @@ export default function ChatView({
     >
       <ScrollContainer showsVerticalScrollIndicator={false}>
         {chatRooms.map((chatRoom) => (
-          <ChatItem key={chatRoom.roomId} onPress={() => onPressChatRoom(chatRoom.roomId, chatRoom.opponentId)}>
+          <ChatItem key={chatRoom.roomId} onPress={() => onPressChatRoom(chatRoom.roomId, chatRoom.opponentNickname, chatRoom.profileImageURI ?? '')}>
             <ChatProfileImageWrapper>
               <ChatProfileImage {...(chatRoom.profileImageURI ? { uri: chatRoom.profileImageURI } : {})} />
             </ChatProfileImageWrapper>
@@ -52,14 +52,14 @@ export default function ChatView({
                 {chatRoom.lastMessage || '없음'}
               </Typography>
             </ChatContentWrapper>
-            <UnreadTextCounter>
+            {chatRoom.unreadCount > 0 && <UnreadTextCounter>
               <Typography
                 fontSize={16}
                 color="#fff"
               >
                 {chatRoom.unreadCount}
               </Typography>
-            </UnreadTextCounter>
+            </UnreadTextCounter>}
           </ChatItem>
         ))}
       </ScrollContainer>

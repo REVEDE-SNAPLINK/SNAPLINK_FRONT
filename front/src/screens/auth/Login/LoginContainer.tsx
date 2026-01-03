@@ -1,7 +1,5 @@
 import LoginView from './LoginView';
 import { useAuthStore } from '@/store/authStore';
-import { useNavigation } from '@react-navigation/native';
-
 export default function LoginContainer() {
   const { signInWithKakao, signInWithProviderToken } = useAuthStore();
 
@@ -9,9 +7,7 @@ export default function LoginContainer() {
     try {
       const token = await signInWithKakao();
       if (token !== null && token !== '') {
-        signInWithProviderToken("KAKAO", token).then(() => {
-          useNavigation()
-        });
+        signInWithProviderToken("KAKAO", token);
       }
     } catch (error) {
       console.error('Kakao login failed:', error);
@@ -22,3 +18,4 @@ export default function LoginContainer() {
     <LoginView onKakaoLogin={handleKakaoLogin} />
   );
 }
+

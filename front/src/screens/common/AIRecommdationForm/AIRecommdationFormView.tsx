@@ -91,6 +91,7 @@ export default function AIRecommdationFormView({
           width="100%"
           text="추천 작가 확인하기"
           onPress={onPressSubmit}
+          marginBottom={20}
         />
       </KeyboardAvoidingView>
     </ScreenContainer>

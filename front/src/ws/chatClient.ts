@@ -1,10 +1,8 @@
-// src/ws/chatClient.ts
-import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+import { Client, IMessage, ReconnectionTimeMode, StompSubscription, Versions } from '@stomp/stompjs';
 import type { ChatMessage, ChatMessageType } from '@/api/chat';
 import { useAuthStore } from '@/store/authStore';
 
-// WebSocket 엔드포인트 (토큰은 STOMP connectHeaders에 전달)
-const WS_URL = 'wss://api.snaplink.run/ws/chat/websocket';
+const WS_URL = 'wss://api.snaplink.run/ws/chat';
 
 export interface ChatMessageRequest {
   content: string;
@@ -54,9 +52,20 @@ export class ChatStompClient {
     this.client = new Client({
       brokerURL: WS_URL,
       connectHeaders: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-      reconnectDelay: 3000,
-      heartbeatIncoming: 10000,
-      heartbeatOutgoing: 10000,
+      connectionTimeout: 5000,
+
+      // ✅ 수정 2: React Native 호환성 개선
+      forceBinaryWSFrames: true,      // Android에서 필수
+      stompVersions: new Versions([Versions.V1_2]),
+
+      // ✅ 수정 3: 빠른 감지 및 재시도
+      reconnectDelay: 2000,           // 실패 후 2초 후 재시도
+      maxReconnectDelay: 15000,
+      heartbeatIncoming: 5000,        // 하트비트 감소
+      heartbeatOutgoing: 5000,
+      appendMissingNULLonIncoming: true,
+
+      reconnectTimeMode: ReconnectionTimeMode.EXPONENTIAL,
       debug: (str) => {
         console.log('[STOMP Debug]', str);
       },
@@ -89,7 +98,11 @@ export class ChatStompClient {
         onError?.(frame);
       },
       onWebSocketError: (event) => {
-        console.error('[ChatStompClient] onWebSocketError:', event);
+        console.error('[ChatStompClient] WebSocket error details:', {
+          message: event.message,
+          code: event.code,
+          reason: event.reason,
+        });
         onError?.(event);
       },
     });

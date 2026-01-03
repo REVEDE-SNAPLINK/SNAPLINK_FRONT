@@ -1,7 +1,15 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BookingFormData } from '@/screens/user/Booking/BookingContainer.tsx';
 import { PhotographerReviewItem } from '@/api/photographers.ts';
-import { MyReviewItem } from '@/api/me.ts';
+import { MyReviewItem } from '@/api/reviews.ts';
+import { BookingRequestOption } from '@/api/bookings.ts';
+
+export type BookingRequestParams = {
+  photographerId: string;
+  productId: number;
+  options: BookingRequestOption[];
+  shootingDate: string; // ISO date-time string
+  startTime: string; // HH:mm format
+};
 
 // Root Stack
 export type RootStackParamList = {
@@ -25,28 +33,34 @@ export type MainStackParamList = {
   PhotographerDetails: { photographerId: string };
   AIRecommdationForm: undefined;
   AIRecommdationResult: { prompt: string; resultCount?: number };
+  PostDetail: { postId: number, profileImageURI: string };
 
   // Community
-  CommunityDetails: { postId: string };
+  CommunityDetails: { postId: number };
   MyPosts: undefined;
 
   // Chat
-  ChatDetails: { chatRoomId: number, opponentId: string, profileImageURI: string };
+  ChatDetails: {
+    roomId: number;
+    opponentNickname?: string;
+    opponentProfileImageURI?: string;
+  };
 
   // Reservation
   BookingHistory: undefined;
   BookingDetails: { bookingId: number };
   Booking: { photographerId: string };
-  BookingRequest: BookingFormData;
+  BookingRequest: BookingRequestParams;
   BookingReject: { bookingId: number };
   BookingCancel: { bookingId: number };
+  BookingManage: undefined;
 
   // Review
   Reviews: { photographerId: string };
-  ReviewDetails: { reviewId: number; review: PhotographerReviewItem | MyReviewItem };
+  ReviewDetails: { review: PhotographerReviewItem | MyReviewItem };
   ReviewPhotos: { photographerId: string };
-  WriteReview: { bookingId: number; review?: MyReviewItem };
-  ViewPhotos: { reservationId: number };
+  WriteReview: { bookingId?: number; review?: MyReviewItem };
+  ViewPhotos: { bookingId: number };
   MyReviews: undefined;
 
   // Profile
@@ -56,12 +70,18 @@ export type MainStackParamList = {
 
   // For Photographer
   PortfolioOnboarding: undefined;
-  BookingCalendar: undefined;
+  PortfolioForm: undefined;
   ShootingManage: undefined;
-  ServiceForm: { serviceId?: number };
+  ServiceForm: { productId?: number };
+  HolidayManage: undefined;
+  ScheduleForm: undefined;
+
+  // Notification
+  Notification: undefined;
+  NotificationSetting: undefined;
 
   // etc
-  Notification: undefined;
+  OpenSourceLicense: undefined;
 };
 
 // Navigation Props

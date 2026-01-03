@@ -27,20 +27,35 @@ LocaleConfig.defaultLocale = 'ko';
 
 interface CalendarProps {
   onChangeDate: (date: string) => void;
+  onMonthChange?: (year: number, month: number) => void;
   initialDate: string;
   currentDate: string;
   availableDates: string[];
+  minDate?: string;
+  maxDate?: string;
 }
 
 export default function Calendar({
   onChangeDate,
+  onMonthChange,
   initialDate,
   currentDate,
   availableDates,
+  minDate,
+  maxDate,
 }: CalendarProps) {
   return (
     <RNCalendar
       initialDate={initialDate}
+      minDate={minDate}
+      maxDate={maxDate}
+      onMonthChange={(date) => {
+        if (onMonthChange) {
+          const year = date.year;
+          const month = date.month;
+          onMonthChange(year, month);
+        }
+      }}
       theme={{
         textSectionTitleColor: theme.colors.textPrimary,
         textDayHeaderFontFamily: 'Pretendard-SemiBold',
@@ -70,7 +85,12 @@ export default function Calendar({
         return (
           <DayWrapper
             selected={isSelected}
-            onPress={() => onChangeDate(dateString ?? initialDate)}
+            disabled={isDisabled}
+            onPress={() => {
+              if (!isDisabled) {
+                onChangeDate(dateString ?? initialDate);
+              }
+            }}
           >
             <Typography
               fontSize={13}
@@ -86,7 +106,7 @@ export default function Calendar({
   )
 }
 
-const DayWrapper = styled.TouchableOpacity<{ selected: boolean }>`
+const DayWrapper = styled.TouchableOpacity<{ selected: boolean; disabled?: boolean }>`
   width: 30px;
   height: 30px;
   justify-content: center;

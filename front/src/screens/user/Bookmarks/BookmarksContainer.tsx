@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMyScrappedPhotographersInfiniteQuery } from '@/queries/photographers.ts';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
+import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 
 const PAGE_SIZE = 20;
 
@@ -18,6 +19,8 @@ export default function BookmarksContainer() {
     refetch,
     isRefetching,
   } = useMyScrappedPhotographersInfiniteQuery({ size: PAGE_SIZE });
+
+  const toggleScrapMutation = useTogglePhotographerScrapMutation();
 
   // Flatten paginated data
   const photographers = useMemo<PhotographerSearchItem[]>(() => {
@@ -41,6 +44,10 @@ export default function BookmarksContainer() {
     refetch();
   };
 
+  const handleToggleBookmark = (photographerId: string) => {
+    toggleScrapMutation.mutate(photographerId);
+  };
+
   return (
     <BookmarksView
       photographers={photographers}
@@ -50,6 +57,7 @@ export default function BookmarksContainer() {
       onRefresh={handleRefresh}
       isRefreshing={isRefetching}
       isFetchingNextPage={isFetchingNextPage}
+      onToggleBookmark={handleToggleBookmark}
     />
   );
 }

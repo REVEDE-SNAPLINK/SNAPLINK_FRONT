@@ -7,11 +7,6 @@ import {
   GetPageable,
 } from '@/api/community.ts';
 import { communityKeys } from '@/queries/keys.ts';
-import {
-  withMockData,
-  // getMockCommunityPostsPage,
-  getMockCommunityPost
-} from '@/__dev__';
 
 export const useCommunityPostsQuery = (
   params: Omit<GetPageable, 'page'>,
@@ -34,20 +29,17 @@ export const useCommunityPostsQuery = (
   });
 };
 
-export const useCommunityPostQuery = (postId?: string) => {
+export const useCommunityPostQuery = (postId?: number) => {
   return useQuery({
     queryKey: postId ? communityKeys.post(postId) : [],
-    queryFn: () => withMockData(
-      () => getMockCommunityPost(postId!) || {} as any,
-      () => getCommunityPost(postId!),
-    ),
+    queryFn: () => getCommunityPost(postId!),
     enabled: Boolean(postId),
     staleTime: 1000 * 30,
   });
 };
 
 export const useCommunityCommentsQuery = (
-  postId: string,
+  postId: number,
   params?: GetPageable,
 ) => {
   return useQuery({

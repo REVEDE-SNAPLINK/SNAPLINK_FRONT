@@ -6,6 +6,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import { EditingDeadline, EditingType, SelectionAuthority } from '@/api/shootings.ts';
 
 const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
+const REVIEWS_BASE = `${API_BASE_URL}/api/reviews/photographers`;
 const HOLIDAYS_BASE = `${PHOTOGRAPHERS_BASE}/holidays`;
 
 /* ---------------------------------------------
@@ -240,12 +241,12 @@ export const signPhotographer = async (
 export type Gender = 'MAN' | 'WOMAN';
 
 export interface SearchPhotographersBody {
-  gender?: Gender;
-  regionIds?: number[];
-  conceptIds?: number[];
-  maxPrice?: number;
-  minPrice?: number;
-  query?: string;
+  gender: Gender | null;
+  regionIds: number[] | null;
+  conceptIds: number[] | null;
+  maxPrice: number | null;
+  minPrice: number | null;
+  query: string;
 }
 
 export interface PhotographerSearchItem {
@@ -291,10 +292,6 @@ export const searchPhotographers = async (
  * 포트폴리오 게시글 업로드 (multipart: request + images[])
  * -------------------------------------------- */
 
-export interface CreatePortfolioRequest {
-  content: string;
-}
-
 export interface UploadImageFile {
   uri: string;
   name: string;
@@ -302,7 +299,9 @@ export interface UploadImageFile {
 }
 
 export interface CreatePortfolioParams {
-  request: CreatePortfolioRequest;
+  title: string;
+  content: string;
+  isLinked: boolean;
   images: UploadImageFile[];
 }
 
@@ -310,7 +309,9 @@ export interface CreatePortfolioParams {
  * POST /api/photographers/portfolios
  *
  * multipart/form-data:
- * - request: JSON (content)
+ * - title: JSON
+ * - content: JSON
+ * - isLinked: JSON
  * - images: array(files)
  */
 export const createPortfolio = async (
@@ -338,9 +339,19 @@ export const createPortfolio = async (
   const parts: MultipartPart[] = [
     // request는 JSON 파트
     {
-      name: 'request',
+      name: 'title',
       type: 'application/json',
-      data: JSON.stringify(params.request),
+      data: params.title,
+    },
+    {
+      name: 'content',
+      type: 'application/json',
+      data: params.content,
+    },
+    {
+      name: 'isLinked',
+      type: 'application/json',
+      data: String(params.isLinked),
     },
 
     // images는 file 파트들
@@ -372,7 +383,7 @@ export const createPortfolio = async (
 };
 
 /* ---------------------------------------------
- * 6) GET /{photographerId}/reviews  (paging)
+ * 6) GET /api/reviews/photographers/{photographerId}/reviews  (paging)
  * 작가 전체 리뷰 목록 조회
  * -------------------------------------------- */
 
@@ -405,8 +416,8 @@ export const getPhotographerReviews = async (
 ): Promise<GetPhotographerReviewsResponse> => {
   const qs = buildQuery(pageable);
   const url = qs
-    ? `${PHOTOGRAPHERS_BASE}/${photographerId}/reviews?${qs}`
-    : `${PHOTOGRAPHERS_BASE}/${photographerId}/reviews`;
+    ? `${REVIEWS_BASE}/${photographerId}/reviews?${qs}`
+    : `${REVIEWS_BASE}/${photographerId}/reviews`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error(`Failed to get photographer reviews ${response.status}`);
@@ -415,7 +426,7 @@ export const getPhotographerReviews = async (
 };
 
 /* ---------------------------------------------
- * 7) GET /{photographerId}/reviews/summary
+ * 7) GET /api/reviews/photographers/{photographerId}/summary
  * 작가 리뷰 요약 조회
  * -------------------------------------------- */
 
@@ -433,13 +444,13 @@ export interface GetPhotographerReviewSummaryResponse {
 }
 
 /**
- * GET /api/photographers/{photographerId}/reviews/summary
+ * GET /api/reviews/photographers/{photographerId}/summary
  * 작가 리뷰 요약(평균 별점, 전체 리뷰 수, 최신 사진 10개, 최신 리뷰 5개)
  */
 export const getPhotographerReviewSummary = async (
   photographerId: string,
 ): Promise<GetPhotographerReviewSummaryResponse> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/${photographerId}/reviews/summary`, {
+  const response = await authFetch(`${REVIEWS_BASE}/${photographerId}/summary`, {
     method: 'GET',
   });
 
@@ -546,4 +557,74 @@ export const updateHolidays = async (
 
   if (!response.ok) throw new Error(`Failed to update holiday ${response.status}`);
   return response.json();
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+}
+
+export const getTags = async (): Promise<Tag[]> => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/tag`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get tags ${response.status}`);
+
+  return response.json();
+}
+
+export interface PortfolioPhoto {
+  photoId: number;
+  imageUrl: string;
+  sortOrder: number;
+}
+
+export interface GetPortfolioResponse {
+  postId: number;
+  title: string;
+  content: string;
+  representativeImageUrl: string;
+  createdAt: string;
+  photographerId: string;
+  photographerName: string;
+  photos: PortfolioPhoto[];
+}
+
+export const getPortfolioPost = async (postId: number): Promise<GetPortfolioResponse> => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/portfolios/${postId}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get portfolio ${response.status}`);
+
+  return response.json();
+}
+
+export type PhotographerStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'REJECTED' | 'SUSPENDED';
+
+export const getStatusMe = async (): Promise<PhotographerStatus> => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/status/me`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get status ${response.status}`);
+
+  return response.json();
+};
+
+export const activePhotographer = async () => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/me/active`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get active photographer ${response.status}`);
+}
+
+export const inactivePhotographer = async () => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/me/inactive`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get active photographer ${response.status}`);
 }

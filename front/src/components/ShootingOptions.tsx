@@ -4,38 +4,41 @@ import Typography from '@/components/theme/Typography.tsx';
 import { formatNumber } from '@/utils/format.ts';
 import { View } from 'react-native';
 import Checkbox from '@/components/theme/Checkbox.tsx';
-import { RequiredShootingOption, OptionalShootingOption } from '@/api/photographers.ts';
+import { GetShootingOptionResponse, GetShootingResponse } from '@/api/shootings.ts';
 
 /**
  * Required Option Component
  */
-const RequiredOptionWrapper = styled.View`
+const ShootingProductWrapper = styled.View`
   margin-bottom: 13px;
   flex-direction: row;
 `;
 
-const RequiredOptionInfo = styled.View`
+const ShootingProductInfo = styled.View`
   flex: 1;
   margin-left: 10px;
 `;
 
-interface RequiredOptionProps {
+interface ShootingProductProps {
   isChecked: boolean;
   isDisabled?: boolean;
   onPress: () => void;
-  option: RequiredShootingOption;
+  product: GetShootingResponse;
 }
 
-export const RequiredOption = ({ isChecked, isDisabled = false, onPress, option }: RequiredOptionProps) => {
+export const ShootingProduct = ({ isChecked, isDisabled = false, onPress, product }: ShootingProductProps) => {
+  const photoHour = ~~(product.photoTime / 60)
+  const photoMinute = ~~(product.photoTime % 60)
+
   return (
-    <RequiredOptionWrapper>
+    <ShootingProductWrapper>
       <Checkbox isChecked={isChecked} isDisabled={isDisabled} onPress={onPress} />
-      <RequiredOptionInfo>
+      <ShootingProductInfo>
         <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#000">
-          {option.title}
+          {product.shoootingName}
         </Typography>
         <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#000">
-          {formatNumber(option.price)}원
+          {formatNumber(product.basePrice)}원
         </Typography>
         <Typography
           fontSize={12}
@@ -45,13 +48,13 @@ export const RequiredOption = ({ isChecked, isDisabled = false, onPress, option 
           color={theme.colors.disabled}
           marginBottom={10}
         >
-          소요시간 {option.duration}
+          소요시간 {photoHour}시간{`${photoMinute === 0 ? '' : ` ${photoMinute}분`}`}
         </Typography>
         <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color={theme.colors.disabled}>
-          {option.description}
+          {product.description}
         </Typography>
-      </RequiredOptionInfo>
-    </RequiredOptionWrapper>
+      </ShootingProductInfo>
+    </ShootingProductWrapper>
   );
 };
 
@@ -123,24 +126,24 @@ const OptionalWrapper = styled.View`
   margin-bottom: 15px;
 `;
 
-interface OptionalOptionProps {
-  option: OptionalShootingOption;
+interface ShootingOptionProps {
+  option: GetShootingOptionResponse;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }
 
-export const OptionalOption = ({ option, quantity, onQuantityChange }: OptionalOptionProps) => {
+export const ShootingOption = ({ option, quantity, onQuantityChange }: ShootingOptionProps) => {
   return (
     <OptionalWrapper>
       <View>
         <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#000" marginBottom={3}>
-          {option.title}
+          {option.name}
         </Typography>
         <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#000">
           {formatNumber(option.price)}원
         </Typography>
       </View>
-      <QuantityInput quantity={quantity} onChange={onQuantityChange} maxQuantity={option.maxQuantity} />
+      <QuantityInput quantity={quantity} onChange={onQuantityChange} />
     </OptionalWrapper>
   );
 };

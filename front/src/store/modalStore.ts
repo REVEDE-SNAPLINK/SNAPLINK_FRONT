@@ -8,13 +8,12 @@ export interface PersonalSchedule {
   endDate: Date;
   isAllDay: boolean;
   description?: string;
-  location?: string;
 }
 
 interface CommunityPostModalState {
   visible: boolean;
   initialPost?: CommunityPost;
-  onSubmit?: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void;
+  onSubmit?: (params: CreateCommunityPostParams & { deletePhotoIds?: number[] }) => void;
   isLoading?: boolean;
 }
 
@@ -22,6 +21,7 @@ interface AddScheduleModalState {
   visible: boolean;
   initialSchedule?: PersonalSchedule;
   onSubmit?: (schedule: Omit<PersonalSchedule, 'id'>) => void;
+  isDuplicate?: boolean;
 }
 
 interface ScheduleDetailModalState {
@@ -35,7 +35,7 @@ interface ScheduleDetailModalState {
 interface ModalStore {
   communityPostModal: CommunityPostModalState;
   openCommunityPostModal: (
-    onSubmit: (params: CreateCommunityPostParams & { deletePhotoIds?: string[] }) => void,
+    onSubmit: (params: CreateCommunityPostParams & { deletePhotoIds?: number[] }) => void,
     initialPost?: CommunityPost,
   ) => void;
   closeCommunityPostModal: () => void;
@@ -45,6 +45,7 @@ interface ModalStore {
   openAddScheduleModal: (
     onSubmit: (schedule: Omit<PersonalSchedule, 'id'>) => void,
     initialSchedule?: PersonalSchedule,
+    isDuplicate?: boolean,
   ) => void;
   closeAddScheduleModal: () => void;
 
@@ -95,13 +96,15 @@ export const useModalStore = create<ModalStore>((set) => ({
     visible: false,
     initialSchedule: undefined,
     onSubmit: undefined,
+    isDuplicate: false,
   },
-  openAddScheduleModal: (onSubmit, initialSchedule) =>
+  openAddScheduleModal: (onSubmit, initialSchedule, isDuplicate = false) =>
     set({
       addScheduleModal: {
         visible: true,
         onSubmit,
         initialSchedule,
+        isDuplicate,
       },
     }),
   closeAddScheduleModal: () =>
@@ -110,6 +113,7 @@ export const useModalStore = create<ModalStore>((set) => ({
         visible: false,
         initialSchedule: undefined,
         onSubmit: undefined,
+        isDuplicate: false,
       },
     }),
 

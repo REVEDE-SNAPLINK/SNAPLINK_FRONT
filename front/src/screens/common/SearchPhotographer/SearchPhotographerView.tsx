@@ -140,6 +140,7 @@ const Header = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  margin-top: 24px;
 `
 
 const SearchInputWrapper = styled.View`
@@ -169,6 +170,8 @@ const SearchResultHeader = styled.View`
   width: 100%;
   margin-top: 33px;
   margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
 `
 
 const SearchResultWrapper = styled.View`

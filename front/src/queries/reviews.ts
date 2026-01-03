@@ -1,7 +1,8 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { reviewsQueryKeys } from '@/queries/keys';
 import { GetPageable } from '@/api/community.ts';
-import { getMyReviews } from '@/api/me.ts';
+
+import { getMyReviews, getBookingReviewMe } from '@/api/reviews.ts';
 
 // queries/reviews.ts
 export const useMyReviewsInfiniteQuery = (
@@ -13,4 +14,13 @@ export const useMyReviewsInfiniteQuery = (
     queryFn: ({ pageParam }) => getMyReviews({ ...pageableWithoutPage, page: pageParam }),
     getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.number + 1),
     staleTime: 1000 * 30,
+  });
+
+export const useBookingReviewMeQuery = (bookingId?: number) =>
+  useQuery({
+    queryKey: typeof bookingId === 'number'
+      ? reviewsQueryKeys.bookingReviewMe(bookingId)
+      : [],
+    queryFn: () => getBookingReviewMe(bookingId!),
+    enabled: typeof bookingId === 'number',
   });

@@ -22,6 +22,7 @@ import ProfileColorIcon from '@/assets/icons/profile-color.svg';
 import CalendarIcon from '@/assets/icons/calendar-gray.svg';
 import CalendarColorIcon from '@/assets/icons/calendar-color.svg';
 import { useAuthStore } from '@/store/authStore.ts';
+import BookingCalendarContainer from '@/screens/photographer/BookingCalendar/BookingCalendarContainer.tsx';
 
 const USER_TABS_CONFIG = [
   { key: 'community', label: '커뮤니티', Icon: CommunityIcon, ColorIcon: CommunityColorIcon, component: CommunityContainer },
@@ -35,7 +36,7 @@ const PHOTOGRAPHER_TABS_CONFIG = [
   { key: 'community', label: '커뮤니티', Icon: CommunityIcon, ColorIcon: CommunityColorIcon, component: CommunityContainer },
   { key: 'chat', label: '채팅', Icon: ChatIcon, ColorIcon: ChatColorIcon, component: ChatContainer },
   { key: 'home', label: '홈', Icon: HomeIcon, ColorIcon: HomeColorIcon, component: HomeContainer },
-  { key: 'booking', label: '예약 관리', Icon: CalendarIcon, ColorIcon: CalendarColorIcon, component: BookingManageContainer },
+  { key: 'booking', label: '일정 관리', Icon: CalendarIcon, ColorIcon: CalendarColorIcon, component: BookingCalendarContainer },
   { key: 'profile', label: '마이', Icon: ProfileIcon, ColorIcon: ProfileColorIcon, component: ProfileContainer },
 ];
 

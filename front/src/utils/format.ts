@@ -123,12 +123,22 @@ const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 export const formatReservationDateTime = (
   reservedDate: string,
   startTime: string,
+  endTime: string,
 ): string => {
   const date = dayjs(reservedDate);
   const day = DAY_KO[date.day()]; // 0(Sun) ~ 6(Sat)
+  const startTimeArr = startTime.split(':');
+  const endTimeArr = endTime.split(':');
+  const formatStartTime = `${startTimeArr[0]}:${startTimeArr[1]}`;
+  const formatEndTime = `${endTimeArr[0]}:${endTimeArr[1]}`;
 
-  return `${date.format('YYYY.MM.DD')}(${day}) ${startTime}`;
+  return `${date.format('YYYY.MM.DD')}(${day}) ${formatStartTime}~${formatEndTime}`;
 };
+
+export const formatTime = (time: string) => {
+  const arr = time.split(':');
+  return `${arr[0]}:${arr[1]}`;
+}
 
 export const normalizeImageMime = (t?: string) => {
   if (!t) return 'image/jpeg';
@@ -191,10 +201,14 @@ export const buildQuery = <T extends { [K in keyof T]?: QueryValue }>(
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const formatChatDayjs = (iso: string) =>
-  dayjs(iso).tz('Asia/Seoul').format('A hh:mm')  // "오전 10:24"
+export const formatChatDayjs = (iso: string) => {
+  if (!iso) return '';
+  const date = dayjs(iso);
+  if (!date.isValid()) return '';
+  return date.tz('Asia/Seoul').format('A hh:mm')  // "오전 10:24"
     .replace('AM', '오전')
     .replace('PM', '오후');
+};
 
 export const formatTimeAgo = (dateString: string): string => {
   const now = new Date();

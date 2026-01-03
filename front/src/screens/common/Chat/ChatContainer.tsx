@@ -9,10 +9,8 @@ export default function ChatContainer() {
   // Fetch chat rooms
   const { data: chatRooms = [] } = useChatRoomsQuery();
 
-  const handlePressChatRoom = (chatRoomId: number, opponentId: string) => {
-    const room = chatRooms.find((r) => r.roomId === chatRoomId);
-    const profileImageURI = room?.profileImageURI || '';
-    navigation.navigate('ChatDetails', { chatRoomId, profileImageURI, opponentId });
+  const handlePressChatRoom = (roomId: number, opponentNickname: string, opponentProfileImageURI: string) => {
+    navigation.navigate('ChatDetails', { roomId, opponentNickname, opponentProfileImageURI });
   };
 
   return (

@@ -1,13 +1,13 @@
 // src/api/bookings.ts
 import { API_BASE_URL } from '@/config/api';
-import { authFetch, authMultipartFetch } from '@/api/utils';
+import { authFetch, authMultipartFetch, toBlobPath } from '@/api/utils';
 import { GetPageable } from '@/api/community';
 import { buildQuery } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
+import { UploadImageFile } from '@/api/reviews.ts';
 
 const BOOKINGS_BASE = `${API_BASE_URL}/api/bookings`
-const PHOTOS_BASE = `${BOOKINGS_BASE}/photos`;
-const SCHEDULES_BASE = `${API_BASE_URL}/api/schedules`;
+const PHOTOS_BASE = `${API_BASE_URL}/api/booking/photos`;
 
 
 /** Spring Page 응답에 포함되는 Sort 요소 */
@@ -53,7 +53,7 @@ export type BookingStatus =
   | 'WAITING_FOR_APPROVAL' // 예약 요청
   | 'APPROVED' // 승인
   | 'REJECTED' // 거절
-  | 'CANCELLED' // 촬영 완료
+  | 'CANCELLED' // 촬영 취소
   | 'COMPLETED' // 촬영 완료
   | 'PHOTOS_DELIVERED' // 사진 전달
   | 'USER_PHOTO_CHECK'; // 사용자가 사진을 승인함
@@ -118,8 +118,8 @@ export interface BookingRequestOption {
 
 export interface CreateBookingRequest {
   photographerId: string;
-  productId: string;
-  optionIds: BookingRequestOption[];
+  productId: number;
+  options: BookingRequestOption[];
   shootingDate: string; // ISO date-time string
   startTime: string;
   requestDetails: string;
@@ -147,9 +147,9 @@ export interface GetBookingPhotosResponse {
 }
 
 /** 예약 사진 일괄 삭제 요청 */
-export interface DeleteBookingPhotosRequest {
-  bookingId: number;
-  photoIds: number[];
+export interface UpdateBookingPhotosRequest {
+  deletePhotoIds: number[];
+  newPhotos: UploadImageFile[];
 }
 
 /** 예약 결과 ZIP 업로드 요청 (multipart/form-data) */
@@ -208,43 +208,6 @@ export const getPhotographerBookings = async (
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error(`Failed to get photographer bookings ${response.status}`);
-
-  return response.json();
-};
-
-/**
- * GET /api/schedules/month/{photographerId}
- * 월별 예약 가능일 조회
- * query: year, month
- */
-export const getMonthlySchedule = async (
-  photographerId: string,
-  year: string,
-  month: string
-): Promise<GetMonthlyScheduleResponse[]> => {
-  const qs = buildQuery({ year, month });
-  const url = `${SCHEDULES_BASE}/month/${photographerId}?${qs}`;
-
-  const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get monthly schedule ${response.status}`);
-
-  return response.json();
-};
-
-/**
- * GET /api/schedules/day/{photographerId}
- * 특정 날짜에 가능한 예약 시간 슬롯 조회
- * query: date (YYYY-MM-DD)
- */
-export const getAvailableDays = async (
-  photographerId: string,
-  date: string, // YYYY-MM-DD
-): Promise<AvailableDay[]> => {
-  const qs = buildQuery({ date });
-  const url = `${SCHEDULES_BASE}/day/${photographerId}?${qs}`;
-
-  const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get available days ${response.status}`);
 
   return response.json();
 };
@@ -343,7 +306,7 @@ export const createBooking = async (
     json: body,
   });
 
-  if (!response.ok) throw new Error(`Failed to create booking ${response.status}`);
+  if (!response.ok) throw new Error(`Failed to create booking ${response.status} ${response.statusText}`);
 }
 
 /**
@@ -366,23 +329,46 @@ export const getBookingPhotos = async (
 };
 
 /**
- * DELETE /api/booking/photos
- * 예약 ID + 사진 ID 리스트로 일괄 삭제하고 ZIP을 갱신
- * body: { bookingId, photoIds }
+ * POST /api/booking/photos/{bookingId}/update
+ * 사진 추가 및 삭제
+ * body: { deletePhotoIds, newPhotos }
  */
-export const deleteBookingPhotos = async (
-  body: DeleteBookingPhotosRequest,
+export const updateBookingPhotos = async (
+  bookingId: number,
+  body: UpdateBookingPhotosRequest,
 ): Promise<void> => {
-  const response = await authFetch(`${PHOTOS_BASE}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  const photoParts = await Promise.all(
+    body.newPhotos.map(async (photo) => {
+      const path = await toBlobPath(photo.uri);
+      // 실제로 존재하는지 확인(디버깅에 도움)
+      await RNBlobUtil.fs.stat(path);
 
-  if (!response.ok) {
-    throw new Error(`Failed to delete booking photos ${response.status}`);
+      return {
+        name: 'newPhotos',
+        filename: photo.name ?? 'photo.jpg',
+        type: photo.type,
+        data: RNBlobUtil.wrap(path),
+      };
+    }),
+  );
+
+  const parts = [
+    {
+      name: 'deletePhotoIds',
+      type: 'application/json',
+      data: JSON.stringify(body.deletePhotoIds),
+    },
+    ...photoParts,
+  ];
+
+  const response = await authMultipartFetch(
+    `${PHOTOS_BASE}/${bookingId}/update`,
+    parts,
+    'POST',
+  );
+
+  if (response.info().status >= 400) {
+    throw new Error(`Failed to update booking photos ${response.info().status}`);
   }
 };
 
@@ -391,9 +377,10 @@ export const deleteBookingPhotos = async (
  * 작가가 결과 ZIP 파일을 업로드(multipart/form-data)
  * form-data: zipFile
  */
-export const uploadBookingZip = async (
-  params: UploadBookingZipRequest,
-): Promise<void> => {
+export const uploadBookingZip = async (params: UploadBookingZipRequest): Promise<void> => {
+  const path = await toBlobPath(params.zipFile.uri);
+  await RNBlobUtil.fs.stat(path);
+
   const response = await authMultipartFetch(
     `${PHOTOS_BASE}/${params.bookingId}`,
     [
@@ -401,7 +388,7 @@ export const uploadBookingZip = async (
         name: 'zipFile',
         filename: params.zipFile.name,
         type: params.zipFile.type ?? 'application/zip',
-        data: RNBlobUtil.wrap(params.zipFile.uri),
+        data: RNBlobUtil.wrap(path),
       },
     ],
     'POST',

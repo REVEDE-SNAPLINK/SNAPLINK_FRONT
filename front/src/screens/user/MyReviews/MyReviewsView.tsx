@@ -8,8 +8,8 @@ import DeleteIcon from '@/assets/icons/delete.svg';
 import React from 'react';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { ScrollView } from 'react-native';
-import { MyReviewItem } from '@/api/me.ts';
 import ServerImage from '@/components/ServerImage.tsx';
+import {MyReviewItem} from "@/api/reviews.ts";
 
 interface MyReviewsViewProps {
   reviews: MyReviewItem[];
@@ -54,7 +54,7 @@ export default function MyReviewsView({
             <ReviewItemHeader>
               <ReviewWriterWrapper>
                 <ReviewWriterProfileImage
-                  uri="" // TODO: API 수정후 추가
+                  uri={review.photographerProfileImage} // TODO: API 수정후 추가
                 />
                 <ReviewWriterInfoWrapper>
                   <Typography

@@ -108,3 +108,27 @@ export const patchUserProfileImage = async (
   // CloudFront key 반환
   return response.text();
 };
+
+export const checkNickname = async (
+  nickname: string,
+): Promise<boolean> => {
+  const response = await authFetch(`${USER_BASE}/check-nickname?nickname=${nickname}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to check nickname ${response.status}`);
+
+  return response.json();
+}
+
+export const checkEmail = async (
+  email: string,
+): Promise<boolean> => {
+  const response = await authFetch(`${USER_BASE}/check-email?email=${email}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to check email ${response.status}`);
+
+  return response.json();
+}

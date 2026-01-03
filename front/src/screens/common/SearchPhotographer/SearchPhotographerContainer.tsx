@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
 import { useSearchPhotographersInfiniteQuery } from '@/queries/photographers.ts';
-import { SearchPhotographersBody, PhotographerSearchItem } from '@/api/photographers.ts';
+import { SearchPhotographersBody } from '@/api/photographers.ts';
 import { useRegionsQuery, useConceptsQuery } from '@/queries/meta.ts';
 
 import CameraIcon from '@/assets/icons/camera.svg';
@@ -130,7 +130,12 @@ export default function SearchPhotographerContainer() {
    */
   const searchBody = useMemo<SearchPhotographersBody>(() => {
     const body: SearchPhotographersBody = {
-      query: searchKey || undefined,
+      gender: null,
+      regionIds: null,
+      conceptIds: null,
+      maxPrice: null,
+      minPrice: null,
+      query: searchKey,
     };
 
     selectedFilters.forEach((filter) => {
@@ -182,28 +187,32 @@ export default function SearchPhotographerContainer() {
     isFetchingNextPage,
     refetch,
     isRefetching,
+    isSuccess
   } = useSearchPhotographersInfiniteQuery(
     { size: PAGE_SIZE,
       sort: sortBy === 'REVIEWS'
-        ? ['reviewCount,DESC']
+        ? ['reviewCount,desc']
         : sortBy === 'HIGH_PRICE'
-      ? ['averageRating,DESC']
+      ? ['basePrice,desc']
           : sortBy === 'LOW_PRICE'
-      ? ['averageRating,ASC']
+      ? ['basePrice,asc']
             : []
     },
     searchBody,
   );
 
+  useEffect(() => {
+    if (isSuccess) {
+      console.log("data", data);
+    }
+  }, [data, isSuccess]);
+
   /**
    * Flatten paginated data into single array
    */
-  const photographers = useMemo<PhotographerSearchItem[]>(() => {
-    if (!data) return [];
-    return data.pages.flatMap((page) => page.content);
-  }, [data]);
+  const photographers = data?.pages.flatMap((page) => page.content);
 
-  const totalCount = data?.pages[0]?.totalElements ?? 0;
+  const totalCount = (data?.pages[0]?.numberOfElements ?? 0); // +1 for dummy data
 
   const handlePressBack = () => {
     navigation.goBack();
@@ -299,7 +308,7 @@ export default function SearchPhotographerContainer() {
       onCloseFilterModal={handleCloseFilterModal}
       selectedFilters={selectedFilters}
       onApplyFilters={handleApplyFilters}
-      photographers={photographers}
+      photographers={photographers ?? []}
       totalCount={totalCount}
       sortBy={sortBy}
       onChangeSortBy={handleChangeSortBy}

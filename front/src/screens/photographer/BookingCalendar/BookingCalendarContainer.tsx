@@ -26,15 +26,43 @@ export default function BookingCalendarContainer() {
   // Personal schedules state (local)
   const [personalSchedules, setPersonalSchedules] = useState<PersonalSchedule[]>([]);
 
-  // Extract year and month from selected date
-  const [year, month] = useMemo(() => {
+  // Current year-month state for data fetching
+  const [currentYearMonth, setCurrentYearMonth] = useState<string>(() => {
     const parts = selectedDate.split('-');
-    return [parseInt(parts[0]), parseInt(parts[1])];
-  }, [selectedDate]);
+    return `${parts[0]}-${parts[1]}`;
+  });
 
-  // Fetch monthly schedule
+  // Extract year and month from currentYearMonth
+  const [year, month] = useMemo(() => {
+    const parts = currentYearMonth.split('-');
+    return [parseInt(parts[0]), parseInt(parts[1])];
+  }, [currentYearMonth]);
+
+  // Calculate prev and next month
+  const { prevYear, prevMonth, nextYear, nextMonth } = useMemo(() => {
+    const prev = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
+    const next = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+    return {
+      prevYear: prev.year,
+      prevMonth: prev.month,
+      nextYear: next.year,
+      nextMonth: next.month,
+    };
+  }, [year, month]);
+
+  // Fetch monthly schedules for prev, current, and next month
+  const { data: prevMonthScheduleData } = usePhotographerMonthSchedulesQuery(
+    { photographerId: userId || '', year: prevYear, month: prevMonth },
+    !!userId
+  );
+
   const { data: monthScheduleData } = usePhotographerMonthSchedulesQuery(
     { photographerId: userId || '', year, month },
+    !!userId
+  );
+
+  const { data: nextMonthScheduleData } = usePhotographerMonthSchedulesQuery(
+    { photographerId: userId || '', year: nextYear, month: nextMonth },
     !!userId
   );
 
@@ -44,7 +72,74 @@ export default function BookingCalendarContainer() {
     !!userId
   );
 
-  const handlePressBack = () => navigation.goBack();
+  // Helper: Get all dates between start and end (inclusive)
+  const getDatesBetween = (startDate: Date, endDate: Date): string[] => {
+    const dates: string[] = [];
+    const current = new Date(startDate);
+    const end = new Date(endDate);
+
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+  };
+
+  // Enhanced schedule data with personal schedules (prev, current, next month)
+  const enhancedScheduleData = useMemo(() => {
+    const schedulesByDate = new Map<string, {
+      hasBooking: boolean;
+      publicHoliday: boolean;
+      photographerHoliday: boolean;
+      hasPersonalSchedule: boolean;
+    }>();
+
+    // Helper to add month data to map
+    const addMonthData = (data: typeof monthScheduleData, year: number, month: number) => {
+      if (!data || !Array.isArray(data)) return;
+      data.forEach(item => {
+        const dateString = `${year}-${String(month).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
+        schedulesByDate.set(dateString, {
+          hasBooking: item.hasBooking,
+          publicHoliday: item.publicHoliday,
+          photographerHoliday: item.photographerHoliday,
+          hasPersonalSchedule: false,
+        });
+      });
+    };
+
+    // Add prev, current, and next month data
+    addMonthData(prevMonthScheduleData, prevYear, prevMonth);
+    addMonthData(monthScheduleData, year, month);
+    addMonthData(nextMonthScheduleData, nextYear, nextMonth);
+
+    // Add personal schedules
+    personalSchedules.forEach(schedule => {
+      const affectedDates = getDatesBetween(schedule.startDate, schedule.endDate);
+      affectedDates.forEach(dateString => {
+        const existing = schedulesByDate.get(dateString);
+        if (existing) {
+          existing.hasPersonalSchedule = true;
+        } else {
+          // Date might not be in API data, create entry for personal schedule only
+          schedulesByDate.set(dateString, {
+            hasBooking: false,
+            publicHoliday: false,
+            photographerHoliday: false,
+            hasPersonalSchedule: true,
+          });
+        }
+      });
+    });
+
+    // Convert map to array
+    return Array.from(schedulesByDate.entries()).map(([date, data]) => ({
+      date,
+      ...data,
+    }));
+  }, [prevMonthScheduleData, monthScheduleData, nextMonthScheduleData, personalSchedules, prevYear, prevMonth, year, month, nextYear, nextMonth]);
+
 
   const handlePressBookingItem = (bookingId: number) =>
     navigation.navigate('BookingDetails', { bookingId });
@@ -65,6 +160,10 @@ export default function BookingCalendarContainer() {
     setSelectedDate(date);
   };
 
+  const handleMonthChange = (yearMonth: string) => {
+    setCurrentYearMonth(yearMonth);
+  };
+
   const handleAddSchedule = () => {
     openAddScheduleModal(handleSubmitSchedule);
   };
@@ -80,12 +179,13 @@ export default function BookingCalendarContainer() {
 
   const handleEditSchedule = (schedule: PersonalSchedule) => {
     closeScheduleDetailModal();
+    // 수정 모드로 AddScheduleModal 열기
     openAddScheduleModal((updatedSchedule) => {
       setPersonalSchedules((prev) =>
         prev.map((s) => (s.id === schedule.id ? { ...updatedSchedule, id: schedule.id } : s))
       );
       closeAddScheduleModal();
-    }, schedule);
+    }, schedule, false); // isDuplicate = false (수정 모드)
   };
 
   const handleDeleteSchedule = (scheduleId: string) => {
@@ -94,13 +194,16 @@ export default function BookingCalendarContainer() {
   };
 
   const handleDuplicateSchedule = (schedule: PersonalSchedule) => {
-    const newSchedule: PersonalSchedule = {
-      ...schedule,
-      id: `schedule_${Date.now()}`,
-      title: `${schedule.title} (복사)`,
-    };
-    setPersonalSchedules((prev) => [...prev, newSchedule]);
     closeScheduleDetailModal();
+    // 복사 모드로 AddScheduleModal 열기
+    openAddScheduleModal((duplicatedSchedule) => {
+      const newSchedule: PersonalSchedule = {
+        ...duplicatedSchedule,
+        id: `schedule_${Date.now()}`,
+      };
+      setPersonalSchedules((prev) => [...prev, newSchedule]);
+      closeAddScheduleModal();
+    }, schedule, true); // isDuplicate = true
   };
 
   // Calculate D-day from today to selected date
@@ -117,26 +220,26 @@ export default function BookingCalendarContainer() {
     return `D-${Math.abs(diffDays)}`;
   }, [selectedDate, today]);
 
-  // Get schedules for selected date
+  // Get schedules for selected date (including multi-day schedules)
   const selectedDateSchedules = useMemo(() => {
     return personalSchedules.filter((schedule) => {
-      const scheduleDate = schedule.startDate.toISOString().split('T')[0];
-      return scheduleDate === selectedDate;
+      const affectedDates = getDatesBetween(schedule.startDate, schedule.endDate);
+      return affectedDates.includes(selectedDate);
     });
   }, [personalSchedules, selectedDate]);
 
   return (
     <BookingCalendarView
       selectedDate={selectedDate}
-      monthScheduleData={monthScheduleData || []}
+      scheduleData={enhancedScheduleData}
       dayDetailData={dayDetailData || null}
       personalSchedules={selectedDateSchedules}
       dDayText={dDayText}
-      onPressBack={handlePressBack}
       onPressBookingItem={handlePressBookingItem}
       onPressPersonalSchedule={handlePressPersonalSchedule}
       onSelectDate={handleSelectDate}
       onPressAddSchedule={handleAddSchedule}
+      onMonthChange={handleMonthChange}
     />
   );
 }

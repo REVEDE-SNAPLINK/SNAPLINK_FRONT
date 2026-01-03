@@ -21,8 +21,9 @@ interface ProfileViewProps {
   onPressManageAccount: () => void;
   onPressBookingHistory: () => void;
   onPressManageBooking: () => void;
-  onPressManageShootService: () => void;
   onPressManagePortfolio: () => void;
+  onPressManageShootService: () => void;
+  onPressManageHolidays: () => void;
   onPressCustomerCenter: () => void;
   onPressNotice: () => void;
   onPressFAQ: () => void;
@@ -47,8 +48,9 @@ export default function ProfileView({
   onPressManageAccount,
   onPressBookingHistory,
   onPressManageBooking,
-  onPressManageShootService,
   onPressManagePortfolio,
+  onPressManageShootService,
+  onPressManageHolidays,
   onPressCustomerCenter,
   onPressNotice,
   onPressFAQ,
@@ -139,7 +141,7 @@ export default function ProfileView({
           <InfoContainer>
             <InfoButton
               onPress={onPressManageBooking}
-              name="촬영 일정 관리"
+              name="촬영 예약 관리"
             />
             <InfoButton
               onPress={onPressManagePortfolio}
@@ -147,7 +149,11 @@ export default function ProfileView({
             />
             <InfoButton
               onPress={onPressManageShootService}
-              name="판매 촬영 서비스 관리"
+              name="판매 관리"
+            />
+            <InfoButton
+              onPress={onPressManageHolidays}
+              name="휴가 설정"
               isLast
             />
           </InfoContainer>

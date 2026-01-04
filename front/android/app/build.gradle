@@ -1,5 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "com.google.gms.google-services"
+apply plugin: "com.google.firebase.crashlytics"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
@@ -129,5 +130,14 @@ dependencies {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
+    }
+}
+
+// Fix for Firebase Analytics Gradle task dependency issue
+afterEvaluate {
+    tasks.findAll { task ->
+        task.name.contains('copyReleaseJniLibsProjectOnly')
+    }.each { task ->
+        task.dependsOn tasks.findAll { it.name.contains('mergeReleaseNativeLibs') }
     }
 }

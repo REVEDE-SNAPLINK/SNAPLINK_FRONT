@@ -1,4 +1,3 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
 import Icon from '@/components/Icon.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
@@ -17,14 +16,14 @@ import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
 
 export const SORT_BY_ENUM = {
   'LATEST': '최신순',
-  'LIKES': '좋아요 순',
+  'LIKES': '인기순',
 };
 
 export type SortByKey = keyof typeof SORT_BY_ENUM;
 
 const SORT_OPTIONS: SortOption<SortByKey>[] = [
   { key: 'LATEST', label: '최신순' },
-  { key: 'LIKES', label: '좋아요 순' },
+  { key: 'LIKES', label: '인기순' },
 ];
 
 
@@ -76,7 +75,7 @@ export default function CommunityView({
     : posts;
 
   return (
-    <ScreenContainer headerShown={false}>
+    <Container>
       <Header>
         <SearchInputWrapper>
           <SearchInput
@@ -209,9 +208,13 @@ export default function CommunityView({
           글쓰기
         </Typography>
       </WritePostButton>
-    </ScreenContainer>
+    </Container>
   );
 }
+
+const Container = styled.View`
+  flex: 1;
+`
 
 const Header = styled.View`
   flex-direction: row;
@@ -253,7 +256,7 @@ const TabNavigator = styled.View`
 `;
 
 const Tab = styled.TouchableOpacity<{ isSelected: boolean }>`
-  width: 65px;
+  padding: 0 10px;
   align-items: center;
   transform: translateY(1px);
   ${({ isSelected }) =>
@@ -282,14 +285,12 @@ const ITEM_WIDTH = SCREEN_WIDTH / 2;
 
 const PostItem = styled.Pressable`
   width: ${ITEM_WIDTH}px;
-  margin-bottom: 30px;
-  height: 270px;
+  margin-bottom: 10px;
 `;
 
 const EmptyPostItem = styled.View`
   width: ${ITEM_WIDTH}px;
   margin-bottom: 30px;
-  height: 270px;
   opacity: 0;
 `;
 
@@ -322,6 +323,7 @@ const PostWriterProfileImage = styled(ServerImage)`
 const PostInfoWrapper = styled.View`
   margin-top: 9px;
   flex-direction: row;
+  align-items: center;
 `;
 
 const LoadingIndicator = styled.View`

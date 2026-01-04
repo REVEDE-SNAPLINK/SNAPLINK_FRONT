@@ -53,6 +53,8 @@ interface SearchPhotographerViewProps {
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
   onPressPhotographer: (photographerId: string) => void;
+
+  navigation?: any;
 }
 
 export default function SearchPhotographerView({
@@ -79,10 +81,11 @@ export default function SearchPhotographerView({
   isRefreshing,
   isFetchingNextPage,
   onPressPhotographer,
-}: SearchPhotographerViewProps) {
+  navigation,}: SearchPhotographerViewProps) {
   return (
     <>
-      <ScreenContainer paddingHorizontal={20} headerShown={false}>
+      <ScreenContainer paddingHorizontal={20} headerShown={false}
+      navigation={navigation}>
         <Header>
           <BackButton onPress={onPressBack} />
           <SearchInputWrapper>

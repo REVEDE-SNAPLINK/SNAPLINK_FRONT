@@ -50,6 +50,7 @@ interface UserOnboardingViewProps {
   nicknameError: string | null;
   isSubmitDisabled: boolean;
   submitButtonText: string;
+  navigation?: any;
 }
 
 // TODO: 랜딩 페이지 구현 후 실제 링크로 연결
@@ -84,6 +85,7 @@ export default function UserOnboardingView({
   nicknameError,
   isSubmitDisabled,
   submitButtonText,
+  navigation,
 }: UserOnboardingViewProps) {
   const opacity = useSharedValue(1);
 
@@ -125,6 +127,7 @@ export default function UserOnboardingView({
       headerShown
       isShowLogo
       onPressBack={onPressBack}
+      navigation={navigation}
     >
       <KeyboardFormView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -477,7 +480,7 @@ const ScrollContainer = styled.ScrollView`
 const AnimatedFormContainer = styled(Animated.View)`
   flex: 1;
   width: 100%;
-  padding: 0 40px;
+  padding: 0 20px;
   margin-top: 40px;
 `;
 

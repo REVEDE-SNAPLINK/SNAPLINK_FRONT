@@ -15,6 +15,8 @@ interface NotificationViewProps {
   onPressNotification: (notificationId: string, relatedId?: string) => void;
   onPressDelete: (notificationId: string) => void;
   onPressSetting: () => void;
+
+  navigation?: any;
 }
 
 const CATEGORIES: NotificationCategory[] = ['일정', '게시글', '리뷰'];
@@ -26,7 +28,8 @@ export default function NotificationView({
   onPressTab,
   onPressNotification,
   onPressDelete,
-  onPressSetting
+  onPressSetting,
+  navigation,
 }: NotificationViewProps) {
   return (
     <ScreenContainer
@@ -35,6 +38,7 @@ export default function NotificationView({
       onPressBack={onPressBack}
       onPressTool={onPressSetting}
       headerToolIcon={SettingsIcon}
+      navigation={navigation}
     >
       <TabNavigator>
         {CATEGORIES.map((category) => (

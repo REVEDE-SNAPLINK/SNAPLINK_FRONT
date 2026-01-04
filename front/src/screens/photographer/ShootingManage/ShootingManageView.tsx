@@ -29,6 +29,8 @@ interface ShootingManageViewProps {
   onPressEditSchedule: () => void;
   shootings: ShootingWithOptions[];
   days: string;
+
+  navigation?: any;
 }
 
 export default function ShootingManageView({
@@ -38,8 +40,8 @@ export default function ShootingManageView({
   onPressDeleteProduct,
   onPressEditSchedule,
   shootings,
-  days
-}: ShootingManageViewProps) {
+  days,
+  navigation,}: ShootingManageViewProps) {
   const [productId, setProductId] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [scheduleModalVisible, setScheduleModalVisible] = useState<boolean>(false);
@@ -50,7 +52,8 @@ export default function ShootingManageView({
         headerShown={true}
         headerTitle="촬영 판매 서비스 관리"
         onPressBack={onPressBack}
-      >
+      
+      navigation={navigation}>
         <ScrollContainer>
           <ShootingOptionContainer>
             <ShootingOptionHeader>

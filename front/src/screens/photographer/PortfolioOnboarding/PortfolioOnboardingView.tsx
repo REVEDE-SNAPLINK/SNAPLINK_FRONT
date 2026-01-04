@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Control, Controller, FieldErrors, useWatch } from 'react-hook-form';
 import Animated, {
   useSharedValue,
@@ -11,6 +11,7 @@ import { SubmitButton, Typography } from '@/components/theme';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import { theme } from '@/theme';
 import { Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Checkbox from '@/components/theme/Checkbox';
 import TextInput from '@/components/theme/TextInput.tsx';
 import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
@@ -79,6 +80,7 @@ interface PortfolioOnboardingViewProps {
   onToggleConcept: (id: number) => void;
   onDeleteOption: (index: number) => void;
   onToggleDay: (day: string) => void;
+  navigation?: any;
 }
 
 export default function PortfolioOnboardingView({
@@ -103,10 +105,19 @@ export default function PortfolioOnboardingView({
   onToggleConcept,
   onDeleteOption,
   onToggleDay,
+  navigation,
 }: PortfolioOnboardingViewProps) {
   const opacity = useSharedValue(1);
   const progressWidth = useSharedValue(0);
 
+
+  const scrollRef = React.useRef<any>(null);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToPosition(0, 0, false);
+    });
+  }, [currentStep]);
   useEffect(() => {
     opacity.value = 0;
     opacity.value = withTiming(1, {
@@ -193,20 +204,28 @@ export default function PortfolioOnboardingView({
       onPressBack={onPressBack}
       onPressTool={onPressClose}
       headerToolIcon={CloseIcon}
-      paddingHorizontal={40}
+      paddingHorizontal={16}
+      alignItemsCenter={false}
       iconSize={20}
+      navigation={navigation}
     >
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled={true}
-          scrollEventThrottle={16}
+      <KeyboardFormView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+        <KeyboardAwareScrollView
+          ref={scrollRef}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={20}
+          contentContainerStyle={{
+            alignItems: 'stretch',
+          }}
         >
           <AnimatedFormContainer style={animatedStyle}>
             {renderStep()}
           </AnimatedFormContainer>
-          <ScrollViewSpacer />
-        </ScrollContainer>
+        </KeyboardAwareScrollView>
       </KeyboardFormView>
       <Footer>
         <ProgressBarContainer>
@@ -244,6 +263,8 @@ const PortfolioOnboardingStep1 = ({
   profileImageURI,
   onProfileImageUpload,
 }: PortfolioOnboardingStep1Props) => {
+  // @ts-ignore
+  const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
       <Typography fontSize={18} lineHeight="140%">
@@ -276,6 +297,7 @@ const PortfolioOnboardingStep1 = ({
             multiline
             height={115}
             maxLength={200}
+            onFocus={handleAutoScrollOnFocus}
           />
         )}
       />
@@ -296,6 +318,8 @@ const PortfolioOnboardingStep2 = ({
   onRemoveImage,
   onAddImages,
 }: PortfolioOnboardingStep2Props) => {
+  // @ts-ignore
+  const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -333,6 +357,7 @@ const PortfolioOnboardingStep2 = ({
             placeholder="게시글 제목"
             value={value}
             onChangeText={onChange}
+            onFocus={handleAutoScrollOnFocus}
           />
         )}
       />
@@ -355,6 +380,7 @@ const PortfolioOnboardingStep2 = ({
             value={value}
             onChangeText={onChange}
             height={115}
+            onFocus={handleAutoScrollOnFocus}
           />
         )}
       />
@@ -547,6 +573,8 @@ interface PortfolioOnboardingStep6Props {
 const PortfolioOnboardingStep6 = ({
   control,
 }: PortfolioOnboardingStep6Props) => {
+  // @ts-ignore
+  const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
@@ -570,6 +598,7 @@ const PortfolioOnboardingStep6 = ({
             placeholder="판매할 서비스 이름을 입력해주세요 *"
             value={value}
             onChangeText={onChange}
+            onFocus={handleAutoScrollOnFocus}
           />
         )}
       />
@@ -590,6 +619,7 @@ const PortfolioOnboardingStep6 = ({
             value={value}
             onChangeText={onChange}
             keyboardType="numeric"
+            onFocus={handleAutoScrollOnFocus}
           />
         )}
       />
@@ -612,6 +642,7 @@ const PortfolioOnboardingStep6 = ({
             multiline
             height={116}
             style={{ textAlignVertical: 'top', paddingTop: 16 }}
+            onFocus={handleAutoScrollOnFocus}
           />
         )}
       />
@@ -727,6 +758,8 @@ const PortfolioOnboardingStep7 = ({
   control,
   onDeleteOption,
 }: PortfolioOnboardingStep7Props) => {
+  // @ts-ignore
+  const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
@@ -765,6 +798,7 @@ const PortfolioOnboardingStep7 = ({
                   }
                   onChange(newOptions);
                 }}
+                onFocus={handleAutoScrollOnFocus}
               />
               <Typography
                 fontSize={16}
@@ -772,10 +806,10 @@ const PortfolioOnboardingStep7 = ({
                 marginBottom={10}
                 marginTop={21}
               >
-                추가 옵션 시간
+                시간 추가 옵션
               </Typography>
               <FormInput
-                placeholder="시간을 추가로 판매할 경우 입력해주세요.(분)"
+                placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
                 value={firstOption.time || ''}
                 keyboardType="numeric"
                 onChangeText={(time: string) => {
@@ -787,6 +821,7 @@ const PortfolioOnboardingStep7 = ({
                   }
                   onChange(newOptions);
                 }}
+                onFocus={handleAutoScrollOnFocus}
               />
               <Typography
                 fontSize={16}
@@ -811,6 +846,7 @@ const PortfolioOnboardingStep7 = ({
                 multiline
                 height={116}
                 style={{ textAlignVertical: 'top', paddingTop: 16 }}
+                onFocus={handleAutoScrollOnFocus}
               />
               <Typography
                 fontSize={16}
@@ -833,6 +869,7 @@ const PortfolioOnboardingStep7 = ({
                   onChange(newOptions);
                 }}
                 keyboardType="numeric"
+                onFocus={handleAutoScrollOnFocus}
               />
 
               {/* 옵션 추가 버튼 */}
@@ -900,6 +937,8 @@ const PortfolioOnboardingStep8 = ({
   const retouchingType = useWatch({ control, name: 'shootingProductEditingType' });
   const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
 
+  // @ts-ignore
+  const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
@@ -943,7 +982,7 @@ const PortfolioOnboardingStep8 = ({
             render={({ field: { onChange, value } }) => (
               <DropDownInput
                 placeholder="선택해주세요 *"
-                options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내']}
+                options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내', '7일 이상']}
                 value={value || undefined}
                 onChange={onChange}
               />
@@ -986,6 +1025,7 @@ const PortfolioOnboardingStep8 = ({
                 value={value}
                 onChangeText={onChange}
                 keyboardType="numeric"
+                onFocus={handleAutoScrollOnFocus}
               />
             )}
           />
@@ -1140,15 +1180,9 @@ const KeyboardFormView = styled.KeyboardAvoidingView`
   width: 100%;
 `
 
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 152px;
-`
-
 const AnimatedFormContainer = styled(Animated.View)`
-  flex: 1;
   width: 100%;
+  align-self: stretch;
 `;
 
 const ProgressBarContainer = styled.View`
@@ -1181,12 +1215,10 @@ const Footer = styled.View`
   justify-content: center;
 `
 
-const ScrollViewSpacer = styled.View`
-  height: 50px;
-`;
 
 const CheckOptionWrapper = styled.View`
   width: 100%;
+  align-self: stretch;
   flex-direction: row;
   align-items: center;
   margin-bottom: 15px;

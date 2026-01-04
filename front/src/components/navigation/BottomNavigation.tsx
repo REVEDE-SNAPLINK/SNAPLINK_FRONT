@@ -58,14 +58,13 @@ export default function BottomNavigation({
 }
 
 const Container = styled.View`
-  height: 80px;
+  height: 65px;
   background: #fff;
-  padding-top: 11px;
   padding-horizontal: 27px;
   flex-direction: row;
   justify-content: space-between;
-  align-items: flex-start;
-  box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.08);
+  align-items: center;
+  box-shadow: 0px -2px 2px rgba(0, 0, 0, 0.08);
 `;
 
 const TabButton = styled.TouchableOpacity`

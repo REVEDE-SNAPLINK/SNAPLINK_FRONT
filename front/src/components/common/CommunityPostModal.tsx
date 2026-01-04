@@ -492,6 +492,7 @@ const ToolWrapper = styled.View`
   padding-left: 28px;
   flex-direction: row;
   align-items: center;
+  padding-bottom: 30px; // TODO: statusbar 및 하단, 상단, tool 영역 침범 x
 `
 
 const ToolButton = styled.TouchableOpacity`

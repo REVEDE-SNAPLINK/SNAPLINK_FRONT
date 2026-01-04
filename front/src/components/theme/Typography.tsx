@@ -36,8 +36,8 @@ const StyledText = styled(Text)<{
   marginLeft?: number;
   marginRight?: number;
 }>`
-  ${({ $fontSize }) => $fontSize !== undefined ? `font-size: ${$fontSize}px;` : ''}
-  ${({ $lineHeight }) => $lineHeight !== undefined ? `line-height: ${$lineHeight}px;` : ''}
+  ${({ $fontSize }) => $fontSize !== undefined ? `font-size: ${$fontSize * 1.1}px;` : ''}
+  ${({ $lineHeight }) => $lineHeight !== undefined ? `line-height: ${$lineHeight * 1.1}px;` : ''}
   ${({ $letterSpacing }) => $letterSpacing !== undefined ? `letter-spacing: ${$letterSpacing}px;` : ''}
   font-family: ${({ $fontWeight }) => fontFamily[$fontWeight] || fontFamily.regular};
   font-weight: ${({ $fontWeight }) => Number(fontWeightMap[$fontWeight]) || 400};

@@ -87,6 +87,8 @@ export interface SignUpFormData {
 
 // 회원가입
 export async function signUpApi (formData: SignUpFormData): Promise<LoginSuccessResponse> {
+  console.log(formData);
+
   const response = await fetch(`${AUTH_BASE}/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

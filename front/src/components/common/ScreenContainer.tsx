@@ -1,7 +1,8 @@
-import { ReactNode, ComponentType } from 'react';
-import { StatusBar } from 'react-native';
+import React, { ReactNode, ComponentType } from 'react';
+import { StatusBar, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgProps } from 'react-native-svg';
+import { useFocusEffect } from '@react-navigation/native';
 import styled from '@/utils/scale/CustomStyled';
 import HeaderWithBackButton from '@/components/common/HeaderWithBackButton';
 
@@ -21,6 +22,7 @@ interface Props {
   onPressTool?: () => void;
   onPressMore?: () => void;
   iconSize?: number;
+  navigation?: any;
 }
 
 export default function ScreenContainer({
@@ -37,14 +39,45 @@ export default function ScreenContainer({
   headerHeight,
   isShowLogo = false,
   headerToolIcon,
-  iconSize
+  iconSize,
+  navigation
 }: Props) {
+  // Default back handler
+  const handleBack = React.useCallback(() => {
+    if (navigation?.canGoBack()) {
+      navigation.goBack();
+    } else {
+      BackHandler.exitApp();
+    }
+  }, [navigation]);
+
+  // Use provided onPressBack or default handleBack
+  const backHandler = onPressBack || (navigation ? handleBack : undefined);
+
+  // Android hardware back button handler
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!navigation) return;
+
+      const onBackPress = () => {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+          return true;
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
   return (
     <StyledSafeAreaView backgroundColor={backgroundColor}>
       <StatusBar barStyle="dark-content" backgroundColor={barBackgroundColor} />
       {headerShown && (
         <HeaderWithBackButton
-          onPressBack={onPressBack}
+          onPressBack={backHandler}
           onPressTool={onPressTool}
           title={headerTitle}
           ToolIcon={headerToolIcon}
@@ -67,7 +100,6 @@ export default function ScreenContainer({
 
 const StyledSafeAreaView = styled(SafeAreaView)<{ backgroundColor: string }>`
   flex: 1;
-  box-sizing: border-box;
   background-color: ${({ backgroundColor }) => backgroundColor};
 `;
 
@@ -77,7 +109,6 @@ const Container = styled.View<{
   backgroundColor: string,
 }>`
   flex: 1;
-  width: 100%;
   background-color: ${({ backgroundColor }) => backgroundColor};
   ${({ paddingHorizontal }) => paddingHorizontal !== undefined && `padding-horizontal: ${paddingHorizontal}px;`}
   ${({ alignItemsCenter }) => alignItemsCenter ? `align-items: center;` : ''}

@@ -77,6 +77,7 @@ export default function BookingHistoryContainer() {
       onPressViewPhotos={handlePressViewPhotos}
       onPressWriteReview={handlePressWriteReview}
       onPressShowMyReivew={handlePressShowMyReview}
+      navigation={navigation}
     />
   );
 }

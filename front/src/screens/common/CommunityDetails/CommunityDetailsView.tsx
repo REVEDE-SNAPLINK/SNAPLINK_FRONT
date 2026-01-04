@@ -8,7 +8,7 @@ import {
   ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Animated,
+  Animated, View,
 } from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
@@ -517,12 +517,11 @@ export default function CommunityDetailsView({
         visible={isCommentModalVisible}
         onClose={onCloseCommentModal}
         showHeader
-        title={`댓글 ${post.commentCount}`}
+        title={`댓글  ${post.commentCount}`}
         headerAlign="left"
         scrollable
         autoGrowToMax
-        maxHeight={SCREEN_HEIGHT * 0.8}
-        minHeight={SCREEN_HEIGHT * 0.8}
+        minHeight={SCREEN_HEIGHT * 0.6}
         footerHeight={75}
         keyboardAvoid
         footer={
@@ -565,6 +564,7 @@ export default function CommunityDetailsView({
             onPressDeleteComment={onPressDeleteComment}
           />
         ))}
+        <View style={{ height: 120 }} />
       </SlideModal>
 
       {/* Edit Modal */}

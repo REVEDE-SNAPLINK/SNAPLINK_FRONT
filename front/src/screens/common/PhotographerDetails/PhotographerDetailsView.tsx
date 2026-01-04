@@ -2,7 +2,6 @@ import React from 'react';
 import {
   FlatList,
   Dimensions,
-  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/common/ScreenContainer';
@@ -14,7 +13,6 @@ import { theme } from '@/theme';
 import BookmarkIcon from '@/assets/icons/bookmark-white.svg'
 import ChatIcon from '@/assets/icons/chat-white.svg';
 import UploadIcon from '@/assets/icons/upload.svg';
-import UploadBlackIcon from '@/assets/icons/upload.svg';
 import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
 import ActiveStarIcon from '@/assets/icons/star-color.svg'
@@ -26,6 +24,7 @@ import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetShootingResponse, mappingEditDeadline } from '@/api/shootings.ts';
 import { formatNumber } from '@/utils/format.ts';
 import TickSquareIcon from '@/assets/icons/tick-square.svg';
+import EditIcon from '@/assets/icons/edit.svg';
 
 export interface ShareLink {
   name: string;
@@ -67,16 +66,17 @@ interface PhotographerDetailsViewProps {
   reviewPreviewImages: string[];
   reviews: Review[];
   isScrapped: boolean;
-  isShareModalVisible: boolean;
   isMoreModalVisible: boolean;
   onCloseMoreModal: () => void;
   onPressMore: () => void;
+  isReportModalVisible: boolean;
+  onPressReportStart: () => void;
+  onCloseReportModal: () => void;
+  onPressEditProfile: () => void;
   reportType: string[];
   onPressReport: (type: string) => void;
-  shareLinks: ShareLink[];
   onPressBack: () => void;
   onPressShare: () => void;
-  onCloseShareModal: () => void;
   onPressFavorite: () => void;
   onPressInquiry: () => void;
   onPressReservation: () => void;
@@ -85,6 +85,7 @@ interface PhotographerDetailsViewProps {
   onPressPortfolioImage: (id: number) => void;
   onPressShowAllReviews: () => void;
   onPressShowAllReviewPhotos: () => void;
+  navigation?: any;
 }
 
 export default function PhotographerDetailsView({
@@ -104,16 +105,17 @@ export default function PhotographerDetailsView({
   reviewPreviewImages,
   reviews,
   isScrapped,
-  isShareModalVisible,
   isMoreModalVisible,
   onCloseMoreModal,
   onPressMore,
+  isReportModalVisible,
+  onPressReportStart,
+  onCloseReportModal,
+  onPressEditProfile,
   reportType,
   onPressReport,
-  shareLinks,
   onPressBack,
   onPressShare,
-  onCloseShareModal,
   onPressFavorite,
   onPressInquiry,
   onPressReservation,
@@ -122,6 +124,7 @@ export default function PhotographerDetailsView({
   onPressPortfolioImage,
   onPressShowAllReviews,
   onPressShowAllReviewPhotos,
+  navigation,
 }: PhotographerDetailsViewProps) {
   const insets = useSafeAreaInsets();
 
@@ -224,54 +227,56 @@ export default function PhotographerDetailsView({
           </TabButton>
         </TabHeader>
         {activeTab === 'portfolio' && shootingData !== undefined && (
-          <PhotographerPortfolioInfo>
-            <PhotographerPortfolioRow>
-              <Typography
-                fontSize={12}
-              >
-                {shootingData?.shoootingName}/{photoHour}시간{photoMinute === 0 ? '' : ` ${photoMinute}분`}
-              </Typography>
-              <Typography
-                fontSize={12}
-              >
-                {formatNumber(shootingData?.basePrice)}원
-              </Typography>
-            </PhotographerPortfolioRow>
-            {shootingData.providesRawFile && (
+          <PhotographerPortfolioInfoWrapper>
+            <PhotographerPortfolioInfo>
               <PhotographerPortfolioRow>
                 <Typography
                   fontSize={12}
                 >
-                  원본 파일 제공
-                </Typography>
-                <Icon width={20} height={20} Svg={TickSquareIcon} />
-              </PhotographerPortfolioRow>
-            )}
-            {shootingOptions.length > 0 && (
-              <PhotographerPortfolioRow>
-                <Typography
-                  fontSize={12}
-                >
-                  {shootingOptions.join(', ')}
-                </Typography>
-                <Icon width={20} height={20} Svg={TickSquareIcon} />
-              </PhotographerPortfolioRow>
-            )}
-            {shootingData.editingType !== 'NONE' && (
-              <PhotographerPortfolioRow>
-                <Typography
-                  fontSize={12}
-                >
-                  보정 작업일
+                  {shootingData?.shoootingName}/{photoHour}시간{photoMinute === 0 ? '' : ` ${photoMinute}분`}
                 </Typography>
                 <Typography
                   fontSize={12}
                 >
-                  {mappingEditDeadline(shootingData.editingDeadline)}일
+                  {formatNumber(shootingData?.basePrice)}원
                 </Typography>
               </PhotographerPortfolioRow>
-            )}
-          </PhotographerPortfolioInfo>
+              {shootingData.providesRawFile && (
+                <PhotographerPortfolioRow>
+                  <Typography
+                    fontSize={12}
+                  >
+                    원본 파일 제공
+                  </Typography>
+                  <Icon width={20} height={20} Svg={TickSquareIcon} />
+                </PhotographerPortfolioRow>
+              )}
+              {shootingOptions.length > 0 && (
+                <PhotographerPortfolioRow>
+                  <Typography
+                    fontSize={12}
+                  >
+                    {shootingOptions.join(', ')}
+                  </Typography>
+                  <Icon width={20} height={20} Svg={TickSquareIcon} />
+                </PhotographerPortfolioRow>
+              )}
+              {shootingData.editingType !== 'NONE' && (
+                <PhotographerPortfolioRow>
+                  <Typography
+                    fontSize={12}
+                  >
+                    보정 작업일
+                  </Typography>
+                  <Typography
+                    fontSize={12}
+                  >
+                    {mappingEditDeadline(shootingData.editingDeadline)}일
+                  </Typography>
+                </PhotographerPortfolioRow>
+              )}
+            </PhotographerPortfolioInfo>
+          </PhotographerPortfolioInfoWrapper>
         )}
       </>
     );
@@ -382,6 +387,7 @@ export default function PhotographerDetailsView({
         headerShown={true}
         headerTitle=""
         onPressBack={onPressBack}
+        navigation={navigation}
       >
         <Loading size="large" variant="fullscreen" />
       </ScreenContainer>
@@ -394,6 +400,7 @@ export default function PhotographerDetailsView({
         headerShown={true}
         headerTitle=""
         onPressBack={onPressBack}
+        navigation={navigation}
       >
         <ContentContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
           <Typography fontSize={14} color={theme.colors.textSecondary}>
@@ -413,6 +420,7 @@ export default function PhotographerDetailsView({
         headerShown={true}
         headerTitle={photographer.nickname}
         onPressBack={onPressBack}
+        navigation={navigation}
         headerToolIcon={UploadIcon}
         onPressTool={onPressShare}
         onPressMore={onPressMore}
@@ -495,52 +503,65 @@ export default function PhotographerDetailsView({
     </ScreenContainer>
 
     {/* Share Modal */}
-    <SlideModal
-      visible={isShareModalVisible}
-      onClose={onCloseShareModal}
-      title="Links"
-      minHeight={SCREEN_WIDTH * 0.25}
-    >
-      {shareLinks.map((v, i) => (
-        <ShareLinkButton
-          key={i}
-          onPress={() => {
-            (async () => {
-              const supported = await Linking.canOpenURL(v.url);
-
-              if (supported) {
-                Linking.openURL(v.url);
-              }
-            })();
-          }}
-        >
-          <Icon width={18} height={18} Svg={UploadBlackIcon} />
-          <Typography
-            fontSize={14}
-            marginLeft={15}
-          >
-            {v.name}
-          </Typography>
-        </ShareLinkButton>
-      ))}
-    </SlideModal>
-
       <SlideModal
         visible={isMoreModalVisible}
         onClose={onCloseMoreModal}
-        title="신고하기"
+        title="더보기"
         minHeight={276}
       >
-        {reportType.map((v, i) => (
-          <ReportButton isFirst={i === 0} onPress={() => onPressReport(v)}>
-            <Typography
-              fontSize={12}
-            >
-              {v}
-            </Typography>
-          </ReportButton>
-        ))}
+        {isMyProfile ? (
+          <>
+            <ModalButton onPress={() => {
+              onCloseMoreModal();
+              onPressEditProfile();
+            }}>
+              <Icon width={18} height={18} Svg={EditIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                프로필 수정
+              </Typography>
+            </ModalButton>
+          </>
+        ) : (
+          <>
+            <ModalButton onPress={() => {
+              onCloseMoreModal();
+              onPressReportStart();
+            }}>
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                신고하기
+              </Typography>
+            </ModalButton>
+          </>
+        )}
       </SlideModal>
+
+    <SlideModal
+      visible={isReportModalVisible}
+      onClose={onCloseReportModal}
+      title="신고하기"
+      minHeight={276}
+    >
+      {reportType.map((v, i) => (
+        <ReportButton isFirst={i === 0} onPress={() => onPressReport(v)}>
+          <Typography
+            fontSize={12}
+          >
+            {v}
+          </Typography>
+        </ReportButton>
+      ))}
+    </SlideModal>
+
   </>
   );
 }
@@ -767,12 +788,6 @@ const ShowReviewButton = styled.TouchableOpacity`
   align-items: center;
 `
 
-const ShareLinkButton = styled.Pressable`
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 15px;
-`
-
 const FloatingButton = styled.TouchableOpacity`
   width: 38px;
   height: 38px;
@@ -787,14 +802,21 @@ const FloatingButton = styled.TouchableOpacity`
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
 `
 
+const PhotographerPortfolioInfoWrapper = styled.View`
+  width: 100%;
+  align-items: center;
+  margin-bottom: 13px;
+  padding: 0 25px;
+`
+
 const PhotographerPortfolioInfo = styled.View`
   width: 100%;
-  background-color: #C8C8C8;
+  background-color: #f1f0ef;
   padding-top: 10px;
   padding-bottom: 7px;
   padding-horizontal: 25px;
-  margin-bottom: 13px;
   justify-content: space-between;
+  border-radius: 5px;
 `
 
 const PhotographerPortfolioRow = styled.View`
@@ -807,4 +829,10 @@ const PhotographerPortfolioRow = styled.View`
 
 const ReportButton = styled.TouchableOpacity<{ isFirst: boolean }>`
   ${({ isFirst }) => !isFirst && `margin-top: 25px;`}
+`
+
+const ModalButton = styled.TouchableOpacity`
+  flex-direction: row;
+  margin-bottom: 15px;
+  align-items: center;
 `

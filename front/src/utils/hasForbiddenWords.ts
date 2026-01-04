@@ -6,6 +6,7 @@ const KEYWORDS = [
 
 // 기본: 부분 문자열 포함 여부(띄어쓰기/대소문자 영향 거의 없음, 한글 기준)
 export function hasForbiddenWords(input: string, keywords: readonly string[] = KEYWORDS) {
+  if (input === null || input === undefined || input === '') return false;
   const text = (input ?? '').trim();
   if (!text) return { has: false, matches: [] as string[] };
 

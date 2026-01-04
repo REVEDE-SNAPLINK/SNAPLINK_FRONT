@@ -26,6 +26,8 @@ interface BookingManageViewProps {
   onPressRejectBooking?: (bookingId: number) => void;
   onPressCompleteBooking?: (bookingId: number) => void;
   onPressCancelBooking?: (bookingId: number) => void;
+
+  navigation?: any;
 }
 
 export default function BookingManageView({
@@ -45,7 +47,7 @@ export default function BookingManageView({
   onPressRejectBooking,
   onPressCompleteBooking,
   onPressCancelBooking,
-}: BookingManageViewProps) {
+  navigation,}: BookingManageViewProps) {
   const renderItem = ({ item }: { item: PhotographerBookingListItem }) => {
 
     const endDateTime = new Date(`${item.shootingDate}T${item.endTime}`);
@@ -128,7 +130,8 @@ export default function BookingManageView({
       headerTitle="촬영 예약 관리"
       headerShown={true}
       onPressBack={onPressBack}
-    >
+    
+      navigation={navigation}>
       <ContentContainer>
         <FlatList
           testID="booking-history-list"

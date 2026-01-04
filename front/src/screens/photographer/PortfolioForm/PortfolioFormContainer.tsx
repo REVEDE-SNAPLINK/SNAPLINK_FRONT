@@ -151,6 +151,7 @@ export default function PortfolioFormContainer() {
       onPressBack={handlePressBack}
       onPressSubmit={handleSubmitForm}
       isSubmitDisabled={!isValid || isPending}
+      navigation={navigation}
     />
   );
 }

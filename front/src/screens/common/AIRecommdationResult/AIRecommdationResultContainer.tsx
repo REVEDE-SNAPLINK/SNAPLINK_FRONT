@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import AIRecommdationResultView from '@/screens/common/AIRecommdationResult/AIRecommdationResultView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
@@ -68,6 +68,11 @@ export default function AIRecommdationResultContainer() {
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => setIsLoading(false), 2500);
+  }, []);
 
   // API search body
   const searchBody = useMemo<SearchPhotographersBody>(() => ({
@@ -266,6 +271,8 @@ export default function AIRecommdationResultContainer() {
       isRefreshing={isRefetching}
       isFetchingNextPage={isFetchingNextPage}
       onPressPhotographer={handlePressPhotographer}
+      isLoading={isLoading}
+      navigation={navigation}
     />
   );
 }

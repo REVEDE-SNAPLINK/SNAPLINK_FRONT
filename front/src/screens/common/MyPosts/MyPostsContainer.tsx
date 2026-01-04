@@ -31,7 +31,8 @@ export default function MyPostsContainer() {
         posts={[]}
         onPressBack={handlePressBack}
         onPressPost={handlePressPost}
-      />
+      navigation={navigation}
+    />
     );
   }
 
@@ -45,6 +46,7 @@ export default function MyPostsContainer() {
       posts={allPosts}
       onPressBack={handlePressBack}
       onPressPost={handlePressPost}
+      navigation={navigation}
     />
   );
 }

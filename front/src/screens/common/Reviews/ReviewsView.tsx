@@ -31,6 +31,8 @@ interface ReviewsViewProps {
   isFetchingNextPage: boolean;
   isRefreshing: boolean;
   isLoading: boolean;
+
+  navigation?: any;
 }
 
 export default function ReviewsView({
@@ -46,7 +48,7 @@ export default function ReviewsView({
   isFetchingNextPage,
   isRefreshing,
   isLoading,
-}: ReviewsViewProps) {
+  navigation,}: ReviewsViewProps) {
   const renderStars = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -138,14 +140,16 @@ export default function ReviewsView({
 
   if (isLoading) {
     return (
-      <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle={`리뷰 ${totalCount}`}>
+      <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle={`리뷰 ${totalCount}`}
+      navigation={navigation}>
         <Loading />
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle={`리뷰 ${totalCount}`}>
+    <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle={`리뷰 ${totalCount}`}
+      navigation={navigation}>
       <ReviewsContainer
         data={reviews}
         keyExtractor={(item) => item.reviewId.toString()}

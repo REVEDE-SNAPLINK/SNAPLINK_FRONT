@@ -294,6 +294,7 @@ export default function HolidayManageContainer() {
       onPressDelete={handlePressDelete}
       editMode={editMode}
       selectedGroup={selectedGroup}
+      navigation={navigation}
     />
   );
 }

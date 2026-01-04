@@ -1,4 +1,3 @@
-import ScreenContainer from '@/components/common/ScreenContainer.tsx';
 import ScheduleCalendar, { EnhancedScheduleData } from '@/components/ScheduleCalendar.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
@@ -58,12 +57,7 @@ export default function BookingCalendarView({
   const hasSchedules = bookings.length > 0 || personalSchedules.length > 0 || hasPublicHoliday || hasPhotographerHoliday;
 
   return (
-    <ScreenContainer
-      headerShown={true}
-      headerTitle="촬영 일정 관리"
-      alignItemsCenter={false}
-      backgroundColor="#EAEAEA"
-    >
+    <Container>
       <ScheduleCalendar
         initialDate={selectedDate}
         selectedDate={selectedDate}
@@ -156,13 +150,18 @@ export default function BookingCalendarView({
           </FloatingButton>
         </ScheduleToolButtonWrapper>
       </BookingContentContainer>
-    </ScreenContainer>
+    </Container>
   );
 }
+
+const Container = styled.View`
+  flex: 1
+`
 
 const BookingContentContainer = styled.View`
   flex: 1;
   width: 100%;
+  background-color: #EAEAEA;
 `
 
 const BookingSlideBarWrapper = styled.View`

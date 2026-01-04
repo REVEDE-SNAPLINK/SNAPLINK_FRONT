@@ -9,6 +9,7 @@ import ChatIcon from '@/assets/icons/chat-black.svg'
 import DocumentIcon from '@/assets/icons/document.svg'
 import NotificationIcon from '@/assets/icons/notification.svg'
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg'
+import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
 
 interface ProfileViewProps {
   onToggleExpertMode: () => void;
@@ -64,7 +65,8 @@ export default function ProfileView({
   email,
 }:  ProfileViewProps) {
   return (
-    <ScreenContainer headerShown={true} headerTitle="마이페이지">
+    <Container>
+      <HeaderWithBackButton title="마이페이지" />
       {isPhotographer && (
         <ChangeModeWrapper isExpertMode={isExpertMode}>
           <Typography
@@ -244,9 +246,13 @@ export default function ProfileView({
           Copyright Revede, All Rights Reserved.
         </Typography>
       </ContentContainer>
-    </ScreenContainer>
+    </Container>
   );
 }
+
+const Container = styled.View`
+  flex: 1;
+`
 
 const ChangeModeWrapper = styled.View<{ isExpertMode: Boolean }>`
   height: 50px;
@@ -261,7 +267,7 @@ const ChangeModeWrapper = styled.View<{ isExpertMode: Boolean }>`
 
 const ContentContainer = styled.ScrollView`
   width: 100%;
-  padding-horizontal: 33px;
+  padding-horizontal: 20px;
 `
 
 const IconNavigationButtonWrapper = styled.View`

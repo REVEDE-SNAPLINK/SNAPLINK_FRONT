@@ -197,6 +197,7 @@ export default function PhotographerViewPhotosContainer() {
       onDeletePhotos={handleDeletePhotos}
       onAddImages={handleAddImages}
       isLoading={isLoading || isUploadPending || isUpdatePending}
+      navigation={navigation}
     />
   );
 }

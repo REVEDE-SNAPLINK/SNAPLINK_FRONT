@@ -17,6 +17,8 @@ interface UserBookingDetailsViewProps {
   onPressWriteReview?: () => void;
   onPressShowMyReview?: () => void;
   isLoading?: boolean;
+
+  navigation?: any;
 }
 
 export default function UserBookingDetailsView({
@@ -29,14 +31,15 @@ export default function UserBookingDetailsView({
   onPressWriteReview,
   onPressShowMyReview,
   isLoading = false,
-}: UserBookingDetailsViewProps) {
+  navigation,}: UserBookingDetailsViewProps) {
   if (isLoading) {
     return (
       <ScreenContainer
         onPressBack={onPressBack}
         headerTitle="예약 상세"
         backgroundColor={theme.colors.bgSecondary}
-      >
+      
+      navigation={navigation}>
         <Loading size="large" variant="fullscreen" />
       </ScreenContainer>
     );
@@ -46,7 +49,8 @@ export default function UserBookingDetailsView({
       onPressBack={onPressBack}
       headerTitle="촬영 상세 내역"
       backgroundColor={theme.colors.bgSecondary}
-    >
+    
+      navigation={navigation}>
       <InfoContainer>
         <Typography
           fontSize={16}

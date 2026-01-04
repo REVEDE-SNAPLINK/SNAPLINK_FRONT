@@ -26,7 +26,8 @@ export default function PhotographerBookingDetailsContainer() {
         additionalRequest=""
         status="WAITING_FOR_APPROVAL"
         isLoading={isLoading}
-      />
+      navigation={navigation}
+    />
     );
   }
 
@@ -42,6 +43,7 @@ export default function PhotographerBookingDetailsContainer() {
       status={bookingDetails.status}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       isLoading={isLoading}
+      navigation={navigation}
     />
   );
 }

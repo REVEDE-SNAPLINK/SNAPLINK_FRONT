@@ -20,6 +20,8 @@ interface ReviewDetailsViewProps {
   isEditable: boolean;
   onPressEdit?: () => void;
   onPressDelete?: () => void;
+
+  navigation?: any;
 }
 
 export default function ReviewDetailsView({
@@ -31,9 +33,10 @@ export default function ReviewDetailsView({
   isEditable,
   onPressEdit,
   onPressDelete,
-}: ReviewDetailsViewProps) {
+  navigation,}: ReviewDetailsViewProps) {
   if (!review) {
-    return <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰">{null}</ScreenContainer>;
+    return <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰"
+      navigation={navigation}>{null}</ScreenContainer>;
   }
 
   const renderStars = (rating: number) => {
@@ -55,7 +58,8 @@ export default function ReviewDetailsView({
   )}.${String(reviewDate.getDate()).padStart(2, '0')}`;
 
   return (
-    <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰">
+    <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰"
+      navigation={navigation}>
       <ReviewDetailsContainer showsVerticalScrollIndicator={false}>
         <ReviewItemHeader>
           <ReviewWriterWrapper>

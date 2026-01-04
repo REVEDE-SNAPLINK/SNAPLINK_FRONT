@@ -317,6 +317,7 @@ export default function SearchPhotographerContainer() {
       isRefreshing={isRefetching}
       isFetchingNextPage={isFetchingNextPage}
       onPressPhotographer={handlePressPhotographer}
+      navigation={navigation}
     />
   );
 }

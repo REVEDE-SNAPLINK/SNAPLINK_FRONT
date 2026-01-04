@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Share, TextInput } from 'react-native';
+import { Share, TextInput, InteractionManager } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import { CreateCommunityPostParams } from '@/api/community.ts';
@@ -31,10 +31,30 @@ export default function CommunityDetailsContainer() {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   // const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
+  const [shouldFocusCommentInput, setShouldFocusCommentInput] = useState(false);
   const [replyTo, setReplyTo] = useState<{ parentId: number; nickname: string } | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
 
   const commentInputRef = useRef<TextInput | null>(null);
+
+  // Safe focus utility for comment input (iOS release modal animation/layout fix)
+  const focusCommentInputSafely = () => {
+    // iOS Release(Build)에서 모달 애니메이션/레이아웃 중 focus 호출 시 크래시/이상 동작이 발생할 수 있어
+    // InteractionManager + rAF로 화면 안정화 이후 포커스를 준다.
+    InteractionManager.runAfterInteractions(() => {
+      requestAnimationFrame(() => {
+        commentInputRef.current?.focus();
+      });
+    });
+  };
+
+  useEffect(() => {
+    if (!isCommentModalVisible) return;
+    if (!shouldFocusCommentInput) return;
+
+    focusCommentInputSafely();
+    setShouldFocusCommentInput(false);
+  }, [isCommentModalVisible, shouldFocusCommentInput]);
 
   // Fetch post details
   const { data: post } = useCommunityPostQuery(postId);
@@ -83,10 +103,7 @@ export default function CommunityDetailsContainer() {
 
   const handlePressWriteComment = () => {
     setIsCommentModalVisible(true);
-    // Auto focus input after modal opens
-    setTimeout(() => {
-      commentInputRef.current?.focus();
-    }, 300);
+    setShouldFocusCommentInput(true);
   };
 
   const handleCloseCommentModal = () => {
@@ -224,18 +241,14 @@ export default function CommunityDetailsContainer() {
     console.log(commentId, nickname);
     setReplyTo({ parentId: commentId, nickname });
     setCommentInput(`@${nickname} `);
-    setTimeout(() => {
-      commentInputRef.current?.focus();
-    }, 100);
+    setShouldFocusCommentInput(true);
   };
 
   const handlePressEditComment = (commentId: number, content: string) => {
     setEditingCommentId(commentId);
     setCommentInput(content);
     setReplyTo(null);
-    setTimeout(() => {
-      commentInputRef.current?.focus();
-    }, 100);
+    setShouldFocusCommentInput(true);
   };
 
   const handlePressDeleteComment = (commentId: number) => {

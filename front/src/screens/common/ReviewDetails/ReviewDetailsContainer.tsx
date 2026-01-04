@@ -71,6 +71,7 @@ export default function ReviewDetailsContainer() {
       onPressEdit={handlePressEdit}
       onPressDelete={handlePressDelete}
       onPressBack={handlePressBack}
+      navigation={navigation}
     />
   );
 }

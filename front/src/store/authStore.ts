@@ -40,7 +40,7 @@ type AuthState = {
   // actions
   bootstrap: () => Promise<void>;
   signInWithKakao: () => Promise<string | null>;
-  signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE', token: string) => Promise<void>;
+  signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE', token: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signOut: () => Promise<void>;
   signUp: (formData: SignUpFormData) => Promise<void>;
   withdraw: () => Promise<void>;
@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  async signInWithProviderToken(provider, token) {
+  async signInWithProviderToken(provider, token): Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'> {
     set({ status: 'loading' });
     try {
       const response = await signInApi(provider, token);
@@ -169,6 +169,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           accessToken: null,
         });
       }
+
+      return response.status;
     } catch (e) {
       set({ status: 'anon', accessToken: null });
       console.error(e);

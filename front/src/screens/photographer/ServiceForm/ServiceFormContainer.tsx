@@ -166,7 +166,6 @@ export default function ServiceFormContainer() {
           // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
           return watchedAdditionalOptions.every(option => {
             const hasAnyValue = option.name.trim() !== '' ||
-                                option.description.trim() !== '' ||
                                 option.price.trim() !== '';
 
             if (!hasAnyValue) {
@@ -226,7 +225,6 @@ export default function ServiceFormContainer() {
         // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
         return watchedAdditionalOptions.every(option => {
           const hasAnyValue = option.name.trim() !== '' ||
-                              option.description.trim() !== '' ||
                               option.price.trim() !== '';
 
           if (!hasAnyValue) {
@@ -476,6 +474,7 @@ export default function ServiceFormContainer() {
       submitButtonText={submitButtonText}
       onDeleteOption={handleDeleteOption}
       isEditMode={isEditMode}
+      navigation={navigation}
     />
   );
 }

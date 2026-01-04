@@ -78,7 +78,8 @@ export default function BookingRequestContainer() {
           isSubmitDisabled={!isFormValid || createBookingMutation.isPending}
           additionalRequest={value}
           onChangeAdditionalRequest={onChange}
-        />
+      navigation={navigation}
+    />
       )}
     />
   );

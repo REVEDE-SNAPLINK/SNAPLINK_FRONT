@@ -409,6 +409,7 @@ export default function BookingContainer() {
       totalPrice={totalPrice}
       onSubmit={handleSubmit(onSubmit)}
       isSubmitDisabled={!isFormValid}
+      navigation={navigation}
     />
   );
 }

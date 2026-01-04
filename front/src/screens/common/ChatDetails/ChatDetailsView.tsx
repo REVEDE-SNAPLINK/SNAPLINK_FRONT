@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
-import { KeyboardAvoidingView, Platform, FlatList, Dimensions, Modal } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import { FlatList, Dimensions, Modal, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme';
@@ -60,6 +61,7 @@ interface ChatDetailsViewProps {
   imagePreviewIndex: number;
   onChangeImagePreviewIndex: (index: number) => void;
   onCloseImagePreview: () => void;
+  navigation?: any;
 }
 
 export default function ChatDetailsView({
@@ -92,9 +94,10 @@ export default function ChatDetailsView({
   onChangeImagePreviewIndex,
   onCloseImagePreview,
   hasNextPage,
+  navigation,
 }: ChatDetailsViewProps) {
   const [showExtraButtons, setShowExtraButtons] = useState(false);
-  const flatListRef = useRef<FlatList<any>>(null);
+  const scrollRef = useRef<any>(null);
 
   // Refs for end-reached throttling
   const endReachedLockRef = useRef(false);
@@ -107,6 +110,7 @@ export default function ChatDetailsView({
     setShowExtraButtons(!showExtraButtons);
   };
 
+  const insets = useSafeAreaInsets();
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isMyMessage = opponentId !== item.senderId;
@@ -243,7 +247,7 @@ export default function ChatDetailsView({
           </MyMessageBubble>
         </MyMessageContainer>
       );
-      } else {
+    } else {
       return (
         <PartnerMessageContainer>
           <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
@@ -267,123 +271,140 @@ export default function ChatDetailsView({
     }
   };
 
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      requestAnimationFrame(() => {
+        if (scrollRef.current?.scrollToEnd) {
+          scrollRef.current.scrollToEnd({ animated: true });
+        }
+      });
+    });
+    return () => {
+      showSub.remove();
+    };
+  }, []);
+
   return (
-    <>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? -insets.bottom : 0}
+    >
       <ScreenContainer
         headerShown={true}
         headerTitle={partnerNickname}
         onPressBack={onPressBack}
         headerToolIcon={MoreIcon}
         onPressTool={onPressTool}
+        alignItemsCenter={false}
+        navigation={navigation}
       >
-        <KeyboardAvoidingView
-          style={{ flex: 1, width: "100%" }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
-        >
-          {/* 채팅 내역 */}
-          <MessagesContainer>
-            <FlatList
-              ref={flatListRef}
-              data={messages.filter((v) => v.messageId !== null)}
-              keyExtractor={(item, index) => String((item as any).messageId ?? `${item.senderId}-${item.sentAt}-${index}`)}
-              renderItem={renderMessage}
-              contentContainerStyle={{ padding: 16 }}
-              ListFooterComponent={
-                isFetchingNextPage ? (
-                  <LoadingContainer>
-                    <Typography fontSize={12} color="#AAAAAA">
-                      로딩 중...
-                    </Typography>
-                  </LoadingContainer>
-                ) : null
-              }
-              onScroll={(e) => {
-                if (!onLoadMore) return;
-                if (isFetchingNextPage) return;
-                if (hasNextPage === false) return;
+        {/* 채팅 내역 */}
+        <MessagesContainer>
+          <FlatList
+            ref={scrollRef}
+            data={messages.filter((v) => v.messageId !== null)}
+            keyExtractor={(item, index) => String((item as any).messageId ?? `${item.senderId}-${item.sentAt}-${index}`)}
+            renderItem={renderMessage}
+            contentContainerStyle={{ padding: 16 }}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <LoadingContainer>
+                  <Typography fontSize={12} color="#AAAAAA">
+                    로딩 중...
+                  </Typography>
+                </LoadingContainer>
+              ) : null
+            }
+            onScroll={(e) => {
+              if (!onLoadMore) return;
+              if (isFetchingNextPage) return;
+              if (hasNextPage === false) return;
 
-                const y = e?.nativeEvent?.contentOffset?.y ?? 0;
-                // when close to top, load older messages
-                if (y > 60) return;
+              const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+              // when close to top, load older messages
+              if (y > 60) return;
 
-                const now = Date.now();
-                if (endReachedLockRef.current) return;
-                if (now - lastEndReachedAtRef.current < 800) return;
+              const now = Date.now();
+              if (endReachedLockRef.current) return;
+              if (now - lastEndReachedAtRef.current < 800) return;
 
-                endReachedLockRef.current = true;
-                lastEndReachedAtRef.current = now;
-                onLoadMore();
+              endReachedLockRef.current = true;
+              lastEndReachedAtRef.current = now;
+              onLoadMore();
 
-                setTimeout(() => {
-                  endReachedLockRef.current = false;
-                }, 500);
-              }}
-              scrollEventThrottle={16}
-            />
-          </MessagesContainer>
+              setTimeout(() => {
+                endReachedLockRef.current = false;
+              }, 500);
+            }}
+            scrollEventThrottle={16}
+          />
+        </MessagesContainer>
+        {/* 하단 입력 영역 */}
+        <InputContainer>
+          {/* 추천 메시지 버튼들 */}
+          {hasRecommendedMessages && (
+            <RecommendedMessagesContainer>
+              {recommendedMessages.slice(0, 8).map((msg, index) => (
+                <RecommendedMessageButton
+                  key={index}
+                  onPress={() => onPressRecommendedMessage(msg)}
+                >
+                  <RecommendedMessageText fontSize={12} color="#fff">
+                    {msg}
+                  </RecommendedMessageText>
+                </RecommendedMessageButton>
+              ))}
+            </RecommendedMessagesContainer>
+          )}
 
-          {/* 하단 입력 영역 */}
-          <InputContainer>
-            {/* 추천 메시지 버튼들 */}
-            {hasRecommendedMessages && (
-              <RecommendedMessagesContainer>
-                {recommendedMessages.slice(0, 8).map((msg, index) => (
-                  <RecommendedMessageButton
-                    key={index}
-                    onPress={() => onPressRecommendedMessage(msg)}
-                  >
-                    <RecommendedMessageText fontSize={12} color="#fff">
-                      {msg}
-                    </RecommendedMessageText>
-                  </RecommendedMessageButton>
-                ))}
-              </RecommendedMessagesContainer>
-            )}
+          {/* 입력 줄 */}
+          <InputRow>
+            <CrossButton onPress={handlePressCross} showExtraButtons={showExtraButtons}>
+              <Icon width={20} height={20} Svg={CrossBlackIcon} />
+            </CrossButton>
+            <MessageInputWrapper hasInputValue={hasInputValue}>
+              <MessageInput
+                value={messageInput}
+                onChangeText={onChangeMessageInput}
+                onSubmitEditing={onPressSend}
+                onFocus={() => {
+                  requestAnimationFrame(() => {
+                    if (scrollRef.current?.scrollToEnd) {
+                      scrollRef.current.scrollToEnd({ animated: true });
+                    }
+                  });
+                }}
+              />
+              <IconButton width={20} height={20} Svg={SendIcon} onPress={onPressSend} disabled={!hasInputValue} />
+            </MessageInputWrapper>
+          </InputRow>
 
-
-            {/* 입력 줄 */}
-            <InputRow>
-              <CrossButton onPress={handlePressCross} showExtraButtons={showExtraButtons}>
-                <Icon width={20} height={20} Svg={CrossBlackIcon} />
-              </CrossButton>
-              <MessageInputWrapper hasInputValue={hasInputValue}>
-                <MessageInput
-                  value={messageInput}
-                  onChangeText={onChangeMessageInput}
-                  onSubmitEditing={onPressSend}
-                />
-                <IconButton width={20} height={20} Svg={SendIcon} onPress={onPressSend} disabled={!hasInputValue} />
-              </MessageInputWrapper>
-            </InputRow>
-
-            {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
-            {showExtraButtons && (
-              <ExtraButtonsContainer>
-                <ExtraButtonWrapper onPress={onPressAlbum}>
-                  <ExtraButton>
-                    <Icon width={24} height={24} Svg={ImageIcon} />
-                  </ExtraButton>
-                  <Typography fontSize={9} color="#000" lineHeight={20}>앨범</Typography>
-                </ExtraButtonWrapper>
-                <ExtraButtonWrapper onPress={onPressFile}>
-                  <ExtraButton>
-                    <Icon width={24} height={24} Svg={PaperPlusIcon} />
-                  </ExtraButton>
-                  <Typography fontSize={9} color="#000" lineHeight={20}>파일</Typography>
-                </ExtraButtonWrapper>
-              </ExtraButtonsContainer>
-            )}
-
-          </InputContainer>
-        </KeyboardAvoidingView>
+          {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
+          {showExtraButtons && (
+            <ExtraButtonsContainer>
+              <ExtraButtonWrapper onPress={onPressAlbum}>
+                <ExtraButton>
+                  <Icon width={24} height={24} Svg={ImageIcon} />
+                </ExtraButton>
+                <Typography fontSize={9} color="#000" lineHeight={20}>앨범</Typography>
+              </ExtraButtonWrapper>
+              <ExtraButtonWrapper onPress={onPressFile}>
+                <ExtraButton>
+                  <Icon width={24} height={24} Svg={PaperPlusIcon} />
+                </ExtraButton>
+                <Typography fontSize={9} color="#000" lineHeight={20}>파일</Typography>
+              </ExtraButtonWrapper>
+            </ExtraButtonsContainer>
+          )}
+        </InputContainer>
       </ScreenContainer>
 
       <SlideModal
         visible={isModalVisible}
         onClose={onCloseModal}
         showHeader={false}
-        minHeight={160}
+        minHeight={260}
         scrollable={false}
       >
         <EditModalWrapper>
@@ -456,7 +477,7 @@ export default function ChatDetailsView({
           />
         </ImagePreviewContainer>
       </Modal>
-    </>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -471,6 +492,7 @@ const MessagesContainer = styled.View`
 `;
 
 const InputContainer = styled.View`
+  width: 100%;
   background-color: #fff;
   padding-top: 20px;
   padding-bottom: 20px;

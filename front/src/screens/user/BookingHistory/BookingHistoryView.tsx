@@ -22,6 +22,8 @@ interface BookingHistoryViewProps {
   onPressViewPhotos?: (bookingId: number) => void;
   onPressWriteReview?: (bookingId: number) => void;
   onPressShowMyReivew?: (bookingId: number) => void;
+
+  navigation?: any;
 }
 
 export default function BookingHistoryView({
@@ -38,7 +40,7 @@ export default function BookingHistoryView({
   onPressViewPhotos,
   onPressWriteReview,
   onPressShowMyReivew,
-}: BookingHistoryViewProps) {
+  navigation,}: BookingHistoryViewProps) {
   const renderItem = ({ item }: { item: UserBookingListItem }) => {
     console.log(item.bookingId, item.shootingDate, item.startTime, item.endTime, item.status);
 
@@ -104,7 +106,8 @@ export default function BookingHistoryView({
       onPressBack={onPressBack}
       headerTitle="촬영 내역"
       headerShown={true}
-    >
+    
+      navigation={navigation}>
       <ContentContainer>
         <FlatList
           testID="booking-history-list"

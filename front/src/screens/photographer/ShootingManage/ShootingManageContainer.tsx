@@ -120,6 +120,7 @@ export default function ShootingManageContainer() {
       onPressEditSchedule={handlePressEditSchedule}
       shootings={shootingsWithOptions}
       days={days}
+      navigation={navigation}
     />
   );
 }

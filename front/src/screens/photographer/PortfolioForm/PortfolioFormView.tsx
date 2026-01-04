@@ -22,6 +22,8 @@ interface PortfolioFormViewProps {
   onPressBack: () => void;
   onPressSubmit: () => void;
   isSubmitDisabled: boolean;
+
+  navigation?: any;
 }
 
 export default function PortfolioFormView({
@@ -32,7 +34,7 @@ export default function PortfolioFormView({
   onPressBack,
   onPressSubmit,
   isSubmitDisabled,
-}: PortfolioFormViewProps) {
+  navigation,}: PortfolioFormViewProps) {
   return (
     <ScreenContainer
       headerShown
@@ -40,7 +42,8 @@ export default function PortfolioFormView({
       onPressBack={onPressBack}
       paddingHorizontal={40}
       iconSize={20}
-    >
+    
+      navigation={navigation}>
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollContainer
           showsVerticalScrollIndicator={false}

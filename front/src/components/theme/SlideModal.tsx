@@ -4,6 +4,7 @@ import {
   Pressable,
   Platform,
   KeyboardAvoidingView,
+  Keyboard,
   ScrollView,
   View,
   LayoutChangeEvent,
@@ -107,6 +108,7 @@ export default function SlideModal({
 
   // translateY: sheet 슬라이드 (0 = 붙어있음)
   const translateY = useSharedValue(SCREEN_HEIGHT);
+  const keyboardOffset = useSharedValue(0);
 
   // 댓글형 autoGrow에서 사용할 sheetHeight
   const sheetHeight = useSharedValue(minHeight);
@@ -144,9 +146,42 @@ export default function SlideModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  // ====== autoGrowToMax: body 높이 측정값으로 sheetHeight 계산 ======
+// ====== autoGrowToMax: body 높이 측정값으로 sheetHeight 계산 ======
+// ====== Keyboard Avoiding for iOS ======
+useEffect(() => {
+  if (!keyboardAvoid || Platform.OS !== 'ios') return;
+
+  const showSub = Keyboard.addListener('keyboardWillShow', (e) => {
+    const keyboardHeight =
+      e.endCoordinates.height - Math.max(insets.bottom, 0);
+
+    keyboardOffset.value = withTiming(
+      Math.max(0, keyboardHeight),
+      {
+        duration: e.duration ?? 250,
+        easing: Easing.out(Easing.cubic),
+      }
+    );
+  });
+
+  const hideSub = Keyboard.addListener('keyboardWillHide', (e) => {
+    keyboardOffset.value = withTiming(0, {
+      duration: e.duration ?? 200,
+      easing: Easing.out(Easing.cubic),
+    });
+  });
+
+  return () => {
+    showSub.remove();
+    hideSub.remove();
+  };
+}, [keyboardAvoid, insets.bottom, keyboardOffset]);
   useEffect(() => {
     if (!visible) return;
+    if (scrollable) {
+      sheetHeight.value = minHeight;
+      return;
+    }
     if (!autoGrowToMax) {
       // 자연 증가 모드는 height 고정 안 걸고 minHeight만 걸어줌(Style로)
       sheetHeight.value = minHeight;
@@ -175,19 +210,41 @@ export default function SlideModal({
     bodyPaddingTop,
     bodyPaddingBottom,
     insets.bottom,
+    scrollable,
   ]);
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
   }));
 
-  const sheetTranslateStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
+  const sheetTranslateStyle = useAnimatedStyle(() => {
+    if (Platform.OS === 'ios') {
+      // iOS: 열고/닫기만 담당
+      return {
+        transform: [{ translateY: translateY.value }],
+      };
+    }
+
+    // Android: 기존 동작 유지
+    return {
+      transform: [
+        {
+          translateY: Math.max(0, translateY.value - keyboardOffset.value),
+        },
+      ],
+    };
+  });
+
+  const sheetBottomStyle = useAnimatedStyle(() => {
+    if (Platform.OS !== 'ios') return {};
+    return {
+      bottom: keyboardOffset.value,
+    };
+  });
 
   // autoGrowToMax=true인 경우에만 height를 강제로 주고(max에서 멈추게)
   const sheetHeightStyle = useAnimatedStyle(() => {
-    if (!autoGrowToMax) return {};
+    if (!autoGrowToMax || scrollable) return {};
     return { height: sheetHeight.value };
   });
 
@@ -259,6 +316,7 @@ export default function SlideModal({
     </View>
   );
 
+  // SheetInner 내부에서 BodyScroll/BodyFixed만 KeyboardAvoidingView로 감싸도록 구조 변경
   const SheetInner = (
     <SheetTouchable
       style={[
@@ -304,21 +362,40 @@ export default function SlideModal({
           {MeasuredBodyContent}
         </BodyScroll>
       ) : (
-        <BodyFixed
-          style={{
-            flex: 1,
-            paddingHorizontal: 30,
-            paddingTop: 22,
-            paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
-          }}
-        >
-          {MeasuredBodyContent}
-        </BodyFixed>
+        keyboardAvoid && Platform.OS === 'android' ? (
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior="height"
+            keyboardVerticalOffset={resolvedFooterHeight}
+          >
+            <BodyFixed
+              style={{
+                flex: 1,
+                paddingHorizontal: 30,
+                paddingTop: 22,
+                paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
+              }}
+            >
+              {MeasuredBodyContent}
+            </BodyFixed>
+          </KeyboardAvoidingView>
+        ) : (
+          <BodyFixed
+            style={{
+              flex: 1,
+              paddingHorizontal: 30,
+              paddingTop: 22,
+              paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
+            }}
+          >
+            {MeasuredBodyContent}
+          </BodyFixed>
+        )
       )}
 
       {/* Sticky Footer */}
       {!!footer && (
-        <Footer style={{ height: footerHeight, paddingBottom: Math.max(insets.bottom, 8) }}>
+        <Footer style={{ height: footerHeight + Math.max(insets.bottom, 0), paddingBottom: Math.max(insets.bottom, 8) }}>
           {footer}
         </Footer>
       )}
@@ -336,16 +413,13 @@ export default function SlideModal({
       </AnimatedOverlay>
 
       {/* Sheet */}
-      <AnimatedSheet style={[sheetTranslateStyle]} pointerEvents="box-none">
+      <AnimatedSheet
+        style={[sheetTranslateStyle, sheetBottomStyle]}
+        pointerEvents="box-none"
+      >
         <PanGestureHandler enabled={draggableDown || draggableUp} onGestureEvent={panHandler}>
           <Animated.View style={[sheetHeightStyle]}>
-            {keyboardAvoid ? (
-              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-                {SheetInner}
-              </KeyboardAvoidingView>
-            ) : (
-              SheetInner
-            )}
+            {SheetInner}
           </Animated.View>
         </PanGestureHandler>
       </AnimatedSheet>
@@ -367,7 +441,9 @@ const AnimatedOverlay = styled(Animated.View)`
 
 const AnimatedSheet = styled(Animated.View)`
   position: absolute;
-  left: 0; right: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 `;
 
 const SheetTouchable = styled.View`
@@ -376,7 +452,6 @@ const SheetTouchable = styled.View`
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   overflow: hidden;
-  ${Platform.OS === 'ios' ? 'padding-bottom: 10px;' : ''}
 `;
 
 const HandleBarWrap = styled.View`
@@ -421,10 +496,6 @@ const Footer = styled.View`
   right: 0;
   bottom: 0;
   padding: 0 30px;
-
   justify-content: center;
   background-color: #fff;
-
-  border-top-width: 1px;
-  border-top-color: #eee;
 `;

@@ -9,18 +9,21 @@ interface MyPostsViewProps {
   posts: CommunityPost[];
   onPressBack: () => void;
   onPressPost: (postId: number) => void;
+  navigation?: any;
 }
 
 export default function MyPostsView({
   posts,
   onPressBack,
   onPressPost,
+  navigation,
 }: MyPostsViewProps) {
   return (
     <ScreenContainer
       headerShown={true}
       headerTitle="내 게시글"
       onPressBack={onPressBack}
+      navigation={navigation}
     >
       <PostContainer showsVerticalScrollIndicator={false}>
         {posts.map((post) => {

@@ -15,6 +15,8 @@ interface PhotographerViewPhotosViewProps {
   onDeletePhotos: () => void;
   onAddImages?: () => void;
   isLoading?: boolean;
+
+  navigation?: any;
 }
 
 export default function PhotographerViewPhotosView({
@@ -26,7 +28,7 @@ export default function PhotographerViewPhotosView({
   onDeletePhotos,
   onAddImages,
   isLoading = false,
-}: PhotographerViewPhotosViewProps) {
+  navigation,}: PhotographerViewPhotosViewProps) {
   const getButtonText = () => {
     return imageURIs.length > 0 ? '선택 사진 삭제하기' : '사진 등록하기';
   };
@@ -53,7 +55,8 @@ export default function PhotographerViewPhotosView({
         headerShown={true}
         headerTitle="촬영 사진 관리"
         onPressBack={onPressBack}
-      >
+      
+      navigation={navigation}>
         <PageCaptionWrapper>
           <PageCaption>
             <Typography

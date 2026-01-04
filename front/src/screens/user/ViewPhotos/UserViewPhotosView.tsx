@@ -17,6 +17,8 @@ interface UserViewPhotosViewProps {
   onDownloadZip: () => void;
   onDownloadPhotos: () => void;
   isLoading?: boolean;
+
+  navigation?: any;
 }
 
 export default function UserViewPhotosView({
@@ -27,7 +29,7 @@ export default function UserViewPhotosView({
   onDownloadZip,
   onDownloadPhotos,
   isLoading = false,
-}: UserViewPhotosViewProps) {
+  navigation,}: UserViewPhotosViewProps) {
   const hasCheckedImages = checkedImages.filter((v) => v).length === 0;
 
   const getButtonText = () => {
@@ -40,7 +42,8 @@ export default function UserViewPhotosView({
         headerShown={true}
         headerTitle="촬영 사진 보기"
         onPressBack={onPressBack}
-      >
+      
+      navigation={navigation}>
         <PageCaptionWrapper>
           <PageCaption>
             <Typography

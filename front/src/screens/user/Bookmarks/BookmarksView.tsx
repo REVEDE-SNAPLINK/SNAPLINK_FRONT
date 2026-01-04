@@ -9,6 +9,7 @@ import Loading from '@/components/Loading.tsx';
 import ServerImage from '@/components/ServerImage.tsx';
 import StarIcon from '@/assets/icons/star-review.svg';
 import BookmarkColorIcon from '@/assets/icons/bookmark-color.svg';
+import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
 
 interface BookmarksViewProps {
   photographers: PhotographerSearchItem[];
@@ -34,11 +35,8 @@ export default function BookmarksView({
   const hasBookmarks = photographers.length > 0;
 
   return (
-    <ScreenContainer
-      headerShown={true}
-      headerTitle="스크랩"
-      paddingHorizontal={20}
-    >
+    <Container>
+      <HeaderWithBackButton title="스크랩" />
       {!hasBookmarks ? (
         <EmptyContainer>
           <Typography
@@ -84,7 +82,7 @@ export default function BookmarksView({
           </BookmarkListWrapper>
         </>
       )}
-    </ScreenContainer>
+    </Container>
   );
 }
 
@@ -167,6 +165,11 @@ const BookmarkedPhotographerItem = ({
     </BookmarkedPhotographerItemContainer>
   );
 };
+
+const Container = styled.View`
+  flex: 1;
+  padding-horizontal: 20px;
+`
 
 const EmptyContainer = styled.View`
   flex: 1;

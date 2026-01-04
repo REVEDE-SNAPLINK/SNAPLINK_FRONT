@@ -58,6 +58,7 @@ export default function ReviewPhotosContainer() {
       onLoadMore={handleLoadMore}
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
+      navigation={navigation}
     />
   );
 }

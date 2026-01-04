@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { StatusBar, View } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import BottomNavigation, { TabItem } from '@/components/navigation/BottomNavigation';
 import HomeContainer from '@/screens/common/Home/HomeContainer';
@@ -7,7 +7,6 @@ import CommunityContainer from '@/screens/common/Community/CommunityContainer';
 import BookmarksContainer from '@/screens/user/Bookmarks/BookmarksContainer.tsx';
 import ProfileContainer from '@/screens/common/Profile/ProfileContainer.tsx';
 import ChatContainer from '@/screens/common/Chat/ChatContainer.tsx';
-import BookingManageContainer from '@/screens/photographer/BookingManage/BookingManageContainer.tsx';
 
 import CommunityIcon from '@/assets/icons/group.svg';
 import CommunityColorIcon from '@/assets/icons/group-color.svg';
@@ -23,6 +22,7 @@ import CalendarIcon from '@/assets/icons/calendar-gray.svg';
 import CalendarColorIcon from '@/assets/icons/calendar-color.svg';
 import { useAuthStore } from '@/store/authStore.ts';
 import BookingCalendarContainer from '@/screens/photographer/BookingCalendar/BookingCalendarContainer.tsx';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const USER_TABS_CONFIG = [
   { key: 'community', label: '커뮤니티', Icon: CommunityIcon, ColorIcon: CommunityColorIcon, component: CommunityContainer },
@@ -57,6 +57,7 @@ export default function MainTab() {
 
   return (
     <Container>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <ScreenContainer>
         <ScreenComponent />
       </ScreenContainer>
@@ -69,7 +70,7 @@ export default function MainTab() {
   );
 }
 
-const Container = styled(View)`
+const Container = styled(SafeAreaView)`
   flex: 1;
   background-color: #FFFFFF;
 `;

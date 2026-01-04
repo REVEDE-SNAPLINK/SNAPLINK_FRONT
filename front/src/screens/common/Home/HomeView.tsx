@@ -2,7 +2,6 @@ import { theme } from '@/theme';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Icon from '@/components/Icon.tsx';
 import Typography from '@/components/theme/Typography.tsx';
-import ScreenContainer from '@/components/common/ScreenContainer';
 import IconButton from '@/components/IconButton.tsx';
 import Banner, { BannerItem } from '@/components/user/Banner.tsx';
 import PhotographerList from '@/components/user/PhotographerList.tsx';
@@ -26,7 +25,7 @@ interface HomeViewProps {
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CONTAINER_MARGIN = 26;
+const CONTAINER_MARGIN = 20;
 const LIST_WIDTH = SCREEN_WIDTH - CONTAINER_MARGIN * 2;
 
 export default function HomeView({
@@ -42,7 +41,7 @@ export default function HomeView({
   onSubmitSearchKey,
 }: HomeViewProps) {
   return (
-    <ScreenContainer headerShown={false} paddingHorizontal={CONTAINER_MARGIN}>
+    <Container>
       <Header>
         <LogoWrapper>
           <Icon
@@ -106,9 +105,14 @@ export default function HomeView({
         />
         <ScrollSpacer />
       </ScrollContainer>
-    </ScreenContainer>
+    </Container>
   );
 }
+
+const Container = styled.View`
+  flex: 1;
+  padding-horizontal: ${CONTAINER_MARGIN}px;
+`
 
 const Header = styled.View`
   width: 100%;

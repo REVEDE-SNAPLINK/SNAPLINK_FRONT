@@ -16,6 +16,8 @@ interface AIRecommdationFormViewProps {
   prompt: string;
   setPrompt: (prompt: string) => void;
   onPressSubmit: () => void;
+
+  navigation?: any;
 }
 
 // const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -29,6 +31,7 @@ export default function AIRecommdationFormView({
   prompt,
   setPrompt,
   onPressSubmit,
+  navigation,
 }: AIRecommdationFormViewProps) {
   return (
     <ScreenContainer
@@ -36,6 +39,7 @@ export default function AIRecommdationFormView({
       onPressBack={onPressBack}
       paddingHorizontal={SCREEN_PADDING}
       alignItemsCenter={false}
+      navigation={navigation}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

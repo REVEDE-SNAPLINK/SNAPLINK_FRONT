@@ -45,6 +45,7 @@ interface ServiceFormViewProps {
   submitButtonText: string;
   onDeleteOption: (index: number) => void;
   isEditMode: boolean;
+  navigation?: any;
 }
 
 export default function ServiceFormView({
@@ -56,6 +57,7 @@ export default function ServiceFormView({
   submitButtonText,
   onDeleteOption,
   isEditMode,
+  navigation,
 }: ServiceFormViewProps) {
   const opacity = useSharedValue(1);
 
@@ -88,8 +90,9 @@ export default function ServiceFormView({
     <ScreenContainer
       headerShown
       headerTitle={isEditMode ? '촬영 서비스 수정' : '촬영 서비스 등록'}
-      paddingHorizontal={40}
+      paddingHorizontal={20}
       onPressBack={onPressBack}
+      navigation={navigation}
     >
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollContainer showsVerticalScrollIndicator={false}>
@@ -363,10 +366,10 @@ const ServiceFormStep2 = ({
                     marginBottom={10}
                     marginTop={21}
                   >
-                    추가 옵션 시간
+                    시간 추가 옵션
                   </Typography>
                   <FormInput
-                    placeholder="시간을 추가로 판매할 경우 입력해주세요."
+                    placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
                     value={firstOption.time || ''}
                     onChangeText={(time: string) => {
                       const newOptions = [...optionList];
@@ -570,7 +573,7 @@ const ServiceFormStep3 = ({
               render={({ field: { onChange, value } }) => (
                 <DropDownInput
                   placeholder="선택해주세요 *"
-                  options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내']}
+                  options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내', '7일 이상']}
                   value={value || undefined}
                   onChange={onChange}
                 />

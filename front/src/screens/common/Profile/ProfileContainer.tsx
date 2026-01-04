@@ -18,16 +18,18 @@ import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useEffect, useState } from 'react';
 import { openTermUrl } from '@/utils/link.ts';
+import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
-  const { userType, isExpertMode, toggleExpertMode: toggleExpertModeAction } = useAuthStore();
+  const { userType, isExpertMode, userId, toggleExpertMode: toggleExpertModeAction } = useAuthStore();
 
   const [ profileImageURI, setProfileImageURI ] = useState<string | null>(null);
 
   const isPhotographer = userType === 'photographer';
 
   const { data: userProfile, isSuccess } = useMeQuery();
+  const { data: photographerStatus } = usePhotographerStatusQuery();
 
   useEffect(() => {
     if (isSuccess && userProfile?.profileImageURI) {
@@ -240,6 +242,7 @@ export default function ProfileContainer () {
   }
 
   const handlePressManagePortfolio = () => {
+    const isPending = photographerStatus === 'PENDING';
     if (!isPhotographer) {
       Alert.show({
         title: '권한 없음',
@@ -247,7 +250,11 @@ export default function ProfileContainer () {
       });
       return;
     }
-    navigation.navigate('PortfolioOnboarding');
+    if (isPending) {
+      navigation.navigate('PortfolioOnboarding');
+    } else {
+      navigation.navigate('PhotographerDetails', { photographerId: userId })
+    }
   }
 
   const handlePressShootService = () => {

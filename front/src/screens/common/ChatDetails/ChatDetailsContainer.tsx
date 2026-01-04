@@ -822,6 +822,7 @@ export default function ChatDetailsContainer() {
       imagePreviewIndex={imagePreviewIndex}
       onChangeImagePreviewIndex={handleChangeImagePreviewIndex}
       onCloseImagePreview={handleCloseImagePreview}
+      navigation={navigation}
     />
   );
 }

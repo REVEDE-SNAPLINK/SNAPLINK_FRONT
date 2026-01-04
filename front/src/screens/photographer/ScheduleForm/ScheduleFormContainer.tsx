@@ -162,6 +162,7 @@ export default function ScheduleFormContainer() {
       onPressSubmit={onPressSubmit}
       isSubmitDisabled={!isValid || isLoading || updateWeeklyScheduleMutation.isPending}
       submitButtonText="저장하기"
+      navigation={navigation}
     />
   );
 }

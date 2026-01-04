@@ -30,6 +30,8 @@ interface WriteReviewViewProps {
   contentMinLength: number;
   contentMaxLength: number;
   onContentChange: (text: string) => void;
+
+  navigation?: any;
 }
 
 const STAR_RATINGS = [1, 2, 3, 4, 5] as const;
@@ -53,6 +55,7 @@ export default function WriteReviewView({
   contentMinLength,
   contentMaxLength,
   onContentChange,
+  navigation,
 }: WriteReviewViewProps) {
 
   return (
@@ -60,7 +63,8 @@ export default function WriteReviewView({
         headerTitle={headerTitle}
         headerShown={true}
         onPressBack={onPressBack}
-      >
+      
+      navigation={navigation}>
         <ScrollContainer
           nestedScrollEnabled={false}
           showsVerticalScrollIndicator={false}

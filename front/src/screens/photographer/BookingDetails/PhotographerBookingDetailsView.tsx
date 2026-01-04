@@ -16,6 +16,8 @@ interface PhotographerBookingDetailsViewProps {
   status: BookingStatus;
   onPressViewPhotos?: () => void;
   isLoading?: boolean;
+
+  navigation?: any;
 }
 
 export default function PhotographerBookingDetailsView({
@@ -27,14 +29,15 @@ export default function PhotographerBookingDetailsView({
   // status,
   onPressViewPhotos,
   isLoading = false,
-}: PhotographerBookingDetailsViewProps) {
+  navigation,}: PhotographerBookingDetailsViewProps) {
   if (isLoading) {
     return (
       <ScreenContainer
         onPressBack={onPressBack}
         headerTitle="예약 상세"
         backgroundColor={theme.colors.bgSecondary}
-      >
+      
+      navigation={navigation}>
         <Loading size="large" variant="fullscreen" />
       </ScreenContainer>
     );
@@ -45,7 +48,8 @@ export default function PhotographerBookingDetailsView({
       onPressBack={onPressBack}
       headerTitle="촬영 예약 관리"
       backgroundColor={theme.colors.bgSecondary}
-    >
+    
+      navigation={navigation}>
       <InfoContainer>
         <Typography
           fontSize={16}

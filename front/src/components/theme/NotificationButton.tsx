@@ -6,7 +6,7 @@ import NotificationIcon from '@/assets/icons/notification.svg';
 
 export default function NotificationButton() {
   const navigation = useNavigation<MainNavigationProp>();
-  const badgeCount = 1;
+  const badgeCount = 0;
 
   return (
     <TouchableOpacity

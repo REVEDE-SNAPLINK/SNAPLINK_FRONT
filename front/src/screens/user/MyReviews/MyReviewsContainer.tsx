@@ -84,6 +84,7 @@ export default function MyReviewsContainer() {
       onPressReview={handlePressReview}
       onPressEdit={handlePressEdit}
       onPressDelete={handlePressDelete}
+      navigation={navigation}
     />
   );
 }

@@ -181,6 +181,7 @@ export default function WriteReviewContainer() {
       contentMinLength={CONTENT_MIN_LENGTH}
       contentMaxLength={CONTENT_MAX_LENGTH}
       onContentChange={setContent}
+      navigation={navigation}
     />
   );
 }

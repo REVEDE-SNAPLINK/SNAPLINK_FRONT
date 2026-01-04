@@ -186,7 +186,6 @@ export default function PortfolioOnboardingContainer() {
           // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
           return watchedShootingProductOptions.every(option => {
             const hasAnyValue = option.name.trim() !== '' ||
-                                option.description.trim() !== '' ||
                                 option.price.trim() !== '';
 
             if (!hasAnyValue) {
@@ -286,7 +285,6 @@ export default function PortfolioOnboardingContainer() {
         // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
         return watchedShootingProductOptions.every(option => {
           const hasAnyValue = option.name.trim() !== '' ||
-                              option.description.trim() !== '' ||
                               option.price.trim() !== '';
 
           if (!hasAnyValue) {
@@ -839,6 +837,7 @@ export default function PortfolioOnboardingContainer() {
       onToggleConcept={handleToggleConcept}
       onDeleteOption={handleDeleteOption}
       onToggleDay={handleToggleDay}
+      navigation={navigation}
     />
   );
 }

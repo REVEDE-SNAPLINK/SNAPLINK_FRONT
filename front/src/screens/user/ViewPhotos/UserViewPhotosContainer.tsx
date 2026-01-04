@@ -213,6 +213,7 @@ export default function UserViewPhotosContainer() {
       onDownloadZip={handleDownloadZip}
       onDownloadPhotos={handleDownloadPhotos}
       isLoading={isLoading}
+      navigation={navigation}
     />
   );
 }

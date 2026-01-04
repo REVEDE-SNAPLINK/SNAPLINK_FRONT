@@ -138,6 +138,7 @@ export default function NotificationSettingContainer() {
       onToggleCommunityNotifications={handleToggleCommunityNotifications}
       onToggleAdvertisementNotifications={handleToggleAdvertisementNotifications}
       onToggleFollowNotifications={handleToggleFollowNotifications}
+      navigation={navigation}
     />
   );
 }

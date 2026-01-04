@@ -33,6 +33,7 @@ export default function AIRecommdationFormContainer() {
       prompt={prompt}
       setPrompt={setPrompt}
       onPressSubmit={handlePressSubmit}
+      navigation={navigation}
     />
   );
 }

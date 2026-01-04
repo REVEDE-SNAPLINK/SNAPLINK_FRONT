@@ -7,16 +7,16 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { SignUpFormData } from '@/api/auth.ts';
 import { requestPermission } from '@/utils/permissions.ts'
 import { useNavigation } from '@react-navigation/native';
-import { RootNavigationProp } from '@/types/navigation.ts';
-import { Linking } from 'react-native';
-import { Alert } from '@/components/theme';
+import { MainNavigationProp, RootNavigationProp } from '@/types/navigation.ts';
 import { checkEmail, checkNickname } from '@/api/user.ts';
+import { openUrl } from '@/utils/link.ts';
 
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 export default function UserOnboardingContainer() {
   const rootNavigation = useNavigation<RootNavigationProp>();
+  const navigation = useNavigation<MainNavigationProp>();
   const { userId, userType, signUp, setIsFirst, setUserType, signOut } = useAuthStore();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -72,16 +72,7 @@ export default function UserOnboardingContainer() {
   }
 
   const handlePressTermLink = async (url: string) => {
-    const supported = await Linking.canOpenURL(url);
-
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      Alert.show({
-        'title': '링크 연결 실패',
-        'message': '지원되지 않는 주소잆니다.',
-      })
-    }
+    openUrl(url);
   }
 
   const handleToggleTerm = useCallback((termId: string) => {
@@ -213,7 +204,7 @@ export default function UserOnboardingContainer() {
   const onSubmit = useCallback(
     async (data: UserOnboardingFormData) => {
       const YYYY = data.birthDate?.getFullYear() ?? 2000;
-      let month = data.birthDate?.getMonth() ?? 1 + 1;
+      let month = (data.birthDate?.getMonth() ?? 1) + 1;
       const MM = month < 10 ? '0' + month : month;
       let date = data.birthDate?.getDate() ?? 1;
       const DD = date < 10 ? '0' + date : date;
@@ -259,6 +250,7 @@ export default function UserOnboardingContainer() {
       nicknameError={nicknameError}
       isSubmitDisabled={!isStepValid}
       submitButtonText={submitButtonText}
+      navigation={navigation}
     />
   );
 }

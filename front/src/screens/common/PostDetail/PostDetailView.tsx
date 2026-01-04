@@ -17,6 +17,7 @@ import { theme } from '@/theme';
 
 interface PostDetailViewProps {
   post?: GetPortfolioResponse;
+  isMyPost: boolean;
   isLoading: boolean;
   onPressBack: () => void;
   profileImageURI: string;
@@ -25,10 +26,13 @@ interface PostDetailViewProps {
   setCurrentIndex: (index: number) => void;
   showMoreModal: boolean;
   onCloseMoreModal: () => void;
+
+  navigation?: any;
 }
 
 export default function PostDetailView({
   post,
+  isMyPost,
   isLoading,
   onPressBack,
   profileImageURI,
@@ -37,10 +41,11 @@ export default function PostDetailView({
   setCurrentIndex,
   showMoreModal,
   onCloseMoreModal,
-}: PostDetailViewProps) {
+  navigation,}: PostDetailViewProps) {
   if (isLoading) {
     return (
-      <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}>
+      <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}
+      navigation={navigation}>
         <LoadingSpinner visible={isLoading} />
       </ScreenContainer>
     );
@@ -48,7 +53,8 @@ export default function PostDetailView({
 
   if (!post) {
     return (
-      <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}>
+      <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}
+      navigation={navigation}>
           <Typography fontSize={16} color="#999">
             포트폴리오를 불러올 수 없습니다.
           </Typography>
@@ -62,7 +68,8 @@ export default function PostDetailView({
         headerShown={true}
         headerTitle="게시물"
         onPressBack={onPressBack}
-      >
+      
+      navigation={navigation}>
         <Container>
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Post Header */}
@@ -173,28 +180,32 @@ export default function PostDetailView({
             </Typography>
           </ModalReserveTextWrapper>
         </ModalButton>
-        <ModalButton>
-          <Icon width={18} height={18} Svg={EditIcon} />
-          <Typography
-            fontSize={14}
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            marginLeft={8}
-          >
-            게시글 수정
-          </Typography>
-        </ModalButton>
-        <ModalButton>
-          <Icon width={18} height={18} Svg={DeleteIcon} />
-          <Typography
-            fontSize={14}
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            marginLeft={8}
-          >
-            삭제
-          </Typography>
-        </ModalButton>
+        {isMyPost && (
+          <>
+            <ModalButton>
+              <Icon width={18} height={18} Svg={EditIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                게시글 수정
+              </Typography>
+            </ModalButton>
+            <ModalButton>
+              <Icon width={18} height={18} Svg={DeleteIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                삭제
+              </Typography>
+            </ModalButton>
+          </>
+        )}
       </SlideModal>
     </>
   );

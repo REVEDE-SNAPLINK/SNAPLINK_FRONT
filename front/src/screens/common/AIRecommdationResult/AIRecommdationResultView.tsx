@@ -10,6 +10,7 @@ import SearchPhotographerList from '@/components/user/SearchPhotographerList.tsx
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { FlatList, RefreshControl } from 'react-native';
 import Loading from '@/components/Loading.tsx';
+import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 
 interface PhotographerWithScore extends PhotographerSearchItem {
   aiScore: number;
@@ -35,6 +36,8 @@ interface AIRecommdationResultViewProps {
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
   onPressPhotographer: (photographerId: string) => void;
+  isLoading: boolean;
+  navigation?: any;
 }
 
 export default function AIRecommdationResultView({
@@ -57,13 +60,16 @@ export default function AIRecommdationResultView({
   isRefreshing,
   isFetchingNextPage,
   onPressPhotographer,
-} : AIRecommdationResultViewProps) {
+  isLoading,
+  navigation,
+}: AIRecommdationResultViewProps) {
   return (
     <>
       <ScreenContainer
         headerTitle="AI 추천 작가 확인"
         onPressBack={onPressBack}
         paddingHorizontal={20}
+        navigation={navigation}
       >
         <Header>
           <Icon width={19} height={20} Svg={SearchIcon} />
@@ -88,32 +94,34 @@ export default function AIRecommdationResultView({
           onPressFilterChip={onPressFilterChip}
         />
         <SearchResultWrapper>
-          <FlatList
-            testID="photographer-list"
-            data={photographers}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <SearchPhotographerList
-                photographers={[item]}
-                onEndReached={() => {}}
-                onRefresh={onRefresh}
-                isRefreshing={false}
-                isFetchingNextPage={false}
-                onPressItem={onPressPhotographer}
-                aiRecommendationScore={item.aiScore}
-                isAIRecommendation={true}
-              />
-            )}
-            onEndReached={onLoadMore}
-            onEndReachedThreshold={0.5}
-            refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <Loading size="small" variant="inline" />
-              ) : null
-            }
-            showsVerticalScrollIndicator={false}
-          />
+          {!isLoading && (
+            <FlatList
+              testID="photographer-list"
+              data={photographers}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <SearchPhotographerList
+                  photographers={[item]}
+                  onEndReached={() => {}}
+                  onRefresh={onRefresh}
+                  isRefreshing={false}
+                  isFetchingNextPage={false}
+                  onPressItem={onPressPhotographer}
+                  aiRecommendationScore={item.aiScore}
+                  isAIRecommendation={true}
+                />
+              )}
+              onEndReached={onLoadMore}
+              onEndReachedThreshold={0.5}
+              refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <Loading size="small" variant="inline" />
+                ) : null
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </SearchResultWrapper>
       </ScreenContainer>
 
@@ -125,6 +133,8 @@ export default function AIRecommdationResultView({
           onApply={onApplyFilters}
         />
       )}
+
+      <LoadingSpinner visible={isLoading} />
     </>
   )
 }

@@ -14,6 +14,8 @@ interface ReviewPhotosViewProps {
   onLoadMore: () => void;
   isFetchingNextPage: boolean;
   isLoading: boolean;
+
+  navigation?: any;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -29,14 +31,15 @@ export default function ReviewPhotosView({
   onLoadMore,
   isFetchingNextPage,
   isLoading,
-}: ReviewPhotosViewProps) {
+  navigation,}: ReviewPhotosViewProps) {
   return (
     <>
       <ScreenContainer
         onPressBack={onPressBack}
         headerShown={true}
         headerTitle="포토 리뷰 전체보기"
-      >
+      
+      navigation={navigation}>
         <FlatList
           data={photos}
           keyExtractor={(item, index) => `${item}-${index}`}

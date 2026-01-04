@@ -42,7 +42,8 @@ export default function UserBookingDetailsContainer() {
         datetime=""
         additionalRequest=""
         isLoading={isLoading}
-      />
+      navigation={navigation}
+    />
     );
   }
 
@@ -61,6 +62,7 @@ export default function UserBookingDetailsContainer() {
       onPressWriteReview={canWriteReview ? handlePressWriteReview : undefined}
       onPressShowMyReview={canShowMyReview ? handlePressShowMyReview : undefined}
       isLoading={isLoading}
+      navigation={navigation}
     />
   );
 }

@@ -1,9 +1,9 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { Typography } from '@/components/theme';
 import ServerImage from '@/components/ServerImage';
 import { ChatRoomItem } from '@/api/chat';
 import { formatTimeAgo } from '@/utils/format';
+import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
 
 interface ChatViewProps {
   chatRooms: ChatRoomItem[];
@@ -14,58 +14,81 @@ export default function ChatView({
   chatRooms,
   onPressChatRoom,
 }:  ChatViewProps) {
+  const hasChatRooms = chatRooms.length > 0;
+
   return (
-    <ScreenContainer
-      headerShown={true}
-      headerTitle="채팅 내역"
-      paddingHorizontal={28}
-    >
-      <ScrollContainer showsVerticalScrollIndicator={false}>
-        {chatRooms.map((chatRoom) => (
-          <ChatItem key={chatRoom.roomId} onPress={() => onPressChatRoom(chatRoom.roomId, chatRoom.opponentNickname, chatRoom.profileImageURI ?? '')}>
-            <ChatProfileImageWrapper>
-              <ChatProfileImage {...(chatRoom.profileImageURI ? { uri: chatRoom.profileImageURI } : {})} />
-            </ChatProfileImageWrapper>
-            <ChatContentWrapper>
-              <ChatContentHeader>
+    <Container>
+      <HeaderWithBackButton title="채팅 내역" />
+      {!hasChatRooms ? (
+        <EmptyContainer>
+          <Typography
+            fontSize={16}
+            fontWeight="medium"
+            color="#AAAAAA"
+            style={{ textAlign: 'center' }}
+          >
+            아직 채팅 내역이 없어요.
+          </Typography>
+        </EmptyContainer>
+      ) : (
+        <ScrollContainer showsVerticalScrollIndicator={false}>
+          {chatRooms.map((chatRoom) => (
+            <ChatItem key={chatRoom.roomId} onPress={() => onPressChatRoom(chatRoom.roomId, chatRoom.opponentNickname, chatRoom.profileImageURI ?? '')}>
+              <ChatProfileImageWrapper>
+                <ChatProfileImage {...(chatRoom.profileImageURI ? { uri: chatRoom.profileImageURI } : {})} />
+              </ChatProfileImageWrapper>
+              <ChatContentWrapper>
+                <ChatContentHeader>
+                  <Typography
+                    fontSize={16}
+                    fontWeight="semiBold"
+                    marginRight={5}
+                  >
+                    {chatRoom.opponentNickname}
+                  </Typography>
+                  <Typography
+                    fontSize={12}
+                    color="#C8C8C8"
+                  >
+                    {formatTimeAgo(chatRoom.lastMessageTime)}
+                  </Typography>
+                </ChatContentHeader>
+                <Typography
+                  fontSize={14}
+                  color="#AAAAAA"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  marginTop={5}
+                >
+                  {chatRoom.lastMessage || '없음'}
+                </Typography>
+              </ChatContentWrapper>
+              {chatRoom.unreadCount > 0 && <UnreadTextCounter>
                 <Typography
                   fontSize={16}
-                  fontWeight="semiBold"
-                  marginRight={5}
+                  color="#fff"
                 >
-                  {chatRoom.opponentNickname}
+                  {chatRoom.unreadCount}
                 </Typography>
-                <Typography
-                  fontSize={12}
-                  color="#C8C8C8"
-                >
-                  {formatTimeAgo(chatRoom.lastMessageTime)}
-                </Typography>
-              </ChatContentHeader>
-              <Typography
-                fontSize={14}
-                color="#AAAAAA"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                marginTop={5}
-              >
-                {chatRoom.lastMessage || '없음'}
-              </Typography>
-            </ChatContentWrapper>
-            {chatRoom.unreadCount > 0 && <UnreadTextCounter>
-              <Typography
-                fontSize={16}
-                color="#fff"
-              >
-                {chatRoom.unreadCount}
-              </Typography>
-            </UnreadTextCounter>}
-          </ChatItem>
-        ))}
-      </ScrollContainer>
-    </ScreenContainer>
+              </UnreadTextCounter>}
+            </ChatItem>
+          ))}
+        </ScrollContainer>
+      )}
+    </Container>
   );
 }
+
+const Container = styled.View`
+  flex: 1;
+  padding-horizontal: 20px;
+`
+
+const EmptyContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
 
 const ScrollContainer = styled.ScrollView`
   flex: 1;

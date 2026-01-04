@@ -18,6 +18,7 @@ interface MyReviewsViewProps {
   onPressReview: (review: MyReviewItem) => void;
   onPressEdit: (review: MyReviewItem) => void;
   onPressDelete: (reviewId: number) => void;
+  navigation?: any;
 }
 
 export default function MyReviewsView({
@@ -27,6 +28,7 @@ export default function MyReviewsView({
   onPressReview,
   onPressEdit,
   onPressDelete,
+  navigation,
 }: MyReviewsViewProps) {
   const renderStars = (rating: number) => {
     const stars = [];
@@ -41,7 +43,7 @@ export default function MyReviewsView({
   };
 
   return (
-    <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="내 리뷰">
+    <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="내 리뷰" navigation={navigation}>
       <ReviewsContainer showsVerticalScrollIndicator={false}>
         <TotalReviewsContainer>
           <Typography fontSize={16} fontWeight="bold" lineHeight="140%" letterSpacing="-2.5%">

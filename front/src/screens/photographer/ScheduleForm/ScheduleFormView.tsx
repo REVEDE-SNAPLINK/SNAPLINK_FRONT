@@ -23,6 +23,8 @@ interface ScheduleFormViewProps {
   onPressSubmit: () => void;
   isSubmitDisabled: boolean;
   submitButtonText?: string;
+
+  navigation?: any;
 }
 
 const days = [
@@ -42,6 +44,7 @@ export default function ScheduleFormView({
   onPressSubmit,
   isSubmitDisabled,
   submitButtonText = '저장하기',
+  navigation,
 }: ScheduleFormViewProps) {
   const timeOptions = useMemo(
     () => Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`),
@@ -64,7 +67,8 @@ export default function ScheduleFormView({
       onPressBack={onPressBack}
       paddingHorizontal={40}
       iconSize={20}
-    >
+    
+      navigation={navigation}>
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollContainer
           showsVerticalScrollIndicator={false}

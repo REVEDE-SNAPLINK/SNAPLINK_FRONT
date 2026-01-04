@@ -27,6 +27,8 @@ interface HolidayManageViewProps {
   onPressDelete: () => void;
   editMode: 'create' | 'edit';
   selectedGroup: HolidayGroup | null;
+
+  navigation?: any;
 }
 
 export default function HolidayManageView({
@@ -43,7 +45,7 @@ export default function HolidayManageView({
   onPressDelete,
   editMode,
   selectedGroup,
-}: HolidayManageViewProps) {
+  navigation,}: HolidayManageViewProps) {
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
 
@@ -115,7 +117,8 @@ export default function HolidayManageView({
         headerShown={true}
         headerTitle="휴가 관리"
         onPressBack={onPressBack}
-      >
+      
+      navigation={navigation}>
         <ScrollContainer>
           {holidays.length === 0 ? (
             <EmptyWrapper>

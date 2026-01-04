@@ -26,7 +26,7 @@ export default function HeaderWithBackButton({
   title,
   ToolIcon,
   isShowLogo = false,
-  height = 100,
+  height = 70,
   iconSize = 24,
 }: HeaderWithBackButtonProps) {
   return (

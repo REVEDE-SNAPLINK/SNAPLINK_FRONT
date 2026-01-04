@@ -16,6 +16,8 @@ interface NotificationSettingViewProps {
   onToggleCommunityNotifications: (value: boolean) => void;
   onToggleAdvertisementNotifications: (value: boolean) => void;
   onToggleFollowNotifications: (value: boolean) => void;
+
+  navigation?: any;
 }
 
 export default function NotificationSettingView({
@@ -32,6 +34,7 @@ export default function NotificationSettingView({
   onToggleCommunityNotifications,
   onToggleAdvertisementNotifications,
   onToggleFollowNotifications,
+  navigation,
 }: NotificationSettingViewProps) {
   return (
     <ScreenContainer
@@ -39,6 +42,7 @@ export default function NotificationSettingView({
       headerTitle="알림 설정"
       onPressBack={onPressBack}
       paddingHorizontal={33}
+      navigation={navigation}
     >
       <NotificationItem>
         <Typography

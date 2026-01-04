@@ -121,6 +121,7 @@ export default function BookingManageContainer() {
       onPressRejectBooking={handlePressRejectBooking}
       onPressCancelBooking={handlePressCancelBooking}
       onPressCompleteBooking={handlePressCompleteBooking}
+      navigation={navigation}
     />
   );
 }

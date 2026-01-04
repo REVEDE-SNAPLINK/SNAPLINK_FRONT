@@ -91,6 +91,7 @@ export default function NotificationContainer() {
       onPressNotification={handlePressNotification}
       onPressDelete={handlePressDelete}
       onPressSetting={handlePressSetting}
+      navigation={navigation}
     />
   );
 }

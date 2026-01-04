@@ -42,6 +42,8 @@ interface BookingViewProps {
   totalPrice: number;
   onSubmit: () => void;
   isSubmitDisabled: boolean;
+
+  navigation?: any;
 }
 
 export default function BookingView({
@@ -74,6 +76,7 @@ export default function BookingView({
   totalPrice,
   onSubmit,
   isSubmitDisabled,
+  navigation,
 }: BookingViewProps) {
   // Split time slots into morning (오전) and afternoon (오후)
   const { morningSlots, afternoonSlots } = useMemo(() => {
@@ -108,7 +111,8 @@ export default function BookingView({
       onPressBack={onPressBack}
       headerTitle="예약"
       alignItemsCenter={false}
-    >
+    
+      navigation={navigation}>
       <ScrollContainer
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20 }}

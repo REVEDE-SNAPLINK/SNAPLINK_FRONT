@@ -71,6 +71,7 @@ export default function ReviewsContainer() {
       isFetchingNextPage={isFetchingNextPage}
       isRefreshing={isRefetching}
       isLoading={isLoading}
+      navigation={navigation}
     />
   );
 }

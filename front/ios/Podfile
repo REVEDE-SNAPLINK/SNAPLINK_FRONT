@@ -48,16 +48,6 @@ target 'snaplink' do
       # :ccache_enabled => true
     )
 
-    # Ensure Hermes dSYM is generated & included in the archive (fix missing hermes.framework dSYM UUID issue)
-    installer.pods_project.targets.each do |t|
-      next unless ['hermes-engine', 'hermes'].include?(t.name)
-
-      t.build_configurations.each do |config|
-        # Force dSYM generation for all configurations (Release is the important one)
-        config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
-      end
-    end
-
     # Fix react-native-date-picker missing string header for Xcode 26+
     date_picker_files = [
       '../node_modules/react-native-date-picker/ios/RNDatePickerManager.mm',

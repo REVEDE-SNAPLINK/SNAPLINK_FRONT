@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
-import PhotographerDetailsView, { ShareLink } from './PhotographerDetailsView.tsx';
+import PhotographerDetailsView from './PhotographerDetailsView.tsx';
 import { usePhotographerProfileInfiniteQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { LatestReviewSummaryItem } from '@/api/photographers.ts';
@@ -11,15 +11,9 @@ import { chatQueryKeys } from '@/queries/keys.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
 import { Alert } from '@/components/theme';
+import { Share } from 'react-native';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
-
-const shareLinks: ShareLink[] = [
-  {
-    name: '카카오톡 오픈 채팅',
-    url: 'https://pf.kakao.com/_KasSn/chat'
-  }
-];
 
 const ReportType = [
   '저작권 침해가 우려돼요',
@@ -36,8 +30,8 @@ export default function PhotographerDetailsContainer() {
   const { userId, userType, isExpertMode } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews'>('portfolio');
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
   // Fetch photographer profile (includes portfolio thumbnails)
   const {
@@ -101,12 +95,12 @@ export default function PhotographerDetailsContainer() {
   }, [navigation]);
 
   const handlePressShare = useCallback(() => {
-    setIsShareModalVisible(true);
-  }, []);
-
-  const handleCloseShareModal = useCallback(() => {
-    setIsShareModalVisible(false);
-  }, []);
+    if (profileData?.nickname) {
+      Share.share({
+        message: `${profileData?.nickname}\nhttps://link.snaplink.run/photographer/${photographerId}`,
+      });
+    }
+  }, [profileData?.nickname, photographerId]);
 
   const handlePressFavorite = useCallback(() => {
     scrapMutation.mutate(photographerId);
@@ -157,8 +151,8 @@ export default function PhotographerDetailsContainer() {
   // Transform review summary to view model
   const reviews =
     Array.isArray(reviewSummary?.latestReviews)
-      ? reviewSummary.latestReviews.map((r: LatestReviewSummaryItem) => ({
-        id: r.createdAt,
+      ? reviewSummary.latestReviews.map((r: LatestReviewSummaryItem, index: number) => ({
+        id: `${r.createdAt}-${index}`,
         content: r.content,
         date: r.createdAt,
         imageUrl: r.photoKey,
@@ -175,6 +169,18 @@ export default function PhotographerDetailsContainer() {
 
   const handleCloseMoreModal = () => {
     setIsMoreModalVisible(false);
+  }
+
+  const handlePressReportStart = () => {
+    setIsReportModalVisible(true);
+  }
+
+  const handleCloseReportModal = () => {
+    setIsReportModalVisible(false);
+  }
+
+  const handlePressEditProfile = () => {
+
   }
 
   const handlePressReport = (type: string) => {
@@ -217,16 +223,17 @@ export default function PhotographerDetailsContainer() {
       reviewPreviewImages={reviewSummary?.topPhotoKeys || []}
       reviews={reviews}
       isScrapped={profileData?.scrapped || false}
-      isShareModalVisible={isShareModalVisible}
       isMoreModalVisible={isMoreModalVisible}
       reportType={ReportType}
       onPressReport={handlePressReport}
+      isReportModalVisible={isReportModalVisible}
+      onCloseReportModal={handleCloseReportModal}
+      onPressReportStart={handlePressReportStart}
+      onPressEditProfile={handlePressEditProfile}
       onCloseMoreModal={handleCloseMoreModal}
       onPressMore={handlePressMore}
-      shareLinks={shareLinks}
       onPressBack={handlePressBack}
       onPressShare={handlePressShare}
-      onCloseShareModal={handleCloseShareModal}
       onPressFavorite={handlePressFavorite}
       onPressInquiry={handlePressInquiry}
       onPressReservation={handlePressReservation}
@@ -235,6 +242,7 @@ export default function PhotographerDetailsContainer() {
       onPressPortfolioImage={handlePressPortfolioImage}
       onPressShowAllReviews={handlePressShowAllReviews}
       onPressShowAllReviewPhotos={handlePressShowAllReviewPhotos}
+      navigation={navigation}
     />
   );
 }

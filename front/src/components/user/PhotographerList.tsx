@@ -35,12 +35,13 @@ export default function PhotographerList ({
       </PhotographerListHeader>
       {items.length > 0 ? (
         <PhotographerListWrapper>
-          {items.map((item: PhotographerSearchItem) => (
+          {items.map((item: PhotographerSearchItem, index) => (
             <PhotographerItem
               key={item.id}
               width={itemWidth}
               item={item}
               onPress={onPressItem}
+              isLast={index === 2}
             />
           ))}
         </PhotographerListWrapper>
@@ -110,7 +111,6 @@ const PhotographerListTitle = ({ title, onPress }: { title: string, onPress?:() 
 
 const PhotographerListWrapper = styled.View`
   flex-direction: row;
-  justify-content: space-between;
   align-items: center;
   align-content: space-between;
   width: 100%;
@@ -141,15 +141,17 @@ interface PhotographerItemProps {
   item: PhotographerSearchItem;
   onPress: (id: string) => void;
   width: number;
+  isLast: boolean;
 }
 
 const PhotographerItem = ({
   item,
   onPress,
   width,
+  isLast,
 }: PhotographerItemProps) => {
   return (
-    <PhotographerItemWrapper width={width} onPress={() => onPress(item.id)}>
+    <PhotographerItemWrapper width={width} onPress={() => onPress(item.id)} isLastItem={isLast}>
       <SampleSnapImageWrapper size={width}>
         {item.portfolioImages.length > 0 !== undefined ? (
           <SampleSnapImage uri={item.portfolioImages[0]} />

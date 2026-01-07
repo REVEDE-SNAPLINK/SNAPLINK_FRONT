@@ -10,18 +10,7 @@ import { shootingsQueryKeys } from '@/queries/keys.ts';
 import { getShootingOptions } from '@/api/shootings.ts';
 import { Alert } from '@/components/theme';
 import { useAuthStore } from '@/store/authStore.ts';
-import { DayOfWeek } from '@/api/photographers.ts';
 import analytics from '@react-native-firebase/analytics';
-
-const DAY_OF_WEEK_MAP: Record<DayOfWeek, string> = {
-  MONDAY: '월요일',
-  TUESDAY: '화요일',
-  WEDNESDAY: '수요일',
-  THURSDAY: '목요일',
-  FRIDAY: '금요일',
-  SATURDAY: '토요일',
-  SUNDAY: '일요일',
-};
 
 export default function ShootingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -31,14 +20,14 @@ export default function ShootingManageContainer() {
   const { data: weeklyScheduleData } = useWeeklyScheduleQuery(userId || '', !!userId);
 
   // Convert weekly schedule to days string
-  const days = useMemo(() => {
-    if (!weeklyScheduleData || weeklyScheduleData.length === 0) {
-      return '설정된 일정 없음';
-    }
-    return weeklyScheduleData
-      .map((schedule) => DAY_OF_WEEK_MAP[schedule.dayOfWeek])
-      .join(', ');
-  }, [weeklyScheduleData]);
+  // const days = useMemo(() => {
+  //   if (!weeklyScheduleData || weeklyScheduleData.length === 0) {
+  //     return '설정된 일정 없음';
+  //   }
+  //   return weeklyScheduleData
+  //     .map((schedule) => DAY_OF_WEEK_MAP[schedule.dayOfWeek])
+  //     .join(', ');
+  // }, [weeklyScheduleData]);
 
   // Fetch shooting list
   const { data: shootings = [] } = useMyShootingsQuery();
@@ -146,7 +135,7 @@ export default function ShootingManageContainer() {
       onPressDeleteProduct={handlePressDeleteProduct}
       onPressEditSchedule={handlePressEditSchedule}
       shootings={shootingsWithOptions}
-      days={days}
+      weeklySchedule={weeklyScheduleData ?? []}
       navigation={navigation}
     />
   );

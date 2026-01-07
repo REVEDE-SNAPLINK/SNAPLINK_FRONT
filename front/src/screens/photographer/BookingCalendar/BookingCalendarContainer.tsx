@@ -6,9 +6,16 @@ import { useRoute } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore, PersonalSchedule as UIPersonalSchedule } from '@/store/modalStore.ts';
-import { usePhotographerMonthSchedulesQuery, usePhotographerMultipleDayDetailsQuery } from '@/queries/schedules.ts';
+import { usePhotographerMonthSchedulesQuery, usePhotographerDayDetailQuery } from '@/queries/schedules.ts';
 import { useDeletePersonalScheduleMutation } from '@/mutations/schedules.ts';
 import { getPhotographerDayDetail } from '@/api/schedules';
+
+// 이번 달이 몇 주인지 계산
+const getWeekCountOfMonth = (year: number, month: number) => {
+  const firstDay = new Date(year, month - 1, 1).getDay(); // 0=일, 1=월 ...
+  const lastDate = new Date(year, month, 0).getDate();    // 이번 달 마지막 날짜
+  return Math.ceil((firstDay + lastDate) / 7);
+};
 
 export default function BookingCalendarContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -26,7 +33,9 @@ export default function BookingCalendarContainer() {
   const deletePersonalSchedule = useDeletePersonalScheduleMutation();
 
   // Current date and selected date state
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    return new Date().toISOString().split('T')[0];
+  });
 
   // Deep link date mapping effect
   useEffect(() => {
@@ -46,6 +55,11 @@ export default function BookingCalendarContainer() {
   const [currentYearMonth, setCurrentYearMonth] = useState<string>(() => {
     const parts = (selectedDate === '' ? new Date().toISOString().split('T')[0] : selectedDate).split('-');
     return `${parts[0]}-${parts[1]}`;
+  });
+
+  const [currentWeekCount, setCurrentWeekCount] = useState<number>(() => {
+    const [y, m] = currentYearMonth.split('-').map(Number);
+    return getWeekCountOfMonth(y, m);
   });
 
 
@@ -83,40 +97,11 @@ export default function BookingCalendarContainer() {
     !!userId
   );
 
-  // Generate all dates from prev, current, and next month schedule data
-  const allDates = useMemo(() => {
-    const dates: string[] = [];
-    const addDatesFromMonth = (data: typeof monthScheduleData, targetYear: number, targetMonth: number) => {
-      if (!data || !Array.isArray(data)) return;
-      data.forEach(item => {
-        // Validate date before adding
-        const day = item.day;
-        const date = new Date(targetYear, targetMonth - 1, day);
-
-        // Check if the date is valid (e.g., prevent 11-31)
-        if (date.getMonth() === targetMonth - 1 && date.getDate() === day) {
-          const dateString = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          dates.push(dateString);
-        }
-      });
-    };
-
-    addDatesFromMonth(prevMonthScheduleData, prevYear, prevMonth);
-    addDatesFromMonth(monthScheduleData, year, month);
-    addDatesFromMonth(nextMonthScheduleData, nextYear, nextMonth);
-
-    return dates;
-  }, [prevMonthScheduleData, monthScheduleData, nextMonthScheduleData, prevYear, prevMonth, year, month, nextYear, nextMonth]);
-
-  // Fetch all day details for all dates in parallel
-  const { dayDetailMap } = usePhotographerMultipleDayDetailsQuery(
-    userId || '',
-    allDates,
-    !!userId
+  // Fetch day detail for selected date
+  const { data: dayDetailData } = usePhotographerDayDetailQuery(
+    { photographerId: userId || '', date: selectedDate },
+    !!userId && !!selectedDate
   );
-
-  // Get day detail for selected date
-  const dayDetailData = dayDetailMap.get(selectedDate);
 
   // Enhanced schedule data from API (prev, current, next month)
   const enhancedScheduleData = useMemo(() => {
@@ -132,7 +117,6 @@ export default function BookingCalendarContainer() {
       if (!data || !Array.isArray(data)) return;
       data.forEach(item => {
         const dateString = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
-        const dayDetail = dayDetailMap.get(dateString);
 
         // Parse status to determine the type of schedule
         // status: NONE, HOLIDAY, BOOKING, PERSONAL
@@ -160,35 +144,13 @@ export default function BookingCalendarContainer() {
           return;
         }
 
-        // 3. HOLIDAY인 경우 복잡한 판단 로직
+        // 3. HOLIDAY인 경우 photographerHoliday = true
         if (status === 'HOLIDAY') {
-          let publicHoliday = false;
-          let photographerHoliday = false;
-          let hasPersonalSchedule = false;
-
-          // item.publicHoliday가 true이면 공휴일 관련 판단
-          // holidayId !== null이면 작가 휴가
-          if (dayDetail?.holidayId !== null) {
-            photographerHoliday = true;
-          }
-          if (dayDetail?.holidayName && dayDetail.holidayName !== '' && dayDetail.holidayId === null) {
-            // (holidayName !== '' || holidayName !== null) && holidayId === null이면 공휴일
-            publicHoliday = true;
-          }
-
-          // 일요일(dayOfWeek === 7)이고 publicHoliday와 photographerHoliday가 둘 다 false인 경우
-          // personalSchedules 확인
-          if (item.dayOfWeek === 7 && !publicHoliday && !photographerHoliday) {
-            if (dayDetail?.personalSchedules && dayDetail.personalSchedules.length > 0) {
-              hasPersonalSchedule = true;
-            }
-          }
-
           schedulesByDate.set(dateString, {
             hasBooking: false,
-            publicHoliday,
-            photographerHoliday,
-            hasPersonalSchedule,
+            publicHoliday: false,
+            photographerHoliday: true,
+            hasPersonalSchedule: false,
           });
           return;
         }
@@ -213,7 +175,13 @@ export default function BookingCalendarContainer() {
       date,
       ...data,
     }));
-  }, [prevMonthScheduleData, monthScheduleData, nextMonthScheduleData, prevYear, prevMonth, year, month, nextYear, nextMonth, dayDetailMap]);
+  }, [prevMonthScheduleData, monthScheduleData, nextMonthScheduleData, prevYear, prevMonth, year, month, nextYear, nextMonth]);
+
+  useEffect(() => {
+    const [y, m] = currentYearMonth.split('-').map(Number);
+    const newWeekCount = getWeekCountOfMonth(y, m);
+    setCurrentWeekCount(newWeekCount);
+  }, [currentYearMonth]);
 
 
   const handlePressBookingItem = (bookingId: number) => {
@@ -337,6 +305,10 @@ export default function BookingCalendarContainer() {
 
   const handleMonthChange = (yearMonth: string) => {
     setCurrentYearMonth(yearMonth);
+
+    const [y, m] = yearMonth.split('-').map(Number);
+    const newWeekCount = getWeekCountOfMonth(y, m);
+    setCurrentWeekCount(newWeekCount); // state 업데이트
   };
 
   const handleAddSchedule = () => {
@@ -422,6 +394,7 @@ export default function BookingCalendarContainer() {
       selectedDate={selectedDate}
       scheduleData={enhancedScheduleData}
       currentYearMonth={currentYearMonth}
+      weekCount={currentWeekCount}
       dayDetailData={dayDetailData || null}
       dDayText={dDayText}
       onPressBookingItem={handlePressBookingItem}

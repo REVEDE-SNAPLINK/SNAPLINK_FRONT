@@ -10,9 +10,8 @@ import {
   rejectBooking,
   completeBooking,
   cancelBooking,
-  deliverPhotos,
   PatchBookingStatusParams,
-  RejectOrCancelBookingParams,
+  RejectOrCancelBookingParams, cancelBookingFromCustomer,
 } from '@/api/bookings.ts';
 import { bookingsQueryKeys } from '@/queries/keys.ts';
 
@@ -76,21 +75,6 @@ export const useCancelBookingMutation = () => {
   });
 };
 
-export const useDeliverPhotosMutation = () => {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: (params: PatchBookingStatusParams) => deliverPhotos(params),
-    onSuccess: async (_, vars) => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
-        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
-        qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
-      ]);
-    },
-  });
-};
-
 export const useCreateBookingMutation = () => {
   const qc = useQueryClient();
 
@@ -132,3 +116,17 @@ export const useUploadBookingZipMutation = () => {
     },
   });
 };
+
+export const useCancelBookingFromCustomerMutation = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (bookingId: number) => cancelBookingFromCustomer(bookingId),
+    onSuccess: async (_) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.photographerList() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+      ]);
+    },
+  })
+}

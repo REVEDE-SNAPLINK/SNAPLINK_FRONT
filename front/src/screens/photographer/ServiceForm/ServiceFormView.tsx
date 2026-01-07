@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Control, FieldErrors, Controller, useWatch } from 'react-hook-form';
 import Animated, {
   useSharedValue,
@@ -13,7 +13,7 @@ import { Platform, ScrollView } from 'react-native';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import Checkbox from '@/components/theme/Checkbox.tsx';
-import OptionItem, { Option } from '@/components/OptionItem.tsx';
+import OptionItem, { Option, TimeOptionCheckboxWrapper } from '@/components/OptionItem.tsx';
 import { theme } from '@/theme';
 
 export interface DaySchedule {
@@ -319,6 +319,8 @@ const ServiceFormStep2 = ({
   onDeleteOption,
   isEditMode,
 }: ServiceFormStep2Props) => {
+  const [isTimeOptions, setTimeOptions] = useState<boolean[]>(!isEditMode ? [false] : []);
+
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
@@ -360,27 +362,31 @@ const ServiceFormStep2 = ({
                       onChange(newOptions);
                     }}
                   />
-                  <Typography
-                    fontSize={16}
-                    letterSpacing="-2.5%"
-                    marginBottom={10}
-                    marginTop={21}
-                  >
-                    시간 추가 옵션
-                  </Typography>
-                  <FormInput
-                    placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
-                    value={firstOption.time || ''}
-                    onChangeText={(time: string) => {
-                      const newOptions = [...optionList];
-                      if (newOptions.length === 0) {
-                        newOptions.push({ name: '', description: '', price: '', time });
-                      } else {
-                        newOptions[0] = { ...newOptions[0], time };
-                      }
-                      onChange(newOptions);
-                    }}
-                  />
+                  <TimeOptionCheckboxWrapper>
+                    <Checkbox isChecked={isTimeOptions[0]} onPress={() => setTimeOptions([!isTimeOptions[0], ...isTimeOptions.slice(1)])} />
+                    <Typography
+                      fontSize={14}
+                      letterSpacing="-2.5%"
+                      marginLeft={12}
+                    >
+                      시간 추가 옵션
+                    </Typography>
+                  </TimeOptionCheckboxWrapper>
+                  {isTimeOptions[0] && (
+                    <FormInput
+                      placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
+                      value={firstOption.time || ''}
+                      onChangeText={(time: string) => {
+                        const newOptions = [...optionList];
+                        if (newOptions.length === 0) {
+                          newOptions.push({ name: '', description: '', price: '', time });
+                        } else {
+                          newOptions[0] = { ...newOptions[0], time };
+                        }
+                        onChange(newOptions);
+                      }}
+                    />
+                  )}
                   <Typography
                     fontSize={16}
                     letterSpacing="-2.5%"
@@ -454,6 +460,7 @@ const ServiceFormStep2 = ({
                   name={option.name}
                   description={option.description}
                   price={option.price}
+                  isTimeOption={isTimeOptions[index]}
                   time={option.time}
                   setName={(name: string) => {
                     const newOptions = [...optionList];
@@ -469,6 +476,9 @@ const ServiceFormStep2 = ({
                     const newOptions = [...optionList];
                     newOptions[index] = { ...newOptions[index], price };
                     onChange(newOptions);
+                  }}
+                  setIsTimeOption={(isTimeOption: boolean) => {
+                    setTimeOptions([...isTimeOptions.slice(0, index), isTimeOption, ...isTimeOptions.slice(index + 1)]);
                   }}
                   setTime={(time: string) => {
                     const newOptions = [...optionList];
@@ -488,6 +498,7 @@ const ServiceFormStep2 = ({
                   description={option.description}
                   price={option.price}
                   time={option.time}
+                  isTimeOption={isTimeOptions[index + 1]}
                   setName={(name: string) => {
                     const newOptions = [...optionList];
                     newOptions[index + 1] = { ...newOptions[index + 1], name };
@@ -502,6 +513,9 @@ const ServiceFormStep2 = ({
                     const newOptions = [...optionList];
                     newOptions[index + 1] = { ...newOptions[index + 1], price };
                     onChange(newOptions);
+                  }}
+                  setIsTimeOption={(isTimeOption: boolean) => {
+                    setTimeOptions([...isTimeOptions.slice(0, index + 1), isTimeOption, ...isTimeOptions.slice(index + 2)]);
                   }}
                   setTime={(time: string) => {
                     const newOptions = [...optionList];

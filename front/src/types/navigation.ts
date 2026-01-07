@@ -9,6 +9,7 @@ export type BookingRequestParams = {
   options: BookingRequestOption[];
   shootingDate: string; // ISO date-time string
   startTime: string; // HH:mm format
+  region: string; // City name
 };
 
 // Root Stack
@@ -91,6 +92,9 @@ export type MainStackParamList = {
   // Notification
   Notification: undefined;
   NotificationSetting: undefined;
+  Notice: undefined;
+  NoticeDetail: { noticeId: number };
+  FAQ: undefined;
 
   // etc
   Legal: undefined;

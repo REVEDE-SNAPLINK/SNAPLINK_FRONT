@@ -7,13 +7,14 @@ import { Typography } from '@/components/theme';
 import SettingsIcon from '@/assets/icons/settings.svg';
 import { NotificationItem } from '@/api/notifications.ts';
 import { formatTimeAgo } from '@/utils/format.ts';
+import { theme } from '@/theme';
 
 interface NotificationViewProps {
   notifications: NotificationItem[];
   // selectedCategory: NotificationCategory;
   onPressBack: () => void;
   // onPressTab: (category: NotificationCategory) => void;
-  onPressNotification: (notificationId: number) => void;
+  onPressNotification: (notificationId: number, deeplink: string) => void;
   onPressSetting: () => void;
 
   navigation?: any;
@@ -98,18 +99,16 @@ export default function NotificationView({
           //   }
           // }
           return (
-            <NotificationItemButton onPress={() => onPressNotification(notification.id)}>
+            <NotificationItemButton key={notification.id} onPress={() => onPressNotification(notification.id, notification.deeplink)} isRead={notification.isRead}>
               <NotificationItemContent>
                 <NotificationItemHeader>
-                  <Typography fontSize={10} marginBottom={11}>
+                  <Typography fontSize={14} marginBottom={11} color="primary" fontWeight="semiBold">
                     {notification.title}
                   </Typography>
-                  {/*<NotificationItemDeleteButton onPress={onPressDelete}>*/}
-                  {/*  <Icon width={18} height={18} Svg={MoreCircleIcon} />*/}
-                  {/*</NotificationItemDeleteButton>*/}
                 </NotificationItemHeader>
-                {notification.body}
-                <Typography fontSize={10} color="#C8C8C8">
+                <Typography fontSize={14} marginBottom={5}>{notification.body}</Typography>
+
+                <Typography fontSize={10} color="#BBB">
                   {formatTimeAgo(notification.createdAt)}
                 </Typography>
               </NotificationItemContent>
@@ -141,7 +140,6 @@ export default function NotificationView({
 const NotificationContainer = styled.ScrollView`
   flex: 1;
   width: 100%;
-  padding: 0 25px;
 `
 //
 // const NotificationItem = styled.View`
@@ -159,6 +157,7 @@ const NotificationContainer = styled.ScrollView`
 
 const NotificationItemContent = styled.View`
   flex: 1;
+  padding: 15px 20px;
 `
 
 const NotificationItemHeader = styled.View`
@@ -172,10 +171,13 @@ const NotificationItemHeader = styled.View`
 //   align-items: center;
 // `
 
-const NotificationItemButton = styled.TouchableOpacity`
+const NotificationItemButton = styled.TouchableOpacity<{ isRead: boolean }>`
   width: 100%;
   flex-direction: row;
-  margin-bottom: 15px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: ${theme.colors.disabled};
+  ${({ isRead }) => !isRead && `background-color: ${theme.colors.primary}15;`}
 `
 
 // const NotificationItemDeleteButton = styled.TouchableOpacity`

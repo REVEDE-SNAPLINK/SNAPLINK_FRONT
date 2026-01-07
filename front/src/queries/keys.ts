@@ -205,3 +205,11 @@ export const shootingsQueryKeys = {
   options: (productId: number) =>
     [...shootingsQueryKeys.all, 'options', productId] as const,
 };
+
+export const noticeQueryKeys = {
+  all: ['notices'] as const,
+
+  lists: () => [...noticeQueryKeys.all, 'list'] as const,
+
+  notice: (id: number) => [...noticeQueryKeys.all, 'notice', id] as const,
+}

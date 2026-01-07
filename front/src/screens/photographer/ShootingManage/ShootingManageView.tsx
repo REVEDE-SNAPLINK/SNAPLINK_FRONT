@@ -16,6 +16,8 @@ import {
   GetShootingResponse,
   SelectionAuthority,
 } from '@/api/shootings.ts';
+import { GetWeeklyScheduleRespnose } from '@/api/schedules.ts';
+import { DayOfWeek } from '@/api/photographers.ts';
 
 interface ShootingWithOptions extends GetShootingResponse {
   optionalOptions?: GetShootingOptionResponse[];
@@ -28,9 +30,24 @@ interface ShootingManageViewProps {
   onPressDeleteProduct: (productId: number) => void;
   onPressEditSchedule: () => void;
   shootings: ShootingWithOptions[];
-  days: string;
+  weeklySchedule: GetWeeklyScheduleRespnose[];
 
   navigation?: any;
+}
+
+const DAY_OF_WEEK_MAP: Record<DayOfWeek, string> = {
+  MONDAY: '월요일',
+  TUESDAY: '화요일',
+  WEDNESDAY: '수요일',
+  THURSDAY: '목요일',
+  FRIDAY: '금요일',
+  SATURDAY: '토요일',
+  SUNDAY: '일요일',
+};
+
+const formatLocalTime = (time: string) => {
+  const arr = time.split(':');
+  return `${arr[0]}:${arr[1]}`;
 }
 
 export default function ShootingManageView({
@@ -40,7 +57,7 @@ export default function ShootingManageView({
   onPressDeleteProduct,
   onPressEditSchedule,
   shootings,
-  days,
+  weeklySchedule,
   navigation,}: ShootingManageViewProps) {
   const [productId, setProductId] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -52,8 +69,8 @@ export default function ShootingManageView({
         headerShown={true}
         headerTitle="촬영 판매 서비스 관리"
         onPressBack={onPressBack}
-      
-      navigation={navigation}>
+        navigation={navigation}
+      >
         <ScrollContainer>
           <ShootingOptionContainer>
             <ShootingOptionHeader>
@@ -77,14 +94,25 @@ export default function ShootingManageView({
                 촬영 요일
               </Typography>
               <ShootingOptionValueWrapper>
-                <Typography
-                  fontSize={12}
-                  lineHeight="140%"
-                  letterSpacing="-2.5%"
-                  color="textSecondary"
-                >
-                  {days}
-                </Typography>
+                {weeklySchedule.length === 0 ? (
+                  <Typography
+                    fontSize={12}
+                    lineHeight="140%"
+                    letterSpacing="-2.5%"
+                    color="textSecondary"
+                  >
+                    설정된 요일 없음
+                  </Typography>
+                ) : weeklySchedule.map((w) => (
+                  <Typography
+                    fontSize={12}
+                    lineHeight="140%"
+                    letterSpacing="-2.5%"
+                    color="textSecondary"
+                  >
+                    {DAY_OF_WEEK_MAP[w.dayOfWeek]} : {formatLocalTime(w.startTime)} ~ {formatLocalTime(w.endTime)}
+                  </Typography>
+                ))}
               </ShootingOptionValueWrapper>
             </ShootingOptionContent>
           </ShootingOptionContainer>
@@ -99,7 +127,9 @@ export default function ShootingManageView({
                 }}
                 name={shooting.shoootingName}
                 // days={''}
-                type={`${shooting.personnel}인 ${shooting.isDefault ? '기본 ' : ''}촬영`}
+                type={`${shooting.personnel}인 ${
+                  shooting.isDefault ? '기본 ' : ''
+                }촬영`}
                 photoTime={shooting.photoTime}
                 basePrice={shooting.basePrice}
                 providesRawFile={shooting.providesRawFile}
@@ -108,7 +138,8 @@ export default function ShootingManageView({
                 selectionAuthority={shooting.selectionAuthority}
                 providedEditCount={shooting.providedEditCount}
                 options={
-                  shooting.optionalOptions && shooting.optionalOptions.length > 0
+                  shooting.optionalOptions &&
+                  shooting.optionalOptions.length > 0
                     ? shooting.optionalOptions
                     : []
                 }
@@ -139,12 +170,14 @@ export default function ShootingManageView({
             </Typography>
           </EditModalButton>
           <EditModalDivider />
-          <EditModalButton onPress={() => {
-            if (productId !== null) {
-              onPressDeleteProduct(productId)
-              setModalVisible(false)
-            }
-          }}>
+          <EditModalButton
+            onPress={() => {
+              if (productId !== null) {
+                onPressDeleteProduct(productId);
+                setModalVisible(false);
+              }
+            }}
+          >
             <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
               삭제
             </Typography>

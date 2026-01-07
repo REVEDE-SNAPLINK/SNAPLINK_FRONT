@@ -3,21 +3,6 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { KAKAO_NATIVE_APP_KEY } from '@/config/api.ts';
 import { initializeKakaoSDK } from '@react-native-kakao/core';
 import SplashScreen from 'react-native-splash-screen';
-import messaging from '@react-native-firebase/messaging';
-import { Platform } from 'react-native';
-
-async function initPush() {
-  if (Platform.OS !== 'ios') return;
-
-  try {
-    console.log('[AuthInitializer] Registering for remote notifications...');
-    // ✅ APNs 등록(이게 먼저!)
-    await messaging().registerDeviceForRemoteMessages();
-    console.log('[AuthInitializer] Remote notifications registered');
-  } catch (e) {
-    console.error('[AuthInitializer] Failed to register for remote notifications:', e);
-  }
-}
 
 /**
  * AuthInitializer - 앱 시작 시 인증 상태를 초기화하는 컴포넌트
@@ -35,16 +20,8 @@ export default function AuthInitializer({ children }: { children: React.ReactNod
         await initializeKakaoSDK(`${KAKAO_NATIVE_APP_KEY}`);
         console.log('[AuthInitializer] Kakao SDK initialized');
 
-        // Push 초기화와 bootstrap을 병렬로 실행
-        const [, bootstrapResult] = await Promise.allSettled([
-          initPush(),
-          bootstrap(),
-        ]);
-
-        // bootstrap이 실패해도 앱은 계속 실행
-        if (bootstrapResult.status === 'rejected') {
-          console.error('[AuthInitializer] Bootstrap failed:', bootstrapResult.reason);
-        }
+        // Bootstrap 실행 (FCM 등록은 로그인/회원가입 후 진행)
+        await bootstrap();
 
         const elapsed = Date.now() - startTime;
         console.log(`[AuthInitializer] Initialization completed in ${elapsed}ms`);

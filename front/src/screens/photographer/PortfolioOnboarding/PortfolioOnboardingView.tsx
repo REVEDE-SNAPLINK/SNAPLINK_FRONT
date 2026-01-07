@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Control, Controller, FieldErrors, useWatch } from 'react-hook-form';
 import Animated, {
   useSharedValue,
@@ -19,7 +19,7 @@ import { GetRegionsResponse } from '@/api/regions.ts';
 import { GetConceptsResponse } from '@/api/concepts.ts';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
-import OptionItem, { Option } from '@/components/OptionItem.tsx';
+import OptionItem, { Option, TimeOptionCheckboxWrapper } from '@/components/OptionItem.tsx';
 import CloseIcon from '@/assets/icons/multiply.svg'
 import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
@@ -761,6 +761,8 @@ const PortfolioOnboardingStep7 = ({
   control,
   onDeleteOption,
 }: PortfolioOnboardingStep7Props) => {
+  const [isTimeOptions, setTimeOptions] = useState<boolean[]>([false]);
+
   // @ts-ignore
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
@@ -803,29 +805,33 @@ const PortfolioOnboardingStep7 = ({
                 }}
                 onFocus={handleAutoScrollOnFocus}
               />
-              <Typography
-                fontSize={CAPTION_FONT_SIZE}
-                letterSpacing="-2.5%"
-                marginBottom={10}
-                marginTop={21}
-              >
-                시간 추가 옵션
-              </Typography>
-              <FormInput
-                placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
-                value={firstOption.time || ''}
-                keyboardType="numeric"
-                onChangeText={(time: string) => {
-                  const newOptions = [...optionList];
-                  if (newOptions.length === 0) {
-                    newOptions.push({ name: '', description: '', price: '', time });
-                  } else {
-                    newOptions[0] = { ...newOptions[0], time };
-                  }
-                  onChange(newOptions);
-                }}
-                onFocus={handleAutoScrollOnFocus}
-              />
+              <TimeOptionCheckboxWrapper>
+                <Checkbox isChecked={isTimeOptions[0]} onPress={() => setTimeOptions([!isTimeOptions[0], ...isTimeOptions.slice(1)])} />
+                <Typography
+                  fontSize={14}
+                  letterSpacing="-2.5%"
+                  marginLeft={10}
+                >
+                  시간 추가 옵션
+                </Typography>
+              </TimeOptionCheckboxWrapper>
+              {isTimeOptions[0] && (
+                <FormInput
+                  placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
+                  value={firstOption.time || ''}
+                  keyboardType="numeric"
+                  onChangeText={(time: string) => {
+                    const newOptions = [...optionList];
+                    if (newOptions.length === 0) {
+                      newOptions.push({ name: '', description: '', price: '', time });
+                    } else {
+                      newOptions[0] = { ...newOptions[0], time };
+                    }
+                    onChange(newOptions);
+                  }}
+                  onFocus={handleAutoScrollOnFocus}
+                />
+              )}
               <Typography
                 fontSize={CAPTION_FONT_SIZE}
                 letterSpacing="-2.5%"
@@ -879,6 +885,7 @@ const PortfolioOnboardingStep7 = ({
               <AddOptionButton
                 onPress={() => {
                   const newOptions = [...optionList, { name: '', description: '', price: '', time: '' }];
+                  setTimeOptions([...isTimeOptions, false]);
                   onChange(newOptions);
                 }}
               >
@@ -898,6 +905,7 @@ const PortfolioOnboardingStep7 = ({
                   name={option.name}
                   description={option.description}
                   price={option.price}
+                  isTimeOption={isTimeOptions[index + 1]}
                   time={option.time}
                   setName={(name: string) => {
                     const newOptions = [...optionList];
@@ -913,6 +921,9 @@ const PortfolioOnboardingStep7 = ({
                     const newOptions = [...optionList];
                     newOptions[index + 1] = { ...newOptions[index + 1], price };
                     onChange(newOptions);
+                  }}
+                  setIsTimeOption={(isTimeOption: boolean) => {
+                    setTimeOptions([...isTimeOptions.slice(0, index + 1), isTimeOption, ...isTimeOptions.slice(index + 2)]);
                   }}
                   setTime={(time: string) => {
                     const newOptions = [...optionList];

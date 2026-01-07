@@ -137,7 +137,7 @@ export default function AddScheduleModal({
   const handlePressClose = () => {
     if (isDirty) {
       Alert.show({
-        title: `일정 ${initialSchedule ? '수정' : '추가'}을 그만둘까요?`,
+        title: `일정 ${initialSchedule ? '수정을' : '추가를'} 그만둘까요?`,
         message: '변경된 내용은 저장되지 않아요.',
         buttons: [
           {

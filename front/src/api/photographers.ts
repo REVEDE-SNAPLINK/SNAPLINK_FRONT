@@ -5,7 +5,6 @@ import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/f
 import RNBlobUtil from 'react-native-blob-util';
 import { EditingDeadline, EditingType, SelectionAuthority } from '@/api/shootings.ts';
 import { GetRegionsResponse } from '@/api/regions.ts';
-import { GetConceptsResponse } from '@/api/concepts.ts';
 
 const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
 const PORTFOLIOS_BASE = `${PHOTOGRAPHERS_BASE}/portfolios`;

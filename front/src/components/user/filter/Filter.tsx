@@ -31,7 +31,7 @@ export default function Filter({
         contentContainerStyle={{ alignItems: 'center' }}
       >
         <FilterButton onPress={onPressFilterButton}>
-          <Icon width={15} height={15} Svg={FilterIcon} />
+          <Icon width={20} height={20} Svg={FilterIcon} />
         </FilterButton>
 
         {categories.map((category) => {
@@ -76,9 +76,9 @@ const TopRow = styled.ScrollView`
 `;
 
 const FilterButton = styled.TouchableOpacity`
-  width: 25px;
-  height: 25px;
-  border-radius: 12.5px;
+  width: 30px;
+  height: 30px;
+  border-radius: 30px;
   background-color: #f4f4f4;
   align-items: center;
   justify-content: center;
@@ -89,8 +89,8 @@ const CategoryChipWrapper = styled.TouchableOpacity<{ isActive: boolean }>`
   flex-direction: row;
   align-items: center;
   padding-horizontal: 10px;
-  height: 25px;
-  border-radius: 17.5px;
+  height: 30px;
+  border-radius: 30px;
   background-color: ${({ isActive }) => (isActive ? theme.colors.primary : '#F4F4F4')};
   margin-right: 8px;
 `;
@@ -106,8 +106,8 @@ const CategoryChip = ({ name, Icon: IconComponent, isActive, onPress }: Category
   return (
     <CategoryChipWrapper onPress={onPress} isActive={isActive}>
       <Icon
-        width={15}
-        height={15}
+        width={20}
+        height={20}
         Svg={IconComponent}
         color={isActive ? '#fff' : theme.colors.textPrimary}
       />
@@ -133,10 +133,10 @@ const SelectedFiltersContainer = styled.View`
 
 const SelectedFilterChipButton = styled.TouchableOpacity`
   flex-direction: row;
-  height: 25px;
+  height: 30px;
   padding-horizontal: 10px;
   background-color: #f4f4f4;
-  border-radius: 15px;
+  border-radius: 30px;
   align-items: center;
 `;
 

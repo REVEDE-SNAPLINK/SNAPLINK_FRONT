@@ -17,7 +17,7 @@ export default function BookingRequestContainer() {
   const { userId, userType } = useAuthStore();
   const route = useRoute<BookingRequestRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
-  const { photographerId, productId, options, shootingDate, startTime } = route.params;
+  const { photographerId, productId, options, shootingDate, startTime, region } = route.params;
 
   const { control, handleSubmit, watch, formState: { isValid } } = useForm<BookingRequestFormInputs>({
     mode: 'onChange',
@@ -44,6 +44,7 @@ export default function BookingRequestContainer() {
     });
     createBookingMutation.mutate({
       photographerId,
+      region,
       productId,
       options,
       shootingDate, // Already ISO string from Booking screen

@@ -322,40 +322,105 @@ const isJwtExpired = (token: string, skewSeconds = 30) => {
 
 const safeDeleteFcmToken = async () => {
   try {
-    if (Platform.OS === 'ios') {
-      await messaging().registerDeviceForRemoteMessages().catch(() => {});
-      const apnsToken = await messaging().getAPNSToken().catch(() => null);
-      if (!apnsToken) return;
+    console.log('[FCM] Deleting FCM token from server...');
+
+    const fcmToken = await messaging().getToken().catch(() => null);
+
+    if (!fcmToken) {
+      console.log('[FCM] No FCM token found, skip deletion');
+      return;
     }
 
-    const fcmToken = await messaging().getToken();
-    if (!fcmToken) return;
-
+    console.log('[FCM] FCM token to delete:', fcmToken.substring(0, 20) + '...');
     await deleteFCMToken(fcmToken);
+    console.log('[FCM] FCM token deleted successfully from server');
   } catch (e) {
-    console.log('[Auth] safeDeleteFcmToken failed:', e);
+    console.error('[FCM] safeDeleteFcmToken failed:', e);
   }
 };
 
 const safeRegisterFcmDevice = async () => {
   try {
-    if (Platform.OS === 'ios') {
-      // iOS에서 APNs 준비가 안 되면 getToken이 터질 수 있음
-      await messaging().registerDeviceForRemoteMessages();
-      await messaging().requestPermission();
+    console.log('[FCM] Starting FCM device registration...');
 
-      const apnsToken = await messaging().getAPNSToken().catch(() => null);
-      if (!apnsToken) {
-        console.log('[Auth] APNs token not ready, skip FCM register');
-        return;
-      }
+    // Step 1: 권한 요청 (iOS와 Android 모두)
+    console.log('[FCM] Requesting notification permission...');
+    const authStatus = await messaging().requestPermission({
+      alert: true,
+      badge: true,
+      sound: true,
+    });
+
+    const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    console.log('[FCM] Platform:', Platform.OS, 'Permission status:', authStatus, 'enabled:', enabled);
+
+    if (!enabled) {
+      console.warn('[FCM] 알림 권한 거부됨, FCM 등록 불가');
+      return;
     }
 
-    const fcmToken = await messaging().getToken();
-    if (!fcmToken) return;
+    if (Platform.OS === 'ios') {
+      // Step 2 (iOS only): APNs 등록 (권한 승인 후)
+      console.log('[FCM] iOS - Registering device for remote notifications...');
+      await messaging().registerDeviceForRemoteMessages();
+      console.log('[FCM] iOS - Device registered for remote notifications');
 
+      // Step 3 (iOS only): APNs 토큰 대기 (retry with timeout)
+      console.log('[FCM] iOS - Waiting for APNs token...');
+      const apnsToken = await waitForAPNsToken();
+
+      if (!apnsToken) {
+        console.error('[FCM] iOS - Failed to get APNs token after retries, cannot proceed');
+        return;
+      }
+
+      console.log('[FCM] iOS - APNs token obtained:', apnsToken.substring(0, 20) + '...');
+    }
+
+    // Step 4: FCM 토큰 생성
+    console.log('[FCM] Getting FCM token...');
+    const fcmToken = await messaging().getToken();
+
+    if (!fcmToken) {
+      console.error('[FCM] Failed to get FCM token');
+      return;
+    }
+
+    console.log('[FCM] FCM token obtained:', fcmToken.substring(0, 20) + '...');
+
+    // Step 5: 서버에 FCM 토큰 등록
+    console.log('[FCM] Registering FCM token with server...');
     await registerFCMdevice(fcmToken);
+    console.log('[FCM] FCM device registration completed successfully');
   } catch (e) {
-    console.log('[Auth] safeRegisterFcmDevice failed:', e);
+    console.error('[FCM] safeRegisterFcmDevice failed:', e);
   }
+};
+
+/**
+ * APNs 토큰을 기다리는 헬퍼 함수 (retry 로직 포함)
+ * iOS에서 registerDeviceForRemoteMessages() 후 APNs 토큰 생성까지 시간이 걸릴 수 있음
+ */
+const waitForAPNsToken = async (maxRetries = 10, delayMs = 500): Promise<string | null> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const token = await messaging().getAPNSToken();
+      if (token) {
+        console.log(`[FCM] APNs token obtained on attempt ${i + 1}`);
+        return token;
+      }
+    } catch (e) {
+      console.log(`[FCM] APNs token not available yet (attempt ${i + 1}/${maxRetries})`);
+    }
+
+    // 마지막 시도가 아니면 대기
+    if (i < maxRetries - 1) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  console.error('[FCM] APNs token not available after', maxRetries, 'attempts');
+  return null;
 };

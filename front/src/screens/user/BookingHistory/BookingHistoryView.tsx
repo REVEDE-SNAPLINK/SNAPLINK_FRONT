@@ -19,6 +19,7 @@ interface BookingHistoryViewProps {
   onPressBookingDetail: (bookingId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onPressCancelBooking?: (bookingId: number) => void;
   onPressViewPhotos?: (bookingId: number) => void;
   onPressWriteReview?: (bookingId: number) => void;
   onPressShowMyReivew?: (bookingId: number) => void;
@@ -37,13 +38,12 @@ export default function BookingHistoryView({
   onPressBookingDetail,
   onRefresh,
   isRefreshing,
+  onPressCancelBooking,
   onPressViewPhotos,
   onPressWriteReview,
   onPressShowMyReivew,
   navigation,}: BookingHistoryViewProps) {
   const renderItem = ({ item }: { item: UserBookingListItem }) => {
-    console.log(item.bookingId, item.shootingDate, item.startTime, item.endTime, item.status);
-
     return (
       <HistoryCard
         onPress={() => onPressBookingDetail(item.bookingId)}
@@ -52,6 +52,11 @@ export default function BookingHistoryView({
         photographerName={item.photographerName || '작가'}
         type={item.type}
         datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
+        onPressCancelBooking={
+          item.status === 'WAITING_FOR_APPROVAL' && onPressCancelBooking
+            ? () => onPressCancelBooking(item.bookingId)
+            : undefined
+        }
         onPressViewPhotos={
           (item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK') && onPressViewPhotos
             ? () => onPressViewPhotos(item.bookingId)

@@ -233,7 +233,7 @@ async function requestSystemPermission(
  * - Android: 설정 앱으로 직접 이동
  * - iOS: 설정 안내 후 사용자가 수동으로 이동
  */
-function showSettingsAlert(
+export function showSettingsAlert(
   type: PermissionType,
   onDenied?: () => void,
 ): void {

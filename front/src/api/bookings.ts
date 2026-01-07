@@ -118,6 +118,7 @@ export interface BookingRequestOption {
 
 export interface CreateBookingRequest {
   photographerId: string;
+  region: string;
   productId: number;
   options: BookingRequestOption[];
   shootingDate: string; // ISO date-time string
@@ -279,22 +280,6 @@ export const approveBooking = async (
 }
 
 /**
- * PATCH /api/bookings/{bookingId}/deliver
- * 작가가 사진 전달 완료 처리
- */
-export const deliverPhotos = async (
-  params: PatchBookingStatusParams
-) => {
-  const { bookingId } = params;
-
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/deliver`, {
-    method: 'PATCH',
-  });
-
-  if (!response.ok) throw new Error(`Failed to deliver photos ${response.status}`);
-}
-
-/**
  * POST /api/bookings
  * 예약 생성
  */
@@ -416,3 +401,13 @@ export const getBookingDetail = async (
 
   return response.json();
 };
+
+export const cancelBookingFromCustomer = async (
+  bookingId: number
+) => {
+  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/customer/cancel`, {
+    method: 'PATCH',
+  });
+
+  if (!response.ok) throw new Error(`Failed to cancel booking ${response.status}`);
+}

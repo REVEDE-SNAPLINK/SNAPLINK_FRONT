@@ -7,7 +7,7 @@ import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import dayjs from 'dayjs';
 import Icon from '@/components/Icon.tsx';
 import { useMemo, useState } from 'react';
-import Animated, { SharedValue, useAnimatedStyle, useDerivedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, SharedValue } from 'react-native-reanimated';
 
 LocaleConfig.locales['ko'] = {
   monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -38,13 +38,10 @@ interface ScheduleCalendarProps {
   /** 월 변경 콜백 (YYYY-MM) */
   onMonthChange?: (yearMonth: string) => void;
 
-  sheetHeight: SharedValue<number>;
-  defaultHeight: number;
-  calendarWrapperHeight: SharedValue<number>;
-  weekRowCount: number;
+  dayMarginBottom: SharedValue<number>;
+  containerHeight: number;
 }
 
-const CALENDAR_HEADER_HEIGHT = 76;
 const DAY_HEIGHT = 42;
 
 export default function ScheduleCalendar({
@@ -53,10 +50,8 @@ export default function ScheduleCalendar({
   scheduleData = [],
   initialDate,
   onMonthChange,
-  sheetHeight,
-  defaultHeight,
-  calendarWrapperHeight,
-  weekRowCount,
+  dayMarginBottom,
+  containerHeight,
 }: ScheduleCalendarProps) {
   // Track currently displayed month (YYYY-MM)
   const [displayedYearMonth, setDisplayedYearMonth] = useState(() =>
@@ -79,11 +74,8 @@ export default function ScheduleCalendar({
     if (scheduleItem.hasBooking) {
       return 'rgba(0, 169, 128, 0.2)'; // primary color
     }
-    if (scheduleItem.photographerHoliday) {
-      return 'rgba(232, 78, 78, 0.2)'; // orange for photographer holiday
-    }
-    if (scheduleItem.publicHoliday) {
-      return 'rgba(255, 178, 63, 0.2)'; // #FFB23F with 20% opacity
+    if (scheduleItem.photographerHoliday || scheduleItem.publicHoliday) {
+      return 'rgba(232, 78, 78, 0.2)'; // red for holiday
     }
     if (scheduleItem.hasPersonalSchedule) {
       return `${theme.colors.textPrimary}33`; // textPrimary with 20% opacity
@@ -91,43 +83,15 @@ export default function ScheduleCalendar({
     return null;
   };
 
-  const rowGap = useDerivedValue(() => {
-    const fixedDaysHeight =
-      weekRowCount * DAY_HEIGHT;
-
-    const minCalendarHeight =
-      CALENDAR_HEADER_HEIGHT + fixedDaysHeight;
-
-    const expandableSpace = Math.max(
-      0,
-      calendarWrapperHeight.value - minCalendarHeight,
-    );
-
-    if (sheetHeight.value >= defaultHeight) {
-      return 0;
-    }
-
-    const progress =
-      (defaultHeight - sheetHeight.value) / defaultHeight;
-
-    return (
-      expandableSpace /
-      Math.max(1, weekRowCount - 1)
-    ) * progress;
-  });
-
-  const dayMarginStyle = useAnimatedStyle(() => {
-    return {
-      marginBottom: rowGap.value,
-    };
-  });
+  const dayMarginStyle = useAnimatedStyle(() => ({
+    marginBottom: dayMarginBottom.value,
+  }));
 
   const AnimatedDayWrapper =
     Animated.createAnimatedComponent(DayWrapper);
 
-  return (
+  return containerHeight > 0 ? (
     <RNCalendar
-      style={{ flexGrow: 1, height: '100%' }}
       initialDate={selectedDate ?? initialDate}
       onMonthChange={(date) => {
         const yearMonth = dayjs(date.dateString).format('YYYY-MM');
@@ -168,8 +132,7 @@ export default function ScheduleCalendar({
         // Show event color for all dates (including prev/next month)
         const eventColor = getEventColor(dateString);
 
-        const isSunday = dayjs(date).day() === 0;
-        console.log(isSunday);
+        const isSunday = new Date(date?.dateString || '').getDay() === 0;
 
         // Text color: selected = white, other month = disabled, current month = textPrimary
         const textColor = isSelected
@@ -200,7 +163,7 @@ export default function ScheduleCalendar({
         );
       }}
     />
-  );
+  ) : null;
 }
 
 const DayWrapper = styled.TouchableOpacity<{ selected: boolean; eventColor: string | null }>`

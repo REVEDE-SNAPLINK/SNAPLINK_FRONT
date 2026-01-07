@@ -37,6 +37,9 @@ import EditProfileContainer from '@/screens/photographer/EditProfile/EditProfile
 import EditRegionContainer from '@/screens/photographer/EditRegion/EditRegionContainer.tsx';
 import EditConceptTagContainer from '@/screens/photographer/EditConceptTag/EditConceptTagContainer.tsx';
 import LegalScreen from '@/screens/common/LegalScreen.tsx';
+import NoticeScreen from '@/screens/common/NoticeScreen.tsx';
+import NoticeDetailScreen from '@/screens/common/NoticeDetailScreen.tsx';
+import FAQScreen from '@/screens/common/FAQScreen.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -91,6 +94,9 @@ export default function MainStack() {
       <Stack.Screen name="MyReviews" component={MyReviewsContainer} />
       <Stack.Screen name="OpenSourceLicense" component={OpenSourceLicensesScreen} />
       <Stack.Screen name="NotificationSetting" component={NotificationSettingContainer} />
+      <Stack.Screen name="Notice" component={NoticeScreen} />
+      <Stack.Screen name="NoticeDetail" component={NoticeDetailScreen} />
+      <Stack.Screen name="FAQ" component={FAQScreen} />
       <Stack.Screen name="Legal" component={LegalScreen} />
     </Stack.Navigator>
   )

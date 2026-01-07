@@ -73,18 +73,25 @@ export default function HistoryCard({
 
   const renderUserActionButtons = useMemo(() => {
     if (status !== 'PHOTOS_DELIVERED' && status !== 'USER_PHOTO_CHECK') {
+      if (status === 'WAITING_FOR_APPROVAL' && onPressCancelBooking) {
+        return (
+          <Status
+            text="예약 취소"
+            disabled={false}
+            onPress={onPressCancelBooking}
+          />
+        )
+      }
       return (
         <Status
           text={
-            status === 'WAITING_FOR_APPROVAL'
-              ? '작가님의 승인을 기다리고 있어요'
-              : status === 'APPROVED'
-            ? '아직 촬영 전이에요' :
-              status === 'COMPLETED'
-            ? '작가님이 작업 중이에요'
-              : status === 'CANCELLED'
-                  ? '취소된 예약이에요'
-                  : '거절된 예약이에요'
+            status === 'APPROVED'
+              ? '아직 촬영 전이에요' :
+                status === 'COMPLETED'
+              ? '작가님이 작업 중이에요'
+                : status === 'CANCELLED'
+                    ? '취소된 예약이에요'
+                    : '거절된 예약이에요'
           }
         />
       )
@@ -132,7 +139,7 @@ export default function HistoryCard({
         )}
       </ActionButtonWrapper>
     );
-  }, [status, onPressWriteReview, onPressViewPhotos, isreview, onPressViewMyReivew]);
+  }, [status, onPressWriteReview, onPressViewPhotos, isreview, onPressViewMyReivew, onPressCancelBooking]);
 
   const renderPhotographerActionButtons = useMemo(() => {
     if (status !== 'WAITING_FOR_APPROVAL') {

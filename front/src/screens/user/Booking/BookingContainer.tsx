@@ -11,19 +11,16 @@ import { useAvailableBookingDaysQuery, useAvailableBookingTimesQuery } from '@/q
 import { useShootingsQuery, useShootingOptionsQuery } from '@/queries/shootings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useRegionsQuery } from '@/queries/meta.ts';
+import { usePhotographerRegionsConceptsTagsQuery } from '@/queries/photographers.ts';
 
 type BookingRouteProp = RouteProp<MainStackParamList, 'Booking'>;
 
 interface BookingFormInputs {
   date: string;
   time: string;
-  regionIds: number[];
+  regionId: number;
   productId: number;
 }
-
-const availbleRegionIds = [
-  1, 3
-]
 
 export default function BookingContainer() {
   const { userId, userType } = useAuthStore();
@@ -36,14 +33,13 @@ export default function BookingContainer() {
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       time: '',
-      regionIds: [],
+      regionId: 0,
       productId: 0,
     },
   });
-
   const selectedDate = watch('date');
   const selectedTime = watch('time');
-  const selectedRegionIds = watch('regionIds');
+  const selectedRegionId = watch('regionId');
   const selectedProductIdField = watch('productId');
   const isInitialDateSet = useRef(false);
 
@@ -92,6 +88,15 @@ export default function BookingContainer() {
   const {
     data: regions
   } = useRegionsQuery();
+
+  // Fetch photographer's regions
+  const { data: photographerRegionsData } = usePhotographerRegionsConceptsTagsQuery(photographerId);
+
+  // Get available region IDs from photographer's regions
+  const availableRegionIds = useMemo(() => {
+    if (!photographerRegionsData?.regions) return [];
+    return photographerRegionsData.regions.map((r) => r.id);
+  }, [photographerRegionsData]);
 
   // Calculate booking range (today ~ 3 months from today)
   const maxBookingDate = useMemo(() => {
@@ -268,8 +273,9 @@ export default function BookingContainer() {
   );
 
   const handleToggleRegion = (id: number) => {
-    const newRegionIds = selectedRegionIds.includes(id) ? selectedRegionIds.filter((v) => v !== id) : [...selectedRegionIds, id];
-    setValue('regionIds', newRegionIds)
+    // Toggle: if already selected, deselect. Otherwise, select this one.
+    const newRegionId = selectedRegionId === id ? 0 : id;
+    setValue('regionId', newRegionId);
   }
 
   const handlePressShootingProduct = (productId: number) => {
@@ -320,6 +326,10 @@ export default function BookingContainer() {
         count,
       }));
 
+    // Get selected region's city name
+    const selectedRegion = regions?.find((r) => r.id === data.regionId);
+    const regionCity = selectedRegion?.city || '';
+
     // Log booking_request_submitted
     analytics().logEvent('booking_request_submitted', {
       user_id: userId,
@@ -329,6 +339,7 @@ export default function BookingContainer() {
       shooting_date: data.date,
       start_time: data.time,
       options: JSON.stringify(options),
+      region: regionCity,
     });
 
     // Log booking_confirmed (for demonstration, as actual confirmation is after request)
@@ -340,6 +351,7 @@ export default function BookingContainer() {
       shooting_date: data.date,
       start_time: data.time,
       options: JSON.stringify(options),
+      region: regionCity,
     });
 
     // Navigate to BookingRequest with form data
@@ -349,6 +361,7 @@ export default function BookingContainer() {
       options,
       shootingDate: data.date,
       startTime: data.time, // HH:mm format
+      region: regionCity,
     });
   };
 
@@ -444,8 +457,8 @@ export default function BookingContainer() {
       timeSlots={timeSlots}
       selectedTime={selectedTime}
       onSelectTime={handleSelectTime}
-      availbleRegions={regions ? regions?.filter((v) => availbleRegionIds.includes(v.id)) : []}
-      selectedRegionIds={selectedRegionIds}
+      availbleRegions={regions ? regions?.filter((v) => availableRegionIds.includes(v.id)) : []}
+      selectedRegionId={selectedRegionId}
       onToggleRegion={handleToggleRegion}
       shootingProducts={shootingProducts ?? []}
       isFetchingProducts={isFetchingProducts}

@@ -19,7 +19,6 @@ import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useAuthStore } from '@/store/authStore.ts';
 import analytics from '@react-native-firebase/analytics';
 
-
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
 const recommdationMessages = [
@@ -29,7 +28,6 @@ const recommdationMessages = [
   '당일 예약 가능할까요?',
   '그럼 촬영날 뵙겠습니다.',
 ];
-
 
 // --- downloadKey util ---
 const makeDownloadKey = (url: string) =>
@@ -66,6 +64,7 @@ export default function ChatDetailsContainer() {
 
   const [messageInput, setMessageInput] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
   const [fileDownloadStates, setFileDownloadStates] = useState<Record<string, FileDownloadState>>({});
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
@@ -492,6 +491,10 @@ export default function ChatDetailsContainer() {
     setIsModalVisible(false);
   }
 
+  const handleCloseReportModal = () => {
+    setIsReportModalVisible(false);
+  }
+
   const handlePressBlock = () => {
     Alert.show({
       title: '사용자 차단',
@@ -512,22 +515,7 @@ export default function ChatDetailsContainer() {
   }
 
   const handlePressReport = () => {
-    Alert.show({
-      title: '사용자 신고',
-      message: '해당 사용자를 신고하시겠습니까?\n모든 과정은 익명으로 처리됩니다.',
-      buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
-        { text: '신고', onPress: () => {
-            Alert.show({
-              title: '신고 완료가 완료되었습니다.',
-              message: '보내주신 소중한 의견으로 신고가 접수되었습니다.',
-              buttons: [
-                { text: '확인', onPress: () => navigation.goBack()}
-              ]
-            })
-          }, type: 'destructive' },
-      ]
-    })
+    setIsReportModalVisible(true);
   }
 
   // 파일 메타데이터 가져오기 (HEAD 요청)
@@ -810,18 +798,21 @@ export default function ChatDetailsContainer() {
 
   return (
     <ChatDetailsView
+      userType={userType}
       partnerNickname={partnerNickname}
       opponentId={opponentId}
       opponentProfileImageURI={profileImageURI}
       messages={messages}
       messageInput={messageInput}
       isModalVisible={isModalVisible}
+      isReportModalVisible={isReportModalVisible}
       onChangeMessageInput={setMessageInput}
       onPressSend={handlePressSend}
       onPressBack={handlePressBack}
       recommendedMessages={recommdationMessages}
       onPressRecommendedMessage={handlePressRecommendedMessage}
       onCloseModal={handleCloseModal}
+      onCloseReportModal={handleCloseReportModal}
       onPressTool={handlePressTool}
       onPressBlock={handlePressBlock}
       onPressReport={handlePressReport}

@@ -155,7 +155,7 @@ export default function PostDetailView({
         title="더보기"
         headerAlign="center"
       >
-        <ModalButton>
+        <ModalButton onPress={() => onSharePost}>
           <Icon width={18} height={18} Svg={UploadIcon} />
           <Typography
             fontSize={14}

@@ -12,7 +12,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   runOnJS,
-  withTiming, interpolate, Extrapolate,
+  withTiming, interpolate, Extrapolate, useAnimatedReaction,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
@@ -20,6 +20,7 @@ interface BookingCalendarViewProps {
   selectedDate: string;
   scheduleData: EnhancedScheduleData[];
   currentYearMonth: string;
+  weekCount: number;
   dayDetailData: GetPhotographerDayDetailResponse | null;
   dDayText: string;
   onPressBookingItem: (bookingId: number) => void;
@@ -30,10 +31,24 @@ interface BookingCalendarViewProps {
   onMonthChange: (yearMonth: string) => void;
 }
 
+const CALENDAR_HEADER_HEIGHT = 76;
+const DAY_HEIGHT = 62;
+
+const formatDateToKorean = (dateString: string) => {
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dayOfWeek = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][
+    date.getDay()
+    ];
+  return `${month}월 ${day}일 ${dayOfWeek}`;
+};
+
 export default function BookingCalendarView({
   selectedDate,
   scheduleData,
   currentYearMonth,
+  weekCount,
   dayDetailData,
   dDayText,
   onPressBookingItem,
@@ -44,17 +59,9 @@ export default function BookingCalendarView({
   onMonthChange,
 }: BookingCalendarViewProps) {
   const [containerHeight, setContainerHeight] = useState(0);
-  const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
-
-  const formatDateToKorean = (dateString: string) => {
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const dayOfWeek = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][
-      date.getDay()
-      ];
-    return `${month}월 ${day}일 ${dayOfWeek}`;
-  };
+  const [defaultHeight, setDefaultHeight] = useState(0);
+  const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('DEFAULT');
+  const [calculatedDayMarginBottom, setCalculatedDayMarginBottom] = useState(0);
 
   const bookings = useMemo(() => {
     if (!dayDetailData?.bookings) return [];
@@ -77,11 +84,8 @@ export default function BookingCalendarView({
 
   const sheetHeight = useSharedValue(0);
   const dragStartHeight = useSharedValue(0);
-  const defaultHeight = useMemo(() => {
-    if (!containerHeight) return 0;
-    return containerHeight * 0.45;
-  }, [containerHeight]);
-  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
+  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('DEFAULT');
+  const dayMarginBottom = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -89,16 +93,48 @@ export default function BookingCalendarView({
     };
   });
 
+  // containerHeight와 weekCount가 변경되면 defaultHeight 계산
+  useEffect(() => {
+    if (!containerHeight || weekCount <= 0) return;
+    const calendarHeight = CALENDAR_HEADER_HEIGHT + weekCount * DAY_HEIGHT;
+    const newDefaultHeight = containerHeight - calendarHeight;
+    setDefaultHeight(newDefaultHeight);
+  }, [containerHeight, weekCount]);
+
+  // sheetHeight 변화에 따라 dayMarginBottom 계산
+  useAnimatedReaction(
+    () => sheetHeight.value,
+    (height) => {
+      if (!containerHeight || weekCount <= 0 || !defaultHeight) return;
+
+      const calendarHeight = CALENDAR_HEADER_HEIGHT + weekCount * DAY_HEIGHT;
+      const maxMargin = (containerHeight - calendarHeight) / weekCount;
+
+      // HIDDEN <-> DEFAULT 구간에서만 marginBottom 변화
+      if (height <= 0) {
+        // HIDDEN: marginBottom 최대
+        dayMarginBottom.value = maxMargin;
+      } else if (height < defaultHeight) {
+        // HIDDEN -> DEFAULT 사이: 선형 보간
+        dayMarginBottom.value = maxMargin * (1 - height / defaultHeight);
+      } else {
+        // DEFAULT 이상: marginBottom = 0
+        dayMarginBottom.value = 0;
+      }
+    },
+    [containerHeight, weekCount, defaultHeight]
+  );
+
   useEffect(() => {
     renderTypeSV.value = renderType;
   }, [renderType, renderTypeSV]);
 
+  // HIDDEN 상태에서 날짜 선택 시 DEFAULT로 전환
   useEffect(() => {
-    if (!selectedDate) return;
-    if (!defaultHeight) return;
-
-    setRenderType('DEFAULT');
-  }, [selectedDate, defaultHeight]);
+    if (renderType === 'HIDDEN' && selectedDate) {
+      setRenderType('DEFAULT');
+    }
+  }, [selectedDate]);
 
   const DRAG_DAMPING = 0.8;
 
@@ -106,30 +142,17 @@ export default function BookingCalendarView({
     .onBegin(() => {
       dragStartHeight.value = sheetHeight.value;
     })
-
     .onUpdate((e) => {
-      // 🔥 FULL 상태에서 위로 더 못 올리게
-      if (renderTypeSV.value === 'FULL' && e.translationY < 0) {
-        return;
-      }
+      if (renderTypeSV.value === 'FULL' && e.translationY < 0) return;
 
-      const nextHeight =
-        dragStartHeight.value - e.translationY * DRAG_DAMPING;
-
-      sheetHeight.value = Math.min(
-        containerHeight,
-        Math.max(0, nextHeight),
-      );
+      const nextHeight = dragStartHeight.value - e.translationY * DRAG_DAMPING;
+      sheetHeight.value = Math.min(containerHeight, Math.max(0, nextHeight));
     })
-
     .onEnd((e) => {
       const current = sheetHeight.value;
-
       const SNAP_HIDDEN = defaultHeight * 0.5;
-      const SNAP_FULL =
-        defaultHeight + (containerHeight - defaultHeight) * 0.5;
+      const SNAP_FULL = defaultHeight + (containerHeight - defaultHeight) * 0.5;
 
-      // 🔥 FULL 상태
       if (renderTypeSV.value === 'FULL') {
         if (e.velocityY > 600 || current < SNAP_FULL) {
           sheetHeight.value = withTiming(defaultHeight);
@@ -141,7 +164,6 @@ export default function BookingCalendarView({
         return;
       }
 
-      // 🔥 DEFAULT 상태
       if (current <= SNAP_HIDDEN) {
         sheetHeight.value = withTiming(0);
         renderTypeSV.value = 'HIDDEN';
@@ -161,21 +183,22 @@ export default function BookingCalendarView({
       runOnJS(setRenderType)('DEFAULT');
     });
 
+  // renderType 변경 시 sheetHeight 애니메이션
   useEffect(() => {
-    if (!containerHeight || !defaultHeight) return;
+    if (!containerHeight || weekCount <= 0 || !defaultHeight) return;
 
-    if (renderType === 'HIDDEN') {
-      sheetHeight.value = withTiming(0);
+    switch (renderType) {
+      case 'HIDDEN':
+        sheetHeight.value = withTiming(0, { duration: 300 });
+        break;
+      case 'DEFAULT':
+        sheetHeight.value = withTiming(defaultHeight, { duration: 300 });
+        break;
+      case 'FULL':
+        sheetHeight.value = withTiming(containerHeight, { duration: 300 });
+        break;
     }
-
-    if (renderType === 'DEFAULT') {
-      sheetHeight.value = withTiming(defaultHeight);
-    }
-
-    if (renderType === 'FULL') {
-      sheetHeight.value = withTiming(containerHeight);
-    }
-  }, [renderType, containerHeight, defaultHeight, sheetHeight]);
+  }, [renderType, containerHeight, weekCount, defaultHeight, sheetHeight]);
 
   const floatingAnimatedStyle = useAnimatedStyle(() => {
     /**
@@ -198,63 +221,21 @@ export default function BookingCalendarView({
     };
   });
 
-  const calendarBaseHeight = useSharedValue(containerHeight);
-
-  const calendarAnimatedStyle = useAnimatedStyle(() => {
-    /**
-     * BottomSheet가 DEFAULT보다 커진 만큼
-     * Calendar가 다시 차지해야 할 공간
-     */
-    const extra = Math.max(
-      0,
-      containerHeight - sheetHeight.value,
-    );
-
-    return {
-      height: calendarBaseHeight.value + extra,
-    };
-  });
-
-  const weekRowCount = useMemo(() => {
-    if (!currentYearMonth) return 6;
-
-    const firstDay = new Date(`${currentYearMonth}-01`);
-    const lastDay = new Date(
-      firstDay.getFullYear(),
-      firstDay.getMonth() + 1,
-      0,
-    );
-
-    const startWeekday = firstDay.getDay();
-    const totalDays = lastDay.getDate();
-
-    return Math.ceil((startWeekday + totalDays) / 7) + 1;
-  }, [currentYearMonth]);
-
   return (
     <Container
       onLayout={(e) => {
         setContainerHeight(e.nativeEvent.layout.height);
       }}
     >
-      <CalendarWrapper
-        style={calendarAnimatedStyle}
-        onLayout={(e) => {
-          calendarBaseHeight.value = e.nativeEvent.layout.height;
-        }}
-      >
-        <ScheduleCalendar
-          initialDate={`${currentYearMonth}-01`}
-          selectedDate={selectedDate}
-          onSelectDate={onSelectDate}
-          scheduleData={scheduleData}
-          onMonthChange={onMonthChange}
-          sheetHeight={sheetHeight}
-          defaultHeight={defaultHeight}
-          calendarWrapperHeight={calendarBaseHeight}
-          weekRowCount={weekRowCount}
-        />
-      </CalendarWrapper>
+      <ScheduleCalendar
+        initialDate={`${currentYearMonth}-01`}
+        selectedDate={selectedDate}
+        onSelectDate={onSelectDate}
+        scheduleData={scheduleData}
+        onMonthChange={onMonthChange}
+        dayMarginBottom={dayMarginBottom}
+        containerHeight={containerHeight}
+      />
       <BookingContentContainer
         style={animatedStyle}
       >
@@ -341,17 +322,17 @@ export default function BookingCalendarView({
             )}
           </BookingContentScrollView>
         </BookingContent>
+        <Animated.View style={floatingAnimatedStyle} pointerEvents="box-none">
+          <ScheduleDDayBlock>
+            <Typography fontSize={14} fontWeight="bold">
+              {dDayText}
+            </Typography>
+          </ScheduleDDayBlock>
+          <FloatingButton onPress={onPressAddSchedule}>
+            <Icon width={20} height={20} Svg={CrossIcon} />
+          </FloatingButton>
+        </Animated.View>
       </BookingContentContainer>
-      <Animated.View style={floatingAnimatedStyle} pointerEvents="box-none">
-        <ScheduleDDayBlock>
-          <Typography fontSize={14} fontWeight="bold">
-            {dDayText}
-          </Typography>
-        </ScheduleDDayBlock>
-        <FloatingButton onPress={onPressAddSchedule}>
-          <Icon width={20} height={20} Svg={CrossIcon} />
-        </FloatingButton>
-      </Animated.View>
     </Container>
   );
 }
@@ -360,15 +341,11 @@ const Container = styled.View`
   flex: 1
 `
 
-const CalendarWrapper = styled(Animated.View)`
-  flex: 1;
-  width: 100%;
-`
-
 const BookingContentContainer = styled(Animated.View)`
-  //flex: 1;
   width: 100%;
   background-color: #EAEAEA;
+  position: absolute;
+  bottom: 0;
 `;
 
 const BookingSlideBarWrapper = styled.View`

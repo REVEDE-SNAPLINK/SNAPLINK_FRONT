@@ -89,21 +89,23 @@ export default function HomeView({
         showsVerticalScrollIndicator={false}
       >
         <Banner items={bannerItems} height={264} autoPlay autoPlayInterval={3000} />
-        <PhotographerList
-          items={allPhotographerItems}
-          marginTop={24}
-          title="스냅링크 전체 작가"
-          onPressTitle={onPressAllPhotographer}
-          onPressItem={onPressAllPhotographerItem}
-          width={LIST_WIDTH}
-        />
-        <PhotographerList
-          items={popularPhotographerItems}
-          marginTop={15}
-          title="지금 가장 인기있는 작가"
-          onPressItem={onPressPopularPhotographerItem}
-          width={LIST_WIDTH}
-        />
+        <ListWrapper>
+          <PhotographerList
+            items={allPhotographerItems}
+            marginTop={24}
+            title="스냅링크 전체 작가"
+            onPressTitle={onPressAllPhotographer}
+            onPressItem={onPressAllPhotographerItem}
+            width={LIST_WIDTH}
+          />
+          <PhotographerList
+            items={popularPhotographerItems}
+            marginTop={15}
+            title="지금 가장 인기있는 작가"
+            onPressItem={onPressPopularPhotographerItem}
+            width={LIST_WIDTH}
+          />
+        </ListWrapper>
         <ScrollSpacer />
       </ScrollContainer>
     </Container>
@@ -112,7 +114,6 @@ export default function HomeView({
 
 const Container = styled.View`
   flex: 1;
-  padding-horizontal: ${CONTAINER_MARGIN}px;
 `
 
 const Header = styled.View`
@@ -123,6 +124,7 @@ const Header = styled.View`
   height: 30px;
   margin-bottom: 24px;
   margin-top: 24px;
+  padding: 0 ${CONTAINER_MARGIN}px;
 `;
 
 const LogoWrapper = styled.View`
@@ -137,6 +139,7 @@ const SearchFormWrapper = styled.View`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 28px;
+  padding: 0 ${CONTAINER_MARGIN}px;
 `;
 
 const SearchInputWrapper = styled.View`
@@ -167,4 +170,8 @@ const ScrollContainer = styled.ScrollView`
 
 const ScrollSpacer = styled.View`
   height: 50px;
+`
+
+const ListWrapper = styled.View`
+  padding-horizontal: ${CONTAINER_MARGIN}px;
 `

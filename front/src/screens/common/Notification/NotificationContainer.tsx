@@ -3,6 +3,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import NotificationView from '@/screens/common/Notification/NotificationView.tsx';
 import { useNotificationsQuery } from '@/queries/notifications.ts';
 import { usePatchNotificationReadMutation } from '@/mutations/notifications.ts';
+import { navigateByDeepLink } from '@/navigation';
 
 export default function NotificationContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -23,10 +24,10 @@ export default function NotificationContainer() {
   //   setSelectedCategory(category);
   // };
 
-  const handlePressNotification = (notificationId: number) => {
+  const handlePressNotification = (notificationId: number, deeplink: string) => {
     // Mark as read
     markAsReadMutation.mutate({ notificationId });
-
+    navigateByDeepLink(deeplink);
     // TODO: Navigate based on notification type
     // 현재 API 응답에 notification type이나 relatedId가 없어서 네비게이션 불가
     // 백엔드 API에서 type, relatedId 필드가 추가되면 아래 로직 활성화

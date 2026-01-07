@@ -8,7 +8,7 @@ import { queryClient } from '@/config/queryClient';
 import { AlertProvider } from '@/components/theme';
 import analytics from '@react-native-firebase/analytics';
 import { useEffect } from 'react';
-import BadgeSyncHandler from '@/components/BadgeSyncHandler.tsx';
+import NotificationHandler from '@/components/NotificationHandler';
 
 async function logAppOpen() {
   await analytics().logEvent('app_open');
@@ -24,11 +24,11 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <AuthInitializer>
-            <AlertProvider>
-              <BadgeSyncHandler>
+            <NotificationHandler>
+              <AlertProvider>
                 <AppNavigator />
-              </BadgeSyncHandler>
-            </AlertProvider>
+              </AlertProvider>
+            </NotificationHandler>
           </AuthInitializer>
         </QueryClientProvider>
       </GestureHandlerRootView>

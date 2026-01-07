@@ -4,6 +4,7 @@ import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetail
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
+// import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -14,6 +15,7 @@ export default function PhotographerBookingDetailsContainer() {
   const { userId } = useAuthStore();
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
+  // const { mutate: chatMutate } = useCreateOrGetChatRoomMutation();
 
   const handlePressBack = () => navigation.goBack();
 

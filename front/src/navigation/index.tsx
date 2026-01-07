@@ -1,4 +1,10 @@
-import { NavigationContainer, createNavigationContainerRef, Route, NavigationState } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+  Route,
+  NavigationState,
+  getStateFromPath, getActionFromState,
+} from '@react-navigation/native';
 import RootNavigator from '@/navigation/RootNavigator.tsx';
 import { AppState, Platform } from 'react-native';
 import { useEffect, useRef } from 'react';
@@ -79,16 +85,33 @@ const linking = {
               noticeId: Number,
             }
           },
-          EventDetails: {
-            path: 'event/:eventId',
-            parse: {
-              noticeId: Number,
-            }
-          }
         },
       },
     },
   },
+};
+
+export const navigateByDeepLink = (url: string) => {
+  if (navigationRef.isReady()) {
+    // 스킴 제거 (snaplink://tab/home -> /tab/home)
+    const routePath = url.includes('://') ? url.split('://')[1] : url;
+
+    // 경로에 시작 슬래시가 없다면 추가 (getStateFromPath 요구사항)
+    const fullPath = routePath.startsWith('/') ? routePath : `/${routePath}`;
+
+    // 2. 문자열 경로를 네비게이션 상태 객체로 변환
+    const state = getStateFromPath(fullPath, linking.config);
+
+    if (state) {
+      // 3. 상태 객체로부터 이동 액션 생성 및 실행
+      const action = getActionFromState(state, linking.config);
+      if (action) {
+        navigationRef.dispatch(action);
+      }
+    } else {
+      console.warn('매칭되는 경로를 찾을 수 없습니다:', fullPath);
+    }
+  }
 };
 
 const getActiveRouteName = (route: Route<string, object | undefined>): string => {

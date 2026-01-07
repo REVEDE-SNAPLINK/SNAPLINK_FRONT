@@ -27,6 +27,8 @@ import TickSquareIcon from '@/assets/icons/tick-square.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
 import EditIcon from '@/assets/icons/edit.svg';
 import LocationIcon from '@/assets/icons/location.svg';
+import DangerCircleIcon from '@/assets/icons/danger-circle.svg';
+import ReportModal from '@/components/ReportModal.tsx';
 
 export interface ShareLink {
   name: string;
@@ -58,6 +60,7 @@ interface ProfileInfoData {
 }
 
 interface PhotographerDetailsViewProps {
+  photographerId: string;
   photographer: GetPhotographerProfileResponse | null;
   isPhotographer: boolean;
   isMyProfile: boolean;
@@ -87,8 +90,6 @@ interface PhotographerDetailsViewProps {
   isProfileInfoModalVisible: boolean;
   onCloseProfileInfoModal: () => void;
   profileInfoData: ProfileInfoData;
-  reportType: string[];
-  onPressReport: (type: string) => void;
   onPressBack: () => void;
   onPressShare: () => void;
   onPressFavorite: () => void;
@@ -103,6 +104,7 @@ interface PhotographerDetailsViewProps {
 }
 
 export default function PhotographerDetailsView({
+  photographerId,
   photographer,
   isPhotographer,
   isMyProfile,
@@ -132,8 +134,6 @@ export default function PhotographerDetailsView({
   isProfileInfoModalVisible,
   onCloseProfileInfoModal,
   profileInfoData,
-  reportType,
-  onPressReport,
   onPressBack,
   onPressShare,
   onPressFavorite,
@@ -594,6 +594,7 @@ export default function PhotographerDetailsView({
             onCloseMoreModal();
             onPressReportStart();
           }}>
+            <Icon width={18} height={18} Svg={DangerCircleIcon} />
             <Typography
               fontSize={14}
               lineHeight="140%"
@@ -607,22 +608,13 @@ export default function PhotographerDetailsView({
       )}
     </SlideModal>
 
-    <SlideModal
+    <ReportModal
       visible={isReportModalVisible}
       onClose={onCloseReportModal}
-      title="신고하기"
-      minHeight={276}
-    >
-      {reportType.map((v, i) => (
-        <ReportButton isFirst={i === 0} onPress={() => onPressReport(v)}>
-          <Typography
-            fontSize={12}
-          >
-            {v}
-          </Typography>
-        </ReportButton>
-      ))}
-    </SlideModal>
+      targetId={photographerId}
+      targetType="PROFILE"
+      targetUserType="photographer"
+    />
 
     <SlideModal
       visible={isProfileInfoModalVisible}
@@ -956,13 +948,9 @@ const PhotographerPortfolioRow = styled.View`
   margin-bottom: 3px;
 `
 
-const ReportButton = styled.TouchableOpacity<{ isFirst: boolean }>`
-  ${({ isFirst }) => !isFirst && `margin-top: 25px;`}
-`
-
 const ModalButton = styled.TouchableOpacity`
   flex-direction: row;
-  margin-bottom: 15px;
+  margin-bottom: 25px;
   align-items: center;
 `
 

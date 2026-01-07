@@ -30,7 +30,7 @@ interface BookingViewProps {
   selectedTime: string | null;
   onSelectTime: (time: string) => void;
   availbleRegions: GetRegionsResponse[];
-  selectedRegionIds: number[];
+  selectedRegionId: number;
   onToggleRegion: (id: number) => void;
   shootingProducts: GetShootingResponse[];
   isFetchingProducts: boolean;
@@ -67,7 +67,7 @@ export default function BookingView({
   selectedTime,
   onSelectTime,
   availbleRegions,
-  selectedRegionIds,
+  selectedRegionId,
   onToggleRegion,
   shootingProducts,
   isFetchingProducts,
@@ -105,7 +105,7 @@ export default function BookingView({
 
   const isDateSelected = !!currentDate;
   const isTimeSelected = !!selectedTime;
-  const isRegionSelected = selectedRegionIds.length > 0;
+  const isRegionSelected = selectedRegionId > 0;
   const isProductSelected = selectedProductId > 0;
 
   const disabledHint = useMemo(() => {
@@ -250,7 +250,7 @@ export default function BookingView({
             <RegionRow>
               {availbleRegions.map((v) => (
                 <RegionWrapper key={v.id}>
-                  <Checkbox isChecked={selectedRegionIds.includes(v.id)} onPress={() => onToggleRegion(v.id)} />
+                  <Checkbox isChecked={selectedRegionId === v.id} onPress={() => onToggleRegion(v.id)} />
                   <Typography
                     fontSize={14}
                     marginLeft={10}

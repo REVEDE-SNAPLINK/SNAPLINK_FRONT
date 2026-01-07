@@ -17,9 +17,7 @@ import { usePatchPhotographerProfileImageMutation } from '@/mutations/photograph
 import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useEffect, useState } from 'react';
-import { openUrl } from '@/utils/link.ts';
 import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
-import { WEBSITE_URL } from '@/config/api.ts';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -273,13 +271,9 @@ export default function ProfileContainer () {
 
   };
 
-  const handlePressNotice = () => {
-    openUrl(WEBSITE_URL + "/notice")
-  };
+  const handlePressNotice = () => navigation.navigate('Notice');
 
-  const handlePressFAQ = () => {
-    openUrl(WEBSITE_URL + "/faq")
-  };
+  const handlePressFAQ = () => navigation.navigate('FAQ');
 
   const handlePressTerms = () => navigation.navigate('Legal');
 

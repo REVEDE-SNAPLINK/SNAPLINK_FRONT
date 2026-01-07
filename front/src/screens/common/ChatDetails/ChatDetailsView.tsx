@@ -19,6 +19,8 @@ import ServerImage from '@/components/ServerImage.tsx';
 import FileDownloadButton from '@/components/FileDownloadButton.tsx';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
 import DownloadIcon from '@/assets/icons/download.svg';
+import ReportModal from '@/components/ReportModal.tsx';
+import { UserType } from '@/types/auth.ts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -32,18 +34,21 @@ export interface FileDownloadState {
 }
 
 interface ChatDetailsViewProps {
+  userType: UserType;
   partnerNickname: string;
   opponentId: string;
   opponentProfileImageURI: string;
   messages: ChatMessage[];
   messageInput: string;
   isModalVisible: boolean;
+  isReportModalVisible: boolean;
   onChangeMessageInput: (text: string) => void;
   onPressSend: () => void;
   onPressBack: () => void;
   recommendedMessages: string[];
   onPressRecommendedMessage: (message: string) => void;
   onCloseModal: () => void;
+  onCloseReportModal: () => void;
   onPressBlock: () => void;
   onPressReport: () => void;
   onPressTool: () => void;
@@ -65,12 +70,14 @@ interface ChatDetailsViewProps {
 }
 
 export default function ChatDetailsView({
+  userType,
   partnerNickname,
   opponentId,
   opponentProfileImageURI,
   messages,
   messageInput,
   isModalVisible,
+  isReportModalVisible,
   onChangeMessageInput,
   onPressSend,
   onPressBack,
@@ -78,6 +85,7 @@ export default function ChatDetailsView({
   onPressRecommendedMessage,
   onPressTool,
   onCloseModal,
+  onCloseReportModal,
   onPressBlock,
   onPressReport,
   onPressAlbum,
@@ -421,6 +429,14 @@ export default function ChatDetailsView({
           </EditModalButton>
         </EditModalWrapper>
       </SlideModal>
+
+      <ReportModal
+        visible={isReportModalVisible}
+        onClose={onCloseReportModal}
+        targetId={opponentId}
+        targetType="CHAT"
+        targetUserType={userType === 'user' ? 'photographer' : 'user'}
+      />
 
       {/* 이미지 프리뷰 모달 */}
       <Modal

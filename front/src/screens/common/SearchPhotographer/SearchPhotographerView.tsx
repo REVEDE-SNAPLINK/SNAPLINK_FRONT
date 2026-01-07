@@ -10,6 +10,7 @@ import SearchPhotographerList from '@/components/user/SearchPhotographerList.tsx
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import BackButton from '@/components/common/BackButton';
 import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
+import SearchIcon from '@/assets/icons/search-gray.svg';
 
 export const SORT_BY_ENUM = {
   'LATEST': '최신순',
@@ -94,7 +95,7 @@ export default function SearchPhotographerView({
               onChangeText={onChangeSearchKey}
               onSubmitEditing={() => onSubmitSearchKey()}
             />
-            <Icon width={24} height={24} source={require('@/assets/icons/search.png')} />
+            <Icon width={24} height={24} Svg={SearchIcon} />
           </SearchInputWrapper>
         </Header>
         <Filter

@@ -26,7 +26,9 @@ interface PostDetailViewProps {
   setCurrentIndex: (index: number) => void;
   showMoreModal: boolean;
   onCloseMoreModal: () => void;
-
+  onEditPost: () => void;
+  onDeletePost: () => void;
+  onSharePost: () => void;
   navigation?: any;
 }
 
@@ -41,6 +43,9 @@ export default function PostDetailView({
   setCurrentIndex,
   showMoreModal,
   onCloseMoreModal,
+  onSharePost,
+  onEditPost,
+  onDeletePost,
   navigation,}: PostDetailViewProps) {
   if (isLoading) {
     return (
@@ -158,31 +163,12 @@ export default function PostDetailView({
             letterSpacing="-2.5%"
             marginLeft={8}
           >
-            open.kakao.com/abcdefg
+            공유하기
           </Typography>
-        </ModalButton>
-        <ModalButton>
-          <Icon width={18} height={18} Svg={UploadIcon} />
-          <ModalReserveTextWrapper>
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-            >
-              예약하기 전용 링크
-            </Typography>
-            <Typography
-              fontSize={10}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-            >
-              snaplink.run/artists/abcdefg
-            </Typography>
-          </ModalReserveTextWrapper>
         </ModalButton>
         {isMyPost && (
           <>
-            <ModalButton>
+            <ModalButton onPress={onEditPost}>
               <Icon width={18} height={18} Svg={EditIcon} />
               <Typography
                 fontSize={14}
@@ -193,7 +179,7 @@ export default function PostDetailView({
                 게시글 수정
               </Typography>
             </ModalButton>
-            <ModalButton>
+            <ModalButton onPress={onDeletePost}>
               <Icon width={18} height={18} Svg={DeleteIcon} />
               <Typography
                 fontSize={14}
@@ -298,8 +284,4 @@ const ModalButton = styled.TouchableOpacity`
   flex-direction: row;
   margin-bottom: 15px;
   align-items: center;
-`
-
-const ModalReserveTextWrapper = styled.View`
-  margin-left: 8px;
 `

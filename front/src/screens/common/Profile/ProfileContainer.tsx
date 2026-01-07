@@ -17,8 +17,9 @@ import { usePatchPhotographerProfileImageMutation } from '@/mutations/photograph
 import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useEffect, useState } from 'react';
-import { openTermUrl } from '@/utils/link.ts';
+import { openUrl } from '@/utils/link.ts';
 import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
+import { WEBSITE_URL } from '@/config/api.ts';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -268,32 +269,19 @@ export default function ProfileContainer () {
     navigation.navigate('ShootingManage');
   }
 
-  const handlePressManageHolidays = () => {
-    if (!isPhotographer) {
-      Alert.show({
-        title: '권한 없음',
-        message: '작가만 사용 가능한 기능입니다.'
-      });
-      return;
-    }
-    navigation.navigate('HolidayManage');
-  }
-
   const handlePressCustomerCenter = () => {
-    openTermUrl();
+
   };
 
   const handlePressNotice = () => {
-    openTermUrl();
+    openUrl(WEBSITE_URL + "/notice")
   };
 
   const handlePressFAQ = () => {
-    openTermUrl();
+    openUrl(WEBSITE_URL + "/faq")
   };
 
-  const handlePressTerms = () => {
-    openTermUrl();
-  };
+  const handlePressTerms = () => navigation.navigate('Legal');
 
   const handlePressOpenSource = () => {
     navigation.navigate('OpenSourceLicense');
@@ -314,7 +302,6 @@ export default function ProfileContainer () {
       onPressManageBooking={handlePressManageBooking}
       onPressManageShootService={handlePressShootService}
       onPressManagePortfolio={handlePressManagePortfolio}
-      onPressManageHolidays={handlePressManageHolidays}
       onPressNotice={handlePressNotice}
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}

@@ -71,10 +71,6 @@ export default function UserOnboardingContainer() {
     setCurrentStep(1);
   }
 
-  const handlePressTermLink = async (url: string) => {
-    openUrl(url);
-  }
-
   const handleToggleTerm = useCallback((termId: string) => {
     setShowTermsError(false);
     setAgreedTerms((prev) => {
@@ -240,7 +236,6 @@ export default function UserOnboardingContainer() {
       onPressBack={handlePressBack}
       onPressUser={handlePressUser}
       onPressPhotographer={handlePressPhotographer}
-      onPressTermLink={handlePressTermLink}
       onPressSubmit={handlePressSubmit}
       onToggleTerm={handleToggleTerm}
       onToggleAllTerms={handleToggleAllTerms}

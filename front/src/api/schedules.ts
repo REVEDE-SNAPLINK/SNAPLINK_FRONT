@@ -15,9 +15,9 @@ export interface GetPhotographerMonthSchedulesParams {
 
 export interface GetPhotographerMonthScheduleResponse {
   day: number;
-  hasBooking: boolean;
-  publicHoliday: boolean;
-  photographerHoliday: boolean;
+  dayOfWeek: number;
+  status: string;
+  publicHoliday: true;
 }
 
 export interface GetPhotographerDayDetailParams {
@@ -26,18 +26,28 @@ export interface GetPhotographerDayDetailParams {
 }
 
 export interface DayBookingDetail {
-  bookingId: number;
-  customerNickName: string;
+  id: number;
+  customerName: string;
   startTime: string;
   endTime: string;
   status: BookingStatus;
+  productName: string;
+}
+
+export interface DayPersonalScheduleDetail {
+  id: number;
+  title: string;
+  startTime: string;
+  endTime: string;
+  description: string;
 }
 
 export interface GetPhotographerDayDetailResponse {
   date: string; // YYYY-MM-DD
-  publicHolidayName: string;
-  photographerHolidayReason: string;
+  holidayName: string;
+  holidayId: number | null;
   bookings: DayBookingDetail[];
+  personalSchedules: DayPersonalScheduleDetail[];
 }
 
 export interface GetAvailableBookingDayResponse {
@@ -140,16 +150,19 @@ export const deletePersonalSchedule = async (id: number) => {
 }
 
 export interface PersonalSchedule {
-  id: number;
   startDate: string;
   endDate: string;
   startTime: string;
   endTime: string;
   title: string;
-  content: string;
+  description: string;
 }
 
-export const getPersonalSchedule = async (id: number): Promise<PersonalSchedule> => {
+export interface PersonalScheduleResponse extends PersonalSchedule {
+  id: number;
+}
+
+export const getPersonalSchedule = async (id: number): Promise<PersonalScheduleResponse> => {
   const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
     method: 'GET'
   });

@@ -44,7 +44,7 @@ export const getShootingOptions = async (
 }
 
 export type EditingType = "FACIAL" | "COLOR" | "BOTH" | "NONE";
-export type EditingDeadline = "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS";
+export type EditingDeadline = "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS" | "WITHUP_7_DAYS";
 export type SelectionAuthority = "PHOTOGRAPHER" | "CUSTOMER" | "BOTH";
 
 export const mappingEditDeadline = (editingDeadline: EditingDeadline) => {
@@ -54,7 +54,8 @@ export const mappingEditDeadline = (editingDeadline: EditingDeadline) => {
     case "WITHIN_3_DAYS": return 3;
     case "WITHIN_4_DAYS": return 4;
     case "WITHIN_5_DAYS": return 5;
-    case "WITHIN_7_DAYS": return 8;
+    case "WITHIN_7_DAYS":
+    case "WITHUP_7_DAYS": return 7;
   }
 }
 

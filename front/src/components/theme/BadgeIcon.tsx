@@ -5,27 +5,29 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/theme/index.ts';
 
 interface BadgeIconProps {
-  badgeCount: number,
+  isNew?: boolean;
   Svg: ComponentType<SvgProps>;
   width: number;
   height: number;
+  badgeCount?: number;
 }
 
 export default function BadgeIcon({
-  badgeCount,
+  isNew,
   Svg,
   width,
   height,
+  badgeCount,
 }: BadgeIconProps) {
   return (
     <Wrapper>
-      {badgeCount > 0 && (
+      {(isNew || (badgeCount && badgeCount > 0)) && (
         <Badge>
           <Typography
             fontSize={9}
             color="#fff"
           >
-            {badgeCount}
+            {badgeCount !== undefined ? badgeCount : 'N'}
           </Typography>
         </Badge>
       )}

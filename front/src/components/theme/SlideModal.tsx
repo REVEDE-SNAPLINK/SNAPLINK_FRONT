@@ -373,7 +373,7 @@ useEffect(() => {
                 flex: 1,
                 paddingHorizontal: 30,
                 paddingTop: 22,
-                paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
+                paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + insets.bottom + 22 : 22,
               }}
             >
               {MeasuredBodyContent}
@@ -385,7 +385,7 @@ useEffect(() => {
               flex: 1,
               paddingHorizontal: 30,
               paddingTop: 22,
-              paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
+              paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + insets.bottom + 22 : 22,
             }}
           >
             {MeasuredBodyContent}
@@ -448,6 +448,7 @@ const AnimatedSheet = styled(Animated.View)`
 
 const SheetTouchable = styled.View`
   width: 100%;
+  flex: 1;
   background-color: #fff;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;

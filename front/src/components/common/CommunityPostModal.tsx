@@ -25,6 +25,7 @@ import { generateImageFilename } from '@/utils/format.ts';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 import ServerImage from '@/components/ServerImage.tsx';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -51,6 +52,8 @@ export default function CommunityPostModal({
   const [isTopicListVisible, setIsTopicListVisible] = useState(false);
 
   const isDirty = selectedCategory !== null || title !== '' || content !== '' || images.length > 0 || (initialPost && deletedImageIndices.length > 0);
+
+  const inset = useSafeAreaInsets();
 
   // Sliding animation
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -276,12 +279,12 @@ export default function CommunityPostModal({
           >
             <Header>
               <IconButton width={18} height={18} Svg={CancelIcon} onPress={hanedlePressClose} />
-              <Typography fontSize={18} fontWeight="bold" letterSpacing="-2.5%" color="#000">
+              <Typography fontSize={16} fontWeight="bold" letterSpacing="-2.5%" color="#000">
                 {initialPost ? '게시글 수정' : '커뮤니티 글쓰기'}
               </Typography>
               <ConfirmButton onPress={handleSubmit} disabled={!canSubmit}>
                 <Typography
-                  fontSize={18}
+                  fontSize={16}
                   letterSpacing="-2.5%"
                   color={canSubmit ? theme.colors.primary : '#C8C8C8'}
                 >
@@ -302,7 +305,7 @@ export default function CommunityPostModal({
                   <Icon width={24} height={24} Svg={ArrowDownIcon} />
                 </TopicWrapper>
                 {isTopicListVisible && (
-                  <TopicList length={CATEGORY_KEYS.length}>
+                  <TopicList>
                     {CATEGORY_KEYS.map((category) => (
                       <TopicItem key={category} onPress={() => handleSelectCategory(category)}>
                         <Typography fontSize={16} letterSpacing="-2.5%">
@@ -356,7 +359,7 @@ export default function CommunityPostModal({
                 }
               </PostImageList>
             </ScrollContainer>
-            <ToolWrapper>
+            <ToolWrapper paddingBottom={inset.bottom + 10}>
               <ToolButton onPress={handlePressImage}>
                 <Icon width={24} height={24} Svg={ImageIcon} />
                 <Typography fontSize={12} lineHeight={20} marginLeft={3}>
@@ -390,7 +393,7 @@ const AnimatedContainer = styled(Animated.View)`
   right: 0;
   height: 100%;
   background-color: #fff;
-  ${Platform.OS === 'ios' ? `padding-top: 50px;` : ''};
+  ${Platform.OS === 'ios' ? `padding-top: 50px;` : ''}
 `;
 
 const KeyboardAvoidingContainer = styled.KeyboardAvoidingView`
@@ -410,8 +413,7 @@ const Header = styled.View`
   height: 57px;
   align-items: center;
   flex-direction: row;
-  padding-left: 15px;
-  padding-right: 20px;
+  padding-horizontal: 20px;
   justify-content: space-between;
   position: relative;
   z-index: 999;
@@ -441,7 +443,7 @@ const TopicWrapper = styled.TouchableOpacity`
   justify-content: space-between;
 `
 
-const TopicList = styled.View<{ length: number }>`
+const TopicList = styled.View`
   flex: 1;
   width: 100%;
   position: absolute;
@@ -473,7 +475,7 @@ const TitleInput = styled.TextInput`
   font-family: Pretendard-Bold;
   font-weight: bold;
   color: ${theme.colors.textPrimary};
-  padding:0 28px;
+  padding: 0 28px;
 `
 
 const ContentInput = styled.TextInput`
@@ -486,13 +488,13 @@ const ContentInput = styled.TextInput`
   color: ${theme.colors.textPrimary};
 `
 
-const ToolWrapper = styled.View`
+const ToolWrapper = styled.View<{ paddingBottom: number }>`
   width: 100%;
-  height: 60px;
   padding-left: 28px;
   flex-direction: row;
   align-items: center;
-  padding-bottom: 30px; // TODO: statusbar 및 하단, 상단, tool 영역 침범 x
+  padding-bottom: ${({ paddingBottom }) => paddingBottom}px;
+  padding-top: 20px;
 `
 
 const ToolButton = styled.TouchableOpacity`

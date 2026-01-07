@@ -4,8 +4,8 @@ import {
   getPhotographerReviewSummary,
   SearchPhotographersBody,
   searchPhotographers, getMyScrappedPhotographers,
-  getHolidays,
   getStatusMe,
+  getPhotographerRegionsAndConceptsAndTags,
 } from '@/api/photographers.ts';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { photographersQueryKeys } from '@/queries/keys.ts';
@@ -140,8 +140,6 @@ export const useMainPhotographersTopRatedTop3Query = () =>
     staleTime: 1000 * 30,
   });
 
-
-
 export const useMyScrappedPhotographersInfiniteQuery = (
   pageableWithoutPage: Omit<GetPageable, 'page'>,
 ) =>
@@ -151,16 +149,6 @@ export const useMyScrappedPhotographersInfiniteQuery = (
     queryFn: ({ pageParam }) =>
       getMyScrappedPhotographers({ ...pageableWithoutPage, page: pageParam }),
     getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.number + 1),
-  });
-
-/**
- * 작가의 휴무일 목록 조회
- */
-export const useHolidaysQuery = (enabled = true) =>
-  useQuery({
-    queryKey: photographersQueryKeys.holidays(),
-    queryFn: () => getHolidays(),
-    enabled,
   });
 
 /**
@@ -184,4 +172,15 @@ export const usePhotographerStatusQuery = () =>
   useQuery({
     queryKey: photographersQueryKeys.statusMe(),
     queryFn: () => getStatusMe(),
+  });
+
+/** 작가 지역, 컨셉, 태그 조회 */
+export const usePhotographerRegionsConceptsTagsQuery = (photographerId: string | undefined) =>
+  useQuery({
+    queryKey: photographerId ? photographersQueryKeys.regionsConceptsTags(photographerId) : [],
+    queryFn: () => {
+      if (!photographerId) throw new Error('photographerId is required');
+      return getPhotographerRegionsAndConceptsAndTags(photographerId);
+    },
+    enabled: Boolean(photographerId),
   });

@@ -5,6 +5,9 @@ import { Alert } from '@/components/theme';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { GetMyReviewsResponse, MyReviewItem } from '@/api/reviews.ts';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
+import { useEffect } from 'react';
 
 export default function MyReviewsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -12,12 +15,27 @@ export default function MyReviewsContainer() {
   // Fetch my reviews
   const { data, isLoading, error } = useMyReviewsInfiniteQuery({ size: 10 });
   const deleteReviewMutation = useDeleteReviewMutation();
+  const { userId, userType } = useAuthStore();
+
+  useEffect(() => {
+    analytics().logEvent('screen_view', {
+      screen_name: 'MyReviews',
+      user_id: userId || 'anonymous',
+      user_type: userType || 'guest',
+    });
+  }, [userId, userType]);
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressReview = (review: MyReviewItem) => navigation.navigate('ReviewDetails', { review })
+  const handlePressReview = (review: MyReviewItem) => {
+    analytics().logEvent('review_view', { review_id: review.reviewId, user_id: userId });
+    navigation.navigate('ReviewDetails', { review });
+  };
 
-  const handlePressEdit = (review: MyReviewItem) => navigation.navigate('WriteReview', { review })
+  const handlePressEdit = (review: MyReviewItem) => {
+    analytics().logEvent('review_edit_start', { review_id: review.reviewId, user_id: userId });
+    navigation.navigate('WriteReview', { review });
+  };
 
   const handlePressDelete = (reviewId: number) => {
     Alert.show({

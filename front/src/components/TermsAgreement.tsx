@@ -1,8 +1,9 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { TouchableOpacity } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import Checkbox from '@/components/theme/Checkbox';
+import { openTermUrl } from '@/utils/link.ts';
 
 export interface TermItem {
   id: string;
@@ -16,7 +17,6 @@ interface TermsAgreementProps {
   agreedTerms: string[];
   onToggleTerm: (termId: string) => void;
   onToggleAll: () => void;
-  onPressLink?: (link: string) => void;
 }
 
 const TermWrapper = styled.View`
@@ -30,20 +30,10 @@ function TermsAgreement({
   agreedTerms,
   onToggleTerm,
   onToggleAll,
-  onPressLink,
 }: TermsAgreementProps) {
   const allAgreed = useMemo(
     () => terms.every((term) => agreedTerms.includes(term.id)),
     [terms, agreedTerms]
-  );
-
-  const handlePressLink = useCallback(
-    (link?: string) => {
-      if (link && onPressLink) {
-        onPressLink(link);
-      }
-    },
-    [onPressLink]
   );
 
   return (
@@ -70,7 +60,7 @@ function TermsAgreement({
               onPress={() => onToggleTerm(term.id)}
             />
             {term.link ? (
-              <TouchableOpacity onPress={() => handlePressLink(term.link)}>
+              <TouchableOpacity onPress={() => term.link !== undefined && openTermUrl(term.link)}>
                 <Typography
                   fontSize={12}
                   lineHeight="140%"

@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
     <application
             android:name=".MainApplication"
@@ -37,7 +38,10 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="snap.lnk" />
+                <data
+                        android:scheme="https"
+                        android:host="link.snaplink.run"
+                        android:pathPrefix="/portfolio" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -47,6 +51,15 @@
                         android:scheme="https"
                         android:host="link.snaplink.run"
                         android:pathPrefix="/post" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                        android:scheme="https"
+                        android:host="link.snaplink.run"
+                        android:pathPrefix="/photographer" />
             </intent-filter>
         </activity>
         <activity

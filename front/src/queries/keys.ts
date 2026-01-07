@@ -94,6 +94,10 @@ export const photographersQueryKeys = {
 
   // -------- holidays --------
   holidays: () => [...photographersQueryKeys.all, 'holidays'] as const,
+
+  // -------- regions, concepts, tags --------
+  regionsConceptsTags: (photographerId: string) =>
+    [...photographersQueryKeys.all, 'regionsConceptsTags', photographerId] as const,
 };
 
 // Booking

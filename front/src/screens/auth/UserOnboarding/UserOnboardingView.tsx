@@ -40,7 +40,6 @@ interface UserOnboardingViewProps {
   errors: FieldErrors<UserOnboardingFormData>;
   onPressUser: () => void;
   onPressPhotographer: () => void;
-  onPressTermLink: (url: string) => void;
   onPressSubmit: () => void;
   onToggleTerm: (termId: string) => void;
   onToggleAllTerms: () => void;
@@ -53,14 +52,13 @@ interface UserOnboardingViewProps {
   navigation?: any;
 }
 
-// TODO: 랜딩 페이지 구현 후 실제 링크로 연결
 const TERMS_DATA: TermItem[] = [
   { id: 'age', label: '만 14세 이상입니다', required: true },
-  { id: 'service', label: '이용약관 동의', required: true, link: TERMS_BASE_URL },
-  { id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true, link: TERMS_BASE_URL },
-  { id: 'optional', label: '선택정보 수집 및 이용 동의', required: false, link: TERMS_BASE_URL },
-  { id: 'marketing', label: '개인정보 마케팅 활용 동의', required: false, link: TERMS_BASE_URL },
-  { id: 'notification', label: '마케팅 알림 수신 동의', required: false, link: TERMS_BASE_URL },
+  { id: 'service', label: '이용약관 동의', required: true, link: '/terms' },
+  { id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true, link: '/privacy' },
+  { id: 'optional', label: '선택정보 수집 및 이용 동의', required: false, link: '/consent/optional' },
+  { id: 'marketing', label: '개인정보 마케팅 활용 동의', required: false, link: '/consent/marketing' },
+  { id: 'notification', label: '마케팅 알림 수신 동의', required: false, link: '/consent/notification' },
 ];
 
 const GENDER_OPTIONS: RadioOption<'FEMALE' | 'MALE'>[] = [
@@ -75,7 +73,6 @@ export default function UserOnboardingView({
   onPressBack,
   onPressUser,
   onPressPhotographer,
-  onPressTermLink,
   onPressSubmit,
   onToggleTerm,
   onToggleAllTerms,
@@ -106,7 +103,7 @@ export default function UserOnboardingView({
       case 0:
         return <UserOnboardingStep1 onPressUser={onPressUser} onPressPhotographer={onPressPhotographer} />;
       case 1:
-        return <UserOnboardingStep2 agreedTerms={agreedTerms} onToggleTerm={onToggleTerm} onToggleAllTerms={onToggleAllTerms} showError={showTermsError} onPressTermLink={onPressTermLink} />;
+        return <UserOnboardingStep2 agreedTerms={agreedTerms} onToggleTerm={onToggleTerm} onToggleAllTerms={onToggleAllTerms} showError={showTermsError}/>;
       case 2:
         return <UserOnboardingStep3 control={control} errors={errors} />;
       case 3:
@@ -246,7 +243,6 @@ interface UserOnboardingStep2Props {
   agreedTerms: string[];
   onToggleTerm: (termId: string) => void;
   onToggleAllTerms: () => void;
-  onPressTermLink: (url: string) => void;
   showError: boolean;
 }
 
@@ -254,7 +250,6 @@ const UserOnboardingStep2 = ({
   agreedTerms,
   onToggleTerm,
   onToggleAllTerms,
-  onPressTermLink,
   showError,
 }: UserOnboardingStep2Props) => {
   return (
@@ -270,7 +265,6 @@ const UserOnboardingStep2 = ({
         agreedTerms={agreedTerms}
         onToggleTerm={onToggleTerm}
         onToggleAll={onToggleAllTerms}
-        onPressLink={onPressTermLink}
       />
       {showError && (
         <FormErrorMessage message="필수 약관에 동의하지 않으면 가입이 어려워요!" />
@@ -293,6 +287,9 @@ const UserOnboardingStep3 = ({ control, errors }: UserOnboardingStep3Props) => {
           본인 확인
         </Typography>
         을 위해{'\n'}이름을 입력해 주세요.
+      </Typography>
+      <Typography fontSize={12} lineHeight="140%" color="#767676" marginBottom={10}>
+        실명으로 입력해주세요.
       </Typography>
       <Controller
         control={control}

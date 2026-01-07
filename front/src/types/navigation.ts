@@ -69,17 +69,31 @@ export type MainStackParamList = {
 
   // For Photographer
   PortfolioOnboarding: undefined;
-  PortfolioForm: undefined;
+  PortfolioForm: { postId?: number };
   ShootingManage: undefined;
   ServiceForm: { productId?: number };
-  HolidayManage: undefined;
   ScheduleForm: undefined;
+  EditProfile: {
+    description: string;
+    profileImageURI: string;
+    onSubmit?: (description: string) => void;
+  };
+  EditRegion: {
+    regionIds: number[];
+    onSubmit?: (regionIds: number[]) => void;
+  };
+  EditConceptTag: {
+    tagIds: number[];
+    conceptIds: number[];
+    onSubmit?: (tagIds: number[], conceptIds: number[]) => void;
+  };
 
   // Notification
   Notification: undefined;
   NotificationSetting: undefined;
 
   // etc
+  Legal: undefined;
   OpenSourceLicense: undefined;
 };
 

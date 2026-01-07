@@ -4,8 +4,11 @@ import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
 import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 import { EditingDeadline, EditingType, SelectionAuthority } from '@/api/shootings.ts';
+import { GetRegionsResponse } from '@/api/regions.ts';
+import { GetConceptsResponse } from '@/api/concepts.ts';
 
 const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
+const PORTFOLIOS_BASE = `${PHOTOGRAPHERS_BASE}/portfolios`;
 const REVIEWS_BASE = `${API_BASE_URL}/api/reviews/photographers`;
 const HOLIDAYS_BASE = `${PHOTOGRAPHERS_BASE}/holidays`;
 
@@ -344,7 +347,7 @@ export const createPortfolio = async (
       data: params.title,
     },
     {
-      name: 'content',
+      name: 'contetnt',
       type: 'application/json',
       data: params.content,
     },
@@ -372,7 +375,7 @@ export const createPortfolio = async (
   ];
 
   const response = await authMultipartFetch(
-    `${PHOTOGRAPHERS_BASE}/portfolios`,
+    `${PORTFOLIOS_BASE}`,
     parts,
     'POST',
   );
@@ -513,26 +516,11 @@ export const deleteHoliday = async (
 export interface GetHolidayResponse {
   id: number;
   holidayDate: string; // YYYY-MM-DD
-  reason: string;
   photographerId: string;
-}
-
-export const getHolidays = async (): Promise<GetHolidayResponse[]> => {
-  const response = await authFetch(`${HOLIDAYS_BASE}`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) throw new Error(`Failed to get holidays ${response.status}`);
-  return response.json();
 }
 
 export interface CreateHolidayRequest {
   holidayDate: string;
-  reason: string;
-}
-
-export interface UpdateHolidayParam {
-  holidayId: number;
 }
 
 export const createHolidays = async (
@@ -544,18 +532,6 @@ export const createHolidays = async (
   });
 
   if (!response.ok) throw new Error(`Failed to create holiday ${response.status}`);
-  return response.json();
-}
-
-export const updateHolidays = async (
-  param: UpdateHolidayParam, body: CreateHolidayRequest
-): Promise<GetHolidayResponse> => {
-  const response = await authFetch(`${HOLIDAYS_BASE}/${param.holidayId}`, {
-    method: 'PUT',
-    json: body
-  });
-
-  if (!response.ok) throw new Error(`Failed to update holiday ${response.status}`);
   return response.json();
 }
 
@@ -592,13 +568,94 @@ export interface GetPortfolioResponse {
 }
 
 export const getPortfolioPost = async (postId: number): Promise<GetPortfolioResponse> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/portfolios/${postId}`, {
+  const response = await authFetch(`${PORTFOLIOS_BASE}/${postId}`, {
     method: 'GET',
   });
 
   if (!response.ok) throw new Error(`Failed to get portfolio ${response.status}`);
 
   return response.json();
+}
+
+export interface UpdatePortfolioPostRequest {
+  request: {
+    title: string;
+    content: string;
+    deletePhotoIds: number[];
+    photoOrders: {
+      photoId: number;
+      sortOrder: number;
+    }[];
+  };
+  newImages: UploadImageFile[];
+}
+
+export const updatePortfolioPost = async (
+  postId: number, body: UpdatePortfolioPostRequest
+) => {
+  // Check file sizes for new images
+  for (let i = 0; i < body.newImages.length; i++) {
+    const img = body.newImages[i];
+    let filePath = img.uri;
+    if (filePath.startsWith('file://')) {
+      filePath = filePath.replace('file://', '');
+    }
+
+    try {
+      const stat = await RNBlobUtil.fs.stat(filePath);
+      if (stat.size > 5 * 1024 * 1024) {
+        const fileSizeMB = (stat.size / 1024 / 1024).toFixed(2);
+        console.warn(`⚠️ Portfolio image ${i + 1}: ${fileSizeMB} MB - may cause 413 error`);
+      }
+    } catch (e) {
+      console.error(`Failed to check file size for image ${i + 1}:`, e);
+    }
+  }
+
+  const parts: MultipartPart[] = [
+    // request는 JSON 파트
+    {
+      name: 'request',
+      type: 'application/json',
+      data: JSON.stringify(body.request),
+    },
+
+    // newImages는 file 파트들
+    ...body.newImages.map((img) => {
+      // Remove file:// prefix for RNBlobUtil.wrap()
+      let filePath = img.uri;
+      if (filePath.startsWith('file://')) {
+        filePath = filePath.replace('file://', '');
+      }
+
+      return {
+        name: 'newImages',
+        filename: img.name,
+        type: img.type,
+        data: RNBlobUtil.wrap(filePath),
+      };
+    }),
+  ];
+
+  const response = await authMultipartFetch(
+    `${PORTFOLIOS_BASE}/${postId}`,
+    parts,
+    'PATCH',
+  );
+
+  if (response.info().status < 200 || response.info().status >= 300) {
+    throw new Error(`Failed to update portfolio ${response.info().status}`);
+  }
+}
+
+export const deletePortfolioPost = async (
+  postId: number
+) => {
+  const response = await authFetch(`${PORTFOLIOS_BASE}/${postId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) throw new Error(`Failed to delete post ${response.status}`);
 }
 
 export type PhotographerStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'REJECTED' | 'SUSPENDED';
@@ -627,4 +684,40 @@ export const inactivePhotographer = async () => {
   });
 
   if (!response.ok) throw new Error(`Failed to get active photographer ${response.status}`);
+}
+
+export interface GetPhotographerRegionsAndConceptsAndTagsResponse {
+  regions: GetRegionsResponse[];
+  concepts: Tag[];
+  tags: Tag[];
+}
+
+export const getPhotographerRegionsAndConceptsAndTags = async (
+  photographerId: string,
+): Promise<GetPhotographerRegionsAndConceptsAndTagsResponse> => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/${photographerId}/regions`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error(`Failed to get photographer region ${response.status}`);
+
+  return response.json();
+}
+
+export interface UpdatePhotographerProfileRequest {
+  description: string;
+  regionIds: number[];
+  conceptIds: number[];
+  tagIds: number[];
+}
+
+export const updatePhotographerProfile = async (
+  body: UpdatePhotographerProfileRequest,
+) => {
+  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/profile`, {
+    method: 'PATCH',
+    json: body
+  });
+
+  if (!response.ok) throw new Error(`Failed to update profile ${response.status}`);
 }

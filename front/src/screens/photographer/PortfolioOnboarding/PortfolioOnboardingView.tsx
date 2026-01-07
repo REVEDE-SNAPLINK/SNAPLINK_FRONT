@@ -252,6 +252,9 @@ export default function PortfolioOnboardingView({
   );
 }
 
+const TITLE_FONT_SIZE = 16;
+const CAPTION_FONT_SIZE = 14;
+
 interface PortfolioOnboardingStep1Props {
   control: Control<PortfolioOnboardingFormData>;
   profileImageURI?: string;
@@ -267,8 +270,8 @@ const PortfolioOnboardingStep1 = ({
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%">
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%">
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           포트폴리오 프로필
         </Typography>
         을 채워주세요.
@@ -280,7 +283,7 @@ const PortfolioOnboardingStep1 = ({
         marginBottom={40}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
       >
@@ -322,8 +325,8 @@ const PortfolioOnboardingStep2 = ({
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           포트폴리오 사진
         </Typography>
         을 등록해 주세요.
@@ -342,7 +345,7 @@ const PortfolioOnboardingStep2 = ({
         onAddImages={onAddImages}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={22}
@@ -362,7 +365,7 @@ const PortfolioOnboardingStep2 = ({
         )}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={22}
@@ -420,8 +423,8 @@ const PortfolioOnboardingStep3 = ({
 }: PortfolioOnboardingStep3Props) => {
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           주로 활동하는 지역
         </Typography>
         을 선택해 주세요.
@@ -473,8 +476,8 @@ const PortfolioOnboardingStep4 = ({
 }: PortfolioOnboardingStep4Props) => {
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           촬영 관련 키워드
         </Typography>
         를 알려주세요.
@@ -526,8 +529,8 @@ const PortfolioOnboardingStep5 = ({
 }: PortfolioOnboardingStep5Props) => {
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           주로 활동하는 컨셉
         </Typography>
         을 선택해 주세요.
@@ -577,14 +580,14 @@ const PortfolioOnboardingStep6 = ({
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={24}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           촬영 정보
         </Typography>
         를 자세히 알려주세요.
       </Typography>
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
       >
@@ -603,7 +606,7 @@ const PortfolioOnboardingStep6 = ({
         )}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={25}
@@ -624,7 +627,7 @@ const PortfolioOnboardingStep6 = ({
         )}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={25}
@@ -647,7 +650,7 @@ const PortfolioOnboardingStep6 = ({
         )}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={25}
@@ -702,7 +705,7 @@ const PortfolioOnboardingStep6 = ({
         }}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={25}
@@ -722,7 +725,7 @@ const PortfolioOnboardingStep6 = ({
         )}
       />
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
         marginTop={25}
@@ -762,8 +765,8 @@ const PortfolioOnboardingStep7 = ({
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={24}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           추가할 옵션
         </Typography>
         을 선택해 주세요.
@@ -780,7 +783,7 @@ const PortfolioOnboardingStep7 = ({
             <>
               {/* 첫 번째 추가 옵션 (항상 표시) */}
               <Typography
-                fontSize={16}
+                fontSize={CAPTION_FONT_SIZE}
                 letterSpacing="-2.5%"
                 marginBottom={10}
               >
@@ -801,7 +804,7 @@ const PortfolioOnboardingStep7 = ({
                 onFocus={handleAutoScrollOnFocus}
               />
               <Typography
-                fontSize={16}
+                fontSize={CAPTION_FONT_SIZE}
                 letterSpacing="-2.5%"
                 marginBottom={10}
                 marginTop={21}
@@ -824,7 +827,7 @@ const PortfolioOnboardingStep7 = ({
                 onFocus={handleAutoScrollOnFocus}
               />
               <Typography
-                fontSize={16}
+                fontSize={CAPTION_FONT_SIZE}
                 letterSpacing="-2.5%"
                 marginBottom={10}
                 marginTop={21}
@@ -849,7 +852,7 @@ const PortfolioOnboardingStep7 = ({
                 onFocus={handleAutoScrollOnFocus}
               />
               <Typography
-                fontSize={16}
+                fontSize={CAPTION_FONT_SIZE}
                 letterSpacing="-2.5%"
                 marginBottom={10}
                 marginTop={21}
@@ -941,14 +944,14 @@ const PortfolioOnboardingStep8 = ({
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={24}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={24}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           보정 정보
         </Typography>
         를 자세히 알려주세요.
       </Typography>
       <Typography
-        fontSize={16}
+        fontSize={CAPTION_FONT_SIZE}
         letterSpacing="-2.5%"
         marginBottom={10}
       >
@@ -969,7 +972,7 @@ const PortfolioOnboardingStep8 = ({
       {showRetouchingDetails && (
         <>
           <Typography
-            fontSize={16}
+            fontSize={CAPTION_FONT_SIZE}
             letterSpacing="-2.5%"
             marginBottom={10}
             marginTop={25}
@@ -989,7 +992,7 @@ const PortfolioOnboardingStep8 = ({
             )}
           />
           <Typography
-            fontSize={16}
+            fontSize={CAPTION_FONT_SIZE}
             letterSpacing="-2.5%"
             marginBottom={10}
             marginTop={25}
@@ -1009,7 +1012,7 @@ const PortfolioOnboardingStep8 = ({
             )}
           />
           <Typography
-            fontSize={16}
+            fontSize={CAPTION_FONT_SIZE}
             letterSpacing="-2.5%"
             marginBottom={10}
             marginTop={25}
@@ -1073,8 +1076,8 @@ const PortfolioOnboardingStep9 = ({
 
   return (
     <>
-      <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
-        <Typography fontSize={18} fontWeight="semiBold" lineHeight="140%">
+      <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={20}>
+        <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
           촬영 가능한 일정
         </Typography>
         을 자세히 알려주세요.
@@ -1122,7 +1125,7 @@ const PortfolioOnboardingStep9 = ({
             return (
               <DayScheduleSection key={day}>
                 <Typography
-                  fontSize={16}
+                  fontSize={CAPTION_FONT_SIZE}
                   letterSpacing="-2.5%"
                   marginBottom={17}
                   marginTop={29}

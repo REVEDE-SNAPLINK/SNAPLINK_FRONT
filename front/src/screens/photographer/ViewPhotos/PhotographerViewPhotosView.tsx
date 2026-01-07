@@ -5,6 +5,7 @@ import Typography from '@/components/theme/Typography.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import PhotoGrid from '@/components/PhotoGrid.tsx';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import { Dimensions } from 'react-native';
 
 interface PhotographerViewPhotosViewProps {
   onPressBack: () => void;
@@ -18,6 +19,9 @@ interface PhotographerViewPhotosViewProps {
 
   navigation?: any;
 }
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_PADDING = 20;
 
 export default function PhotographerViewPhotosView({
   onPressBack,
@@ -55,8 +59,8 @@ export default function PhotographerViewPhotosView({
         headerShown={true}
         headerTitle="촬영 사진 관리"
         onPressBack={onPressBack}
-      
-      navigation={navigation}>
+        navigation={navigation}
+      >
         <PageCaptionWrapper>
           <PageCaption>
             <Typography
@@ -76,7 +80,7 @@ export default function PhotographerViewPhotosView({
             setCheckedImage={setCheckedImages}
             addable={imageURIs.length > 0 && !isLoading}
             onPressAddImage={handleAddImage}
-            width={332}
+            width={SCREEN_WIDTH - SCREEN_PADDING * 2}
           />
         </ContentContainer>
         <SubmitButtonWrapper>

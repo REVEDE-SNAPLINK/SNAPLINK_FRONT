@@ -1,4 +1,3 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography.tsx';
@@ -24,7 +23,6 @@ interface ProfileViewProps {
   onPressManageBooking: () => void;
   onPressManagePortfolio: () => void;
   onPressManageShootService: () => void;
-  onPressManageHolidays: () => void;
   onPressCustomerCenter: () => void;
   onPressNotice: () => void;
   onPressFAQ: () => void;
@@ -51,7 +49,6 @@ export default function ProfileView({
   onPressManageBooking,
   onPressManagePortfolio,
   onPressManageShootService,
-  onPressManageHolidays,
   onPressCustomerCenter,
   onPressNotice,
   onPressFAQ,
@@ -152,10 +149,6 @@ export default function ProfileView({
             <InfoButton
               onPress={onPressManageShootService}
               name="판매 관리"
-            />
-            <InfoButton
-              onPress={onPressManageHolidays}
-              name="휴가 설정"
               isLast
             />
           </InfoContainer>
@@ -242,6 +235,7 @@ export default function ProfileView({
           fontSize={12}
           color="#C8C8C8"
           marginTop={20}
+          marginBottom={20}
         >
           Copyright Revede, All Rights Reserved.
         </Typography>

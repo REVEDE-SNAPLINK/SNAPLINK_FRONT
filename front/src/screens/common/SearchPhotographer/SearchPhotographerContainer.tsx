@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
@@ -21,6 +23,7 @@ type SearchPhotographerRouteProp = RouteProp<MainStackParamList, 'SearchPhotogra
 const PAGE_SIZE = 10;
 
 export default function SearchPhotographerContainer() {
+  const { userId, userType } = useAuthStore();
   const route = useRoute<SearchPhotographerRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
 
@@ -219,6 +222,13 @@ export default function SearchPhotographerContainer() {
   };
 
   const handleSubmitSearchKey = () => {
+    // Log search_photographer event when search is submitted
+    analytics().logEvent('search_photographer', {
+      user_id: userId,
+      user_type: userType,
+      search_key: searchKey,
+      source: 'SearchPhotographer',
+    });
     // Query will automatically refetch when searchKey changes
     refetch();
   };
@@ -250,7 +260,16 @@ export default function SearchPhotographerContainer() {
     refetch();
   };
 
-  const handlePressPhotographer = (photographerId: string) => navigation.navigate('PhotographerDetails', { photographerId });
+  const handlePressPhotographer = (photographerId: string) => {
+    // Log photographer_profile_view event when photographer is pressed
+    analytics().logEvent('photographer_profile_view', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      source: 'SearchPhotographer',
+    });
+    navigation.navigate('PhotographerDetails', { photographerId });
+  };
 
   /**
    * Remove all filters for a category when category chip is clicked

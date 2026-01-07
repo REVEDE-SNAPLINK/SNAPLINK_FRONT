@@ -4,6 +4,8 @@ import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useState, useEffect } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -12,6 +14,7 @@ export default function UserBookingDetailsContainer() {
   const route = useRoute<BookingDetailsRouteProp>();
   const { bookingId } = route.params;
   const [shouldFetchReview, setShouldFetchReview] = useState(false);
+  const { userId, userType } = useAuthStore()
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
   const { data: bookingReview } = useBookingReviewMeQuery(shouldFetchReview ? bookingId : undefined);
@@ -23,15 +26,27 @@ export default function UserBookingDetailsContainer() {
     }
   }, [bookingReview, shouldFetchReview, navigation]);
 
+  useEffect(() => {
+    analytics().logEvent('screen_view', {
+      screen_name: 'BookingDetails',
+      user_id: userId || 'anonymous',
+      user_type: userType || 'guest',
+    });
+  }, [userId, userType]);
+
   const handlePressBack = () => navigation.goBack();
 
   const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { bookingId });
 
-  const handlePressWriteReview = () => navigation.navigate('WriteReview', { bookingId });
+  const handlePressWriteReview = () => {
+    analytics().logEvent('review_start', { booking_id: bookingId, user_id: userId });
+    navigation.navigate('WriteReview', { bookingId });
+  };
 
   const handlePressShowMyReview = () => {
+    analytics().logEvent('review_view', { booking_id: bookingId, user_id: userId });
     setShouldFetchReview(true);
-  }
+  };
 
   if (!bookingDetails) {
     return (

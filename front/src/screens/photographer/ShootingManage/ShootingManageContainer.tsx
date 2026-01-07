@@ -11,6 +11,7 @@ import { getShootingOptions } from '@/api/shootings.ts';
 import { Alert } from '@/components/theme';
 import { useAuthStore } from '@/store/authStore.ts';
 import { DayOfWeek } from '@/api/photographers.ts';
+import analytics from '@react-native-firebase/analytics';
 
 const DAY_OF_WEEK_MAP: Record<DayOfWeek, string> = {
   MONDAY: '월요일',
@@ -64,14 +65,34 @@ export default function ShootingManageContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressCreateProduct = () => {
+    // Firebase Analytics 이벤트: 촬영 서비스 생성 버튼 클릭
+    analytics().logEvent('shooting_service_action', {
+      user_id: userId ?? '',
+      user_type: 'photographer',
+      action_type: 'create',
+    });
     navigation.navigate('ServiceForm', {});
   };
 
   const handlePressEditProduct = (productId: number) => {
+    // Firebase Analytics 이벤트: 촬영 서비스 수정 버튼 클릭
+    analytics().logEvent('shooting_service_action', {
+      user_id: userId ?? '',
+      user_type: 'photographer',
+      action_type: 'edit',
+      product_id: productId,
+    });
     navigation.navigate('ServiceForm', { productId });
   };
 
   const handlePressDeleteProduct = (productId: number) => {
+    // Firebase Analytics 이벤트: 촬영 서비스 삭제 버튼 클릭
+    analytics().logEvent('shooting_service_action', {
+      user_id: userId ?? '',
+      user_type: 'photographer',
+      action_type: 'delete',
+      product_id: productId,
+    });
     Alert.show({
       title: '촬영 서비스를 삭제하시겠습니까?',
       message: '삭제된 서비스는 복구할 수 없습니다.',
@@ -108,6 +129,12 @@ export default function ShootingManageContainer() {
   };
 
   const handlePressEditSchedule = () => {
+    // Firebase Analytics 이벤트: 스케줄 편집 버튼 클릭
+    analytics().logEvent('shooting_service_action', {
+      user_id: userId ?? '',
+      user_type: 'photographer',
+      action_type: 'edit_schedule',
+    });
     navigation.navigate('ScheduleForm');
   };
 

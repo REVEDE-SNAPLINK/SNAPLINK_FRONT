@@ -24,7 +24,6 @@ import AccountManageScreen from '@/screens/common/AccountManageScreen.tsx';
 import EmailEditScreen from '@/screens/common/EmailEditScreen.tsx';
 import ShootingManageContainer from '@/screens/photographer/ShootingManage/ShootingManageContainer.tsx';
 import ServiceFormContainer from '@/screens/photographer/ServiceForm/ServiceFormContainer.tsx';
-import HolidayManageContainer from '@/screens/photographer/HolidayManage/HolidayManageContainer.tsx';
 import AIRecommdationFormContainer from '@/screens/common/AIRecommdationForm/AIRecommdationFormContainer.tsx';
 import AIRecommdationResultContainer from '@/screens/common/AIRecommdationResult/AIRecommdationResultContainer.tsx';
 import BookingRejectScreen from '@/screens/photographer/BookingReject/BookingRejectScreen.tsx';
@@ -34,6 +33,10 @@ import NotificationSettingContainer from '@/screens/common/NotificationSetting/N
 import BookingManageContainer from '@/screens/photographer/BookingManage/BookingManageContainer.tsx';
 import ScheduleFormContainer from '@/screens/photographer/ScheduleForm/ScheduleFormContainer.tsx';
 import PostDetailContainer from '@/screens/common/PostDetail/PostDetailContainer.tsx';
+import EditProfileContainer from '@/screens/photographer/EditProfile/EditProfileContainer.tsx';
+import EditRegionContainer from '@/screens/photographer/EditRegion/EditRegionContainer.tsx';
+import EditConceptTagContainer from '@/screens/photographer/EditConceptTag/EditConceptTagContainer.tsx';
+import LegalScreen from '@/screens/common/LegalScreen.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -64,11 +67,13 @@ export default function MainStack() {
       <Stack.Screen name="PortfolioForm" component={PortfolioFormContainer} />
       <Stack.Screen name="ShootingManage" component={ShootingManageContainer} />
       <Stack.Screen name="ServiceForm" component={ServiceFormContainer} />
-      <Stack.Screen name="HolidayManage" component={HolidayManageContainer} />
       <Stack.Screen name="BookingReject" component={BookingRejectScreen} />
       <Stack.Screen name="BookingCancel" component={BookingCancelScreen} />
       <Stack.Screen name="BookingManage" component={BookingManageContainer} />
       <Stack.Screen name="ScheduleForm" component={ScheduleFormContainer} />
+      <Stack.Screen name="EditProfile" component={EditProfileContainer} />
+      <Stack.Screen name="EditRegion" component={EditRegionContainer} />
+      <Stack.Screen name="EditConceptTag" component={EditConceptTagContainer} />
 
       <Stack.Screen name="NicknameEdit" component={NicknameEditScreen} />
       <Stack.Screen name="EmailEdit" component={EmailEditScreen} />
@@ -86,6 +91,7 @@ export default function MainStack() {
       <Stack.Screen name="MyReviews" component={MyReviewsContainer} />
       <Stack.Screen name="OpenSourceLicense" component={OpenSourceLicensesScreen} />
       <Stack.Screen name="NotificationSetting" component={NotificationSettingContainer} />
+      <Stack.Screen name="Legal" component={LegalScreen} />
     </Stack.Navigator>
   )
 }

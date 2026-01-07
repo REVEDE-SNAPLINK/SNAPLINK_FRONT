@@ -7,11 +7,14 @@ import { useBookingPhotosQuery } from '@/queries/bookings.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 
 export default function UserViewPhotosContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'ViewPhotos'>>();
   const { bookingId } = route.params;
+  const { userId } = useAuthStore();
 
   const { data, isLoading } = useBookingPhotosQuery(bookingId);
 
@@ -60,6 +63,8 @@ export default function UserViewPhotosContainer() {
         {
           text: '확인',
           onPress: async () => {
+            analytics().logEvent('photo_zip_download_start', { booking_id: bookingId, user_id: userId });
+
             try {
               const { fs } = RNBlobUtil;
               const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
@@ -126,6 +131,8 @@ export default function UserViewPhotosContainer() {
       selectedIndices.length === 0
         ? data.photos
         : selectedIndices.map((index) => data.photos[index]);
+
+    analytics().logEvent('photo_download_start', { booking_id: bookingId, user_id: userId, count: photosToDownload.length });
 
     Alert.show({
       title: '다운로드 시작',

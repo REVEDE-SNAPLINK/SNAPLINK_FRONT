@@ -55,10 +55,10 @@ export default function OptionItem({
         marginBottom={10}
         marginTop={21}
       >
-        추가 옵션 시간
+        시간 추가 옵션
       </Typography>
       <FormInput
-        placeholder="시간을 추가로 판매할 경우 입력해주세요."
+        placeholder="시간을 추가로 판매할 경우 입력해주세요. (분)"
         value={time}
         onChangeText={setTime}
       />

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { CommunityPost, CreateCommunityPostParams } from '@/api/community.ts';
 
+export type ScheduleType = 'personal' | 'holiday';
+
 export interface PersonalSchedule {
   id: string;
   title: string;
@@ -8,6 +10,8 @@ export interface PersonalSchedule {
   endDate: Date;
   isAllDay: boolean;
   description?: string;
+  scheduleType?: ScheduleType; // 'personal' or 'holiday'
+  holidayId?: number; // For holiday type
 }
 
 interface CommunityPostModalState {
@@ -22,6 +26,7 @@ interface AddScheduleModalState {
   initialSchedule?: PersonalSchedule;
   onSubmit?: (schedule: Omit<PersonalSchedule, 'id'>) => void;
   isDuplicate?: boolean;
+  initialStartDate?: Date;
 }
 
 interface ScheduleDetailModalState {
@@ -46,6 +51,7 @@ interface ModalStore {
     onSubmit: (schedule: Omit<PersonalSchedule, 'id'>) => void,
     initialSchedule?: PersonalSchedule,
     isDuplicate?: boolean,
+    initialStartDate?: Date,
   ) => void;
   closeAddScheduleModal: () => void;
 
@@ -97,14 +103,16 @@ export const useModalStore = create<ModalStore>((set) => ({
     initialSchedule: undefined,
     onSubmit: undefined,
     isDuplicate: false,
+    initialStartDate: undefined,
   },
-  openAddScheduleModal: (onSubmit, initialSchedule, isDuplicate = false) =>
+  openAddScheduleModal: (onSubmit, initialSchedule, isDuplicate = false, initialStartDate) =>
     set({
       addScheduleModal: {
         visible: true,
         onSubmit,
         initialSchedule,
         isDuplicate,
+        initialStartDate,
       },
     }),
   closeAddScheduleModal: () =>
@@ -114,6 +122,7 @@ export const useModalStore = create<ModalStore>((set) => ({
         initialSchedule: undefined,
         onSubmit: undefined,
         isDuplicate: false,
+        initialStartDate: undefined,
       },
     }),
 

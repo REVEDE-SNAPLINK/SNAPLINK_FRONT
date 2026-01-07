@@ -10,6 +10,7 @@ import AIButtonIcon from '@/assets/icons/ai-button.svg'
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import NotificationButton from '@/components/theme/NotificationButton.tsx';
 import { Dimensions } from 'react-native';
+import SearchIcon from '@/assets/icons/search-gray.svg'
 
 interface HomeViewProps {
   onPressAI:  () => void;
@@ -72,7 +73,7 @@ export default function HomeView({
           <Icon
             width={16.67}
             height={17.47}
-            source={require('@/assets/icons/search.png')}
+            Svg={SearchIcon}
           />
           <SearchInput
             placeholder="웨딩 스냅 작가를 찾고 있나요?"

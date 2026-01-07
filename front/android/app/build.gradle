@@ -133,11 +133,3 @@ dependencies {
     }
 }
 
-// Fix for Firebase Analytics Gradle task dependency issue
-afterEvaluate {
-    tasks.findAll { task ->
-        task.name.contains('copyReleaseJniLibsProjectOnly')
-    }.each { task ->
-        task.dependsOn tasks.findAll { it.name.contains('mergeReleaseNativeLibs') }
-    }
-}

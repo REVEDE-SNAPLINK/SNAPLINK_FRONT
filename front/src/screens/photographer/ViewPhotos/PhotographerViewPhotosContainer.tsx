@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import analytics from '@react-native-firebase/analytics';
 import { pick, types } from '@react-native-documents/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import PhotographerViewPhotosView from '@/screens/photographer/ViewPhotos/PhotographerViewPhotosView.tsx';
@@ -66,6 +67,11 @@ export default function PhotographerViewPhotosContainer() {
 
         await updatePhotos({ deletePhotoIds: [], newPhotos });
         await refetch();
+        analytics().logEvent('photographer_booking_photos_added', {
+          user_type: 'photographer',
+          bookingId,
+          count: newPhotos.length,
+        });
         Alert.show({
           title: '업로드 완료',
           message: `${newPhotos.length}개의 사진이 추가되었습니다.`
@@ -91,11 +97,16 @@ export default function PhotographerViewPhotosContainer() {
           type: file.type,
         };
 
-        uploadZip({ bookingId: bookingId, zipFile },{
+        uploadZip({ bookingId: bookingId, zipFile }, {
           onSuccess: () => {
+            analytics().logEvent('photographer_booking_photos_uploaded', {
+              user_type: 'photographer',
+              bookingId,
+              file_name: zipFile.name,
+            });
             refetch().finally(() => {
               Alert.show({ title: '업로드 완료', message: '촬영 사진 업로드가 완료되었습니다.' })
-            })
+            });
           },
           onError: () => {
             Alert.show({ title: '업로드 실패', message: '네트워크를 확인해보세요.' })
@@ -140,6 +151,12 @@ export default function PhotographerViewPhotosContainer() {
             try {
               await updatePhotos({ deletePhotoIds, newPhotos: [] });
               await refetch();
+              analytics().logEvent('photographer_booking_photos_deleted', {
+                user_type: 'photographer',
+                bookingId,
+                count: deletePhotoIds.length,
+                photo_ids: deletePhotoIds,
+              });
               Alert.show({
                 title: '삭제 완료',
                 message: '선택한 사진이 삭제되었습니다.',
@@ -178,6 +195,11 @@ export default function PhotographerViewPhotosContainer() {
 
       await updatePhotos({ deletePhotoIds: [], newPhotos });
       await refetch();
+      analytics().logEvent('photographer_booking_photos_added', {
+        user_type: 'photographer',
+        bookingId,
+        count: newPhotos.length,
+      });
       Alert.show({
         title: '업로드 완료',
         message: `${newPhotos.length}개의 사진이 추가되었습니다.`

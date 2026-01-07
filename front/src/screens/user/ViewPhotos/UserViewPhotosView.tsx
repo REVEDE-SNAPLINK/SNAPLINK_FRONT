@@ -8,6 +8,7 @@ import DownloadIcon from '@/assets/icons/download.svg'
 import Icon from '@/components/Icon.tsx';
 import PhotoGrid from '@/components/PhotoGrid.tsx';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import { Dimensions } from 'react-native';
 
 interface UserViewPhotosViewProps {
   onPressBack: () => void;
@@ -20,6 +21,9 @@ interface UserViewPhotosViewProps {
 
   navigation?: any;
 }
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_PADDING = 20;
 
 export default function UserViewPhotosView({
   onPressBack,
@@ -83,7 +87,7 @@ export default function UserViewPhotosView({
             imageURIs={imageURIs}
             checkedImages={checkedImages}
             setCheckedImage={setCheckedImages}
-            width={332}
+            width={SCREEN_WIDTH - SCREEN_PADDING * 2}
           />
         </ContentContainer>
         <SubmitButtonWrapper>

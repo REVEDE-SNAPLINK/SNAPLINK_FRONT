@@ -15,7 +15,7 @@ import {
   useUpdateShootingOptionMutation,
   useDeleteShootingOptionMutation,
 } from '@/mutations/shootings.ts';
-import type { EditingType, EditingDeadline, SelectionAuthority, GetShootingOptionResponse } from '@/api/shootings.ts';
+import type { EditingType, EditingDeadline, SelectionAuthority } from '@/api/shootings.ts';
 
 const TOTAL_STEPS = 3;
 
@@ -34,7 +34,6 @@ export default function ServiceFormContainer() {
   const isEditMode = productId !== undefined;
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [originalOptions, setOriginalOptions] = useState<GetShootingOptionResponse[]>([]);
   const [deletedOptionIds, setDeletedOptionIds] = useState<number[]>([]);
 
   // Fetch all shootings to find the one being edited
@@ -97,6 +96,7 @@ export default function ServiceFormContainer() {
         'WITHIN_4_DAYS': '4일 이내',
         'WITHIN_5_DAYS': '5일 이내',
         'WITHIN_7_DAYS': '7일 이내',
+        'WITHUP_7_DAYS': '7일 이상',
       };
 
       const selectionAuthorityMap: Record<string, string> = {
@@ -132,8 +132,6 @@ export default function ServiceFormContainer() {
           time: opt.additionalTime > 0 ? opt.additionalTime.toString() : '',
         })),
       });
-
-      setOriginalOptions(shootingOptions);
     }
   }, [isEditMode, currentShooting, shootingOptions, reset]);
 
@@ -305,6 +303,7 @@ export default function ServiceFormContainer() {
           '4일 이내': 'WITHIN_4_DAYS',
           '5일 이내': 'WITHIN_5_DAYS',
           '7일 이내': 'WITHIN_7_DAYS',
+          '7일 이상': 'WITHUP_7_DAYS',
         };
 
         const selectionAuthorityReverseMap: Record<string, SelectionAuthority> = {
@@ -330,7 +329,7 @@ export default function ServiceFormContainer() {
 
         // Transform form data to API request
         const shootingRequest = {
-          isDefault: false, // TODO: Add UI for this if needed
+          isDefault: false,
           PhotographerId: userId,
           shootingName: data.shootingProductName.trim(),
           basePrice: parseInt(data.basePrice, 10),
@@ -339,7 +338,7 @@ export default function ServiceFormContainer() {
           personnel: personnelCount,
           providesRawFile: data.provideRawFiles,
           editingType: retouchingTypeReverseMap[data.retouchingType || ''] || 'NONE',
-          editingDeadline: retouchingDurationReverseMap[data.retouchingDuration || ''] || 'WITHIN_7_DAYS',
+          editingDeadline: retouchingDurationReverseMap[data.retouchingDuration || ''] || 'WITHUP_7_DAYS',
           selectionAuthority: selectionAuthorityReverseMap[data.retouchingSelectionRight || ''] || 'BOTH',
           providedEditCount: parseInt(data.shootingProductProvidedEditCount, 10),
         };
@@ -441,7 +440,6 @@ export default function ServiceFormContainer() {
       updateOptionMutation,
       deleteOptionMutation,
       deletedOptionIds,
-      originalOptions,
     ]
   );
 

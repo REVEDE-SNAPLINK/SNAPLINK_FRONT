@@ -1,9 +1,14 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
 import PostDetailView from './PostDetailView';
 import { usePortfolioPostQuery } from '@/queries/photographers';
 import { useAuthStore } from '@/store/authStore.ts';
+import { useDeletePortfolioMutation } from '@/mutations/photographers';
+import { Alert } from '@/components/theme';
+
+import analytics from '@react-native-firebase/analytics';
+import { Share } from 'react-native';
 
 type PostDetailRouteProp = RouteProp<MainStackParamList, 'PostDetail'>;
 
@@ -11,14 +16,27 @@ export default function PostDetailContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<PostDetailRouteProp>();
   const { postId, profileImageURI } = route.params;
-  const { userId } = useAuthStore();
+  const { userId, userType } = useAuthStore();
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isMoreModalVisible, setIsMoreModalVisible] = useState<boolean>(false);
 
   const { data: post, isLoading } = usePortfolioPostQuery(postId);
+  const { mutate: deletePortfolio } = useDeletePortfolioMutation(postId, post?.photographerId);
 
   const isMyPost = userId === post?.photographerId;
+
+  useEffect(() => {
+    if (!post) return;
+
+    analytics().logEvent('portfolio_post_view', {
+      screen_name: 'PostDetail',
+      user_id: userId || 'anonymous',
+      user_type: userType || 'guest',
+      post_id: postId,
+      photographer_id: post.photographerId,
+    });
+  }, [post, postId, userId, userType]);
 
   const handlePressBack = useCallback(() => {
     navigation.goBack();
@@ -30,6 +48,64 @@ export default function PostDetailContainer() {
 
   const handleCloseMoreModal = () => {
     setIsMoreModalVisible(false);
+  }
+
+  const handleEditPost = () => {
+    setIsMoreModalVisible(false);
+    navigation.navigate('PortfolioForm', { postId });
+  }
+
+  const handleDeletePost = () => {
+    setIsMoreModalVisible(false);
+
+    Alert.show({
+      title: '포트폴리오 삭제',
+      message: '정말로 이 포트폴리오를 삭제하시겠습니까?',
+      buttons: [
+        { text: '취소', type: 'cancel', onPress: () => {} },
+        {
+          text: '삭제',
+          type: 'destructive',
+          onPress: () => {
+            deletePortfolio(undefined, {
+              onSuccess: () => {
+                analytics().logEvent('portfolio_post_deleted', {
+                  user_id: userId || '',
+                  user_type: userType || 'guest',
+                  post_id: postId,
+                });
+
+                Alert.show({
+                  title: '삭제 완료',
+                  message: '포트폴리오가 삭제되었습니다.',
+                  buttons: [
+                    {
+                      text: '확인',
+                      onPress: () => navigation.goBack(),
+                    },
+                  ],
+                });
+              },
+              onError: () => {
+                Alert.show({
+                  title: '삭제 실패',
+                  message: '포트폴리오 삭제에 실패했습니다. 다시 시도해주세요.',
+                  buttons: [{ text: '확인', onPress: () => {} }],
+                });
+              },
+            });
+          },
+        },
+      ],
+    });
+  }
+
+  const handleSharePost = () => {
+    if (post) {
+      Share.share({
+        message: `${post.title}\nhttps://link.snaplink.run/portfolio/${postId}`,
+      });
+    }
   }
 
   return (
@@ -44,6 +120,9 @@ export default function PostDetailContainer() {
       showMoreModal={isMoreModalVisible}
       onPressMore={handlePressMore}
       onCloseMoreModal={handleCloseMoreModal}
+      onSharePost={handleSharePost}
+      onEditPost={handleEditPost}
+      onDeletePost={handleDeletePost}
       navigation={navigation}
     />
   );

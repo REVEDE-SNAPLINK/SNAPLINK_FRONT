@@ -5,6 +5,8 @@ import { Alert } from '@/components/theme/Alert';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { useCreateReservationReviewMutation, useUpdateReviewMutation } from '@/mutations/reviews.ts';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 
 // Form validation constants
 const MAX_IMAGES = 3;
@@ -16,6 +18,7 @@ export default function WriteReviewContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
   const { bookingId, review } = route.params;
+  const { userId } = useAuthStore();
 
   // Determine if we're in edit mode
   const isEditMode = !!review;
@@ -76,6 +79,7 @@ export default function WriteReviewContainer() {
     );
 
     if (isEditMode && review) {
+      analytics().logEvent('review_edit_complete', { review_id: review?.reviewId, user_id: userId });
       // Update existing review
       updateMutation.mutate(
         {
@@ -108,6 +112,7 @@ export default function WriteReviewContainer() {
     }
 
     if (bookingId) {
+      analytics().logEvent('review_create_complete', { booking_id: bookingId, user_id: userId });
       // Create new review
       createMutation.mutate(
         {

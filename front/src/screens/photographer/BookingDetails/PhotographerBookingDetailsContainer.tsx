@@ -2,6 +2,8 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetails/PhotographerBookingDetailsView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -9,12 +11,20 @@ export default function PhotographerBookingDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingDetailsRouteProp>();
   const { bookingId } = route.params;
+  const { userId } = useAuthStore();
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { bookingId });
+  const handlePressViewPhotos = () => {
+    analytics().logEvent('photographer_booking_photos_view', {
+      user_id: userId,
+      user_type: 'photographer',
+      bookingId,
+    });
+    navigation.navigate('ViewPhotos', { bookingId });
+  };
 
   if (!bookingDetails) {
     return (

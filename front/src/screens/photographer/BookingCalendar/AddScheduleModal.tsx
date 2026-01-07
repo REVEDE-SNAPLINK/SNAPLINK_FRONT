@@ -5,14 +5,19 @@ import IconButton from '@/components/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
 import TimeCircleIcon from '@/assets/icons/time-circle.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
+import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
+import Icon from '@/components/Icon';
 import { Typography, Alert } from '@/components/theme';
 import PrimaryToggleButton from '@/components/theme/PrimaryToggleButton';
 import DatePicker from 'react-native-date-picker';
 import { theme } from '@/theme';
-import { PersonalSchedule } from '@/store/modalStore';
+import { PersonalSchedule, ScheduleType } from '@/store/modalStore';
 import { usePersonalScheduleQuery } from '@/queries/schedules';
 import { useCreatePersonalScheduleMutation, useUpdatePersonalScheduleMutation } from '@/mutations/schedules';
 import { PersonalSchedule as APIPersonalSchedule } from '@/api/schedules';
+import { useCreateHolidayMutation, useDeleteHolidayMutation } from '@/mutations/holidays';
+import { getPhotographerDayDetail } from '@/api/schedules';
+import { useAuthStore } from '@/store/authStore';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -23,6 +28,7 @@ interface AddScheduleModalProps {
   initialSchedule?: PersonalSchedule;
   isDuplicate?: boolean; // 복사 모드 여부
   scheduleId?: number; // API로부터 불러올 스케줄 ID (수정 모드)
+  initialStartDate?: Date;
 }
 
 export default function AddScheduleModal({
@@ -32,7 +38,10 @@ export default function AddScheduleModal({
   initialSchedule,
   isDuplicate = false,
   scheduleId,
+  initialStartDate,
 }: AddScheduleModalProps) {
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('personal');
+  const [isTypeListVisible, setIsTypeListVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [isAllDay, setIsAllDay] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
@@ -48,8 +57,11 @@ export default function AddScheduleModal({
 
   // API hooks
   const { data: apiScheduleData } = usePersonalScheduleQuery(scheduleId, visible && !!scheduleId);
+  const userId = useAuthStore((state) => state.userId);
   const createMutation = useCreatePersonalScheduleMutation();
   const updateMutation = useUpdatePersonalScheduleMutation();
+  const createHolidayMutation = useCreateHolidayMutation();
+  const deleteHolidayMutation = useDeleteHolidayMutation();
 
   const isDirty =
     title !== '' ||
@@ -57,6 +69,7 @@ export default function AddScheduleModal({
     location !== '';
 
   const resetModal = () => {
+    setScheduleType('personal');
     setTitle('');
     setIsAllDay(false);
     setStartDate(new Date());
@@ -69,23 +82,26 @@ export default function AddScheduleModal({
   useEffect(() => {
     if (visible && apiScheduleData) {
       // API 데이터를 로드 (수정 모드)
-      const { startDate: startDateStr, endDate: endDateStr, startTime, endTime, title: apiTitle, content } = apiScheduleData;
+      const { startDate: startDateStr, endDate: endDateStr, startTime, endTime, title: apiTitle, description } = apiScheduleData;
 
-      // YYYY-MM-DD와 HH:mm을 Date 객체로 변환
+      // YYYY-MM-DD와 HH:mm:ss을 Date 객체로 변환
       const startDateTime = new Date(`${startDateStr}T${startTime}`);
       const endDateTime = new Date(`${endDateStr}T${endTime}`);
 
-      // 종일 여부 판단 (00:00 ~ 23:59 or 00:00 ~ 00:00)
-      const isAllDaySchedule = startTime === '00:00' && (endTime === '23:59' || endTime === '00:00');
+      // 종일 여부 판단 (00:00:00 ~ 23:59:59)
+      const isAllDaySchedule =
+        startTime === '00:00:00' && endTime === '23:59:59';
 
       setTitle(apiTitle);
       setIsAllDay(isAllDaySchedule);
       setStartDate(startDateTime);
       setEndDate(endDateTime);
-      setDescription(content || '');
+      setDescription(description || '');
+      setScheduleType('personal'); // API는 항상 personal schedule
       previousStartDateRef.current = startDateTime;
     } else if (visible && initialSchedule) {
       // 로컬 데이터를 로드
+      setScheduleType(initialSchedule.scheduleType || 'personal');
       setTitle(initialSchedule.title);
       setIsAllDay(initialSchedule.isAllDay);
       setStartDate(initialSchedule.startDate);
@@ -94,10 +110,12 @@ export default function AddScheduleModal({
       previousStartDateRef.current = initialSchedule.startDate;
     } else if (visible && !initialSchedule && !apiScheduleData) {
       resetModal();
-      const now = new Date();
-      previousStartDateRef.current = now;
+      const baseDate = initialStartDate ?? new Date();
+      setStartDate(baseDate);
+      setEndDate(baseDate);
+      previousStartDateRef.current = baseDate;
     }
-  }, [visible, initialSchedule, apiScheduleData]);
+  }, [visible, initialSchedule, apiScheduleData, initialStartDate]);
 
   useEffect(() => {
     if (visible) {
@@ -143,8 +161,68 @@ export default function AddScheduleModal({
     }
   };
 
+  // 휴가 기간 찾기 함수
+  const findHolidayRange = async (baseDate: Date, photographerId: string) => {
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    let startDate = new Date(baseDate);
+    let endDate = new Date(baseDate);
+
+    // 시작 날짜 찾기 (이전으로 거슬러 올라가기)
+    let currentDate = new Date(baseDate);
+    currentDate.setDate(currentDate.getDate() - 1);
+
+    while (true) {
+      try {
+        const dayDetail = await getPhotographerDayDetail({
+          photographerId,
+          date: formatDate(currentDate),
+        });
+
+        if (dayDetail.holidayId !== null) {
+          startDate = new Date(currentDate);
+          currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+          break;
+        }
+      } catch (error) {
+        break;
+      }
+    }
+
+    // 종료 날짜 찾기 (다음으로 내려가기)
+    currentDate = new Date(baseDate);
+    currentDate.setDate(currentDate.getDate() + 1);
+
+    while (true) {
+      try {
+        const dayDetail = await getPhotographerDayDetail({
+          photographerId,
+          date: formatDate(currentDate),
+        });
+
+        if (dayDetail.holidayId !== null) {
+          endDate = new Date(currentDate);
+          currentDate.setDate(currentDate.getDate() + 1);
+        } else {
+          break;
+        }
+      } catch (error) {
+        break;
+      }
+    }
+
+    return { startDate, endDate };
+  };
+
   const handlePressSave = () => {
-    if (!title.trim()) {
+    // 휴가 타입은 title 검증 불필요
+    if (scheduleType === 'personal' && !title.trim()) {
       Alert.show({
         title: '일정 제목을 입력해주세요',
         message: '일정 제목은 필수입니다.',
@@ -189,19 +267,128 @@ export default function AddScheduleModal({
       return `${hours}:${minutes}`;
     };
 
+    // 휴가 타입 처리
+    if (scheduleType === 'holiday') {
+      // 날짜 범위 생성
+      const generateDateRange = (start: Date, end: Date): string[] => {
+        const dates: string[] = [];
+        const current = new Date(start);
+        current.setHours(0, 0, 0, 0);
+        const endDate = new Date(end);
+        endDate.setHours(0, 0, 0, 0);
+
+        while (current <= endDate) {
+          dates.push(formatDate(current));
+          current.setDate(current.getDate() + 1);
+        }
+        return dates;
+      };
+
+      const newDates = generateDateRange(startDate, endDate);
+      const isEditMode = !isDuplicate && initialSchedule?.scheduleType === 'holiday';
+
+      if (isEditMode && initialSchedule && userId) {
+        // 휴가 수정 모드 - 기존 휴가 기간 찾기
+        const updateHolidays = async () => {
+          try {
+            // 기존 휴가 기간 찾기
+            const holidayRange = await findHolidayRange(initialSchedule.startDate, userId);
+            const existingDates = generateDateRange(holidayRange.startDate, holidayRange.endDate);
+
+            // 추가할 날짜 (새로운 범위에는 있지만 기존에는 없던 날짜)
+            const datesToAdd = newDates.filter(date => !existingDates.includes(date));
+            // 삭제할 날짜 (기존에는 있었지만 새로운 범위에는 없는 날짜)
+            const datesToDelete = existingDates.filter(date => !newDates.includes(date));
+
+            // 삭제할 날짜에 대한 휴가 삭제 - dayDetail 조회해서 holidayId 찾기
+            for (const dateToDelete of datesToDelete) {
+              try {
+                const dayDetail = await getPhotographerDayDetail({
+                  photographerId: userId,
+                  date: dateToDelete,
+                });
+                if (dayDetail.holidayId !== null) {
+                  await deleteHolidayMutation.mutateAsync(dayDetail.holidayId);
+                }
+              } catch (error) {
+                console.error('Failed to delete holiday:', error);
+              }
+            }
+
+            // 추가할 날짜 생성
+            for (const dateToAdd of datesToAdd) {
+              await createHolidayMutation.mutateAsync({
+                holidayDate: dateToAdd,
+              });
+            }
+
+            onSubmit({
+              title: '휴가',
+              startDate,
+              endDate,
+              isAllDay: true,
+              scheduleType: 'holiday',
+            });
+            resetModal();
+            onClose();
+          } catch (error) {
+            Alert.show({
+              title: '휴가 수정 실패',
+              message: '휴가 수정에 실패했습니다. 다시 시도해주세요.',
+              buttons: [{ text: '확인', onPress: () => {} }],
+            });
+          }
+        };
+        updateHolidays();
+      } else {
+        // 휴가 생성 모드
+        const createHolidaysAsync = async () => {
+          try {
+            for (const date of newDates) {
+              await createHolidayMutation.mutateAsync({
+                holidayDate: date,
+              });
+            }
+            onSubmit({
+              title: '휴가',
+              startDate,
+              endDate,
+              isAllDay: true,
+              scheduleType: 'holiday',
+            });
+            resetModal();
+            onClose();
+          } catch (error) {
+            Alert.show({
+              title: '휴가 생성 실패',
+              message: '휴가 생성에 실패했습니다. 다시 시도해주세요.',
+              buttons: [{ text: '확인', onPress: () => {} }],
+            });
+          }
+        };
+        createHolidaysAsync();
+      }
+      return;
+    }
+
+    // 개인 일정 처리
     const apiSchedule: Omit<APIPersonalSchedule, 'id'> = {
       title: title.trim(),
       startDate: formatDate(startDate),
       endDate: formatDate(endDate),
-      startTime: isAllDay ? '00:00' : formatTime(startDate),
-      endTime: isAllDay ? '23:59' : formatTime(endDate),
-      content: description.trim() || '',
+      startTime: isAllDay ? '00:00:00' : formatTime(startDate),
+      endTime: isAllDay ? '23:59:59' : formatTime(endDate),
+      description: description.trim() || '',
     };
 
-    if (scheduleId) {
+    // Check if this is edit mode (scheduleId or initialSchedule.id exists and not duplicate mode)
+    const isEditMode = !isDuplicate && (scheduleId || initialSchedule?.id);
+    const editId = scheduleId || (initialSchedule?.id ? Number(initialSchedule.id) : undefined);
+
+    if (isEditMode && editId) {
       // 수정 모드
       updateMutation.mutate(
-        { id: scheduleId, body: { ...apiSchedule, id: scheduleId } },
+        { id: editId, body: { ...apiSchedule } },
         {
           onSuccess: () => {
             // 로컬 상태 업데이트를 위해 onSubmit 호출
@@ -211,6 +398,7 @@ export default function AddScheduleModal({
               endDate,
               isAllDay,
               description: description.trim() || undefined,
+              scheduleType: 'personal',
             });
             resetModal();
             onClose();
@@ -225,9 +413,9 @@ export default function AddScheduleModal({
         }
       );
     } else {
-      // 생성 모드
+      // 생성 모드 (복사 모드 포함)
       createMutation.mutate(
-        { ...apiSchedule, id: 0 }, // id는 서버에서 생성
+        { ...apiSchedule },
         {
           onSuccess: () => {
             // 로컬 상태 업데이트를 위해 onSubmit 호출
@@ -237,6 +425,7 @@ export default function AddScheduleModal({
               endDate,
               isAllDay,
               description: description.trim() || undefined,
+              scheduleType: 'personal',
             });
             resetModal();
             onClose();
@@ -279,6 +468,33 @@ export default function AddScheduleModal({
     previousStartDateRef.current = date;
   };
 
+  const handlePressTypeSelector = () => {
+    setIsTypeListVisible(!isTypeListVisible);
+  };
+
+  const handleSelectType = (type: ScheduleType) => {
+    setScheduleType(type);
+    setIsTypeListVisible(false);
+    if (type === 'holiday') {
+      setTitle('휴가');
+      setIsAllDay(true);
+    } else {
+      setTitle('');
+    }
+  };
+
+  // 휴가 날짜 제한: 오늘부터 3개월 후까지
+  const getMaxHolidayDate = () => {
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    return maxDate;
+  };
+
+  const getMinHolidayDate = () => {
+    return new Date(); // 오늘부터
+  };
+
   if (!visible) return null;
 
   return (
@@ -294,31 +510,63 @@ export default function AddScheduleModal({
         </Header>
 
         <ScrollContainer>
-          <TitleInputWrapper>
-            <TitleInput
-              placeholder="일정 제목을 입력하세요."
-              value={title}
-              onChangeText={setTitle}
-              placeholderTextColor="#A4A4A4"
-            />
-          </TitleInputWrapper>
+          <TypeSelector>
+            <TypeWrapper onPress={handlePressTypeSelector}>
+              <TypeLabelWrapper>
+                <TypeDot color={scheduleType === 'holiday' ? '#E84E4E' : theme.colors.textPrimary} />
+                <Typography fontSize={16} letterSpacing="-2.5%">
+                  {scheduleType === 'holiday' ? '휴가' : '개인 일정'}
+                </Typography>
+              </TypeLabelWrapper>
+              <Icon width={24} height={24} Svg={ArrowDownIcon} />
+            </TypeWrapper>
+            {isTypeListVisible && (
+              <TypeList>
+                <TypeItem onPress={() => handleSelectType('holiday')}>
+                  <TypeDot color="#E84E4E" />
+                  <Typography fontSize={16} letterSpacing="-2.5%">
+                    휴가
+                  </Typography>
+                </TypeItem>
+                <TypeItem onPress={() => handleSelectType('personal')}>
+                  <TypeDot color={theme.colors.textPrimary} />
+                  <Typography fontSize={16} letterSpacing="-2.5%">
+                    개인 일정
+                  </Typography>
+                </TypeItem>
+              </TypeList>
+            )}
+          </TypeSelector>
 
-          <AllDaySection>
-            <AllDayLeft>
-              <TimeCircleIcon width={24} height={24} />
-              <AllDayText>
-                <Typography fontSize={16}>종일</Typography>
-              </AllDayText>
-            </AllDayLeft>
-            <PrimaryToggleButton value={isAllDay} onToggle={setIsAllDay} />
-          </AllDaySection>
+          {scheduleType === 'personal' && (
+            <TitleInputWrapper>
+              <TitleInput
+                placeholder="일정 제목을 입력하세요."
+                value={title}
+                onChangeText={setTitle}
+                placeholderTextColor="#A4A4A4"
+              />
+            </TitleInputWrapper>
+          )}
+
+          {scheduleType === 'personal' && (
+            <AllDaySection>
+              <AllDayLeft>
+                <TimeCircleIcon width={24} height={24} />
+                <AllDayText>
+                  <Typography fontSize={16}>종일</Typography>
+                </AllDayText>
+              </AllDayLeft>
+              <PrimaryToggleButton value={isAllDay} onToggle={setIsAllDay} />
+            </AllDaySection>
+          )}
 
           <DateTimeSection>
             <DateTimeRow onPress={() => setStartDatePickerVisible(true)}>
               <DateText>
                 <Typography fontSize={16}>{formatDate(startDate)}</Typography>
               </DateText>
-              {!isAllDay && (
+              {scheduleType === 'personal' && !isAllDay && (
                 <TimeText>
                   <Typography fontSize={16} color="#A4A4A4">
                     {formatTime(startDate)}
@@ -330,7 +578,7 @@ export default function AddScheduleModal({
               <DateText>
                 <Typography fontSize={16}>{formatDate(endDate)}</Typography>
               </DateText>
-              {!isAllDay && (
+              {scheduleType === 'personal' && !isAllDay && (
                 <TimeText>
                   <Typography fontSize={16} color="#A4A4A4">
                     {formatTime(endDate)}
@@ -340,27 +588,32 @@ export default function AddScheduleModal({
             </DateTimeRow>
           </DateTimeSection>
 
-          <Divider />
-
-          <InputRow>
-            <DocumentIcon width={24} height={24} />
-            <DescriptionInput
-              placeholder="설명"
-              value={description}
-              onChangeText={setDescription}
-              placeholderTextColor="#A4A4A4"
-              multiline
-              textAlignVertical="top"
-            />
-          </InputRow>
+          {scheduleType === 'personal' && (
+            <>
+              <Divider />
+              <InputRow>
+                <DocumentIcon width={24} height={24} />
+                <DescriptionInput
+                  placeholder="설명"
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholderTextColor="#A4A4A4"
+                  multiline
+                  textAlignVertical="top"
+                />
+              </InputRow>
+            </>
+          )}
         </ScrollContainer>
       </AnimatedContainer>
 
       <DatePicker
         modal
-        mode={isAllDay ? 'date' : 'datetime'}
+        mode={scheduleType === 'holiday' || isAllDay ? 'date' : 'datetime'}
         open={startDatePickerVisible}
         date={startDate}
+        minimumDate={scheduleType === 'holiday' ? getMinHolidayDate() : undefined}
+        maximumDate={scheduleType === 'holiday' ? getMaxHolidayDate() : undefined}
         onConfirm={handleStartDateChange}
         onCancel={() => setStartDatePickerVisible(false)}
         locale="ko"
@@ -369,10 +622,11 @@ export default function AddScheduleModal({
 
       <DatePicker
         modal
-        mode={isAllDay ? 'date' : 'datetime'}
+        mode={scheduleType === 'holiday' || isAllDay ? 'date' : 'datetime'}
         open={endDatePickerVisible}
         date={endDate}
-        minimumDate={startDate}
+        minimumDate={scheduleType === 'holiday' ? startDate : startDate}
+        maximumDate={scheduleType === 'holiday' ? getMaxHolidayDate() : undefined}
         onConfirm={(date) => {
           setEndDate(date);
           setEndDatePickerVisible(false);
@@ -420,6 +674,60 @@ const SaveButton = styled.TouchableOpacity`
 
 const ScrollContainer = styled.ScrollView`
   flex: 1;
+`;
+
+const TypeSelector = styled.View`
+  width: 100%;
+  height: 62px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #C8C8C8;
+  position: relative;
+  z-index: 999;
+`;
+
+const TypeWrapper = styled.TouchableOpacity`
+  width: 100%;
+  height: 100%;
+  padding-left: 28px;
+  padding-right: 22px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const TypeLabelWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+`;
+
+const TypeDot = styled.View<{ color: string }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: ${({ color }) => color};
+`;
+
+const TypeList = styled.View`
+  flex: 1;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 62px;
+  z-index: 1001;
+  background-color: #FAFAFA;
+`;
+
+const TypeItem = styled.TouchableOpacity`
+  flex: 1;
+  width: 100%;
+  height: 62px;
+  padding-left: 28px;
+  padding-right: 22px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 `;
 
 const TitleInputWrapper = styled.View`

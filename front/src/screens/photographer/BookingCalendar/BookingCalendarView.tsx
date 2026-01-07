@@ -4,19 +4,27 @@ import { Typography } from '@/components/theme';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
-import { PersonalSchedule } from '@/store/modalStore';
 import { GetPhotographerDayDetailResponse } from '@/api/schedules';
 import { formatTime } from '@/utils/format.ts';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Dimensions, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  runOnJS,
+  withTiming, interpolate, Extrapolate,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 interface BookingCalendarViewProps {
   selectedDate: string;
   scheduleData: EnhancedScheduleData[];
+  currentYearMonth: string;
   dayDetailData: GetPhotographerDayDetailResponse | null;
-  personalSchedules: PersonalSchedule[];
   dDayText: string;
   onPressBookingItem: (bookingId: number) => void;
-  onPressPersonalSchedule: (scheduleId: string) => void;
+  onPressPersonalSchedule: (id: number) => void;
+  onPressHoliday: () => void;
   onSelectDate: (date: string) => void;
   onPressAddSchedule: () => void;
   onMonthChange: (yearMonth: string) => void;
@@ -25,22 +33,26 @@ interface BookingCalendarViewProps {
 export default function BookingCalendarView({
   selectedDate,
   scheduleData,
+  currentYearMonth,
   dayDetailData,
-  personalSchedules,
   dDayText,
   onPressBookingItem,
   onPressPersonalSchedule,
+  onPressHoliday,
   onSelectDate,
   onPressAddSchedule,
   onMonthChange,
 }: BookingCalendarViewProps) {
+  const [containerHeight, setContainerHeight] = useState(0);
+  const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
+
   const formatDateToKorean = (dateString: string) => {
     const date = new Date(dateString);
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const dayOfWeek = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][
       date.getDay()
-    ];
+      ];
     return `${month}월 ${day}일 ${dayOfWeek}`;
   };
 
@@ -51,31 +63,218 @@ export default function BookingCalendarView({
       return a.startTime.localeCompare(b.startTime);
     });
   }, [dayDetailData?.bookings]);
-  const hasPublicHoliday = dayDetailData?.publicHolidayName;
-  const hasPhotographerHoliday = dayDetailData?.photographerHolidayReason;
+  const personalSchedules = useMemo(() => {
+    if (!dayDetailData?.personalSchedules) return [];
+
+    return [...dayDetailData.personalSchedules].sort((a, b) => {
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [dayDetailData?.personalSchedules]);
+  const hasPublicHoliday = dayDetailData?.holidayName && dayDetailData?.holidayId === null;
+  const hasPhotographerHoliday = dayDetailData?.holidayId !== null;
 
   const hasSchedules = bookings.length > 0 || personalSchedules.length > 0 || hasPublicHoliday || hasPhotographerHoliday;
 
+  const sheetHeight = useSharedValue(0);
+  const dragStartHeight = useSharedValue(0);
+  const defaultHeight = useMemo(() => {
+    if (!containerHeight) return 0;
+    return containerHeight * 0.45;
+  }, [containerHeight]);
+  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      height: sheetHeight.value,
+    };
+  });
+
+  useEffect(() => {
+    renderTypeSV.value = renderType;
+  }, [renderType, renderTypeSV]);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+    if (!defaultHeight) return;
+
+    setRenderType('DEFAULT');
+  }, [selectedDate, defaultHeight]);
+
+  const DRAG_DAMPING = 0.8;
+
+  const panGesture = Gesture.Pan()
+    .onBegin(() => {
+      dragStartHeight.value = sheetHeight.value;
+    })
+
+    .onUpdate((e) => {
+      // 🔥 FULL 상태에서 위로 더 못 올리게
+      if (renderTypeSV.value === 'FULL' && e.translationY < 0) {
+        return;
+      }
+
+      const nextHeight =
+        dragStartHeight.value - e.translationY * DRAG_DAMPING;
+
+      sheetHeight.value = Math.min(
+        containerHeight,
+        Math.max(0, nextHeight),
+      );
+    })
+
+    .onEnd((e) => {
+      const current = sheetHeight.value;
+
+      const SNAP_HIDDEN = defaultHeight * 0.5;
+      const SNAP_FULL =
+        defaultHeight + (containerHeight - defaultHeight) * 0.5;
+
+      // 🔥 FULL 상태
+      if (renderTypeSV.value === 'FULL') {
+        if (e.velocityY > 600 || current < SNAP_FULL) {
+          sheetHeight.value = withTiming(defaultHeight);
+          renderTypeSV.value = 'DEFAULT';
+          runOnJS(setRenderType)('DEFAULT');
+        } else {
+          sheetHeight.value = withTiming(containerHeight);
+        }
+        return;
+      }
+
+      // 🔥 DEFAULT 상태
+      if (current <= SNAP_HIDDEN) {
+        sheetHeight.value = withTiming(0);
+        renderTypeSV.value = 'HIDDEN';
+        runOnJS(setRenderType)('HIDDEN');
+        return;
+      }
+
+      if (current >= SNAP_FULL) {
+        sheetHeight.value = withTiming(containerHeight);
+        renderTypeSV.value = 'FULL';
+        runOnJS(setRenderType)('FULL');
+        return;
+      }
+
+      sheetHeight.value = withTiming(defaultHeight);
+      renderTypeSV.value = 'DEFAULT';
+      runOnJS(setRenderType)('DEFAULT');
+    });
+
+  useEffect(() => {
+    if (!containerHeight || !defaultHeight) return;
+
+    if (renderType === 'HIDDEN') {
+      sheetHeight.value = withTiming(0);
+    }
+
+    if (renderType === 'DEFAULT') {
+      sheetHeight.value = withTiming(defaultHeight);
+    }
+
+    if (renderType === 'FULL') {
+      sheetHeight.value = withTiming(containerHeight);
+    }
+  }, [renderType, containerHeight, defaultHeight, sheetHeight]);
+
+  const floatingAnimatedStyle = useAnimatedStyle(() => {
+    /**
+     * 언제부터 사라질지 기준
+     * DEFAULT 높이의 60% → 거의 다 내려왔을 때
+     */
+    const fadeStart = defaultHeight * 0.6;
+    const fadeEnd = 0;
+
+    const opacity = interpolate(
+      sheetHeight.value,
+      [fadeEnd, fadeStart],
+      [0, 1],
+      Extrapolate.CLAMP,
+    );
+
+    return {
+      opacity,
+      zIndex: opacity === 0 ? -1 : 10,
+    };
+  });
+
+  const calendarBaseHeight = useSharedValue(containerHeight);
+
+  const calendarAnimatedStyle = useAnimatedStyle(() => {
+    /**
+     * BottomSheet가 DEFAULT보다 커진 만큼
+     * Calendar가 다시 차지해야 할 공간
+     */
+    const extra = Math.max(
+      0,
+      containerHeight - sheetHeight.value,
+    );
+
+    return {
+      height: calendarBaseHeight.value + extra,
+    };
+  });
+
+  const weekRowCount = useMemo(() => {
+    if (!currentYearMonth) return 6;
+
+    const firstDay = new Date(`${currentYearMonth}-01`);
+    const lastDay = new Date(
+      firstDay.getFullYear(),
+      firstDay.getMonth() + 1,
+      0,
+    );
+
+    const startWeekday = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+
+    return Math.ceil((startWeekday + totalDays) / 7) + 1;
+  }, [currentYearMonth]);
+
   return (
-    <Container>
-      <ScheduleCalendar
-        initialDate={selectedDate}
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        scheduleData={scheduleData}
-        onMonthChange={onMonthChange}
-      />
-      <BookingContentContainer>
-        <BookingSlideBarWrapper>
-          <BookingSlideBar />
-        </BookingSlideBarWrapper>
-        <BookingContentHeader>
-          <Typography fontSize={16} fontWeight="semiBold">
-            {formatDateToKorean(selectedDate)}
-          </Typography>
-        </BookingContentHeader>
+    <Container
+      onLayout={(e) => {
+        setContainerHeight(e.nativeEvent.layout.height);
+      }}
+    >
+      <CalendarWrapper
+        style={calendarAnimatedStyle}
+        onLayout={(e) => {
+          calendarBaseHeight.value = e.nativeEvent.layout.height;
+        }}
+      >
+        <ScheduleCalendar
+          initialDate={`${currentYearMonth}-01`}
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+          scheduleData={scheduleData}
+          onMonthChange={onMonthChange}
+          sheetHeight={sheetHeight}
+          defaultHeight={defaultHeight}
+          calendarWrapperHeight={calendarBaseHeight}
+          weekRowCount={weekRowCount}
+        />
+      </CalendarWrapper>
+      <BookingContentContainer
+        style={animatedStyle}
+      >
+        <GestureDetector gesture={panGesture}>
+          <View>
+            <BookingSlideBarWrapper>
+              <BookingSlideBar />
+            </BookingSlideBarWrapper>
+            <BookingContentHeader>
+              <Typography fontSize={16} fontWeight="semiBold">
+                {formatDateToKorean(selectedDate)}
+              </Typography>
+            </BookingContentHeader>
+          </View>
+        </GestureDetector>
         <BookingContent>
-          <BookingContentScrollView showsVerticalScrollIndicator={false}>
+          <BookingContentScrollView
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={renderType === 'FULL'}
+          >
             {!hasSchedules ? (
               <BookingItem disabled>
                 <BookingInfoWrapper>
@@ -92,17 +291,17 @@ export default function BookingCalendarView({
                     <BookingInfoWrapper>
                       <PublicHolidayBar />
                       <Typography fontSize={14}>
-                        공휴일ㆍ{hasPublicHoliday}
+                        공휴일ㆍ{dayDetailData?.holidayName}
                       </Typography>
                     </BookingInfoWrapper>
                   </BookingItem>
                 )}
                 {bookings.map((booking) => (
-                  <BookingItem key={`booking-${booking.bookingId}`} onPress={() => onPressBookingItem(booking.bookingId)}>
+                  <BookingItem key={`booking-${booking.id}`} onPress={() => onPressBookingItem(booking.id)}>
                     <BookingInfoWrapper>
                       <BookingBar />
                       <Typography fontSize={14}>
-                        {booking.customerNickName}ㆍ{formatTime(booking.startTime)}~{formatTime(booking.endTime)}
+                        {booking.customerName}ㆍ{booking.productName}ㆍ{formatTime(booking.startTime)}~{formatTime(booking.endTime)}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
@@ -112,13 +311,16 @@ export default function BookingCalendarView({
                 ))}
 
                 {hasPhotographerHoliday && (
-                  <BookingItem disabled>
+                  <BookingItem onPress={onPressHoliday}>
                     <BookingInfoWrapper>
                       <PhotographerHolidayBar />
                       <Typography fontSize={14}>
-                        휴가ㆍ{hasPhotographerHoliday}
+                        휴가
                       </Typography>
                     </BookingInfoWrapper>
+                    <BookingDetailButton>
+                      <Typography fontSize={11}>상세보기</Typography>
+                    </BookingDetailButton>
                   </BookingItem>
                 )}
 
@@ -127,7 +329,7 @@ export default function BookingCalendarView({
                     <BookingInfoWrapper>
                       <PersonalScheduleBar />
                       <Typography fontSize={14}>
-                        {schedule.title}
+                        {schedule.title}ㆍ{formatTime(schedule.startTime)}~{formatTime(schedule.endTime)}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
@@ -139,17 +341,17 @@ export default function BookingCalendarView({
             )}
           </BookingContentScrollView>
         </BookingContent>
-        <ScheduleToolButtonWrapper>
-          <ScheduleDDayBlock>
-            <Typography fontSize={14} fontWeight="bold">
-              {dDayText}
-            </Typography>
-          </ScheduleDDayBlock>
-          <FloatingButton onPress={onPressAddSchedule}>
-            <Icon width={20} height={20} Svg={CrossIcon} />
-          </FloatingButton>
-        </ScheduleToolButtonWrapper>
       </BookingContentContainer>
+      <Animated.View style={floatingAnimatedStyle} pointerEvents="box-none">
+        <ScheduleDDayBlock>
+          <Typography fontSize={14} fontWeight="bold">
+            {dDayText}
+          </Typography>
+        </ScheduleDDayBlock>
+        <FloatingButton onPress={onPressAddSchedule}>
+          <Icon width={20} height={20} Svg={CrossIcon} />
+        </FloatingButton>
+      </Animated.View>
     </Container>
   );
 }
@@ -158,11 +360,16 @@ const Container = styled.View`
   flex: 1
 `
 
-const BookingContentContainer = styled.View`
+const CalendarWrapper = styled(Animated.View)`
   flex: 1;
   width: 100%;
-  background-color: #EAEAEA;
 `
+
+const BookingContentContainer = styled(Animated.View)`
+  //flex: 1;
+  width: 100%;
+  background-color: #EAEAEA;
+`;
 
 const BookingSlideBarWrapper = styled.View`
   width: 100%;
@@ -218,7 +425,7 @@ const PhotographerHolidayBar = styled.View`
   height: 40px;
   border-radius: 100px;
   margin-right: 10px;
-  background-color: #FF9800;
+  background-color: #E84E4E;
 `
 
 const PersonalScheduleBar = styled.View`
@@ -258,13 +465,7 @@ const BookingDetailButton = styled.View`
   border: 1px solid ${theme.colors.textPrimary};
 `
 
-const ScheduleToolButtonWrapper = styled.View`
-  align-items: center;
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  width: 100%;
-`
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const ScheduleDDayBlock = styled.View`
   width: 54px;
@@ -273,6 +474,9 @@ const ScheduleDDayBlock = styled.View`
   justify-content: center;
   border-radius: 25px;
   background-color: #fff;
+  position: absolute;
+  bottom: 20px;
+  left: ${SCREEN_WIDTH / 2  - 27}px;
 `
 
 const FloatingButton = styled.TouchableOpacity`
@@ -284,5 +488,5 @@ const FloatingButton = styled.TouchableOpacity`
   justify-content: center;
   position: absolute;
   right: 19px;
-  bottom: 0;
+  bottom: 20px;
 `

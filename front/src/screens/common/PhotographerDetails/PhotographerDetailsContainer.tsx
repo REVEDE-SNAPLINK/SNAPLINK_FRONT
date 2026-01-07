@@ -1,8 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import analytics from '@react-native-firebase/analytics';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
-import { usePhotographerProfileInfiniteQuery, usePhotographerReviewSummaryQuery } from '@/queries/photographers.ts';
+import {
+  usePhotographerProfileInfiniteQuery,
+  usePhotographerReviewSummaryQuery,
+  usePhotographerRegionsConceptsTagsQuery,
+} from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { LatestReviewSummaryItem } from '@/api/photographers.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
@@ -12,6 +17,7 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
 import { Alert } from '@/components/theme';
 import { Share } from 'react-native';
+import { useUpdatePhotographerProfileMutation } from '@/mutations/photographers';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
@@ -32,6 +38,9 @@ export default function PhotographerDetailsContainer() {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews'>('portfolio');
   const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+  const [isProfileInfoModalVisible, setIsProfileInfoModalVisible] = useState(false);
+
+  // 더미 데이터 (API가 없으므로 임시로 사용)
 
   // Fetch photographer profile (includes portfolio thumbnails)
   const {
@@ -73,15 +82,46 @@ export default function PhotographerDetailsContainer() {
   // Fetch review summary
   const { data: reviewSummary } = usePhotographerReviewSummaryQuery(photographerId);
 
+  // Fetch regions, concepts, tags
+  const { data: regionsConceptsTagsData } = usePhotographerRegionsConceptsTagsQuery(photographerId);
+
   // Scrap mutation
   const scrapMutation = useTogglePhotographerScrapMutation();
   const chatMutation = useCreateOrGetChatRoomMutation();
+  const updateProfileMutation = useUpdatePhotographerProfileMutation(photographerId);
 
   // Get photographer data from first page (profile info is same across all pages)
   const profileData = useMemo(() => {
     if (!profilePages?.pages?.[0]) return null;
     return profilePages.pages[0];
   }, [profilePages]);
+
+  // Transform API data to profileInfoData
+  const profileInfoData = useMemo(() => {
+    if (!regionsConceptsTagsData) {
+      return {
+        description: profileData?.description || '',
+        profileImageURI: profileData?.profileImageUrl || '',
+        regionIds: [],
+        regions: [],
+        tagIds: [],
+        tags: [],
+        conceptIds: [],
+        concepts: [],
+      };
+    }
+
+    return {
+      description: profileData?.description || '',
+      profileImageURI: profileData?.profileImageUrl || '',
+      regionIds: regionsConceptsTagsData.regions.map((r) => r.id),
+      regions: regionsConceptsTagsData.regions.map((r) => r.city),
+      tagIds: regionsConceptsTagsData.tags.map((t) => t.id),
+      tags: regionsConceptsTagsData.tags.map((t) => t.name),
+      conceptIds: regionsConceptsTagsData.concepts.map((c) => c.id),
+      concepts: regionsConceptsTagsData.concepts.map((c) => c.name),
+    };
+  }, [regionsConceptsTagsData, profileData]);
 
   // Flatten all portfolios from all pages
   const allPortfolios = useMemo(() => {
@@ -109,6 +149,14 @@ export default function PhotographerDetailsContainer() {
   const handlePressInquiry = useCallback(() => {
     chatMutation.mutate({ receiverId: photographerId }, {
       onSuccess: (response) => {
+        // Log chat_initiated event when chat room is created
+        analytics().logEvent('chat_initiated', {
+          user_id: userId,
+          user_type: userType,
+          photographer_id: photographerId,
+          room_id: response.roomId,
+          source: 'PhotographerDetails',
+        });
         // Invalidate chat rooms to refresh the list
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
 
@@ -120,11 +168,18 @@ export default function PhotographerDetailsContainer() {
         });
       }
     });
-  }, [chatMutation, photographerId, navigation, queryClient, profileData]);
+  }, [chatMutation, photographerId, navigation, queryClient, profileData, userId, userType]);
 
   const handlePressReservation = useCallback(() => {
+    // Log booking_intent event when reservation button is pressed
+    analytics().logEvent('booking_intent', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      source: 'PhotographerDetails',
+    });
     navigation.navigate('Booking', { photographerId });
-  }, [navigation, photographerId]);
+  }, [navigation, photographerId, userId, userType]);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -160,7 +215,7 @@ export default function PhotographerDetailsContainer() {
       : [];
 
   const handlePressAddPortfolio = useCallback(() => {
-    navigation.navigate('PortfolioForm');
+    navigation.navigate('PortfolioForm', {});
   }, [navigation]);
 
   const handlePressMore = () => {
@@ -180,7 +235,112 @@ export default function PhotographerDetailsContainer() {
   }
 
   const handlePressEditProfile = () => {
+    navigation.navigate('EditProfile', {
+      description: profileData?.description || '',
+      profileImageURI: profileData?.profileImageUrl || '',
+      onSubmit: (description: string) => {
+        // description만 수정, 나머지는 캐시된 데이터 사용
+        updateProfileMutation.mutate(
+          {
+            description,
+            regionIds: profileInfoData.regionIds,
+            conceptIds: profileInfoData.conceptIds,
+            tagIds: profileInfoData.tagIds,
+          },
+          {
+            onSuccess: () => {
+              Alert.show({
+                title: '수정 완료',
+                message: '프로필이 성공적으로 수정되었습니다.',
+                buttons: [{ text: '확인', onPress: () => {} }],
+              });
+            },
+            onError: () => {
+              Alert.show({
+                title: '수정 실패',
+                message: '프로필 수정에 실패했습니다. 다시 시도해주세요.',
+                buttons: [{ text: '확인', onPress: () => {} }],
+              });
+            },
+          }
+        );
+      },
+    });
+  }
 
+  const handlePressEditConceptTag = () => {
+    navigation.navigate('EditConceptTag', {
+      tagIds: profileInfoData.tagIds,
+      conceptIds: profileInfoData.conceptIds,
+      onSubmit: (tagIds: number[], conceptIds: number[]) => {
+        // tagIds, conceptIds만 수정, 나머지는 캐시된 데이터 사용
+        updateProfileMutation.mutate(
+          {
+            description: profileInfoData.description,
+            regionIds: profileInfoData.regionIds,
+            conceptIds,
+            tagIds,
+          },
+          {
+            onSuccess: () => {
+              Alert.show({
+                title: '수정 완료',
+                message: '컨셉/태그가 성공적으로 수정되었습니다.',
+                buttons: [{ text: '확인', onPress: () => {} }],
+              });
+            },
+            onError: () => {
+              Alert.show({
+                title: '수정 실패',
+                message: '컨셉/태그 수정에 실패했습니다. 다시 시도해주세요.',
+                buttons: [{ text: '확인', onPress: () => {} }],
+              });
+            },
+          }
+        );
+      },
+    });
+  }
+
+  const handlePressEditRegion = () => {
+    navigation.navigate('EditRegion', {
+      regionIds: profileInfoData.regionIds,
+      onSubmit: (regionIds: number[]) => {
+        // regionIds만 수정, 나머지는 캐시된 데이터 사용
+        updateProfileMutation.mutate(
+          {
+            description: profileInfoData.description,
+            regionIds,
+            conceptIds: profileInfoData.conceptIds,
+            tagIds: profileInfoData.tagIds,
+          },
+          {
+            onSuccess: () => {
+              Alert.show({
+                title: '수정 완료',
+                message: '지역이 성공적으로 수정되었습니다.',
+                buttons: [{ text: '확인', onPress: () => {} }],
+              });
+            },
+            onError: () => {
+              Alert.show({
+                title: '수정 실패',
+                message: '지역 수정에 실패했습니다. 다시 시도해주세요.',
+                buttons: [{ text: '확인', onPress: () => {} }],
+              });
+            },
+          }
+        );
+      },
+    });
+  }
+
+  const handlePressProfileInfo = () => {
+    setIsProfileInfoModalVisible(true);
+  }
+
+  const handleCloseProfileInfoModal = () => {
+    setIsProfileInfoModalVisible(false);
   }
 
   const handlePressReport = (type: string) => {
@@ -230,6 +390,12 @@ export default function PhotographerDetailsContainer() {
       onCloseReportModal={handleCloseReportModal}
       onPressReportStart={handlePressReportStart}
       onPressEditProfile={handlePressEditProfile}
+      onPressEditConceptTag={handlePressEditConceptTag}
+      onPressEditRegion={handlePressEditRegion}
+      onPressProfileInfo={handlePressProfileInfo}
+      isProfileInfoModalVisible={isProfileInfoModalVisible}
+      onCloseProfileInfoModal={handleCloseProfileInfoModal}
+      profileInfoData={profileInfoData}
       onCloseMoreModal={handleCloseMoreModal}
       onPressMore={handlePressMore}
       onPressBack={handlePressBack}

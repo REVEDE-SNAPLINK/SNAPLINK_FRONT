@@ -24,7 +24,9 @@ import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetShootingResponse, mappingEditDeadline } from '@/api/shootings.ts';
 import { formatNumber } from '@/utils/format.ts';
 import TickSquareIcon from '@/assets/icons/tick-square.svg';
+import DocumentIcon from '@/assets/icons/document.svg';
 import EditIcon from '@/assets/icons/edit.svg';
+import LocationIcon from '@/assets/icons/location.svg';
 
 export interface ShareLink {
   name: string;
@@ -47,6 +49,12 @@ interface Review {
   content: string;
   date: string;
   imageUrl: string;
+}
+
+interface ProfileInfoData {
+  regions: string[];
+  tags: string[];
+  concepts: string[];
 }
 
 interface PhotographerDetailsViewProps {
@@ -73,6 +81,12 @@ interface PhotographerDetailsViewProps {
   onPressReportStart: () => void;
   onCloseReportModal: () => void;
   onPressEditProfile: () => void;
+  onPressEditConceptTag: () => void;
+  onPressEditRegion: () => void;
+  onPressProfileInfo: () => void;
+  isProfileInfoModalVisible: boolean;
+  onCloseProfileInfoModal: () => void;
+  profileInfoData: ProfileInfoData;
   reportType: string[];
   onPressReport: (type: string) => void;
   onPressBack: () => void;
@@ -112,6 +126,12 @@ export default function PhotographerDetailsView({
   onPressReportStart,
   onCloseReportModal,
   onPressEditProfile,
+  onPressEditConceptTag,
+  onPressEditRegion,
+  onPressProfileInfo,
+  isProfileInfoModalVisible,
+  onCloseProfileInfoModal,
+  profileInfoData,
   reportType,
   onPressReport,
   onPressBack,
@@ -440,7 +460,7 @@ export default function PhotographerDetailsView({
               onEndReached={onEndReached}
               onEndReachedThreshold={0.5}
               showsVerticalScrollIndicator={false}
-              columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: 17 }}
+              columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: HORIZONTAL_PADDING }}
               contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
             />
           </>
@@ -502,48 +522,90 @@ export default function PhotographerDetailsView({
       </BottomActionContainer>
     </ScreenContainer>
 
-    {/* Share Modal */}
-      <SlideModal
-        visible={isMoreModalVisible}
-        onClose={onCloseMoreModal}
-        title="더보기"
-        minHeight={276}
-      >
-        {isMyProfile ? (
-          <>
-            <ModalButton onPress={() => {
-              onCloseMoreModal();
-              onPressEditProfile();
-            }}>
-              <Icon width={18} height={18} Svg={EditIcon} />
-              <Typography
-                fontSize={14}
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                marginLeft={8}
-              >
-                프로필 수정
-              </Typography>
-            </ModalButton>
-          </>
-        ) : (
-          <>
-            <ModalButton onPress={() => {
-              onCloseMoreModal();
-              onPressReportStart();
-            }}>
-              <Typography
-                fontSize={14}
-                lineHeight="140%"
-                letterSpacing="-2.5%"
-                marginLeft={8}
-              >
-                신고하기
-              </Typography>
-            </ModalButton>
-          </>
-        )}
-      </SlideModal>
+    <SlideModal
+      visible={isMoreModalVisible}
+      onClose={onCloseMoreModal}
+      title="더보기"
+      minHeight={276}
+      headerAlign="center"
+    >
+      <ModalButton onPress={() => {
+        onCloseMoreModal();
+        onPressProfileInfo();
+      }}>
+        <Icon width={18} height={18} Svg={DocumentIcon} />
+        <Typography
+          fontSize={14}
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          marginLeft={8}
+        >
+          프로필 정보
+        </Typography>
+      </ModalButton>
+      {isMyProfile ? (
+        <>
+          <ModalButton onPress={() => {
+            onCloseMoreModal();
+            onPressEditProfile();
+          }}>
+            <Icon width={18} height={18} Svg={EditIcon} />
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              marginLeft={8}
+            >
+              프로필 수정
+            </Typography>
+          </ModalButton>
+          <ModalButton onPress={() => {
+            onCloseMoreModal();
+            onPressEditConceptTag();
+          }}>
+            <Icon width={18} height={18} Svg={EditIcon} />
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              marginLeft={8}
+            >
+              촬영 컨셉 및 키워드 수정
+            </Typography>
+          </ModalButton>
+          <ModalButton onPress={() => {
+            onCloseMoreModal();
+            onPressEditRegion();
+          }}>
+            <Icon width={18} height={18} Svg={LocationIcon} />
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              marginLeft={8}
+            >
+              촬영 지역 수정
+            </Typography>
+          </ModalButton>
+        </>
+      ) : (
+        <>
+          <ModalButton onPress={() => {
+            onCloseMoreModal();
+            onPressReportStart();
+          }}>
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              marginLeft={8}
+            >
+              신고하기
+            </Typography>
+          </ModalButton>
+        </>
+      )}
+    </SlideModal>
 
     <SlideModal
       visible={isReportModalVisible}
@@ -560,6 +622,73 @@ export default function PhotographerDetailsView({
           </Typography>
         </ReportButton>
       ))}
+    </SlideModal>
+
+    <SlideModal
+      visible={isProfileInfoModalVisible}
+      onClose={onCloseProfileInfoModal}
+      minHeight={300}
+    >
+      <ProfileInfoSection>
+        <Typography
+          fontSize={16}
+          fontWeight="semiBold"
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          marginBottom={10}
+        >
+          촬영 지역
+        </Typography>
+        <ProfileInfoContent>
+          <Typography
+            fontSize={14}
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+          >
+            {profileInfoData.regions.join(', ')}
+          </Typography>
+        </ProfileInfoContent>
+      </ProfileInfoSection>
+      <ProfileInfoSection>
+        <Typography
+          fontSize={16}
+          fontWeight="semiBold"
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          marginBottom={10}
+        >
+          촬영 키워드
+        </Typography>
+        <ProfileInfoContent>
+          <Typography
+            fontSize={14}
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+          >
+            {profileInfoData.tags.join(', ')}
+          </Typography>
+        </ProfileInfoContent>
+      </ProfileInfoSection>
+      <ProfileInfoSection>
+        <Typography
+          fontSize={16}
+          fontWeight="semiBold"
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          marginBottom={10}
+        >
+          촬영 컨셉
+        </Typography>
+        <ProfileInfoContent>
+          <Typography
+            fontSize={14}
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+          >
+            {profileInfoData.concepts.join(', ')}
+          </Typography>
+        </ProfileInfoContent>
+      </ProfileInfoSection>
     </SlideModal>
 
   </>
@@ -806,7 +935,7 @@ const PhotographerPortfolioInfoWrapper = styled.View`
   width: 100%;
   align-items: center;
   margin-bottom: 13px;
-  padding: 0 25px;
+  padding: 0 ${HORIZONTAL_PADDING}px;
 `
 
 const PhotographerPortfolioInfo = styled.View`
@@ -835,4 +964,16 @@ const ModalButton = styled.TouchableOpacity`
   flex-direction: row;
   margin-bottom: 15px;
   align-items: center;
+`
+
+const ProfileInfoSection = styled.View`
+  width: 100%;
+  margin-bottom: 20px;
+`
+
+const ProfileInfoContent = styled.View`
+  width: 100%;
+  padding: 12px;
+  background-color: #f1f0ef;
+  border-radius: 8px;
 `

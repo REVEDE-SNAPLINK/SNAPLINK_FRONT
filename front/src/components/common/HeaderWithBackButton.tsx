@@ -40,7 +40,7 @@ export default function HeaderWithBackButton({
           <Icon width={89} height={20} Svg={Logo} />
         ) : (
         <Typography
-          fontSize={20}
+          fontSize={18}
           fontWeight="bold"
           lineHeight="140%"
           letterSpacing="-2.5%"

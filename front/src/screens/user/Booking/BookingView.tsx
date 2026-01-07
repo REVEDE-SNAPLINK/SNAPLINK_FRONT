@@ -11,6 +11,8 @@ import { useMemo } from 'react';
 import { ActivityIndicator } from 'react-native';
 import {GetShootingOptionResponse, GetShootingResponse} from "@/api/shootings.ts";
 import { GetAvailableBookingTimeResponse } from '@/api/schedules.ts';
+import { GetRegionsResponse } from '@/api/regions.ts';
+import Checkbox from '@/components/theme/Checkbox.tsx';
 
 interface BookingViewProps {
   onPressBack: () => void;
@@ -27,6 +29,9 @@ interface BookingViewProps {
   onRetryTimes: () => void;
   selectedTime: string | null;
   onSelectTime: (time: string) => void;
+  availbleRegions: GetRegionsResponse[];
+  selectedRegionIds: number[];
+  onToggleRegion: (id: number) => void;
   shootingProducts: GetShootingResponse[];
   isFetchingProducts: boolean;
   isProductsError: boolean;
@@ -61,6 +66,9 @@ export default function BookingView({
   onRetryTimes,
   selectedTime,
   onSelectTime,
+  availbleRegions,
+  selectedRegionIds,
+  onToggleRegion,
   shootingProducts,
   isFetchingProducts,
   isProductsError,
@@ -97,22 +105,24 @@ export default function BookingView({
 
   const isDateSelected = !!currentDate;
   const isTimeSelected = !!selectedTime;
+  const isRegionSelected = selectedRegionIds.length > 0;
   const isProductSelected = selectedProductId > 0;
 
   const disabledHint = useMemo(() => {
     if (!isDateSelected) return '날짜를 선택해 주세요';
     if (!isTimeSelected) return '시간을 선택해 주세요';
+    if (!isRegionSelected) return '장소를 선택해 주세요';
     if (!isProductSelected) return '촬영 상품을 선택해 주세요';
     return '';
-  }, [isDateSelected, isTimeSelected, isProductSelected]);
+  }, [isDateSelected, isTimeSelected, isRegionSelected, isProductSelected]);
 
   return (
     <ScreenContainer
       onPressBack={onPressBack}
       headerTitle="예약"
       alignItemsCenter={false}
-    
-      navigation={navigation}>
+      navigation={navigation}
+    >
       <ScrollContainer
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20 }}
@@ -138,9 +148,14 @@ export default function BookingView({
                 2 시간 {isTimeSelected ? '✓' : ''}
               </Typography>
             </StepItem>
+            <StepItem active={isRegionSelected}>
+              <Typography fontSize={12} color={isRegionSelected ? '#fff' : '#333'}>
+                3 장소 {isRegionSelected ? '✓' : ''}
+              </Typography>
+            </StepItem>
             <StepItem active={isProductSelected}>
               <Typography fontSize={12} color={isProductSelected ? '#fff' : '#333'}>
-                3 상품 {isProductSelected ? '✓' : ''}
+                4 상품 {isProductSelected ? '✓' : ''}
               </Typography>
             </StepItem>
           </StepRow>
@@ -155,18 +170,6 @@ export default function BookingView({
           />
         </CalendarWrapper>
         <Divider />
-
-        <SectionTitle>
-          <Typography
-            fontSize={14}
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#000"
-            marginBottom={17}
-          >
-            시간 선택
-          </Typography>
-        </SectionTitle>
 
         {isFetchingTimes ? (
           <TimeSkeletonRow>
@@ -229,6 +232,34 @@ export default function BookingView({
                 />
               </>
             )}
+          </>
+        )}
+
+        {availbleRegions.length > 0 && (
+          <>
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#000"
+              marginTop={10}
+              marginBottom={17}
+            >
+              장소
+            </Typography>
+            <RegionRow>
+              {availbleRegions.map((v) => (
+                <RegionWrapper key={v.id}>
+                  <Checkbox isChecked={selectedRegionIds.includes(v.id)} onPress={() => onToggleRegion(v.id)} />
+                  <Typography
+                    fontSize={14}
+                    marginLeft={10}
+                  >
+                    {v.city}
+                  </Typography>
+                </RegionWrapper>
+              ))}
+            </RegionRow>
           </>
         )}
 
@@ -412,10 +443,6 @@ const StepItem = styled.View<{ active: boolean }>`
   background-color: ${({ active }) => (active ? theme.colors.primary : theme.colors.disabled)};
 `;
 
-const SectionTitle = styled.View`
-  margin-top: 8px;
-`;
-
 const InlineState = styled.View`
   width: 100%;
   flex-direction: row;
@@ -463,3 +490,15 @@ const HintText = styled.Text`
   color: #666;
   margin-bottom: 22px;
 `;
+
+const RegionRow = styled.View`
+  width: 100%;
+  flex-direction: row;
+  flex-wrap: wrap;
+`
+
+const RegionWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-right: 16px;
+`

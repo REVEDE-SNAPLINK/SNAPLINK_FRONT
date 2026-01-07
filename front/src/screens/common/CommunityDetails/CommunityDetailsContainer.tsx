@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Share, TextInput, InteractionManager } from 'react-native';
+import { Share, TextInput, InteractionManager, Platform } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import { CreateCommunityPostParams } from '@/api/community.ts';
@@ -16,20 +16,20 @@ import {
   useDeletePostMutation,
 } from '@/mutations/community.ts';
 import { Alert } from '@/components/theme';
+import analytics from '@react-native-firebase/analytics';
 
 type CommunityDetailsRouteProp = RouteProp<MainStackParamList, 'CommunityDetails'>;
 
 export default function CommunityDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<CommunityDetailsRouteProp>();
-  const { userId } = useAuthStore();
+  const { userId, userType } = useAuthStore();
   const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading } = useModalStore();
 
   const { postId } = route.params;
 
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  // const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [shouldFocusCommentInput, setShouldFocusCommentInput] = useState(false);
   const [replyTo, setReplyTo] = useState<{ parentId: number; nickname: string } | null>(null);
@@ -71,6 +71,18 @@ export default function CommunityDetailsContainer() {
   const { mutate: updatePostMutation, isPending: isUpdatePostPending } = useUpdatePostMutation();
   const deletePostMutation = useDeletePostMutation();
 
+  useEffect(() => {
+    if (!post) return;
+    analytics().logEvent('community_post_view', {
+      post_id: post.id,
+      author_id: post.author.userId,
+      category: post.categoryLabel,
+      platform: Platform.OS,
+      user_id: userId || 'anonymous',
+      user_type: userType || 'guest',
+    });
+  }, [post, userId, userType]);
+
   // Update modal loading state
   useEffect(() => {
     setCommunityPostModalLoading(isUpdatePostPending);
@@ -86,11 +98,29 @@ export default function CommunityDetailsContainer() {
       Share.share({
         message: `${post.title}\nhttps://link.snaplink.run/post/${post.id}`,
       });
+      // Firebase Analytics: 공유 이벤트
+      analytics().logEvent('community_post_share', {
+        post_id: post.id,
+        user_id: userId || 'anonymous',
+        user_type: userType || 'guest',
+        platform: Platform.OS,
+      });
     }
   };
 
   const handlePressLike = () => {
-    toggleLikeMutation.mutate(postId);
+    toggleLikeMutation.mutate(postId, {
+      onSuccess: () => {
+        // Firebase Analytics: 좋아요 이벤트
+        analytics().logEvent('community_post_like', {
+          post_id: postId,
+          user_id: userId || 'anonymous',
+          user_type: userType || 'guest',
+          platform: Platform.OS,
+          liked: !(post?.isLiked), // liked 상태가 토글되므로 이전 상태의 반대
+        });
+      },
+    });
   };
 
   const handlePressChat = () => {
@@ -128,17 +158,29 @@ export default function CommunityDetailsContainer() {
             setCommentInput('');
             setEditingCommentId(null);
             commentInputRef.current?.blur();
+            // Firebase Analytics: 댓글 수정 이벤트
+            analytics().logEvent('community_comment_edit', {
+              post_id: postId,
+              user_id: userId || 'anonymous',
+              user_type: userType || 'guest',
+              platform: Platform.OS,
+              comment_id: editingCommentId,
+            });
           },
         }
       );
     } else {
       // Remove @nickname mention from content if replying
       let content = commentInput.trim();
+      let isReply = false;
+      let parentCommentId = null;
       if (replyTo) {
         const mentionText = `@${replyTo.nickname} `;
         if (content.startsWith(mentionText)) {
           content = content.substring(mentionText.length).trim();
         }
+        isReply = true;
+        parentCommentId = replyTo.parentId;
       }
 
       // Create new comment or reply
@@ -148,9 +190,19 @@ export default function CommunityDetailsContainer() {
           parentId: replyTo !== null ? replyTo.parentId : null, // 0 for top-level comments
         },
         {
-          onSuccess: () => {
+          onSuccess: (data: any) => {
             setCommentInput('');
             setReplyTo(null);
+            // Firebase Analytics: 댓글 작성 이벤트
+            analytics().logEvent('community_comment_create', {
+              post_id: postId,
+              user_id: userId || 'anonymous',
+              user_type: userType || 'guest',
+              platform: Platform.OS,
+              comment_id: data?.id,
+              is_reply: isReply,
+              parent_comment_id: parentCommentId,
+            });
           },
         }
       );
@@ -209,6 +261,13 @@ export default function CommunityDetailsContainer() {
   const handlePressEdit = () => {
     setIsEditModalVisible(false);
     if (post) {
+      // Firebase Analytics: 게시글 수정 이벤트
+      analytics().logEvent('community_post_edit', {
+        post_id: post.id,
+        user_id: userId || 'anonymous',
+        user_type: userType || 'guest',
+        platform: Platform.OS,
+      });
       openCommunityPostModal(handleUpdatePost, post);
     }
   };
@@ -221,6 +280,13 @@ export default function CommunityDetailsContainer() {
       buttons: [
         { text: '취소', onPress: () => { }, type: 'cancel' },
         { text: '삭제', onPress: () => {
+            // Firebase Analytics: 게시글 삭제 이벤트
+            analytics().logEvent('community_post_delete', {
+              post_id: postId,
+              user_id: userId || 'anonymous',
+              user_type: userType || 'guest',
+              platform: Platform.OS,
+            });
             deletePostMutation.mutate(postId, {
               onSuccess: () => {
                 Alert.show({
@@ -254,7 +320,14 @@ export default function CommunityDetailsContainer() {
   const handlePressDeleteComment = (commentId: number) => {
     deleteCommentMutation.mutate(commentId, {
       onSuccess: () => {
-        // Comment deleted successfully
+        // Firebase Analytics: 댓글 삭제 이벤트
+        analytics().logEvent('community_comment_delete', {
+          post_id: postId,
+          user_id: userId || 'anonymous',
+          user_type: userType || 'guest',
+          platform: Platform.OS,
+          comment_id: commentId,
+        });
       },
     });
   };

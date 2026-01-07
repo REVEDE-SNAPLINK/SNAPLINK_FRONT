@@ -17,6 +17,7 @@ import { login } from '@react-native-kakao/user';
 import { jwtDecode } from 'jwt-decode';
 import { Platform } from 'react-native';
 import { queryClient } from '@/config/queryClient.ts';
+import analytics from '@react-native-firebase/analytics';
 
 type AuthStatus = 'idle' | 'loading' | 'authed' | 'anon' | 'needs_signup';
 type UserType = 'user' | 'photographer';
@@ -144,6 +145,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
 
+        await analytics().logEvent('login', {
+          method: provider.toLowerCase(),
+        });
+
+        analytics().setUserId(response.userId);
+        analytics().setUserProperties({
+          user_type: userType,
+        });
+
         // Save tokens and user data to persistent storage
         await Promise.all([
           saveRefreshToken(response.tokens.refreshToken),
@@ -205,6 +215,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
+
+        await analytics().logEvent('sign_up');
+
+        analytics().setUserId(response.userId);
+        analytics().setUserProperties({
+          user_type: userType,
+        });
 
         // Save tokens and user data to persistent storage
         await Promise.all([

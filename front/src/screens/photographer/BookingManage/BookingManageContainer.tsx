@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import BookingManageView from '@/screens/photographer/BookingManage/BookingManageView.tsx';
 import { Alert } from '@/components/theme';
@@ -6,12 +7,14 @@ import { usePhotographerBookingsInfiniteQuery } from '@/queries/bookings.ts';
 import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/bookings.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
+import { useAuthStore } from '@/store/authStore.ts';
 
 const PAGE_SIZE = 10;
 
 export default function BookingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { userId } = useAuthStore();
 
   const { mutate: approveMutation } = useApproveBookingMutation();
   const { mutate: completeMutaion } = useCompleteBookingMutation();
@@ -34,6 +37,11 @@ export default function BookingManageContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressBookingDetail = (bookingId: number) => {
+    analytics().logEvent('photographer_booking_detail_view', {
+      user_id: userId,
+      user_type: 'photographer',
+      bookingId,
+    });
     navigation.navigate('BookingDetails', { bookingId });
   };
 
@@ -43,7 +51,14 @@ export default function BookingManageContainer() {
     }
   };
 
-  const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { bookingId })
+  const handlePressViewPhotos = (bookingId: number) => {
+    analytics().logEvent('photographer_booking_photos_view', {
+      user_id: userId,
+      user_type: 'photographer',
+      bookingId,
+    });
+    navigation.navigate('ViewPhotos', { bookingId });
+  }
 
   const handlePressConfirmBooking = async (bookingId: number) => {
     Alert.show({
@@ -54,7 +69,12 @@ export default function BookingManageContainer() {
         {
           text: '확인',
           onPress: async () => {
-            approveMutation({ bookingId })
+            approveMutation({ bookingId });
+            analytics().logEvent('photographer_booking_approved', {
+              user_id: userId,
+              user_type: 'photographer',
+              bookingId,
+            });
             Alert.show({
               title: '예약 수락 완료',
               message: '예약이 수락되었습니다.',
@@ -67,6 +87,11 @@ export default function BookingManageContainer() {
   };
 
   const handlePressRejectBooking = (bookingId: number) => {
+    analytics().logEvent('photographer_booking_rejected', {
+      user_id: userId,
+      user_type: 'photographer',
+      bookingId,
+    });
     navigation.navigate('BookingReject', { bookingId });
   };
 
@@ -83,7 +108,12 @@ export default function BookingManageContainer() {
         {
           text: '확인',
           onPress: async () => {
-            completeMutaion({ bookingId })
+            completeMutaion({ bookingId });
+            analytics().logEvent('photographer_booking_completed', {
+              user_id: userId,
+              user_type: 'photographer',
+              bookingId,
+            });
             Alert.show({
               title: '촬영 완료',
               message: '촬영이 완료되었습니다.',

@@ -16,6 +16,9 @@ import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { useAuthStore } from '@/store/authStore.ts';
+import analytics from '@react-native-firebase/analytics';
+
 
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
@@ -56,6 +59,7 @@ const verifyDownloaded = async (localPath?: string) => {
 export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
+  const { userId, userType } = useAuthStore();
 
   const { roomId, opponentNickname: paramNickname, opponentProfileImageURI: paramProfileImageURI } = route.params;
   const queryClient = useQueryClient();
@@ -114,6 +118,19 @@ export default function ChatDetailsContainer() {
 
   // Upload file mutation
   const uploadFileMutation = useUploadChatFileMutation();
+
+  useEffect(() => {
+    const logChatEntered = async () => {
+      await analytics().logEvent('activation_chat_entered', {
+        room_id: roomId,
+        platform: Platform.OS,
+        user_id: userId || 'anonymous',
+        user_type: userType || 'guest',
+      });
+    };
+
+    logChatEntered();
+  }, [roomId, userId, userType]);
 
   // Hydrate fileDownloadStates from AsyncStorage on mount/roomId change
   useEffect(() => {

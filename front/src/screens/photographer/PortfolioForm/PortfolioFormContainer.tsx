@@ -1,23 +1,46 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import PortfolioFormView, { PortfolioFormData } from './PortfolioFormView';
-import { MainNavigationProp } from '@/types/navigation';
-import { useCreatePortfolioMutation } from '@/mutations/photographers';
+import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
+import { useCreatePortfolioMutation, useUpdatePortfolioMutation } from '@/mutations/photographers';
 import { Alert, requestPermission } from '@/components/theme';
 import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import { generateImageFilename } from '@/utils/format';
 import { UploadImageFile } from '@/api/photographers';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
+import { usePortfolioPostQuery } from '@/queries/photographers';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore';
+
+type PortfolioFormRouteProp = RouteProp<MainStackParamList, 'PortfolioForm'>;
+
+// Extended UploadImageFile to track photoId for existing photos
+interface ExtendedUploadImageFile extends UploadImageFile {
+  photoId?: number; // If exists, it's an existing photo from server
+}
 
 export default function PortfolioFormContainer() {
   const navigation = useNavigation<MainNavigationProp>();
-  const { mutate: uploadPortfolio, isPending } = useCreatePortfolioMutation();
+  const route = useRoute<PortfolioFormRouteProp>();
+  const { postId } = route.params || {};
+  const { userId } = useAuthStore();
+  const { mutate: uploadPortfolio, isPending: isCreating } = useCreatePortfolioMutation();
 
-  const [photoURIs, setPhotoURIs] = useState<UploadImageFile[]>([]);
+  const isEditMode = !!postId;
+  const { data: existingPost } = usePortfolioPostQuery(postId);
+  const { mutate: updatePortfolio, isPending: isUpdating } = useUpdatePortfolioMutation(
+    postId || 0,
+    existingPost?.photographerId
+  );
 
-  const { control, handleSubmit, watch } = useForm<PortfolioFormData>({
+  const isPending = isCreating || isUpdating;
+
+  const [photoURIs, setPhotoURIs] = useState<ExtendedUploadImageFile[]>([]);
+  const [originalPhotoIds, setOriginalPhotoIds] = useState<number[]>([]); // Track original photo IDs
+
+  const { control, handleSubmit, watch, reset } = useForm<PortfolioFormData>({
     defaultValues: {
       portfolioTitle: '',
       portfolioDescription: '',
@@ -26,8 +49,32 @@ export default function PortfolioFormContainer() {
     mode: 'onChange',
   });
 
+  // 수정 모드일 때 기존 데이터로 초기화
+  useEffect(() => {
+    if (isEditMode && existingPost) {
+      reset({
+        portfolioTitle: existingPost.title || '',
+        portfolioDescription: existingPost.content || '',
+        portfolioIsLinked: false,
+      });
+
+      // 기존 이미지를 photoURIs로 설정 (서버 URL을 ExtendedUploadImageFile 형식으로 변환)
+      // sortOrder 순서대로 정렬
+      const sortedPhotos = [...existingPost.photos].sort((a, b) => a.sortOrder - b.sortOrder);
+      const existingPhotos: ExtendedUploadImageFile[] = sortedPhotos.map((photo) => ({
+        uri: photo.imageUrl,
+        type: 'image/jpeg',
+        name: photo.imageUrl.split('/').pop() || 'image.jpg',
+        photoId: photo.photoId, // Track photoId
+      }));
+      setPhotoURIs(existingPhotos);
+
+      // Track original photo IDs
+      setOriginalPhotoIds(sortedPhotos.map(photo => photo.photoId));
+    }
+  }, [isEditMode, existingPost, reset]);
+
   const watchedTitle = watch('portfolioTitle');
-  const watchedDescription = watch('portfolioDescription');
 
   const isValid = photoURIs.length > 0 && watchedTitle.trim().length > 0;
 
@@ -112,6 +159,64 @@ export default function PortfolioFormContainer() {
       return;
     }
 
+    if (isEditMode) {
+      // Build update request
+      // 1. Separate existing photos (have photoId) from new photos (no photoId)
+      const existingPhotos = photoURIs.filter(photo => photo.photoId !== undefined);
+      const newPhotos = photoURIs.filter(photo => photo.photoId === undefined);
+
+      // 2. Calculate deleted photo IDs
+      const currentPhotoIds = existingPhotos.map(photo => photo.photoId!);
+      const deletePhotoIds = originalPhotoIds.filter(id => !currentPhotoIds.includes(id));
+
+      // 3. Build photoOrders for existing photos (based on current order)
+      const photoOrders = existingPhotos.map((photo, index) => ({
+        photoId: photo.photoId!,
+        sortOrder: index,
+      }));
+
+      // 4. Build UpdatePortfolioPostRequest
+      updatePortfolio(
+        {
+          request: {
+            title: data.portfolioTitle,
+            content: data.portfolioDescription || '',
+            deletePhotoIds,
+            photoOrders,
+          },
+          newImages: newPhotos,
+        },
+        {
+          onSuccess: () => {
+            analytics().logEvent('portfolio_post_updated', {
+              user_id: userId || '',
+              post_id: postId,
+              deleted_count: deletePhotoIds.length,
+              new_count: newPhotos.length,
+            });
+
+            Alert.show({
+              title: '수정 완료',
+              message: '포트폴리오가 성공적으로 수정되었습니다.',
+              buttons: [
+                {
+                  text: '확인',
+                  onPress: () => navigation.goBack(),
+                },
+              ],
+            });
+          },
+          onError: () => {
+            Alert.show({
+              title: '수정 실패',
+              message: '포트폴리오 수정에 실패했습니다.',
+            });
+          },
+        }
+      );
+      return;
+    }
+
     uploadPortfolio(
       {
         title: data.portfolioTitle,
@@ -121,6 +226,12 @@ export default function PortfolioFormContainer() {
       },
       {
         onSuccess: () => {
+          analytics().logEvent('portfolio_post_created', {
+            user_id: userId || '',
+            photo_count: photoURIs.length,
+            is_linked: data.portfolioIsLinked,
+          });
+
           Alert.show({
             title: '등록 완료',
             message: '포트폴리오가 성공적으로 등록되었습니다.',
@@ -151,6 +262,7 @@ export default function PortfolioFormContainer() {
       onPressBack={handlePressBack}
       onPressSubmit={handleSubmitForm}
       isSubmitDisabled={!isValid || isPending}
+      isEditMode={isEditMode}
       navigation={navigation}
     />
   );

@@ -81,6 +81,7 @@ export default function RootNavigator() {
         onSubmit={handleSubmitAddSchedule}
         initialSchedule={addScheduleModal.initialSchedule}
         isDuplicate={addScheduleModal.isDuplicate}
+        initialStartDate={addScheduleModal.initialStartDate}
       />
 
       <ScheduleDetailModal
@@ -94,13 +95,3 @@ export default function RootNavigator() {
     </>
   );
 }
-
-// export default function RootNavigator() {
-//   return (
-//     <Stack.Navigator
-//       screenOptions={{headerShown: false}}
-//     >
-//       <Stack.Screen name="Auth" component={AuthStack} />
-//     </Stack.Navigator>
-//   )
-// }

@@ -151,13 +151,14 @@ export async function requestPermission(
   // denied 상태이고 이미 인앱 안내를 본 경우: 바로 시스템 요청
   if (currentStatus === 'denied' && hasShownGuide) {
     console.log(`[Permission] ${type} already showed guide, requesting directly...`);
-    await requestSystemPermission(type, onGranted, onDenied);
+    await requestSystemPermission(type, () => {
+      onGranted?.();
+    }, onDenied);
     return;
   }
 
   // 첫 요청: 인앱 안내 표시
   console.log(`[Permission] ${type} showing in-app guide...`);
-  shownInAppGuides.add(type);
 
   Alert.show({
     title: messages.inApp.title,
@@ -167,7 +168,11 @@ export async function requestPermission(
         text: messages.inApp.confirmText,
         onPress: async () => {
           console.log(`[Permission] In-app alert confirmed, requesting ${type} permission...`);
-          await requestSystemPermission(type, onGranted, onDenied);
+          await requestSystemPermission(type, () => {
+            // 권한이 허용된 경우에만 인앱 안내를 본 것으로 표시
+            shownInAppGuides.add(type);
+            onGranted?.();
+          }, onDenied);
         },
       },
     ],
@@ -216,9 +221,10 @@ async function requestSystemPermission(
   } else if (result === RESULTS.DENIED) {
     // 일반 거부 시 - 나중에 다시 시도 가능
     console.log(`[Permission] ${type} denied`);
-    // 거부 시 아무 것도 표시하지 않음 (다음에 다시 요청 가능)
+    onDenied?.();
   } else {
     console.log(`[Permission] ${type} unexpected result:`, result);
+    onDenied?.();
   }
 }
 

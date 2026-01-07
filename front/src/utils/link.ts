@@ -1,6 +1,6 @@
 import { Linking } from 'react-native';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
-import { TERMS_BASE_URL } from '@/config/api.ts';
+import { WEBSITE_URL } from '@/config/api.ts';
 
 export const openUrl = async (url: string) => {
   try {
@@ -30,6 +30,6 @@ export const openUrl = async (url: string) => {
   }
 };
 
-export const openTermUrl = () => {
-  openUrl(TERMS_BASE_URL || 'https://snaplink-web-mu.vercel.app/');
+export const openTermUrl = (url: string) => {
+  openUrl(WEBSITE_URL+url);
 }

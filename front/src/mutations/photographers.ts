@@ -7,13 +7,13 @@ import {
   PhotographerSignRequest,
   signPhotographer,
   togglePhotographerScrap,
-  createHolidays,
-  CreateHolidayRequest,
-  updateHolidays,
-  UpdateHolidayParam,
-  deleteHoliday,
   activePhotographer,
   inactivePhotographer,
+  updatePortfolioPost,
+  UpdatePortfolioPostRequest,
+  deletePortfolioPost,
+  updatePhotographerProfile,
+  UpdatePhotographerProfileRequest,
 } from '@/api/photographers.ts';
 import { photographersQueryKeys } from '@/queries/keys.ts';
 
@@ -83,42 +83,6 @@ export const useTogglePhotographerScrapMutation = (photographerId: string) => {
   });
 };
 
-/** 휴가 생성 */
-export const useCreateHolidayMutation = () => {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: (body: CreateHolidayRequest) => createHolidays(body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: photographersQueryKeys.holidays() });
-    },
-  });
-};
-
-/** 휴가 수정 */
-export const useUpdateHolidayMutation = () => {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ holidayId, body }: { holidayId: number; body: CreateHolidayRequest }) =>
-      updateHolidays({ holidayId }, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: photographersQueryKeys.holidays() });
-    },
-  });
-};
-
-/** 휴가 삭제 */
-export const useDeleteHolidayMutation = () => {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: (holidayId: number) => deleteHoliday(holidayId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: photographersQueryKeys.holidays() });
-    },
-  });
-};
 
 /** 작가 계정 활성화 (공개 전환) */
 export const useActivePhotographerMutation = () => {
@@ -142,6 +106,65 @@ export const useInactivePhotographerMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: photographersQueryKeys.statusMe() });
       qc.invalidateQueries({ queryKey: photographersQueryKeys.all });
+    },
+  });
+};
+
+/** 포트폴리오 수정 */
+export const useUpdatePortfolioMutation = (postId: number, photographerId?: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: UpdatePortfolioPostRequest) => updatePortfolioPost(postId, params),
+    onSuccess: async () => {
+      // 포트폴리오 수정 후 프로필(포트폴리오 목록), 포트폴리오 상세, 검색 결과 영향 가능
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: photographersQueryKeys.portfolio(postId) }),
+        qc.invalidateQueries({ queryKey: photographersQueryKeys.all }),
+        ...(photographerId
+          ? [qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) })]
+          : []),
+      ]);
+    },
+  });
+};
+
+/** 포트폴리오 삭제 */
+export const useDeletePortfolioMutation = (postId: number, photographerId?: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => deletePortfolioPost(postId),
+    onSuccess: async () => {
+      // 포트폴리오 삭제 후 프로필(포트폴리오 목록), 검색 결과 영향 가능
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: photographersQueryKeys.portfolio(postId) }),
+        qc.invalidateQueries({ queryKey: photographersQueryKeys.all }),
+        ...(photographerId
+          ? [qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) })]
+          : []),
+      ]);
+    },
+  });
+};
+
+/** 작가 프로필 업데이트 (description, regions, concepts, tags) */
+export const useUpdatePhotographerProfileMutation = (photographerId?: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: UpdatePhotographerProfileRequest) => updatePhotographerProfile(params),
+    onSuccess: async () => {
+      // 프로필 업데이트 후 프로필, 지역/컨셉/태그, 검색 결과 영향 가능
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: photographersQueryKeys.all }),
+        ...(photographerId
+          ? [
+              qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) }),
+              qc.invalidateQueries({ queryKey: photographersQueryKeys.regionsConceptsTags(photographerId) }),
+            ]
+          : []),
+      ]);
     },
   });
 };

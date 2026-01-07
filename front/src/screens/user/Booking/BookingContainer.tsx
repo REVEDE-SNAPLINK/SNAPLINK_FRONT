@@ -1,4 +1,6 @@
 import BookingView from '@/screens/user/Booking/BookingView.tsx';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,16 +10,23 @@ import { useForm } from 'react-hook-form';
 import { useAvailableBookingDaysQuery, useAvailableBookingTimesQuery } from '@/queries/schedules.ts';
 import { useShootingsQuery, useShootingOptionsQuery } from '@/queries/shootings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
+import { useRegionsQuery } from '@/queries/meta.ts';
 
 type BookingRouteProp = RouteProp<MainStackParamList, 'Booking'>;
 
 interface BookingFormInputs {
   date: string;
   time: string;
+  regionIds: number[];
   productId: number;
 }
 
+const availbleRegionIds = [
+  1, 3
+]
+
 export default function BookingContainer() {
+  const { userId, userType } = useAuthStore();
   const route = useRoute<BookingRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
   const { photographerId } = route.params;
@@ -27,12 +36,14 @@ export default function BookingContainer() {
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       time: '',
+      regionIds: [],
       productId: 0,
     },
   });
 
   const selectedDate = watch('date');
   const selectedTime = watch('time');
+  const selectedRegionIds = watch('regionIds');
   const selectedProductIdField = watch('productId');
   const isInitialDateSet = useRef(false);
 
@@ -47,6 +58,17 @@ export default function BookingContainer() {
     const id = setInterval(tick, 60_000); // 1분마다
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    // Log booking_intent when Booking screen opens
+    analytics().logEvent('booking_intent', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      screen: 'Booking',
+    });
+  }, [userId, photographerId, userType]);
+
 
   // Fetch shooting products
   const {
@@ -66,6 +88,10 @@ export default function BookingContainer() {
     selectedProductIdField,
     !!selectedProductIdField,
   );
+
+  const {
+    data: regions
+  } = useRegionsQuery();
 
   // Calculate booking range (today ~ 3 months from today)
   const maxBookingDate = useMemo(() => {
@@ -241,6 +267,11 @@ export default function BookingContainer() {
     [setValue, timeSlots],
   );
 
+  const handleToggleRegion = (id: number) => {
+    const newRegionIds = selectedRegionIds.includes(id) ? selectedRegionIds.filter((v) => v !== id) : [...selectedRegionIds, id];
+    setValue('regionIds', newRegionIds)
+  }
+
   const handlePressShootingProduct = (productId: number) => {
     setValue('productId', productId);
     // Reset option quantities when product changes
@@ -288,6 +319,28 @@ export default function BookingContainer() {
         id: Number(optionId),
         count,
       }));
+
+    // Log booking_request_submitted
+    analytics().logEvent('booking_request_submitted', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      product_id: data.productId,
+      shooting_date: data.date,
+      start_time: data.time,
+      options: JSON.stringify(options),
+    });
+
+    // Log booking_confirmed (for demonstration, as actual confirmation is after request)
+    analytics().logEvent('booking_confirmed', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      product_id: data.productId,
+      shooting_date: data.date,
+      start_time: data.time,
+      options: JSON.stringify(options),
+    });
 
     // Navigate to BookingRequest with form data
     navigation.navigate('BookingRequest', {
@@ -391,6 +444,9 @@ export default function BookingContainer() {
       timeSlots={timeSlots}
       selectedTime={selectedTime}
       onSelectTime={handleSelectTime}
+      availbleRegions={regions ? regions?.filter((v) => availbleRegionIds.includes(v.id)) : []}
+      selectedRegionIds={selectedRegionIds}
+      onToggleRegion={handleToggleRegion}
       shootingProducts={shootingProducts ?? []}
       isFetchingProducts={isFetchingProducts}
       isProductsError={isProductsError}

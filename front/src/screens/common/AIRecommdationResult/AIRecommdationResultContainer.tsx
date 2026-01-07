@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import AIRecommdationResultView from '@/screens/common/AIRecommdationResult/AIRecommdationResultView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
@@ -20,6 +22,18 @@ import ActiveProfileIcon from '@/assets/icons/profile-white.svg';
 type AIRecommendationResultRouteProp = RouteProp<MainStackParamList, 'AIRecommdationResult'>;
 
 export default function AIRecommdationResultContainer() {
+  const { userId, userType } = useAuthStore();
+  useEffect(() => {
+    // Log ai_recommendation_result_view when the result screen opens
+    analytics().logEvent('ai_recommendation_result_view', {
+      user_id: userId,
+      user_type: userType,
+      prompt: prompt,
+      result_count: resultCount,
+      screen: 'AIRecommdationResult',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const route = useRoute<AIRecommendationResultRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
 
@@ -218,8 +232,15 @@ export default function AIRecommdationResultContainer() {
     refetch();
   };
 
-  const handlePressPhotographer = (photographerId: string) =>
+  const handlePressPhotographer = (photographerId: string) => {
+    analytics().logEvent('photographer_profile_view', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      source: 'AIRecommdationResult',
+    });
     navigation.navigate('PhotographerDetails', { photographerId });
+  };
 
   const handlePressCategoryChip = (categoryId: string) => {
     setSelectedFilters((prev) => prev.filter((f) => f.categoryId !== categoryId));

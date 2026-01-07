@@ -22,6 +22,7 @@ interface PortfolioFormViewProps {
   onPressBack: () => void;
   onPressSubmit: () => void;
   isSubmitDisabled: boolean;
+  isEditMode?: boolean;
 
   navigation?: any;
 }
@@ -34,6 +35,7 @@ export default function PortfolioFormView({
   onPressBack,
   onPressSubmit,
   isSubmitDisabled,
+  isEditMode = false,
   navigation,}: PortfolioFormViewProps) {
   return (
     <ScreenContainer
@@ -111,25 +113,27 @@ export default function PortfolioFormView({
                 />
               )}
             />
-            <CheckOptionWrapper>
-              <Controller
-                control={control}
-                name="portfolioIsLinked"
-                render={({ field: { onChange, value } }) => (
-                  <Checkbox
-                    isChecked={value}
-                    onPress={() => onChange(!value)}
-                  />
-                )}
-              />
-              <Typography
-                fontSize={12}
-                color="#767676"
-                marginLeft={12}
-              >
-                커뮤니티에 함께 게시하기
-              </Typography>
-            </CheckOptionWrapper>
+            {!isEditMode && (
+              <CheckOptionWrapper>
+                <Controller
+                  control={control}
+                  name="portfolioIsLinked"
+                  render={({ field: { onChange, value } }) => (
+                    <Checkbox
+                      isChecked={value}
+                      onPress={() => onChange(!value)}
+                    />
+                  )}
+                />
+                <Typography
+                  fontSize={12}
+                  color="#767676"
+                  marginLeft={12}
+                >
+                  커뮤니티에 함께 게시하기
+                </Typography>
+              </CheckOptionWrapper>
+            )}
             <ScrollViewSpacer />
           </FormContainer>
         </ScrollContainer>

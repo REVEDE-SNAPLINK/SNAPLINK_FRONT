@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import analytics from '@react-native-firebase/analytics';
 import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/user/Banner.tsx';
 import { useNavigation } from '@react-navigation/native';
@@ -42,7 +43,7 @@ const dummyBannerItems: BannerItem[] = [
 
 export default function HomeContainer() {
   const navigation = useNavigation<MainNavigationProp>();
-  const { isFirst } = useAuthStore();
+  const { isFirst, userId, userType } = useAuthStore();
 
   const [searchKey, setSearchKey] = useState('');
 
@@ -52,15 +53,51 @@ export default function HomeContainer() {
   const latestList = latest3?.content ?? [];
   const topRatedList = topRated3?.content ?? [];
 
-  const handlePressAI = () => navigation.navigate('AIRecommdationForm');
+  // AI 클릭 → ai_recommendation_start
+  const handlePressAI = () => {
+    analytics().logEvent('ai_recommendation_start', {
+      user_id: userId,
+      user_type: userType,
+      source: 'Home',
+    });
+    navigation.navigate('AIRecommdationForm');
+  };
+
+  // 검색 키워드 제출 → search_photographer
   const handleSubmitSearchKey = () => {
+    analytics().logEvent('search_photographer', {
+      user_id: userId,
+      user_type: userType,
+      search_key: searchKey,
+      source: 'Home',
+    });
     navigation.navigate('SearchPhotographer', { searchKey });
   };
+
   const handlePressAllPhotographer = () => {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
-  const handlePressAllPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { photographerId });
-  const handlePressPopularPhotographerItem = (photographerId: string) => navigation.navigate('PhotographerDetails', { photographerId });
+
+  // 추천 작가 클릭 → photographer_profile_view
+  const handlePressAllPhotographerItem = (photographerId: string) => {
+    analytics().logEvent('photographer_profile_view', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      source: 'Home_AllPhotographer',
+    });
+    navigation.navigate('PhotographerDetails', { photographerId });
+  };
+
+  const handlePressPopularPhotographerItem = (photographerId: string) => {
+    analytics().logEvent('photographer_profile_view', {
+      user_id: userId,
+      user_type: userType,
+      photographer_id: photographerId,
+      source: 'Home_PopularPhotographer',
+    });
+    navigation.navigate('PhotographerDetails', { photographerId });
+  };
 
   return (
     <>

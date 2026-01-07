@@ -530,7 +530,7 @@ export default function PortfolioOnboardingContainer() {
       };
 
       // Map editing deadline
-      const mapEditingDeadline = (deadline: string | null): "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS" => {
+      const mapEditingDeadline = (deadline: string | null): "SAME_DAY" | "WITHIN_2_DAYS" | "WITHIN_3_DAYS" | "WITHIN_4_DAYS" | "WITHIN_5_DAYS" | "WITHIN_7_DAYS" | "WITHUP_7_DAYS" => {
         switch (deadline) {
           case '당일 보정': return 'SAME_DAY';
           case '2일 이내': return 'WITHIN_2_DAYS';
@@ -538,7 +538,8 @@ export default function PortfolioOnboardingContainer() {
           case '4일 이내': return 'WITHIN_4_DAYS';
           case '5일 이내': return 'WITHIN_5_DAYS';
           case '7일 이내': return 'WITHIN_7_DAYS';
-          default: return 'WITHIN_7_DAYS';
+          case '7일 이상': return 'WITHUP_7_DAYS';
+          default: return 'WITHUP_7_DAYS';
         }
       };
 

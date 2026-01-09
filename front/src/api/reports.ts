@@ -41,5 +41,5 @@ export const reportUser = async (body: ReportRequest) => {
     json: body,
   });
 
-  if (!response.ok) throw new Error(`Failed to fetch report for ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error('신고를 접수할 수 없습니다.');
 }

@@ -1,12 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Dimensions,
+  FlatList,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  ImageSourcePropType,
+} from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Animated, Dimensions, ScrollView, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { ImageSourcePropType } from 'react-native';
 import Typography from '@/components/theme/Typography.tsx';
 import LinearGradient from 'react-native-linear-gradient';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const AUTO_PLAY_INTERVAL = 3000; // 3초
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// 요구사항 반영: 아이템 너비는 전체에서 40을 뺀 값
+const ITEM_WIDTH = SCREEN_WIDTH - 40;
+// 양옆에 20px씩 보여야 하므로, Content 패딩도 20px
+const SIDE_SPACING = 20;
+
+const AUTO_PLAY_INTERVAL = 3000;
 
 export type BannerItem = {
   id: string;
@@ -17,154 +29,133 @@ export type BannerItem = {
 
 type BannerProps = {
   items: BannerItem[];
-  height?: number;
   autoPlay?: boolean;
   autoPlayInterval?: number;
 };
 
 export default function Banner({
   items,
-  height = 264,
   autoPlay = true,
   autoPlayInterval = AUTO_PLAY_INTERVAL,
 }: BannerProps) {
-  const scrollViewRef = useRef<ScrollView>(null);
-  const [currentIndex, setCurrentIndex] = useState(1); // 무한 스크롤을 위해 1부터 시작
-  const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const [currentIndex, setCurrentIndex] = useState(1);
   const isManualScrolling = useRef(false);
 
-  // 무한 스크롤을 위해 앞뒤에 아이템 추가
+  // 1. 무한 스크롤을 위한 데이터 복제
   const infiniteItems = items.length > 1
     ? [items[items.length - 1], ...items, items[0]]
     : items;
 
-  // 초기 스크롤 위치 설정
+  // 2. 초기 위치 설정 (첫 번째 진짜 아이템으로)
   useEffect(() => {
     if (items.length > 1) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({
-          x: SCREEN_WIDTH,
-          animated: false,
-        });
-      }, 0);
+      // ITEM_WIDTH만큼 이동하되, 왼쪽 패딩(SIDE_SPACING) 고려
+      flatListRef.current?.scrollToOffset({
+        offset: ITEM_WIDTH,
+        animated: false,
+      });
     }
   }, [items.length]);
 
-  // 자동 재생
+  // 3. 자동 재생 로직
   useEffect(() => {
     if (!autoPlay || items.length <= 1) return;
 
-    autoPlayTimer.current = setInterval(() => {
+    const timer = setInterval(() => {
       if (!isManualScrolling.current) {
-        setCurrentIndex((prevIndex) => {
-          const nextIndex = prevIndex + 1;
-          scrollViewRef.current?.scrollTo({
-            x: nextIndex * SCREEN_WIDTH,
-            animated: true,
-          });
-          return nextIndex;
+        const nextIndex = currentIndex + 1;
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
         });
+        setCurrentIndex(nextIndex);
       }
     }, autoPlayInterval);
 
-    return () => {
-      if (autoPlayTimer.current) {
-        clearInterval(autoPlayTimer.current);
-      }
-    };
-  }, [autoPlay, autoPlayInterval, items.length]);
+    return () => clearInterval(timer);
+  }, [autoPlay, autoPlayInterval, items.length, currentIndex]);
 
-  // 스크롤 시작
   const handleScrollBeginDrag = () => {
     isManualScrolling.current = true;
   };
 
-  // 스크롤 종료
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     isManualScrolling.current = false;
-
-    if (items.length <= 1) return;
-
     const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
+    // 패딩을 제외한 순수 이동 거리로 인덱스 계산
+    const index = Math.round(offsetX / ITEM_WIDTH);
 
-    setCurrentIndex(index);
-
-    // 무한 스크롤 처리
     if (index === 0) {
-      // 첫 번째 복사본 -> 마지막 실제 아이템으로 점프
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({
-          x: items.length * SCREEN_WIDTH,
-          animated: false,
-        });
-        setCurrentIndex(items.length);
-      }, 50);
+      flatListRef.current?.scrollToIndex({ index: items.length, animated: false });
+      setCurrentIndex(items.length);
     } else if (index === infiniteItems.length - 1) {
-      // 마지막 복사본 -> 첫 번째 실제 아이템으로 점프
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({
-          x: SCREEN_WIDTH,
-          animated: false,
-        });
-        setCurrentIndex(1);
-      }, 50);
+      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+      setCurrentIndex(1);
+    } else {
+      setCurrentIndex(index);
     }
   };
 
-  // 실제 dot index 계산
-  const getActualDotIndex = (index: number) => {
-    if (items.length <= 1) return 0;
-    if (index === 0) return items.length - 1;
-    if (index === infiniteItems.length - 1) return 0;
-    return index - 1;
-  };
+  // Dot 인덱스 계산
+  const actualDotIndex = items.length <= 1 ? 0 : (currentIndex - 1 + items.length) % items.length;
 
-  const actualDotIndex = getActualDotIndex(currentIndex);
+  const renderItem = ({ item, index }: { item: BannerItem; index: number }) => (
+    <BannerSlide key={`${item.id}-${index}`}>
+      <BannerImage source={item.image} />
+      <BannerOverlay
+        colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, .24)', 'rgba(0, 0, 0, .7)']}
+        locations={[0, 0.29, 0.63]}
+      />
+      {(item.title || item.description) && (
+        <TextOverlay>
+          {item.description && (
+            <Typography fontSize={12} fontWeight="regular" letterSpacing={-0.4} color="#fff">
+              {item.description}
+            </Typography>
+          )}
+          {item.title && (
+            <Typography fontSize={17} fontWeight="bold" letterSpacing={-0.4} color="#fff">
+              {item.title}
+            </Typography>
+          )}
+        </TextOverlay>
+      )}
+    </BannerSlide>
+  );
 
   return (
-    <BannerContainer height={height}>
-      <ScrollView
-        ref={scrollViewRef}
+    <BannerContainer>
+      <FlatList
+        ref={flatListRef}
+        data={infiniteItems}
+        renderItem={renderItem}
+        keyExtractor={(_, index) => index.toString()}
         horizontal
-        pagingEnabled
+        pagingEnabled={false} // snapToInterval을 위해 false
         showsHorizontalScrollIndicator={false}
         onScrollBeginDrag={handleScrollBeginDrag}
         onMomentumScrollEnd={handleMomentumScrollEnd}
-        scrollEventThrottle={16}
+        // 핵심: 카드 너비만큼씩 딱딱 멈추게 함
+        snapToInterval={ITEM_WIDTH}
         decelerationRate="fast"
-        snapToInterval={SCREEN_WIDTH}
-        snapToAlignment="start"
-      >
-        {infiniteItems.map((item, index) => (
-          <BannerSlide key={`${item.id}-${index}`}>
-            <BannerImage source={item.image} />
-            <BannerOverlay
-              colors={[
-                'rgba(0, 0, 0, 0)',
-                'rgba(0, 0, 0, .24)',
-                'rgba(0, 0, 0, .7)',
-              ]}
-              locations={[0, 0.29, 0.63]}
-            />
-            {(item.title || item.description) && (
-              <TextOverlay>
-                {item.description && <Typography fontSize={12} fontWeight="regular" letterSpacing={-0.4} color="#fff">{item.description}</Typography>}
-                {item.title && <Typography fontSize={17} fontWeight="bold" letterSpacing={-0.4} color="#fff">{item.title}</Typography>}
-              </TextOverlay>
-            )}
-          </BannerSlide>
-        ))}
-      </ScrollView>
+        // 양 옆 20px 노출을 위한 설정
+        contentContainerStyle={{
+          paddingHorizontal: SIDE_SPACING,
+        }}
+        scrollEventThrottle={16}
+        // getItemLayout 추가로 스크롤 성능 및 정확도 향상
+        getItemLayout={(_, index) => ({
+          length: ITEM_WIDTH,
+          offset: ITEM_WIDTH * index,
+          index,
+        })}
+      />
 
       {items.length > 1 && (
         <DotContainer>
           {items.map((_, index) => (
-            <AnimatedDot
-              key={index}
-              index={index}
-              activeIndex={actualDotIndex}
-            />
+            <AnimatedDot key={index} index={index} activeIndex={actualDotIndex} />
           ))}
         </DotContainer>
       )}
@@ -172,17 +163,14 @@ export default function Banner({
   );
 }
 
-// Animated Dot Component
+// --- 아래는 스타일 및 AnimatedDot (기존 코드 유지) ---
+
 function AnimatedDot({ index, activeIndex }: { index: number; activeIndex: number }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const distance = Math.abs(index - activeIndex);
-    let targetScale = 1;
-
-    if (distance === 0) targetScale = 1.5; // 현재 선택된 dot
-    else if (distance === 1) targetScale = 1.2; // 양옆
-    else targetScale = 1; // 나머지
+    let targetScale = distance === 0 ? 1.5 : distance === 1 ? 1.2 : 1;
 
     Animated.spring(scaleAnim, {
       toValue: targetScale,
@@ -204,18 +192,17 @@ function AnimatedDot({ index, activeIndex }: { index: number; activeIndex: numbe
   );
 }
 
-const BannerContainer = styled.View<{ height: number }>`
-  height: 264px;
+const BannerContainer = styled.View`
+  height: ${ITEM_WIDTH}px;
   width: ${SCREEN_WIDTH}px;
   position: relative;
-  margin-left: -26px;
-  margin-right: -26px;
 `;
 
 const BannerSlide = styled.View`
-  width: ${SCREEN_WIDTH}px;
-  height: 264px;
+  width: ${ITEM_WIDTH}px;
+  height: ${ITEM_WIDTH}px;
   position: relative;
+  overflow: hidden;
 `;
 
 const BannerImage = styled.Image`
@@ -231,12 +218,12 @@ const BannerOverlay = styled(LinearGradient)`
   width: 100%;
   height: 65%;
   z-index: 5;
-`
+`;
 
 const TextOverlay = styled.View`
   position: absolute;
   bottom: 33px;
-  left: 46px;
+  left: 26px; /* 카드 안쪽 여백에 맞게 조정 */
   z-index: 10;
 `;
 
@@ -246,6 +233,7 @@ const DotContainer = styled.View`
   left: 46px;
   flex-direction: row;
   align-items: center;
+  z-index: 20;
 `;
 
 const AnimatedDotView = styled(Animated.View)`

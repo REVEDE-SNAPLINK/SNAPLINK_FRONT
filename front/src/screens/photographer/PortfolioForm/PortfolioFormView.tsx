@@ -9,7 +9,6 @@ import Checkbox from '@/components/theme/Checkbox';
 import { UploadImageFile } from '@/api/photographers';
 
 export interface PortfolioFormData {
-  portfolioTitle: string;
   portfolioDescription: string;
   portfolioIsLinked: boolean;
 }
@@ -71,25 +70,6 @@ export default function PortfolioFormView({
               images={photoURIs}
               onRemoveImage={onRemoveImage}
               onAddImages={onAddImages}
-            />
-            <Typography
-              fontSize={16}
-              letterSpacing="-2.5%"
-              marginBottom={10}
-              marginTop={22}
-            >
-              커뮤니티 게시글 제목
-            </Typography>
-            <Controller
-              control={control}
-              name="portfolioTitle"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  placeholder="게시글 제목"
-                  value={value}
-                  onChangeText={onChange}
-                />
-              )}
             />
             <Typography
               fontSize={16}

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Modal, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { Modal, FlatList, Dimensions } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import ServerImage from '@/components/ServerImage';
 import Icon from '@/components/Icon';
@@ -90,7 +90,7 @@ export default function PhotoViewerModal({
     >
       <Container>
         <CloseButton onPress={onClose}>
-          <RotatedIcon width={24} height={24} Svg={CrossIcon} />
+          <Icon width={24} height={24} Svg={CrossIcon} />
         </CloseButton>
 
         <FlatList
@@ -150,9 +150,6 @@ const CloseButton = styled.TouchableOpacity`
   height: 44px;
   justify-content: center;
   align-items: center;
-`;
-
-const RotatedIcon = styled(Icon)`
   transform: rotate(45deg);
 `;
 
@@ -165,7 +162,7 @@ const PhotoContainer = styled.View`
 
 const FullScreenImage = styled(ServerImage)`
   width: 100%;
-  height: 100%;
+  height: ${SCREEN_WIDTH}px;
 `;
 
 const LeftArrowButton = styled.TouchableOpacity`

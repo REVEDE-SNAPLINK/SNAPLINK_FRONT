@@ -5,11 +5,15 @@ import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
+import { Alert } from '@/components/theme';
+import { requestPermission } from '@/utils/permissions.ts';
+import { ImageLibraryOptions, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
+import { generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
 
 export default function AIRecommdationFormContainer() {
   const navigation = useNavigation<MainNavigationProp>();
 
-  const [images, setImages] = useState<UploadImageFile[]>([]);
+  const [image, setImage] = useState<UploadImageFile | null>(null);
   const [prompt, setPrompt] = useState<string>('');
 
   const { userId, userType } = useAuthStore();
@@ -23,36 +27,58 @@ export default function AIRecommdationFormContainer() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const handlePressBack = () => navigation.goBack();
 
-  const handleRemoveImage = useCallback((index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = useCallback(() => {
+    setImage(null);
   }, []);
-
-  const handleAddImages = useCallback((newImages: UploadImageFile[]) => {
-    setImages((prev) => [...prev, ...newImages]);
-    analytics().logEvent('ai_recommendation_input', {
-      user_id: userId,
-      user_type: userType,
-      added_image_count: newImages.length,
-      total_image_count: images.length + newImages.length,
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, userType, images.length]);
 
   const handlePressSubmit = () => {
     navigation.navigate('AIRecommdationResult', { prompt, resultCount: 3 });
   };
 
+  const handleUploadImage = useCallback(() => {
+    requestPermission(
+      'photo',
+      async () => {
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo',
+          selectionLimit: 1,
+          quality: 0.8,
+          includeExtra: true,
+        };
+
+        const response: ImagePickerResponse = await launchImageLibrary(options);
+
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.show({
+            title: '갤러리 오류',
+            message: response.errorMessage || '알 수 없는 오류',
+          });
+          return;
+        }
+        if (response.assets && response.assets[0] && response.assets[0].uri && response.assets[0].fileName && response.assets[0].type ) {
+          setImage({
+            uri: response.assets[0].uri!,
+            name: generateImageFilename(response.assets[0].type, 'image'),
+            type: normalizeImageMime(response.assets[0].type!),
+          })
+        }
+      }
+    );
+  }, []);
+
+  const isFormValid = image !== null && prompt !== '' && prompt.trim().length >= 30;
+
   return (
     <AIRecommdationFormView
-      onPressBack={handlePressBack}
-      images={images}
+      image={image}
       onRemoveImage={handleRemoveImage}
-      onAddImages={handleAddImages}
+      onUploadImage={handleUploadImage}
       prompt={prompt}
       setPrompt={setPrompt}
       onPressSubmit={handlePressSubmit}
+      isFormValid={isFormValid}
       navigation={navigation}
     />
   );

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { Animated, Dimensions, Platform } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Animated, BackHandler, Dimensions, Platform } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import IconButton from '@/components/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
@@ -16,6 +16,7 @@ import { useDeleteHolidayMutation } from '@/mutations/holidays';
 import { theme } from '@/theme';
 import { getPhotographerDayDetail } from '@/api/schedules';
 import { useAuthStore } from '@/store/authStore';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -183,8 +184,8 @@ export default function ScheduleDetailModal({
                     buttons: [{ text: '확인', onPress: () => {} }],
                   });
                 }
-              } else if (scheduleId) {
-                // API를 통한 개인 일정 삭제
+              } else if (scheduleId && !isHoliday) {
+                // API를 통한 개인 일정 삭제 (휴가가 아닐 때만)
                 deleteMutation.mutate(scheduleId, {
                   onSuccess: () => {
                     onDelete(displaySchedule.id);
@@ -213,6 +214,22 @@ export default function ScheduleDetailModal({
   const onCloseEditModal = () => {
     setIsEditModalVisible(false);
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (onClose) {
+          onClose();
+          return true; // 시스템 종료 방지
+        }
+
+        return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [onClose])
+  );
 
   if (!visible || !displaySchedule) return null;
 

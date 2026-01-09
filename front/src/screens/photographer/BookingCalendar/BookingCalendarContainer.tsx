@@ -122,45 +122,11 @@ export default function BookingCalendarContainer() {
         // status: NONE, HOLIDAY, BOOKING, PERSONAL
         const status = item.status;
 
-        // 1. BOOKING이면 무조건 hasBooking = true
-        if (status === 'BOOKING') {
-          schedulesByDate.set(dateString, {
-            hasBooking: true,
-            publicHoliday: false,
-            photographerHoliday: false,
-            hasPersonalSchedule: false,
-          });
-          return;
-        }
-
-        // 2. PERSONAL이면 hasPersonalSchedule = true
-        if (status === 'PERSONAL') {
-          schedulesByDate.set(dateString, {
-            hasBooking: false,
-            publicHoliday: false,
-            photographerHoliday: false,
-            hasPersonalSchedule: true,
-          });
-          return;
-        }
-
-        // 3. HOLIDAY인 경우 photographerHoliday = true
-        if (status === 'HOLIDAY') {
-          schedulesByDate.set(dateString, {
-            hasBooking: false,
-            publicHoliday: false,
-            photographerHoliday: true,
-            hasPersonalSchedule: false,
-          });
-          return;
-        }
-
-        // 4. NONE이거나 기타 경우
         schedulesByDate.set(dateString, {
-          hasBooking: false,
-          publicHoliday: false,
-          photographerHoliday: false,
-          hasPersonalSchedule: false,
+          hasBooking: status === 'BOOKING',
+          publicHoliday: item.publicHoliday,
+          photographerHoliday: status === 'HOLIDAY',
+          hasPersonalSchedule: status === 'PERSONAL',
         });
       });
     };

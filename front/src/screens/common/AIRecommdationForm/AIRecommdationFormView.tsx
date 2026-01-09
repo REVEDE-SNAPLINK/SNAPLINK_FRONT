@@ -1,22 +1,24 @@
 import ScreenContainer from '@/components/common/ScreenContainer';
 import { SubmitButton, TextInput, Typography } from '@/components/theme';
-import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
+// import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
 import {
   // Dimensions,
   Platform
 } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
+import CrossIcon from '@/assets/icons/cross.svg';
+import Icon from '@/components/Icon.tsx';
+import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
 
 interface AIRecommdationFormViewProps {
-  onPressBack: () => void;
-  images: UploadImageFile[];
-  onRemoveImage: (index: number) => void;
-  onAddImages: (newImages: UploadImageFile[]) => void;
+  image: UploadImageFile | null;
+  onRemoveImage: () => void;
+  onUploadImage: () => void;
   prompt: string;
   setPrompt: (prompt: string) => void;
   onPressSubmit: () => void;
-
+  isFormValid: boolean;
   navigation?: any;
 }
 
@@ -24,19 +26,18 @@ interface AIRecommdationFormViewProps {
 const SCREEN_PADDING = 33;
 
 export default function AIRecommdationFormView({
-  onPressBack,
-  images,
+  image,
   onRemoveImage,
-  onAddImages,
+  onUploadImage,
   prompt,
   setPrompt,
   onPressSubmit,
+  isFormValid,
   navigation,
 }: AIRecommdationFormViewProps) {
   return (
     <ScreenContainer
       headerTitle="AI 작가 추천"
-      onPressBack={onPressBack}
       paddingHorizontal={SCREEN_PADDING}
       alignItemsCenter={false}
       navigation={navigation}
@@ -60,13 +61,30 @@ export default function AIRecommdationFormView({
           >
             • 촬영과 무관한 내용 등이 나오지 않게 유의해 주세요.
           </Typography>
-          <ImageUploadInput
-            images={images}
-            onRemoveImage={onRemoveImage}
-            onAddImages={onAddImages}
-            maxLength={1}
-            width={337}
-          />
+          {/*<ImageUploadInput*/}
+          {/*  images={images}*/}
+          {/*  onRemoveImage={onRemoveImage}*/}
+          {/*  onAddImages={onAddImages}*/}
+          {/*  maxLength={1}*/}
+          {/*  width={337}*/}
+          {/*/>*/}
+          <ImageUploadWrapper>
+            {image === null ? (
+              <ImageUploadInput onPress={onUploadImage}>
+                <Icon width={20} height={20} Svg={CrossIcon} />
+              </ImageUploadInput>
+            ) : (
+              <UploadImageWrapper>
+                <UploadImage source={{ uri: image.uri }} />
+                <DeleteButton onPress={onRemoveImage}>
+                  <DeleteIconWrapper>
+                    <Icon width={12} height={12} Svg={CrossWhiteIcon} />
+                  </DeleteIconWrapper>
+                </DeleteButton>
+              </UploadImageWrapper>
+            )}
+          </ImageUploadWrapper>
+
           <CaptionWrapper>
             <Typography
               fontSize={16}
@@ -96,6 +114,7 @@ export default function AIRecommdationFormView({
           text="추천 작가 확인하기"
           onPress={onPressSubmit}
           marginBottom={20}
+          disabled={!isFormValid}
         />
       </KeyboardAvoidingView>
     </ScreenContainer>
@@ -121,3 +140,51 @@ const CaptionWrapper = styled.View`
   margin-top: 30px;
   margin-bottom: 16px;
 `
+
+const IMAGE_SIZE = 170;
+
+const ImageUploadWrapper = styled.View`
+  width: 100%;
+  height: ${IMAGE_SIZE}px;
+  align-items: center;
+  justify-content: center;
+`
+
+const ImageUploadInput = styled.TouchableOpacity`
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px dashed #C8C8C8;
+  align-items: center;
+  justify-content: center;
+`
+
+const UploadImageWrapper = styled.View`
+  width: ${IMAGE_SIZE}px;
+  height: ${IMAGE_SIZE}px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 5px;
+`
+
+const UploadImage = styled.Image`
+  width: 100%;
+  height: 100%;
+`
+
+const DeleteButton = styled.TouchableOpacity`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  transform: rotate(45deg);
+`;
+
+const DeleteIconWrapper = styled.View`
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background-color: rgba(128, 128, 128, 0.8);
+  justify-content: center;
+  align-items: center;
+`;

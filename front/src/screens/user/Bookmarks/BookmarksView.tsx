@@ -1,4 +1,3 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import { theme } from '@/theme';
@@ -77,6 +76,7 @@ export default function BookmarksView({
                   <ScrollSpacer />
                 )
               }
+              ItemSeparatorComponent={ItemSeparator}
               showsVerticalScrollIndicator={false}
             />
           </BookmarkListWrapper>
@@ -108,10 +108,18 @@ const BookmarkedPhotographerItem = ({
     return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
   };
 
-  const genderLabel = photographer.gender === 'WOMAN' ? '여성작가' : '남성작가';
+  const genderLabel = photographer.gender === 'FEMALE' ? '여성작가' : '남성작가';
 
   return (
     <BookmarkedPhotographerItemContainer>
+      <BookmarkButton
+        onPress={(e) => {
+          e.stopPropagation();
+          onToggleBookmark();
+        }}
+      >
+        <Icon width={24} height={24} Svg={BookmarkColorIcon} />
+      </BookmarkButton>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
         <PortfolioImagesWrapper>
           <FlatList
@@ -126,14 +134,6 @@ const BookmarkedPhotographerItem = ({
             )}
             style={{ marginBottom: 5 }}
           />
-          <BookmarkButton
-            onPress={(e) => {
-              e.stopPropagation();
-              onToggleBookmark();
-            }}
-          >
-            <Icon width={24} height={24} Svg={BookmarkColorIcon} />
-          </BookmarkButton>
         </PortfolioImagesWrapper>
         <PhotographerInfoWrapper>
           <Typography
@@ -200,8 +200,8 @@ const PortfolioImagesWrapper = styled.View`
 
 const BookmarkButton = styled(Pressable)`
   position: absolute;
-  top: 8px;
-  right: 8px;
+  bottom: 20px;
+  right: 20px;
   z-index: 10;
 `;
 
@@ -214,9 +214,8 @@ const PhotofolioImageWrapper = styled.View`
 `;
 
 const PhotofolioImage = styled(ServerImage)`
-  width: 101px;
-  height: 101px;
-  resize-mode: cover;
+  width: 100%;
+  height: 100%;
 `;
 
 const PhotographerInfoWrapper = styled.View`
@@ -258,3 +257,9 @@ const PhotographerLabel = ({ special = false, text }: { special?: boolean; text:
 const ScrollSpacer = styled.View`
   height: 50px;
 `;
+
+const ItemSeparator = styled.View`
+  height: 1px;
+  background: ${theme.colors.disabled};
+  margin-vertical: 15px;
+`

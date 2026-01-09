@@ -130,7 +130,7 @@ export default function WriteReviewContainer() {
               title: '작성 완료',
               message: '리뷰가 작성되었습니다.',
             });
-            navigation.navigate('BookingHistory');
+            navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
           },
           onError: (error) => {
             Alert.show({

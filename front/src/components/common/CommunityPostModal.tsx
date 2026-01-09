@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { Platform, Animated, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Platform, Animated, Dimensions, FlatList, View, BackHandler } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import IconButton from '@/components/IconButton.tsx';
 import CancelIcon from '@/assets/icons/cancel.svg';
+import IcCancelIcon from '@/assets/icons/ic-cancel.svg';
 import { Alert, requestPermission, Typography } from '@/components/theme';
 import Icon from '@/components/Icon.tsx';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
@@ -22,10 +23,15 @@ import {
 } from 'react-native-image-picker';
 import { UploadImageParams } from '@/types/image.ts';
 import { generateImageFilename } from '@/utils/format.ts';
-import CrossIcon from '@/assets/icons/cross-white.svg';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 import ServerImage from '@/components/ServerImage.tsx';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AddUserIcon from '@/assets/icons/add-user.svg';
+import SlideModal from '@/components/theme/SlideModal.tsx';
+import SearchIcon from '@/assets/icons/search-white.svg';
+import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
+import { useAuthStore } from '@/store/authStore.ts';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -45,33 +51,78 @@ export default function CommunityPostModal({
   isLoading,
 }: CommunityPostModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<COMMUNITY_CATEGORY_ENUM | null>(null);
-  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [images, setImages] = useState<UploadImageParams[]>([]);
+  const [taggedUserId, setTaggedUserId] = useState<string>('');
+  const [taggedNickname, setTaggedNickname] = useState<string>('');
   const [deletedImageIndices, setDeletedImageIndices] = useState<number[]>([]);
   const [isTopicListVisible, setIsTopicListVisible] = useState(false);
+  const [isSearchingPhotographerModalVisible, setIsSearchingPhotographerModalVisible] = useState(false);
+  const [searchPhotographerKey, setSearchPhotographerKey] = useState<string>('');
+  const [debouncedSearchKey, setDebouncedSearchKey] = useState<string>('');
 
-  const isDirty = selectedCategory !== null || title !== '' || content !== '' || images.length > 0 || (initialPost && deletedImageIndices.length > 0);
+  const isDirty = selectedCategory !== null || content !== '' || images.length > 0 || (initialPost && deletedImageIndices.length > 0);
 
   const inset = useSafeAreaInsets();
+  const { userId } = useAuthStore();
+
+  // Debounce searchPhotographerKey
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchKey(searchPhotographerKey);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchPhotographerKey]);
+
+  // Search users (photographers only)
+  const {
+    data: searchUsersData,
+    fetchNextPage: fetchNextSearchUsers,
+    hasNextPage: hasNextSearchUsers,
+    isFetchingNextPage: isFetchingNextSearchUsers,
+  } = useSearchUsersInfiniteQuery(debouncedSearchKey, { size: 20 });
+
+  // Filter to get photographers only (exclude self)
+  const searchedPhotographers = searchUsersData?.pages
+    .flatMap(page => page.content)
+    .filter(user => user.role === 'PHOTOGRAPHER' && user.userId !== userId) || [];
 
   // Sliding animation
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
   const resetModal = () => {
     setSelectedCategory(null);
-    setTitle('');
     setContent('');
     setImages([]);
     setDeletedImageIndices([]);
+    setTaggedUserId('');
+    setTaggedNickname('');
   }
 
   // Load initial post data when modal opens
   useEffect(() => {
     if (visible && initialPost) {
       setSelectedCategory(getCategoryEnumByValue(initialPost.categoryLabel));
-      setTitle(initialPost.title);
-      setContent(initialPost.content);
+
+      // Set tagged user info and add @nickname to content
+      const taggedUser = initialPost.taggedUsers?.[0];
+      if (taggedUser) {
+        setTaggedUserId(taggedUser.userId);
+        setTaggedNickname(taggedUser.nickname);
+        // Add @nickname to content if not already present
+        const mentionText = `@${taggedUser.nickname}`;
+        if (!initialPost.content.includes(mentionText)) {
+          setContent(`${mentionText} ${initialPost.content}`);
+        } else {
+          setContent(initialPost.content);
+        }
+      } else {
+        setTaggedUserId('');
+        setTaggedNickname('');
+        setContent(initialPost.content);
+      }
+
       setImages([]);
       setDeletedImageIndices([]);
     } else if (visible && !initialPost) {
@@ -98,7 +149,7 @@ export default function CommunityPostModal({
     }
   }, [visible, slideAnim]);
 
-  const hanedlePressClose = () => {
+  const handlePressClose = useCallback(() => {
     if (isDirty) {
       Alert.show({
         title: `게시글 ${initialPost ? '수정' : '작성'}을 그만둘까요?`,
@@ -124,7 +175,23 @@ export default function CommunityPostModal({
     }
 
     onClose();
-  }
+  }, [initialPost, isDirty, onClose]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (handlePressClose) {
+          handlePressClose();
+          return true; // 시스템 종료 방지
+        }
+
+        return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [handlePressClose])
+  );
 
   const handlePressTopicSelector = () => {
     setIsTopicListVisible(!isTopicListVisible);
@@ -247,22 +314,72 @@ export default function CommunityPostModal({
     });
   };
 
+  const handlePressTagUser = () => {
+    setIsSearchingPhotographerModalVisible(true);
+  };
+
+  const handleCloseSearchingPhotographerModal = () => {
+    setIsSearchingPhotographerModalVisible(false);
+    setSearchPhotographerKey('');
+  };
+
+  const handleSelectPhotographer = (photographerId: string, nickname: string) => {
+    // Remove existing tag if present
+    let newContent = content;
+    if (taggedNickname) {
+      const oldMentionText = `@${taggedNickname}`;
+      newContent = newContent.replace(oldMentionText, '').trim();
+    }
+
+    setTaggedUserId(photographerId);
+    setTaggedNickname(nickname);
+    // Add new @nickname to the beginning of content
+    setContent(`@${nickname} ${newContent}`);
+    setIsSearchingPhotographerModalVisible(false);
+    setSearchPhotographerKey('');
+  };
+
+  const handleLoadMoreSearchedPhotographers = () => {
+    if (hasNextSearchUsers && !isFetchingNextSearchUsers) {
+      fetchNextSearchUsers();
+    }
+  };
+
+  // Watch content changes to detect if @nickname is deleted
+  useEffect(() => {
+    if (taggedUserId && taggedNickname) {
+      const mentionText = `@${taggedNickname}`;
+      if (!content.includes(mentionText)) {
+        // Tag removed
+        setTaggedUserId('');
+        setTaggedNickname('');
+      }
+    }
+  }, [content, taggedUserId, taggedNickname]);
+
   const handleSubmit = () => {
-    if (!selectedCategory || !title.trim()) {
+    if (!selectedCategory || !content.trim()) {
       // Show validation error
       return;
     }
 
+    // Remove @nickname from content before submitting
+    let submitContent = content.trim();
+    if (taggedNickname) {
+      const mentionText = `@${taggedNickname}`;
+      submitContent = submitContent.replace(mentionText, '').trim();
+    }
+
     onSubmit({
       category: selectedCategory,
-      title: title.trim(),
-      content: content.trim(),
+      content: submitContent,
+      taggedUserIds: taggedUserId === '' ? [] : [taggedUserId],
       images,
       deletePhotoIds: initialPost ? deletedImageIndices : undefined,
     });
   };
 
-  const canSubmit = selectedCategory !== null && title.trim().length > 0;
+  const canSubmit = selectedCategory !== null && content.trim().length > 0;
 
   if (!visible) return null;
 
@@ -278,7 +395,7 @@ export default function CommunityPostModal({
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
             <Header>
-              <IconButton width={18} height={18} Svg={CancelIcon} onPress={hanedlePressClose} />
+              <IconButton width={18} height={18} Svg={CancelIcon} onPress={handlePressClose} />
               <Typography fontSize={16} fontWeight="bold" letterSpacing="-2.5%" color="#000">
                 {initialPost ? '게시글 수정' : '커뮤니티 글쓰기'}
               </Typography>
@@ -306,7 +423,7 @@ export default function CommunityPostModal({
                 </TopicWrapper>
                 {isTopicListVisible && (
                   <TopicList>
-                    {CATEGORY_KEYS.map((category) => (
+                    {CATEGORY_KEYS.filter((v) => v !== 'NEWS').map((category) => (
                       <TopicItem key={category} onPress={() => handleSelectCategory(category)}>
                         <Typography fontSize={16} letterSpacing="-2.5%">
                           {COMMUNITY_CATEGORIES[category]}
@@ -316,12 +433,6 @@ export default function CommunityPostModal({
                   </TopicList>
                 )}
               </TopicSelector>
-              <TitleInput
-                placeholder="제목을 입력해주세요."
-                placeholderTextColor="#A4A4A4"
-                value={title}
-                onChangeText={setTitle}
-              />
               <ContentInput
                 placeholder="스냅 사진과 관련된 이야기를 나눠보세요!"
                 placeholderTextColor="#A4A4A4"
@@ -329,41 +440,51 @@ export default function CommunityPostModal({
                 value={content}
                 onChangeText={setContent}
               />
-              <PostImageList>
+            </ScrollContainer>
+            {/* 이미지 미리보기 - 가로 스크롤 */}
+            {(images.length > 0 || (initialPost?.images && initialPost.images.filter(img => !deletedImageIndices.includes(img.Id)).length > 0)) && (
+              <ImagePreviewScrollContainer horizontal showsHorizontalScrollIndicator={false}>
                 {/* Server images */}
                 {initialPost?.images &&
                   initialPost.images.map((image, _) => {
-                    // 삭제된 이미지는 렌더링하지 않음 (Id로 체크)
+                    // 삭제된 이미지는 렌더링하지 않음
                     if (deletedImageIndices.includes(image.Id)) return null;
 
                     return (
-                      <ServerPostImageView
+                      <ThumbnailImageView
                         key={`server-${image.Id}`}
                         uri={image.urls}
                         onDelete={() => {
                           setDeletedImageIndices([...deletedImageIndices, image.Id]);
                         }}
+                        isServerImage={true}
                       />
                     );
                   })
                 }
                 {/* New uploaded images */}
-                {images.length > 0 &&
-                  images.map((image, index) => (
-                    <PostImageView
-                      key={`new-${index}`}
-                      uri={image.uri}
-                      onDelete={() => setImages(images.filter((_, i) => i !== index))}
-                    />
-                  ))
-                }
-              </PostImageList>
-            </ScrollContainer>
+                {images.map((image, index) => (
+                  <ThumbnailImageView
+                    key={`new-${index}`}
+                    uri={image.uri}
+                    onDelete={() => setImages(images.filter((_, i) => i !== index))}
+                    isServerImage={false}
+                  />
+                ))}
+                <ImagePreviewScrollSpacer/>
+              </ImagePreviewScrollContainer>
+            )}
             <ToolWrapper paddingBottom={inset.bottom + 10}>
               <ToolButton onPress={handlePressImage}>
                 <Icon width={24} height={24} Svg={ImageIcon} />
                 <Typography fontSize={12} lineHeight={20} marginLeft={3}>
                   사진
+                </Typography>
+              </ToolButton>
+              <ToolButton onPress={handlePressTagUser}>
+                <Icon width={24} height={24} Svg={AddUserIcon} />
+                <Typography fontSize={12} lineHeight={20} marginLeft={3}>
+                  태그하기
                 </Typography>
               </ToolButton>
             </ToolWrapper>
@@ -372,6 +493,55 @@ export default function CommunityPostModal({
         </AnimatedContainer>
       </Overlay>
       <LoadingSpinner visible={isLoading} />
+      <SlideModal
+        visible={isSearchingPhotographerModalVisible}
+        onClose={handleCloseSearchingPhotographerModal}
+        showHeader={false}
+        scrollable={false}
+        minHeight={SCREEN_HEIGHT * 0.8}
+      >
+        <SearchHeaderWrapper>
+          <SearchInputWrapper>
+            <SearchInput
+              value={searchPhotographerKey}
+              onChangeText={setSearchPhotographerKey}
+              placeholder="작가 검색"
+              placeholderTextColor="#A4A4A4"
+            />
+            <Icon width={24} height={24} Svg={SearchIcon} />
+          </SearchInputWrapper>
+          <CancelSearchButton onPress={handleCloseSearchingPhotographerModal}>
+            <Typography fontSize={18}>취소</Typography>
+          </CancelSearchButton>
+        </SearchHeaderWrapper>
+        <FlatList
+          data={searchedPhotographers}
+          keyExtractor={(item) => item.userId}
+          renderItem={({ item }) => (
+            <TaggedPhotographerButton onPress={() => handleSelectPhotographer(item.userId, item.nickname)}>
+              <TaggedPhotographerInfo>
+                <TaggedPhotographerProfileImageWrapper>
+                  <TaggedPhotographerProfileImage uri={item.profileImageUrl} />
+                </TaggedPhotographerProfileImageWrapper>
+                <Typography fontSize={14} fontWeight="semiBold" marginLeft={4}>
+                  {item.nickname}
+                </Typography>
+              </TaggedPhotographerInfo>
+            </TaggedPhotographerButton>
+          )}
+          onEndReached={handleLoadMoreSearchedPhotographers}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            searchPhotographerKey.trim().length > 0 ? (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Typography fontSize={14} color="#A4A4A4">
+                  검색 결과가 없습니다
+                </Typography>
+              </View>
+            ) : null
+          }
+        />
+      </SlideModal>
     </>
   );
 }
@@ -467,18 +637,8 @@ const TopicItem = styled.TouchableOpacity`
   z-index: 1001;
 `
 
-const TitleInput = styled.TextInput`
-  width: 100%;
-  margin-top: 9px;
-  height: 60px;
-  font-size: 20px;
-  font-family: Pretendard-Bold;
-  font-weight: bold;
-  color: ${theme.colors.textPrimary};
-  padding: 0 28px;
-`
-
 const ContentInput = styled.TextInput`
+  margin-top: 20px;
   width: 100%;
   padding: 0 28px;
   min-height: 100px;
@@ -507,88 +667,130 @@ const KeyboardAvodingSpacer = styled.View`
   height: 20px;
 `
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const IMAGE_PADDING = 20;
-const IMAGE_SIZE = SCREEN_WIDTH - IMAGE_PADDING * 2;
-
-const PostImageList = styled.View`
-  padding: 0 ${IMAGE_PADDING}px;
+// 이미지 썸네일 미리보기 스타일
+const ImagePreviewScrollContainer = styled.ScrollView`
+  padding: 10px 28px;
+  max-height: 120px;
 `
 
-const PostImageContainer = styled.View`
-  width: ${IMAGE_SIZE}px;
-  height: ${IMAGE_SIZE}px;
-  margin-bottom: 10px;
+const ImagePreviewScrollSpacer = styled.View`
+  width: 50px;
 `
 
-const PostImageWrapper = styled.View`
+const ThumbnailContainer = styled.View`
+  width: 90px;
+  height: 90px;
+  margin-right: 5px;
+  position: relative;
+`
+
+const ThumbnailImageWrapper = styled.View`
   width: 100%;
   height: 100%;
+  border-radius: 5px;
   overflow: hidden;
 `
 
-const PostImage = styled.Image`
+const ThumbnailImage = styled.Image`
   width: 100%;
   height: 100%;
 `
 
-const PostImageDeleteButton = styled.Pressable`
-  width: 30px;
-  height: 30px;
-  background-color: #aaa;
-  border-radius: 30px;
+const ThumbnailServerImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
+`
+
+const ThumbnailDeleteButton = styled.Pressable`
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
   align-items: center;
   justify-content: center;
-  transform: rotate(45deg);
-  position: absolute;
-  top: -15px;
-  right: -15px;
-  z-index: 99;
+  z-index: 10;
 `
 
-interface PostImageViewProps {
+interface ThumbnailImageViewProps {
   uri: string;
   onDelete: () => void;
+  isServerImage: boolean;
 }
 
-const PostImageView = ({
+const ThumbnailImageView = ({
   uri,
   onDelete,
-}: PostImageViewProps) => {
+  isServerImage,
+}: ThumbnailImageViewProps) => {
   return (
-    <PostImageContainer>
-      <PostImageDeleteButton onPress={onDelete}>
-        <Icon width={15} height={15} Svg={CrossIcon} />
-      </PostImageDeleteButton>
-      <PostImageWrapper>
-        <PostImage source={{ uri }} />
-      </PostImageWrapper>
-    </PostImageContainer>
+    <ThumbnailContainer>
+      <ThumbnailDeleteButton onPress={onDelete}>
+        <Icon width={20} height={20} Svg={IcCancelIcon} />
+      </ThumbnailDeleteButton>
+      <ThumbnailImageWrapper>
+        {isServerImage ? (
+          <ThumbnailServerImage uri={uri} />
+        ) : (
+          <ThumbnailImage source={{ uri }} />
+        )}
+      </ThumbnailImageWrapper>
+    </ThumbnailContainer>
   )
 }
 
-interface ServerPostImageViewProps {
-  uri: string;
-  onDelete: () => void;
-}
+// Search Modal Styles
+const SearchHeaderWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+`
 
-const ServerPostImageView = ({
-  uri,
-  onDelete,
-}: ServerPostImageViewProps) => {
-  return (
-    <PostImageContainer>
-      <PostImageDeleteButton onPress={onDelete}>
-        <Icon width={15} height={15} Svg={CrossIcon} />
-      </PostImageDeleteButton>
-      <PostImageWrapper>
-        <StyledServerImage uri={uri} />
-      </PostImageWrapper>
-    </PostImageContainer>
-  )
-}
+const SearchInputWrapper = styled.View`
+  flex: 1;
+  flex-direction: row;
+  padding-horizontal: 12px;
+  border: 1px solid ${theme.colors.disabled};
+  border-radius: 8px;
+  height: 41px;
+  margin-left: 13px;
+  align-items: center;
+  margin-right: 15px;
+`;
 
-const StyledServerImage = styled(ServerImage)`
+const SearchInput = styled.TextInput`
+  flex: 1;
+  font-size: 16px;
+  color: #000;
+  font-family: Pretendard-Regular;
+`;
+
+const CancelSearchButton = styled.TouchableOpacity`
+  padding: 5px;
+`;
+
+const TaggedPhotographerButton = styled.TouchableOpacity`
+  width: 100%;
+  padding: 15px 20px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+`;
+
+const TaggedPhotographerInfo = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const TaggedPhotographerProfileImageWrapper = styled.View`
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  overflow: hidden;
+  background-color: #aaa;
+`;
+
+const TaggedPhotographerProfileImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
-`
+`;

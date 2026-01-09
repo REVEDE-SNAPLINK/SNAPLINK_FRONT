@@ -9,6 +9,7 @@ import { AlertProvider } from '@/components/theme';
 import analytics from '@react-native-firebase/analytics';
 import { useEffect } from 'react';
 import NotificationHandler from '@/components/NotificationHandler';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 async function logAppOpen() {
   await analytics().logEvent('app_open');
@@ -21,17 +22,19 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <QueryClientProvider client={queryClient}>
-          <AuthInitializer>
-            <NotificationHandler>
-              <AlertProvider>
-                <AppNavigator />
-              </AlertProvider>
-            </NotificationHandler>
-          </AuthInitializer>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
+      <ErrorBoundary>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <QueryClientProvider client={queryClient}>
+            <AuthInitializer>
+              <NotificationHandler>
+                <AlertProvider>
+                  <AppNavigator />
+                </AlertProvider>
+              </NotificationHandler>
+            </AuthInitializer>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }

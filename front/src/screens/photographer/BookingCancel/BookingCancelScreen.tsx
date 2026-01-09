@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton, Typography, TextInput } from '@/components/theme';
+import { SubmitButton, Typography, TextInput, Alert } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useCancelBookingMutation } from '@/mutations/bookings.ts';
 
@@ -26,21 +26,30 @@ export default function BookingCancelScreen() {
     setReason(text);
   };
 
-  const handlePressSubmit = async () => {
-    const trimmedReason = reason.trim();
+  const handlePressSubmit = () => {
+    Alert.show({
+      title: '예약을 취소하시겠습니까?',
+      message: '고의적인 취소는 제제의 사유가 될 수 있습니다.\n반드시 예약자와 협의 후 취소하세요.',
+      buttons: [
+        { text: '뒤로', type: 'cancel', onPress: () => {} },
+        { text: '예약 취소' , onPress: async () => {
+            const trimmedReason = reason.trim();
 
-    if (!trimmedReason) {
-      setError('취소 사유를 입력해주세요.');
-      return;
-    }
+            if (!trimmedReason) {
+              setError('취소 사유를 입력해주세요.');
+              return;
+            }
 
-    try {
-      await cancelBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
-      navigation.goBack();
-    } catch (e: any) {
-      const message = e?.message ?? '예약을 취소할 수 없어요. 잠시 후 다시 시도해주세요.';
-      setError(message);
-    }
+            try {
+              await cancelBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
+              navigation.goBack();
+            } catch (e: any) {
+              const message = e?.message ?? '예약을 취소할 수 없어요. 잠시 후 다시 시도해주세요.';
+              setError(message);
+            }
+          } },
+      ]
+    })
   };
 
   const isSubmitDisabled = reason.trim().length === 0;
@@ -61,10 +70,10 @@ export default function BookingCancelScreen() {
               color="#3C3C3C"
               marginBottom={16}
             >
-              취소 사유를 입력해주세요.
+              예약을 취소하는 사유를 입력해주세요.
             </Typography>
             <TextInput
-              placeholder="취소 사유를 입력하세요"
+              placeholder="내용을 작성해주세요."
               value={reason}
               onChangeText={handleChangeReason}
               multiline={true}
@@ -108,7 +117,7 @@ const ScrollContainer = styled.ScrollView`
 `;
 
 const Content = styled.View`
-  padding: 0 40px;
+  padding: 0 20px;
   margin-top: 40px;
 `;
 

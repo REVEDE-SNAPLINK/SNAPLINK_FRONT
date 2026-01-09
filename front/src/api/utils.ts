@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 export type AuthRequestInit = RequestInit & {
   json?: unknown;
@@ -75,32 +76,68 @@ export const authFetch = async (
     });
     console.log('--------------------------------------');
 
+    // ✅ Crashlytics API 에러 로깅
+    if (!res.ok) {
+      const errorData = {
+        url: String(input),
+        status: res.status,
+        statusText: res.statusText,
+        method: reqInit.method || 'GET',
+        responseText: text.slice(0, 500),
+      };
+
+      // Non-fatal error 기록
+      crashlytics().recordError(
+        new Error(`API Error: ${res.status} ${String(input)}`),
+        JSON.stringify(errorData),
+      );
+
+      // 5xx 서버 에러는 추가 로깅
+      if (res.status >= 500) {
+        crashlytics().log(`🚨 Server Error: ${res.status} ${String(input)}`);
+      } else if (res.status >= 400 && res.status < 500) {
+        crashlytics().log(`⚠️ Client Error: ${res.status} ${String(input)}`);
+      }
+    }
+
     return res;
   };
 
-  let response = await doFetch(nextInit);
+  try {
+    let response = await doFetch(nextInit);
 
-  // 401이면 토큰 갱신 후 1회 재시도
-  if (response.status === 401) {
-    const { accessToken: currentToken } = useAuthStore.getState();
-    if (currentToken) useAuthStore.setState({ accessToken: null });
+    // 401이면 토큰 갱신 후 1회 재시도
+    if (response.status === 401) {
+      const { accessToken: currentToken } = useAuthStore.getState();
+      if (currentToken) useAuthStore.setState({ accessToken: null });
 
-    const refreshed = await getAccessToken();
-    if (!refreshed) return response;
+      const refreshed = await getAccessToken();
+      if (!refreshed) return response;
 
-    const retryHeaders = new Headers(init.headers);
-    retryHeaders.set('Authorization', `Bearer ${refreshed}`);
-    if (init.json !== undefined && !retryHeaders.has('Content-Type')) {
-      retryHeaders.set('Content-Type', 'application/json');
+      const retryHeaders = new Headers(init.headers);
+      retryHeaders.set('Authorization', `Bearer ${refreshed}`);
+      if (init.json !== undefined && !retryHeaders.has('Content-Type')) {
+        retryHeaders.set('Content-Type', 'application/json');
+      }
+
+      const retryInit: RequestInit = { ...init, headers: retryHeaders, body };
+      delete (retryInit as any).json;
+
+      response = await doFetch(retryInit);
     }
 
-    const retryInit: RequestInit = { ...init, headers: retryHeaders, body };
-    delete (retryInit as any).json;
+    return response;
+  } catch (error) {
+    // ✅ 네트워크 에러 로깅
+    crashlytics().recordError(error as Error, JSON.stringify({
+      url: String(input),
+      type: 'NetworkError',
+      message: (error as Error).message,
+    }));
 
-    response = await doFetch(retryInit);
+    crashlytics().log(`🔴 Network Error: ${String(input)}`);
+    throw error;
   }
-
-  return response;
 };
 /**
  * Multipart/form-data 전송용 인증 fetch
@@ -145,31 +182,64 @@ export const authMultipartFetch = async (
     headers.Authorization = `Bearer ${token}`;
   }
 
-  let response = await RNBlobUtil.fetch(method, url, headers, parts);
+  try {
+    let response = await RNBlobUtil.fetch(method, url, headers, parts);
 
-  // 401이면 토큰 갱신 후 1회 재시도
-  if (response.info().status === 401) {
-    const { accessToken: currentToken } = useAuthStore.getState();
-    if (currentToken) useAuthStore.setState({ accessToken: null });
+    // 401이면 토큰 갱신 후 1회 재시도
+    if (response.info().status === 401) {
+      const { accessToken: currentToken } = useAuthStore.getState();
+      if (currentToken) useAuthStore.setState({ accessToken: null });
 
-    const refreshed = await getAccessToken();
-    if (!refreshed) return response;
+      const refreshed = await getAccessToken();
+      if (!refreshed) return response;
 
-    const retryHeaders: Record<string, string> = {
-      Authorization: `Bearer ${refreshed}`,
-    };
+      const retryHeaders: Record<string, string> = {
+        Authorization: `Bearer ${refreshed}`,
+      };
 
-    response = await RNBlobUtil.fetch(method, url, retryHeaders, parts);
+      response = await RNBlobUtil.fetch(method, url, retryHeaders, parts);
+    }
+
+    console.log('--------------------------------------');
+    console.log('url:', url);
+    console.log('request:', parts);
+    console.log('response:', response);
+    console.log('--------------------------------------');
+
+    // ✅ Crashlytics API 에러 로깅
+    const status = response.info().status;
+    if (status < 200 || status >= 300) {
+      const errorData = {
+        url,
+        status,
+        method,
+        contentType: 'multipart/form-data',
+      };
+
+      crashlytics().recordError(
+        new Error(`Multipart API Error: ${status} ${url}`),
+        JSON.stringify(errorData),
+      );
+
+      if (status >= 500) {
+        crashlytics().log(`🚨 Multipart Server Error: ${status} ${url}`);
+      } else if (status >= 400 && status < 500) {
+        crashlytics().log(`⚠️ Multipart Client Error: ${status} ${url}`);
+      }
+    }
+
+    return response;
+  } catch (error) {
+    // ✅ 네트워크 에러 로깅
+    crashlytics().recordError(error as Error, JSON.stringify({
+      url,
+      type: 'Multipart NetworkError',
+      message: (error as Error).message,
+    }));
+
+    crashlytics().log(`🔴 Multipart Network Error: ${url}`);
+    throw error;
   }
-
-  console.log('--------------------------------------');
-  console.log('url:', url);
-  console.log('request:', parts);
-  console.log('response:', response);
-  console.log('--------------------------------------');
-
-
-  return response;
 };
 
 export async function toBlobPath(uri: string): Promise<string> {

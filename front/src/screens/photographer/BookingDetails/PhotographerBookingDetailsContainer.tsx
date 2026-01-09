@@ -4,7 +4,10 @@ import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetail
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
-// import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
+import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
+import { queryClient } from '@/config/queryClient.ts';
+import { chatQueryKeys } from '@/queries/keys.ts';
+import { formatReservationDateTime } from '@/utils/format.ts';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -15,7 +18,7 @@ export default function PhotographerBookingDetailsContainer() {
   const { userId } = useAuthStore();
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
-  // const { mutate: chatMutate } = useCreateOrGetChatRoomMutation();
+  const { mutate: chatMutate } = useCreateOrGetChatRoomMutation();
 
   const handlePressBack = () => navigation.goBack();
 
@@ -28,6 +31,21 @@ export default function PhotographerBookingDetailsContainer() {
     navigation.navigate('ViewPhotos', { bookingId });
   };
 
+  const handleOpenChatRoom = () => {
+    chatMutate(
+      { receiverId: bookingDetails?.customerId ?? '' },
+      {
+        onSuccess: (roomId) => {
+          queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
+
+          navigation.navigate('ChatDetails', {
+            roomId
+          });
+        },
+      },
+    );
+  }
+
   if (!bookingDetails) {
     return (
       <PhotographerBookingDetailsView
@@ -35,8 +53,8 @@ export default function PhotographerBookingDetailsContainer() {
         customerName=""
         bookingOption=""
         datetime=""
+        region=""
         additionalRequest=""
-        status="WAITING_FOR_APPROVAL"
         isLoading={isLoading}
       navigation={navigation}
     />
@@ -44,16 +62,18 @@ export default function PhotographerBookingDetailsContainer() {
   }
 
   const canViewPhotos = bookingDetails.status === 'COMPLETED' || bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
+  const canOpenChatRoom = bookingDetails.status !== 'WAITING_FOR_APPROVAL' && bookingDetails.status !== 'CANCELLED' && bookingDetails.status !== 'REJECTED';
 
   return (
     <PhotographerBookingDetailsView
       onPressBack={handlePressBack}
       customerName={bookingDetails.customerName}
       bookingOption={bookingDetails.shootingItems}
-      datetime={bookingDetails.shootingDate}
+      datetime={formatReservationDateTime(bookingDetails.shootingDate, bookingDetails.startTime, bookingDetails.endTime)}
+      region={bookingDetails.region}
       additionalRequest={bookingDetails.requestDetails}
-      status={bookingDetails.status}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
+      onOpenChatRoom={canOpenChatRoom ? handleOpenChatRoom : undefined}
       isLoading={isLoading}
       navigation={navigation}
     />

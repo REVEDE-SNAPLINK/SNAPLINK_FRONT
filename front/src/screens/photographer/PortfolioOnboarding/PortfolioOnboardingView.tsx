@@ -19,7 +19,7 @@ import { GetRegionsResponse } from '@/api/regions.ts';
 import { GetConceptsResponse } from '@/api/concepts.ts';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
-import OptionItem, { Option, TimeOptionCheckboxWrapper } from '@/components/OptionItem.tsx';
+import OptionItem, { Option, TimeOptionItem } from '@/components/OptionItem.tsx';
 import CloseIcon from '@/assets/icons/multiply.svg'
 import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
@@ -36,7 +36,6 @@ export interface DaySchedule {
 
 export interface PortfolioOnboardingFormData {
   description: string;
-  portfolioTitle: string;
   portfolioDescription: string;
   portfolioIsLinked: boolean;
   regionIds: number[];
@@ -200,7 +199,7 @@ export default function PortfolioOnboardingView({
   return (
     <ScreenContainer
       headerShown
-      headerTitle="작가 가입"
+      headerTitle={currentStep <= 1 ? "포트폴리오 프로필" : "촬영 등록"}
       onPressBack={onPressBack}
       onPressTool={onPressClose}
       headerToolIcon={CloseIcon}
@@ -343,26 +342,6 @@ const PortfolioOnboardingStep2 = ({
         images={photoURIs}
         onRemoveImage={onRemoveImage}
         onAddImages={onAddImages}
-      />
-      <Typography
-        fontSize={CAPTION_FONT_SIZE}
-        letterSpacing="-2.5%"
-        marginBottom={10}
-        marginTop={22}
-      >
-        커뮤니티 게시글 제목
-      </Typography>
-      <Controller
-        control={control}
-        name="portfolioTitle"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="게시글 제목"
-            value={value}
-            onChangeText={onChange}
-            onFocus={handleAutoScrollOnFocus}
-          />
-        )}
       />
       <Typography
         fontSize={CAPTION_FONT_SIZE}
@@ -761,7 +740,7 @@ const PortfolioOnboardingStep7 = ({
   control,
   onDeleteOption,
 }: PortfolioOnboardingStep7Props) => {
-  const [isTimeOptions, setTimeOptions] = useState<boolean[]>([false]);
+  const [addTimeOption, setAddTimeOption] = useState<boolean>(false);
 
   // @ts-ignore
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
@@ -769,7 +748,7 @@ const PortfolioOnboardingStep7 = ({
     <>
       <Typography fontSize={TITLE_FONT_SIZE} lineHeight="140%" marginBottom={24}>
         <Typography fontSize={TITLE_FONT_SIZE} fontWeight="semiBold" lineHeight="140%">
-          추가할 옵션
+          부가 옵션
         </Typography>
         을 선택해 주세요.
       </Typography>
@@ -789,7 +768,7 @@ const PortfolioOnboardingStep7 = ({
                 letterSpacing="-2.5%"
                 marginBottom={10}
               >
-                추가 옵션
+                부가 옵션
               </Typography>
               <FormInput
                 placeholder="추가 옵션명 *"
@@ -805,40 +784,13 @@ const PortfolioOnboardingStep7 = ({
                 }}
                 onFocus={handleAutoScrollOnFocus}
               />
-              <TimeOptionCheckboxWrapper>
-                <Checkbox isChecked={isTimeOptions[0]} onPress={() => setTimeOptions([!isTimeOptions[0], ...isTimeOptions.slice(1)])} />
-                <Typography
-                  fontSize={14}
-                  letterSpacing="-2.5%"
-                  marginLeft={10}
-                >
-                  시간 추가 옵션
-                </Typography>
-              </TimeOptionCheckboxWrapper>
-              {isTimeOptions[0] && (
-                <FormInput
-                  placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
-                  value={firstOption.time || ''}
-                  keyboardType="numeric"
-                  onChangeText={(time: string) => {
-                    const newOptions = [...optionList];
-                    if (newOptions.length === 0) {
-                      newOptions.push({ name: '', description: '', price: '', time });
-                    } else {
-                      newOptions[0] = { ...newOptions[0], time };
-                    }
-                    onChange(newOptions);
-                  }}
-                  onFocus={handleAutoScrollOnFocus}
-                />
-              )}
               <Typography
                 fontSize={CAPTION_FONT_SIZE}
                 letterSpacing="-2.5%"
                 marginBottom={10}
                 marginTop={21}
               >
-                추가 옵션 설명
+                부가 옵션 설명
               </Typography>
               <FormInput
                 placeholder="입력해주세요 *"
@@ -863,7 +815,7 @@ const PortfolioOnboardingStep7 = ({
                 marginBottom={10}
                 marginTop={21}
               >
-                추가 옵션 비용
+                부가 옵션 비용
               </Typography>
               <FormInput
                 placeholder="원 *"
@@ -884,8 +836,11 @@ const PortfolioOnboardingStep7 = ({
               {/* 옵션 추가 버튼 */}
               <AddOptionButton
                 onPress={() => {
-                  const newOptions = [...optionList, { name: '', description: '', price: '', time: '' }];
-                  setTimeOptions([...isTimeOptions, false]);
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description: '', price: '', time: '' });
+                  }
+                  newOptions.push({ name: '', description: '', price: '', time: '' });
                   onChange(newOptions);
                 }}
               >
@@ -894,45 +849,79 @@ const PortfolioOnboardingStep7 = ({
                   fontWeight="bold"
                   color="primary"
                 >
-                  옵션 추가
+                  부가옵션 추가하기
                 </Typography>
               </AddOptionButton>
+              {!addTimeOption && (
+                <AddOptionButton
+                  onPress={() => {
+                    const newOptions = [...optionList];
+                    if (newOptions.length === 0) {
+                      newOptions.push({ name: '', description: '', price: '', time: '' });
+                    }
+                    newOptions.push({ name: '시간 추가', description: '', price: '', time: '', isTimeOption: true });
+                    setAddTimeOption(true)
+                    onChange(newOptions);
+                  }}
+                >
+                  <Typography
+                    fontSize={14}
+                    fontWeight="bold"
+                    color="primary"
+                  >
+                    시간 옵션 추가하기
+                  </Typography>
+                </AddOptionButton>
+              )}
 
               {/* 추가된 옵션들 */}
-              {restOptions.map((option: Option, index: number) => (
-                <OptionItem
-                  key={index}
-                  name={option.name}
-                  description={option.description}
-                  price={option.price}
-                  isTimeOption={isTimeOptions[index + 1]}
-                  time={option.time}
-                  setName={(name: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], name };
-                    onChange(newOptions);
-                  }}
-                  setDescription={(description: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], description };
-                    onChange(newOptions);
-                  }}
-                  setPrice={(price: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], price };
-                    onChange(newOptions);
-                  }}
-                  setIsTimeOption={(isTimeOption: boolean) => {
-                    setTimeOptions([...isTimeOptions.slice(0, index + 1), isTimeOption, ...isTimeOptions.slice(index + 2)]);
-                  }}
-                  setTime={(time: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], time };
-                    onChange(newOptions);
-                  }}
-                  onDelete={() => onDeleteOption(index + 1)}
-                />
-              ))}
+              {restOptions.map((option: Option, index: number) =>
+                option.isTimeOption ? (
+                  <TimeOptionItem
+                    key={index}
+                    price={option.price}
+                    setPrice={(price: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], price };
+                      onChange(newOptions);
+                    }}
+                    time={option.time}
+                    setTime={(time: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], time };
+                      onChange(newOptions);
+                    }}
+                    onDelete={() => {
+                      onDeleteOption(index + 1);
+                      setAddTimeOption(false);
+                    }}
+                  />
+                ) : (
+                  <OptionItem
+                    key={index}
+                    name={option.name}
+                    description={option.description}
+                    price={option.price}
+                    time={option.time}
+                    setName={(name: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], name };
+                      onChange(newOptions);
+                    }}
+                    setDescription={(description: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], description };
+                      onChange(newOptions);
+                    }}
+                    setPrice={(price: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], price };
+                      onChange(newOptions);
+                    }}
+                    onDelete={() => onDeleteOption(index + 1)}
+                  />
+                )
+              )}
             </>
           );
         }}
@@ -1028,7 +1017,7 @@ const PortfolioOnboardingStep8 = ({
             marginBottom={10}
             marginTop={25}
           >
-            제공하는 사진 장수
+            제공하는 보정 사진 수
           </Typography>
           <Controller
             control={control}
@@ -1057,7 +1046,6 @@ const days = [
   '금요일',
   '토요일',
   '일요일',
-  '공휴일',
 ];
 
 interface PortfolioOnboardingStep9Props {
@@ -1073,8 +1061,7 @@ const PortfolioOnboardingStep9 = ({
     `${String(i).padStart(2, '0')}:00`
   );
 
-  const availableDays = useWatch({ control, name: 'availableDays' }) || [];
-  const selectedWeekdays = availableDays.filter((day: string) => day !== '공휴일');
+  const selectedWeekdays = useWatch({ control, name: 'availableDays' }) || [];
 
   const getEndTimeOptions = (startTime: Date | null) => {
     if (!startTime) return timeOptions;
@@ -1268,7 +1255,7 @@ const TimeBar = styled.View`
 `;
 
 const TimeDropDownInputWrapper = styled.View`
-  width: 130px;
+  flex: 1;
 `;
 
 const DayScheduleSection = styled.View`

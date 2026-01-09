@@ -3,12 +3,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton } from '@/components/theme';
+import { Alert, SubmitButton } from '@/components/theme';
 import FormInput from '@/components/form/FormInput';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { usePatchMyNicknameMutation } from '@/mutations/user.ts';
+import { checkNickname } from '@/api/user.ts';
 
 type NicknameEditFormData = {
   nickname: string;
@@ -30,13 +31,16 @@ export default function NicknameEditScreen() {
     handleSubmit,
     setError,
     clearErrors,
+    watch,
     formState: { errors, isValid },
   } = useForm<NicknameEditFormData>({
     defaultValues,
     mode: 'onChange',
   });
 
-  const isSubmitDisabled = !isValid;
+  const watchedNickname = watch('nickname')
+
+  const isSubmitDisabled = !isValid || (meData?.nickname !== undefined && meData?.nickname === watchedNickname);
   const submitButtonText = '저장';
 
   const handlePressBack = () => navigation.goBack();
@@ -48,21 +52,43 @@ export default function NicknameEditScreen() {
     onChange(text);
   };
 
-  const handleSubmitNickname = async (data: NicknameEditFormData) => {
-    const value = data.nickname.trim();
+  const handleSubmitNickname = (data: NicknameEditFormData) => {
+    Alert.show({
+      title: '닉네임 변경',
+      message: '해당 닉네임으로 변경하시겠습니까?',
+      buttons: [
+        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '변경', onPress: async () => {
+            const value = data.nickname.trim();
 
-    if (!value) {
-      setError('nickname', { type: 'validate', message: '닉네임을 입력해주세요.' });
-      return;
-    }
+            if (!value) {
+              setError('nickname', { type: 'validate', message: '닉네임을 입력해주세요.' });
+              return;
+            }
 
-    try {
-      await patchMyNicknameMutation.mutateAsync(value);
-      navigation.goBack();
-    } catch (e: any) {
-      const message = e?.message ?? '닉네임을 저장할 수 없어요. 잠시 후 다시 시도해주세요.';
-      setNicknameError(message);
-    }
+            // 닉네임 중복 체크
+            try {
+              const isDuplicate = await checkNickname(value);
+              if (isDuplicate) {
+                setNicknameError('이미 사용 중인 닉네임이에요!');
+                return;
+              }
+            } catch (error) {
+              console.error('Failed to check nickname:', error);
+              setNicknameError('닉네임 확인 중 오류가 발생했습니다.');
+              return;
+            }
+
+            try {
+              await patchMyNicknameMutation.mutateAsync(value);
+              navigation.goBack();
+            } catch (e: any) {
+              const message = e?.message ?? '닉네임을 저장할 수 없어요. 잠시 후 다시 시도해주세요.';
+              setNicknameError(message);
+            }
+          } },
+      ]
+    })
   };
 
   const handlePressSubmit = handleSubmit(handleSubmitNickname);
@@ -122,8 +148,8 @@ const ScrollContainer = styled.ScrollView`
 `;
 
 const Content = styled.View`
-  padding: 0 40px;
-  margin-top: 40px;
+  padding: 0 20px;
+  margin-top: 20px;
 `;
 
 const Footer = styled.View`

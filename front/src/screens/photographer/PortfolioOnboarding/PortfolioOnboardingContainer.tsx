@@ -9,9 +9,9 @@ import { useConceptsQuery, useRegionsQuery, useTagsQuery } from '@/queries/meta.
 import { useMeQuery } from '@/queries/user.ts';
 import {
   useCreatePortfolioMutation,
-  usePatchPhotographerProfileImageMutation,
   useSignPhotographerMutation,
 } from '@/mutations/photographers.ts';
+import { usePatchUserProfileImageMutation } from '@/mutations/user.ts';
 import { Alert, requestPermission } from '@/components/theme';
 import {
   CameraOptions,
@@ -51,7 +51,7 @@ const buildSchedulesFromForm = (
   daySchedules: { [day: string]: { startTime: Date | null; endTime: Date | null } },
 ): PhotographerScheduleItem[] => {
   return availableDays
-    .filter((day): day is DayKo => day in DAY_KO_TO_ENUM && day !== '공휴일')
+    .filter((day): day is DayKo => day in DAY_KO_TO_ENUM)
     .filter((day) => {
       const schedule = daySchedules[day];
       return schedule && schedule.startTime && schedule.endTime;
@@ -74,7 +74,7 @@ export default function PortfolioOnboardingContainer() {
 
   const navigation = useNavigation<MainNavigationProp>();
 
-  const { mutate: uploadProfile } = usePatchPhotographerProfileImageMutation();
+  const { mutate: uploadProfile } = usePatchUserProfileImageMutation();
   const { mutate: uploadPortfolio } = useCreatePortfolioMutation();
   const { mutate: signPhotographer } = useSignPhotographerMutation();
 
@@ -104,7 +104,6 @@ export default function PortfolioOnboardingContainer() {
   } = useForm<PortfolioOnboardingFormData>({
     defaultValues: {
       description: '',
-      portfolioTitle: '',
       portfolioDescription: '',
       portfolioIsLinked: false,
       regionIds: [],
@@ -128,7 +127,6 @@ export default function PortfolioOnboardingContainer() {
   });
 
   const watchedDescription = watch('description');
-  const watchedPortfolioTitle = watch('portfolioTitle');
   const watchedPortfolioDescription = watch('portfolioDescription');
   const watchedPortfolioIsLinked = watch('portfolioIsLinked');
   const watchedRegionIds = watch('regionIds');
@@ -155,7 +153,7 @@ export default function PortfolioOnboardingContainer() {
         case 1:
           // Step2: 포트폴리오 사진 (최소 1장), 커뮤니티 게시 체크 시 제목/내용 필수
           const hasPhotos = photoURIs.length >= 1;
-          const hasTitleAndDescription = watchedPortfolioTitle.trim() !== '' && watchedPortfolioDescription.trim() !== '';
+          const hasTitleAndDescription = watchedPortfolioDescription.trim() !== '';
 
           if (watchedPortfolioIsLinked) {
             return hasPhotos && hasTitleAndDescription;
@@ -196,7 +194,6 @@ export default function PortfolioOnboardingContainer() {
             // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
             return (
               option.name.trim() !== '' &&
-              option.description.trim() !== '' &&
               option.price.trim() !== ''
             );
           });
@@ -215,13 +212,12 @@ export default function PortfolioOnboardingContainer() {
           // Step9: 촬영 가능 일정
           if (watchedAvailableDays.length < 1) return false;
 
-          // Check if all selected weekdays (except 공휴일) have time schedules
-          const selectedWeekdays = watchedAvailableDays.filter(day => day !== '공휴일');
-          if (selectedWeekdays.length === 0 && watchedAvailableDays.includes('공휴일')) {
-            return true; // Only 공휴일 is selected, which doesn't need time
+          // Check if all selected weekdays have time schedules
+          if (watchedAvailableDays.length === 0) {
+            return true;
           }
 
-          return selectedWeekdays.every(day => {
+          return watchedAvailableDays.every(day => {
             const schedule = watchedDaySchedules[day];
             return schedule && schedule.startTime !== null && schedule.endTime !== null;
           });
@@ -233,7 +229,6 @@ export default function PortfolioOnboardingContainer() {
       profileImageURI,
       photoURIs,
       watchedDescription,
-      watchedPortfolioTitle,
       watchedPortfolioDescription,
       watchedPortfolioIsLinked,
       watchedRegionIds,
@@ -258,7 +253,7 @@ export default function PortfolioOnboardingContainer() {
         return profileImageURI !== undefined && watchedDescription.trim() !== '';
       case 1: {
         const hasPhotos = photoURIs.length >= 1;
-        const hasTitleAndDescription = watchedPortfolioTitle.trim() !== '' && watchedPortfolioDescription.trim() !== '';
+        const hasTitleAndDescription = watchedPortfolioDescription.trim() !== '';
 
         if (watchedPortfolioIsLinked) {
           return hasPhotos && hasTitleAndDescription;
@@ -295,7 +290,6 @@ export default function PortfolioOnboardingContainer() {
           // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
           return (
             option.name.trim() !== '' &&
-            option.description.trim() !== '' &&
             option.price.trim() !== ''
           );
         });
@@ -312,13 +306,12 @@ export default function PortfolioOnboardingContainer() {
       case 8: {
         if (watchedAvailableDays.length < 1) return false;
 
-        // Check if all selected weekdays (except 공휴일) have time schedules
-        const selectedWeekdays = watchedAvailableDays.filter(day => day !== '공휴일');
-        if (selectedWeekdays.length === 0 && watchedAvailableDays.includes('공휴일')) {
-          return true; // Only 공휴일 is selected, which doesn't need time
+        // Check if all selected weekdays have time schedules
+        if (watchedAvailableDays.length === 0) {
+          return true;
         }
 
-        return selectedWeekdays.every(day => {
+        return watchedAvailableDays.every(day => {
           const schedule = watchedDaySchedules[day];
           return schedule && schedule.startTime !== null && schedule.endTime !== null;
         });
@@ -331,7 +324,6 @@ export default function PortfolioOnboardingContainer() {
     profileImageURI,
     photoURIs,
     watchedDescription,
-    watchedPortfolioTitle,
     watchedPortfolioDescription,
     watchedPortfolioIsLinked,
     watchedRegionIds,
@@ -365,14 +357,28 @@ export default function PortfolioOnboardingContainer() {
 
   const handlePressBack = () => {
     if (currentStep === 0) {
-      navigation.goBack();
+      Alert.show({
+        title: '포트폴리오 작성을 그만둘까요?',
+        message: '변경된 내용은 저장되지 않아요.',
+        buttons: [
+          { text: "취소", type: 'cancel', onPress: () => {} },
+          { text: "확인", onPress: () => navigation.goBack() },
+        ]
+      })
     } else {
       setCurrentStep(currentStep - 1);
     }
   }
 
   const handlePressClose = () => {
-    navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+    Alert.show({
+      title: '포트폴리오 작성을 그만둘까요?',
+      message: '변경된 내용은 저장되지 않아요.',
+      buttons: [
+        { text: "취소", type: 'cancel', onPress: () => {} },
+        { text: "확인", onPress: () => navigation.reset({ index: 0, routes: [{ name: "Home" }] }) },
+      ]
+    })
   }
 
   const handlePressSubmit = async () => {
@@ -390,24 +396,6 @@ export default function PortfolioOnboardingContainer() {
           });
           return;
         }
-        if (profileImageURI !== undefined && isLocalUri(profileImageURI.uri)) {
-          uploadProfile({
-            image: {
-              uri: profileImageURI.uri,
-              name: generateImageFilename(profileImageURI.type, 'photographer_profile'),
-              type: profileImageURI.type,
-            }
-          });
-        }
-      }
-
-      if (currentStep === 1 && photoURIs.length >= 1) {
-        uploadPortfolio({
-          title: watchedPortfolioTitle,
-          content: watchedPortfolioDescription,
-          isLinked: watchedPortfolioIsLinked,
-          images: photoURIs
-        });
       }
 
       if (currentStep === 2) {
@@ -487,6 +475,26 @@ export default function PortfolioOnboardingContainer() {
 
   const onSubmit = useCallback(
     async (data: PortfolioOnboardingFormData) => {
+      // Upload profile image if it's a local URI
+      if (profileImageURI !== undefined && isLocalUri(profileImageURI.uri)) {
+        uploadProfile({
+          image: {
+            uri: profileImageURI.uri,
+            name: generateImageFilename(profileImageURI.type, 'photographer_profile'),
+            type: profileImageURI.type,
+          }
+        });
+      }
+
+      // Upload portfolio if there are photos
+      if (photoURIs.length >= 1) {
+        uploadPortfolio({
+          content: watchedPortfolioDescription,
+          isLinked: watchedPortfolioIsLinked,
+          images: photoURIs
+        });
+      }
+
       // Helper function to convert time duration to minutes
       const parsePhotoTime = (timeStr: string | null): number => {
         if (!timeStr || timeStr.trim() === '') return 60; // default 1 hour
@@ -580,7 +588,7 @@ export default function PortfolioOnboardingContainer() {
         regionIds: data.regionIds,
         conceptIds: data.conceptIds,
         schedules: buildSchedulesFromForm(data.availableDays, data.daySchedules),
-        isPublicHolidays: data.availableDays.includes("공휴일"),
+        isPublicHolidays: true,
         tag: data.tagIds, // Array of tag IDs
         shootingProduct,
       };
@@ -623,7 +631,16 @@ export default function PortfolioOnboardingContainer() {
         },
       });
     },
-    [navigation, signPhotographer]
+    [
+      navigation,
+      signPhotographer,
+      profileImageURI,
+      photoURIs,
+      uploadProfile,
+      uploadPortfolio,
+      watchedPortfolioDescription,
+      watchedPortfolioIsLinked,
+    ]
   );
 
   const handleCamera = useCallback(async () => {

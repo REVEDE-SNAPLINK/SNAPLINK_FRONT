@@ -9,7 +9,6 @@ import { requestPermission } from '@/utils/permissions.ts'
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp, RootNavigationProp } from '@/types/navigation.ts';
 import { checkEmail, checkNickname } from '@/api/user.ts';
-import { openUrl } from '@/utils/link.ts';
 
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
 const TOTAL_STEPS = 7;

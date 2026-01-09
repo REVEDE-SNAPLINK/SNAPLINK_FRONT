@@ -35,7 +35,7 @@ export async function signInApi (provider: string, token: string): Promise<SignI
     body: JSON.stringify({ provider, token: token }),
   });
 
-  if (!response.ok) throw new Error(`Failed to sign in: ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error('로그인할 수 없습니다.');
 
   const data = await response.json();
 
@@ -65,7 +65,7 @@ export async function refreshApi(refreshToken: string): Promise<{ accessToken: s
     body: JSON.stringify({ refreshToken }),
   });
 
-  if (!response.ok) throw new Error(`Failed to refresh tokens: ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error('토큰을 갱신할 수 없습니다.');
 
   const data = await response.json();
   return {
@@ -95,7 +95,7 @@ export async function signUpApi (formData: SignUpFormData): Promise<LoginSuccess
     body: JSON.stringify(formData)
   });
 
-  if (!response.ok) throw new Error(`Failed to sign up: ${response.status}`);
+  if (!response.ok) throw new Error('회원가입을 완료할 수 없습니다.');
 
   const data = await response.json();
 
@@ -116,7 +116,7 @@ export async function logoutApi(): Promise<void> {
     method: 'POST',
   })
 
-  if (!response.ok) throw new Error(`Failed to logout: ${response.status}`);
+  if (!response.ok) throw new Error('로그아웃할 수 없습니다.');
 }
 
 // 회원 탈퇴
@@ -125,5 +125,5 @@ export async function withdrawApi(): Promise<void> {
     method: 'DELETE',
   })
 
-  if (!response.ok) throw new Error(`Failed to logout: ${response.status}`);
+  if (!response.ok) throw new Error('회원 탈퇴를 완료할 수 없습니다.');
 }

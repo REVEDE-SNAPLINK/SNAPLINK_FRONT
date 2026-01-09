@@ -35,6 +35,7 @@ export const useCommunityPostQuery = (postId?: number) => {
     queryFn: () => getCommunityPost(postId!),
     enabled: Boolean(postId),
     staleTime: 1000 * 30,
+    refetchInterval: 10000,
   });
 };
 
@@ -47,6 +48,7 @@ export const useCommunityCommentsQuery = (
     queryFn: () => getComments(postId, params || {}),
     enabled: Boolean(postId),
     staleTime: 1000 * 30,
+    refetchInterval: 10000,
   });
 };
 

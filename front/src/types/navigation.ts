@@ -33,7 +33,7 @@ export type MainStackParamList = {
   PhotographerDetails: { photographerId: string };
   AIRecommdationForm: undefined;
   AIRecommdationResult: { prompt: string; resultCount?: number };
-  PostDetail: { postId: number, profileImageURI: string };
+  PostDetail: { postId: number, photographerId: string; profileImageURI: string };
 
   // Community
   CommunityDetails: { postId: number };
@@ -42,8 +42,6 @@ export type MainStackParamList = {
   // Chat
   ChatDetails: {
     roomId: number;
-    opponentNickname?: string;
-    opponentProfileImageURI?: string;
   };
 
   // Reservation

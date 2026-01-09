@@ -96,6 +96,7 @@ export default function AIRecommdationResultContainer() {
     maxPrice: null,
     minPrice: null,
     query: prompt,
+    sort: "RECOMMENDED"
   }), [prompt]);
 
   // Fetch photographers
@@ -141,9 +142,9 @@ export default function AIRecommdationResultContainer() {
       if (filter.categoryId === 'gender' && filter.type === 'ENUM') {
         const genderValue = filter.values[0];
         if (genderValue === '여성작가') {
-          filtered = filtered.filter((p) => p.gender === 'WOMAN');
+          filtered = filtered.filter((p) => p.gender === 'FEMALE');
         } else if (genderValue === '남성작가') {
-          filtered = filtered.filter((p) => p.gender === 'MAN');
+          filtered = filtered.filter((p) => p.gender === 'MALE');
         }
       } else if (filter.categoryId === 'region' && filter.type === 'ENUM') {
         // Region filtering would require regionIds in PhotographerSearchItem

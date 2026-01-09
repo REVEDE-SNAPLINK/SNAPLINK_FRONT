@@ -5,7 +5,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import ShootingManageView from '@/screens/photographer/ShootingManage/ShootingManageView.tsx';
 import { useMyShootingsQuery } from '@/queries/shootings.ts';
 import { useWeeklyScheduleQuery } from '@/queries/schedules.ts';
-import { useDeleteShootingMutation } from '@/mutations/shootings.ts';
+import { useDeleteShootingMutation, useUpdateShootingMutation } from '@/mutations/shootings.ts';
 import { shootingsQueryKeys } from '@/queries/keys.ts';
 import { getShootingOptions } from '@/api/shootings.ts';
 import { Alert } from '@/components/theme';
@@ -18,16 +18,6 @@ export default function ShootingManageContainer() {
 
   // Fetch weekly schedule
   const { data: weeklyScheduleData } = useWeeklyScheduleQuery(userId || '', !!userId);
-
-  // Convert weekly schedule to days string
-  // const days = useMemo(() => {
-  //   if (!weeklyScheduleData || weeklyScheduleData.length === 0) {
-  //     return '설정된 일정 없음';
-  //   }
-  //   return weeklyScheduleData
-  //     .map((schedule) => DAY_OF_WEEK_MAP[schedule.dayOfWeek])
-  //     .join(', ');
-  // }, [weeklyScheduleData]);
 
   // Fetch shooting list
   const { data: shootings = [] } = useMyShootingsQuery();
@@ -49,7 +39,13 @@ export default function ShootingManageContainer() {
     }));
   }, [shootings, optionsQueries]);
 
+  const defaultShooting = useMemo(() => {
+    const defaultShootings = shootings.filter((v) => v.isDefault);
+    return defaultShootings.length > 0 ? defaultShootings[0] : null;
+  }, [shootings])
+
   const deleteShootingMutation = useDeleteShootingMutation();
+  const updateShootingMutation = useUpdateShootingMutation();
 
   const handlePressBack = () => navigation.goBack();
 
@@ -127,6 +123,86 @@ export default function ShootingManageContainer() {
     navigation.navigate('ScheduleForm');
   };
 
+  const handleChangeDefault = (productId: number) => {
+    Alert.show({
+      title: '기본 상품으로 변경',
+      message: '변경하시면 해당 상품 정보가 프로필에 노출됩니다. 변경하시겠습니까?',
+      buttons: [
+        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '변경', onPress: () => {
+            const currentShooting = shootings.find((v) => v.id === productId);
+
+            if (currentShooting === undefined) {
+              Alert.show({
+                title: '변경 실패',
+                message: '없는 상품입니다.',
+              });
+              return;
+            }
+
+            updateShootingMutation.mutate({
+              shootingId: productId,
+              body: {
+                isDefault: true,
+                PhotographerId: userId,
+                shootingName: currentShooting.shoootingName,
+                basePrice: currentShooting.basePrice,
+                description: currentShooting.description,
+                photoTime: currentShooting.photoTime,
+                personnel: currentShooting.personnel,
+                providesRawFile: currentShooting.providesRawFile,
+                editingType: currentShooting.editingType,
+                editingDeadline: currentShooting.editingDeadline,
+                selectionAuthority: currentShooting.selectionAuthority,
+                providedEditCount: currentShooting.providedEditCount,
+              }
+            }, {
+              onSuccess: () => {
+                if (defaultShooting !== null) {
+                  updateShootingMutation.mutate({
+                    shootingId: defaultShooting.id,
+                    body: {
+                      isDefault: false,
+                      PhotographerId: userId,
+                      shootingName: defaultShooting.shoootingName,
+                      basePrice: defaultShooting.basePrice,
+                      description: defaultShooting.description,
+                      photoTime: defaultShooting.photoTime,
+                      personnel: defaultShooting.personnel,
+                      providesRawFile: defaultShooting.providesRawFile,
+                      editingType: defaultShooting.editingType,
+                      editingDeadline: defaultShooting.editingDeadline,
+                      selectionAuthority: defaultShooting.selectionAuthority,
+                      providedEditCount: defaultShooting.providedEditCount,
+                    }
+                  }, {
+                    onSuccess: () => {
+                      Alert.show({
+                        title: '변경 완료',
+                        message: '기본 상품으로 변경되었습니다.',
+                      });
+                    },
+                    onError: () => {
+                      Alert.show({
+                        title: '네트워크 에러',
+                        message: '네트워크를 확인해보세요.',
+                      });
+                    }
+                  })
+                }
+              },
+              onError: () => {
+                Alert.show({
+                  title: '네트워크 에러',
+                  message: '네트워크를 확인해보세요.',
+                });
+              }
+            })
+          } },
+      ]
+    })
+  }
+
   return (
     <ShootingManageView
       onPressBack={handlePressBack}
@@ -134,7 +210,9 @@ export default function ShootingManageContainer() {
       onPressEditProduct={handlePressEditProduct}
       onPressDeleteProduct={handlePressDeleteProduct}
       onPressEditSchedule={handlePressEditSchedule}
+      onChangeDefault={handleChangeDefault}
       shootings={shootingsWithOptions}
+      hasDefault={defaultShooting !== null}
       weeklySchedule={weeklyScheduleData ?? []}
       navigation={navigation}
     />

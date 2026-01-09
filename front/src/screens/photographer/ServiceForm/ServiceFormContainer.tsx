@@ -130,6 +130,7 @@ export default function ServiceFormContainer() {
           description: opt.description,
           price: opt.price.toString(),
           time: opt.additionalTime > 0 ? opt.additionalTime.toString() : '',
+          isTimeOption: opt.additionalTime > 0, // time 값이 있으면 isTimeOption을 true로 설정
         })),
       });
     }
@@ -174,7 +175,6 @@ export default function ServiceFormContainer() {
             // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
             return (
               option.name.trim() !== '' &&
-              option.description.trim() !== '' &&
               option.price.trim() !== ''
             );
           });
@@ -233,7 +233,6 @@ export default function ServiceFormContainer() {
           // 하나라도 입력했으면 time을 제외한 모든 필드가 필수
           return (
             option.name.trim() !== '' &&
-            option.description.trim() !== '' &&
             option.price.trim() !== ''
           );
         });
@@ -340,7 +339,7 @@ export default function ServiceFormContainer() {
           editingType: retouchingTypeReverseMap[data.retouchingType || ''] || 'NONE',
           editingDeadline: retouchingDurationReverseMap[data.retouchingDuration || ''] || 'WITHUP_7_DAYS',
           selectionAuthority: selectionAuthorityReverseMap[data.retouchingSelectionRight || ''] || 'BOTH',
-          providedEditCount: parseInt(data.shootingProductProvidedEditCount, 10),
+          providedEditCount: parseInt(data.shootingProductProvidedEditCount) || 0,
         };
 
         let shootingId: number;

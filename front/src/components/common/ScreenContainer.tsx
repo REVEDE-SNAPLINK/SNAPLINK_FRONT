@@ -56,20 +56,28 @@ export default function ScreenContainer({
 
   // Android hardware back button handler
   useFocusEffect(
-    React.useCallback(() => {
-      if (!navigation) return;
+      React.useCallback(() => {
+        const onBackPress = () => {
+          // 1. 만약 부모로부터 전달받은 onPressBack이 있다면 그것을 우선 실행
+          if (onPressBack) {
+            onPressBack();
+            return true; // 시스템 종료 방지
+          }
 
-      const onBackPress = () => {
-        if (navigation.canGoBack()) {
-          navigation.goBack();
-          return true;
-        }
-        return false;
-      };
+          // 2. onPressBack이 없고, navigation이 있다면 기본 handleBack(또는 goBack) 실행
+          if (navigation && navigation.isFocused()) {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+              return true;
+            }
+          }
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [navigation])
+          return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
+        };
+
+        const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+        return () => subscription.remove();
+      }, [navigation, onPressBack]) // onPressBack을 의존성 배열에 추가!
   );
 
   return (

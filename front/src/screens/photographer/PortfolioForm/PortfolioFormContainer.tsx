@@ -40,9 +40,8 @@ export default function PortfolioFormContainer() {
   const [photoURIs, setPhotoURIs] = useState<ExtendedUploadImageFile[]>([]);
   const [originalPhotoIds, setOriginalPhotoIds] = useState<number[]>([]); // Track original photo IDs
 
-  const { control, handleSubmit, watch, reset } = useForm<PortfolioFormData>({
+  const { control, handleSubmit, reset, watch } = useForm<PortfolioFormData>({
     defaultValues: {
-      portfolioTitle: '',
       portfolioDescription: '',
       portfolioIsLinked: false,
     },
@@ -53,7 +52,6 @@ export default function PortfolioFormContainer() {
   useEffect(() => {
     if (isEditMode && existingPost) {
       reset({
-        portfolioTitle: existingPost.title || '',
         portfolioDescription: existingPost.content || '',
         portfolioIsLinked: false,
       });
@@ -74,9 +72,7 @@ export default function PortfolioFormContainer() {
     }
   }, [isEditMode, existingPost, reset]);
 
-  const watchedTitle = watch('portfolioTitle');
-
-  const isValid = photoURIs.length > 0 && watchedTitle.trim().length > 0;
+  const isValid = photoURIs.length > 0 && watch('portfolioDescription').trim().length > 0;
 
   const handlePressBack = () => navigation.goBack();
 
@@ -151,7 +147,7 @@ export default function PortfolioFormContainer() {
       return;
     }
 
-    if (hasForbiddenWords(data.portfolioTitle) || hasForbiddenWords(data.portfolioDescription)) {
+    if (hasForbiddenWords(data.portfolioDescription)) {
       Alert.show({
         title: '부적절한 단어 포함',
         message: '제목 또는 내용에 부적절한 단어가 포함되어 있습니다.',
@@ -179,7 +175,6 @@ export default function PortfolioFormContainer() {
       updatePortfolio(
         {
           request: {
-            title: data.portfolioTitle,
             content: data.portfolioDescription || '',
             deletePhotoIds,
             photoOrders,
@@ -219,7 +214,6 @@ export default function PortfolioFormContainer() {
 
     uploadPortfolio(
       {
-        title: data.portfolioTitle,
         content: data.portfolioDescription || '',
         images: photoURIs,
         isLinked: data.portfolioIsLinked,

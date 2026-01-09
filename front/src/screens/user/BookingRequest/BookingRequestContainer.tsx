@@ -6,6 +6,7 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
 import { Alert } from '@/components/theme';
 import { useCreateBookingMutation } from '@/mutations/bookings.ts';
+import { useEffect, useRef } from 'react';
 
 type BookingRequestRouteProp = RouteProp<MainStackParamList, 'BookingRequest'>;
 
@@ -19,18 +20,45 @@ export default function BookingRequestContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const { photographerId, productId, options, shootingDate, startTime, region } = route.params;
 
-  const { control, handleSubmit, watch, formState: { isValid } } = useForm<BookingRequestFormInputs>({
+  const { control, handleSubmit } = useForm<BookingRequestFormInputs>({
     mode: 'onChange',
     defaultValues: {
       requestDetails: '',
     },
   });
 
-  const watchedRequest = watch('requestDetails');
-
   const createBookingMutation = useCreateBookingMutation();
 
+  // Track booking form abandonment
+  const formStartTimeRef = useRef<number | null>(null);
+  const formCompletedRef = useRef(false);
+
+  useEffect(() => {
+    // Record form start time
+    formStartTimeRef.current = Date.now();
+
+    // Cleanup: Log abandonment if form not completed
+    return () => {
+      if (!formCompletedRef.current && formStartTimeRef.current) {
+        const timeSpentSeconds = (Date.now() - formStartTimeRef.current) / 1000;
+
+        analytics().logEvent('booking_form_abandoned', {
+          user_id: userId,
+          user_type: userType,
+          photographer_id: photographerId,
+          step: 'request_details',
+          time_spent_seconds: Math.round(timeSpentSeconds),
+          product_id: productId,
+          shooting_date: shootingDate,
+        });
+      }
+    };
+  }, [userId, userType, photographerId, productId, shootingDate]);
+
   const onSubmit = (data: BookingRequestFormInputs) => {
+    // Mark form as completed to prevent abandonment event
+    formCompletedRef.current = true;
+
     // Log booking_request_submitted
     analytics().logEvent('booking_request_submitted', {
       user_id: userId,
@@ -85,26 +113,19 @@ export default function BookingRequestContainer() {
     navigation.goBack();
   };
 
-  // Check if form is valid: additionalRequest must be at least 15 characters
-  const isFormValid = isValid && watchedRequest.length >= 15;
-
   return (
     <Controller
       control={control}
       name="requestDetails"
-      rules={{
-        required: true,
-        minLength: 15,
-      }}
       render={({ field: { onChange, value } }) => (
         <BookingRequestView
           onPressBack={handlePressBack}
           onSubmit={handleSubmit(onSubmit)}
-          isSubmitDisabled={!isFormValid || createBookingMutation.isPending}
+          isSubmitDisabled={createBookingMutation.isPending}
           additionalRequest={value}
           onChangeAdditionalRequest={onChange}
-      navigation={navigation}
-    />
+          navigation={navigation}
+        />
       )}
     />
   );

@@ -20,7 +20,6 @@ interface HistoryCardProps {
   userName?: string;
   photographerName: string;
   photographerNickName: string;
-  isreview?: boolean;
   type: string;
   datetime: string;
 }
@@ -40,7 +39,6 @@ export default function HistoryCard({
   userName,
   photographerName,
   photographerNickName,
-  isreview,
   type,
   datetime,
 }: HistoryCardProps) {
@@ -52,8 +50,8 @@ export default function HistoryCard({
   const headerTitle = (() => {
     switch (status) {
       case 'CANCELLED':
-        if (isUserMode) return photographerNickName + '님이 예약을 취소했어요'
-        return userName + '님의 예약을 취소했어요'
+        if (isUserMode) return photographerNickName + '님과의 예약이 취소됐어요'
+        return userName + '님과의 예약이 취소됐어요'
       case 'REJECTED':
         if (isUserMode) return photographerNickName + '님이 예약을 거절했어요'
         return userName + '님의 예약을 거절했어요'
@@ -111,7 +109,7 @@ export default function HistoryCard({
             </Typography>
           </ConfirmButton>
         )}
-        {!isreview && onPressWriteReview && (
+        {onPressWriteReview && (
           <CancelButton onPress={onPressWriteReview}>
             <Typography
               fontSize={12}
@@ -124,7 +122,7 @@ export default function HistoryCard({
             </Typography>
           </CancelButton>
         )}
-        {isreview && onPressViewMyReivew && (
+        {onPressViewMyReivew && (
           <CancelButton onPress={onPressViewMyReivew}>
             <Typography
               fontSize={12}
@@ -139,11 +137,11 @@ export default function HistoryCard({
         )}
       </ActionButtonWrapper>
     );
-  }, [status, onPressWriteReview, onPressViewPhotos, isreview, onPressViewMyReivew, onPressCancelBooking]);
+  }, [status, onPressWriteReview, onPressViewPhotos, onPressViewMyReivew, onPressCancelBooking]);
 
   const renderPhotographerActionButtons = useMemo(() => {
     if (status !== 'WAITING_FOR_APPROVAL') {
-      if (status !== 'COMPLETED' && status !== 'PHOTOS_DELIVERED' && status !== 'USER_PHOTO_CHECK') {
+      if (status !== 'COMPLETED') {
         if (status === 'APPROVED') {
           if (canCompleteBooking && onPressCompleteBooking) {
             return (
@@ -157,7 +155,7 @@ export default function HistoryCard({
           if (canCancelBooking && onPressCancelBooking) {
             return (
               <Status
-                text="촬영 취소"
+                text="예약 취소"
                 disabled={false}
                 onPress={onPressCancelBooking}
               />
@@ -170,6 +168,8 @@ export default function HistoryCard({
               ? '거절한 예약이에요'
               : status === 'CANCELLED'
               ? '취소한 예약이에요'
+              : status === 'PHOTOS_DELIVERED' || status === 'USER_PHOTO_CHECK'
+              ? '사진 업로드 완료'
               : '아직 촬영 전이에요'
           } />
         )

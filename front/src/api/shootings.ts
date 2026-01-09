@@ -10,7 +10,7 @@ export const deleteShooting = async (
     method: 'DELETE',
   })
 
-  if (!response.ok) throw new Error(`Failed to delete shooting ${response.status}`);
+  if (!response.ok) throw new Error('촬영 상품을 삭제할 수 없습니다.');
 }
 
 export const deleteShootingOption = async (
@@ -20,7 +20,7 @@ export const deleteShootingOption = async (
     method: 'DELETE',
   });
 
-  if (!response.ok) throw new Error(`Failed to delete option ${response.status}`);
+  if (!response.ok) throw new Error('옵션을 삭제할 수 없습니다.');
 }
 
 export interface GetShootingOptionResponse {
@@ -39,7 +39,7 @@ export const getShootingOptions = async (
     method: 'GET',
   })
 
-  if (!response.ok) throw new Error(`Failed to get shooting options ${response.status}`);
+  if (!response.ok) throw new Error('촬영 옵션을 불러올 수 없습니다.');
   return response.json();
 }
 
@@ -102,7 +102,7 @@ export const getMyShootings = async () : Promise<GetShootingResponse[]> => {
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get shootings ${response.status}`);
+  if (!response.ok) throw new Error('촬영 상품을 불러올 수 없습니다.');
   return response.json();
 }
 
@@ -114,7 +114,7 @@ export const createShooting = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to create shooting ${response.status}`);
+  if (!response.ok) throw new Error('촬영 상품을 생성할 수 없습니다.');
   return response.json();
 }
 
@@ -126,7 +126,7 @@ export const createShootingOption = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to create shooting option ${response.status}`);
+  if (!response.ok) throw new Error('촬영 옵션을 생성할 수 없습니다.');
   return response.json();
 }
 
@@ -138,7 +138,7 @@ export const updateShooting = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to update shooting ${response.status}`);
+  if (!response.ok) throw new Error('촬영 상품을 수정할 수 없습니다.');
   return response.json();
 }
 
@@ -150,7 +150,7 @@ export const updateShootingOption = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to update shooting option ${response.status}`);
+  if (!response.ok) throw new Error('촬영 옵션을 수정할 수 없습니다.');
   return response.json();
 }
 
@@ -161,6 +161,6 @@ export const getShootings = async (
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get shootings ${response.status}`);
+  if (!response.ok) throw new Error('촬영 상품을 불러올 수 없습니다.');
   return response.json();
 }

@@ -34,6 +34,13 @@ export const userQueryKeys = {
 
   // /api/user/me
   me: () => [...userQueryKeys.all, 'me'] as const,
+
+  notifications: () => [...notificationsQueryKeys.all, 'notifications'] as const,
+
+  // user search by nickname
+  search: () => [...userQueryKeys.all, 'search'] as const,
+  searchInfinite: (nickname: string, pageableWithoutPage: Omit<GetPageable, 'page'>) =>
+    [...userQueryKeys.search(), 'infinite', nickname, pageableWithoutPage] as const,
 };
 
 // Photographer
@@ -158,9 +165,15 @@ export const chatQueryKeys = {
 
   room: (roomId: number) => [...chatQueryKeys.all, 'room', roomId] as const,
 
+  roomDetail: (roomId: number) => [...chatQueryKeys.all, 'roomDetail', roomId] as const,
+
   // infinite: pageParam으로 paging 처리하므로 page 제외
   messagesInfinite: (roomId: number, paramsWithoutPage: Omit<import('@/api/chat').GetChatMessagesParams, 'page'>) =>
     [...chatQueryKeys.room(roomId), 'messages', 'infinite', paramsWithoutPage] as const,
+
+  blocks: () => [...chatQueryKeys.all, 'blocks'] as const,
+  blockList: () => [...chatQueryKeys.blocks(), 'list'] as const,
+  block: (targetId: string) => [...chatQueryKeys.blocks(), 'item', targetId] as const,
 };
 
 // Schedules

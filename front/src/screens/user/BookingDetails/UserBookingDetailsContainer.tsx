@@ -6,6 +6,11 @@ import { useState, useEffect } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
+import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
+import { chatQueryKeys } from '@/queries/keys.ts';
+import { queryClient } from '@/config/queryClient.ts';
+import { formatReservationDateTime } from '@/utils/format.ts';
+import { Alert } from '@/components/theme';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -18,6 +23,7 @@ export default function UserBookingDetailsContainer() {
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
   const { data: bookingReview } = useBookingReviewMeQuery(shouldFetchReview ? bookingId : undefined);
+  const { mutate: chatMutate } = useCreateOrGetChatRoomMutation();
 
   useEffect(() => {
     if (bookingReview && shouldFetchReview) {
@@ -48,6 +54,28 @@ export default function UserBookingDetailsContainer() {
     setShouldFetchReview(true);
   };
 
+  const handleOpenChatRoom = () => {
+    chatMutate(
+      { receiverId: bookingDetails?.photographerId ?? '' },
+      {
+        onSuccess: (roomId) => {
+          queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
+
+          navigation.navigate('ChatDetails', {
+            roomId
+          });
+        },
+        onError: () => {
+          Alert.show({
+            title: '채팅방 열기 실패',
+            message: '채팅방을 열 수 없습니다. 다시 시도해주세요.',
+            buttons: [{ text: '확인', onPress: () => {} }],
+          });
+        },
+      },
+    );
+  }
+
   if (!bookingDetails) {
     return (
       <UserBookingDetailsView
@@ -55,6 +83,7 @@ export default function UserBookingDetailsContainer() {
         name=""
         bookingOption=""
         datetime=""
+        region=""
         additionalRequest=""
         isLoading={isLoading}
       navigation={navigation}
@@ -65,17 +94,20 @@ export default function UserBookingDetailsContainer() {
   const canViewPhotos = bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
   const canWriteReview = !bookingDetails.isreview && bookingDetails.status === 'USER_PHOTO_CHECK';
   const canShowMyReview = bookingDetails.isreview;
+  const canOpenChatRoom = bookingDetails.status !== 'WAITING_FOR_APPROVAL' && bookingDetails.status !== 'CANCELLED' && bookingDetails.status !== 'REJECTED';
 
   return (
     <UserBookingDetailsView
       onPressBack={handlePressBack}
       name={bookingDetails.photographerName}
       bookingOption={bookingDetails.shootingItems}
-      datetime={bookingDetails.shootingDate}
+      datetime={formatReservationDateTime(bookingDetails.shootingDate, bookingDetails.startTime, bookingDetails.endTime)}
+      region={bookingDetails.region}
       additionalRequest={bookingDetails.requestDetails}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       onPressWriteReview={canWriteReview ? handlePressWriteReview : undefined}
       onPressShowMyReview={canShowMyReview ? handlePressShowMyReview : undefined}
+      onOpenChatRoom={canOpenChatRoom ? handleOpenChatRoom : undefined}
       isLoading={isLoading}
       navigation={navigation}
     />

@@ -8,8 +8,6 @@ import {
   ScrollView,
   View,
   LayoutChangeEvent,
-  StyleProp,
-  ViewStyle,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -32,6 +30,7 @@ const DEFAULT_FOOTER_HEIGHT = 72;
 // 애니메이션(튀는 느낌 줄이려면 stiffness 낮추고 damping 올리기)
 const OPEN_DURATION = 220;
 const CLOSE_DURATION = 220;
+const PADDING_HORIZONTAL = 20;
 
 type SlideModalProps = {
   visible: boolean;
@@ -177,17 +176,9 @@ useEffect(() => {
   };
 }, [keyboardAvoid, insets.bottom, keyboardOffset]);
   useEffect(() => {
-    if (!visible) return;
-    if (scrollable) {
-      sheetHeight.value = minHeight;
-      return;
-    }
-    if (!autoGrowToMax) {
-      // 자연 증가 모드는 height 고정 안 걸고 minHeight만 걸어줌(Style로)
-      sheetHeight.value = minHeight;
-      return;
-    }
+    if (!visible || !autoGrowToMax) return;
 
+    // measuredBodyHeight 기반으로 필요한 높이 계산
     const desired =
       handleAreaHeight +
       headerHeight +
@@ -196,10 +187,10 @@ useEffect(() => {
       bodyPaddingBottom +
       Math.max(insets.bottom, 0);
 
+    // minHeight와 resolvedMaxHeight 사이로 클램핑
     const clamped = Math.max(minHeight, Math.min(resolvedMaxHeight, desired));
 
     sheetHeight.value = withTiming(clamped, { duration: 160 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     visible,
     autoGrowToMax,
@@ -211,6 +202,8 @@ useEffect(() => {
     bodyPaddingBottom,
     insets.bottom,
     scrollable,
+    sheetHeight,
+    handleAreaHeight,
   ]);
 
   const overlayStyle = useAnimatedStyle(() => ({
@@ -244,8 +237,14 @@ useEffect(() => {
 
   // autoGrowToMax=true인 경우에만 height를 강제로 주고(max에서 멈추게)
   const sheetHeightStyle = useAnimatedStyle(() => {
-    if (!autoGrowToMax || scrollable) return {};
-    return { height: sheetHeight.value };
+    // autoGrowToMax일 때만 높이를 제어
+    if (!autoGrowToMax) return {};
+
+    return {
+      height: sheetHeight.value,
+      maxHeight: resolvedMaxHeight,
+      overflow: 'hidden', // 콘텐츠가 넘치면 잘라내고 스크롤 유도
+    };
   });
 
   // ====== Drag ======
@@ -321,7 +320,8 @@ useEffect(() => {
     <SheetTouchable
       style={[
         { minHeight },
-        autoGrowToMax ? ({} as StyleProp<ViewStyle>) : ({} as StyleProp<ViewStyle>),
+        // autoGrowToMax일 때 높이 제한 스타일 추가
+        autoGrowToMax && { maxHeight: resolvedMaxHeight }
       ]}
     >
       {/* Handle Bar */}
@@ -354,7 +354,7 @@ useEffect(() => {
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
           contentContainerStyle={{
-            paddingHorizontal: 30,
+            paddingHorizontal: PADDING_HORIZONTAL,
             paddingTop: 22,
             paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
           }}
@@ -371,7 +371,7 @@ useEffect(() => {
             <BodyFixed
               style={{
                 flex: 1,
-                paddingHorizontal: 30,
+                paddingHorizontal: PADDING_HORIZONTAL,
                 paddingTop: 22,
                 paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + insets.bottom + 22 : 22,
               }}
@@ -383,7 +383,7 @@ useEffect(() => {
           <BodyFixed
             style={{
               flex: 1,
-              paddingHorizontal: 30,
+              paddingHorizontal: PADDING_HORIZONTAL,
               paddingTop: 22,
               paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + insets.bottom + 22 : 22,
             }}
@@ -479,7 +479,7 @@ const HeaderRow = styled.View<{ textAlign: 'left' | 'center' }>`
   flex-direction: row;
   align-items: center;
   height: 100%;
-  padding: 0 30px;
+  padding: 0 ${PADDING_HORIZONTAL}px;
   ${({ textAlign }) => textAlign === 'left' ? `justify-content: flex-start;` : `justify-content: center;`}
 `;
 
@@ -496,7 +496,7 @@ const Footer = styled.View`
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 0 30px;
+  padding: 0 ${PADDING_HORIZONTAL}px;
   justify-content: center;
   background-color: #fff;
 `;

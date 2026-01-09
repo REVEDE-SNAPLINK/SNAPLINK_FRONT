@@ -4,7 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
 import ChatDetailsView, { FileDownloadState } from './ChatDetailsView';
-import { useChatMessagesInfiniteQuery, useUploadChatFileMutation, useChatRoomQuery } from '@/queries/chat.ts';
+import { useChatMessagesInfiniteQuery, useUploadChatFileMutation, useChatRoomDetailQuery } from '@/queries/chat.ts';
 import { ChatStompClient } from '@/ws/chatClient';
 import { chatQueryKeys } from '@/queries/keys';
 import { ChatMessage } from '@/api/chat';
@@ -17,7 +17,11 @@ import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useAuthStore } from '@/store/authStore.ts';
+import { useModalStore } from '@/store/modalStore.ts';
 import analytics from '@react-native-firebase/analytics';
+import crashlytics from '@react-native-firebase/crashlytics';
+import {useBlockChatUserMutation, useLeaveChatRoomMutation, useUnblockChatUserMutation} from "@/mutations/chat.ts";
+import { reportUser } from '@/api/reports.ts';
 
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
@@ -58,13 +62,13 @@ export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
   const { userId, userType } = useAuthStore();
+  const { openReportModal, setReportModalLoading } = useModalStore();
 
-  const { roomId, opponentNickname: paramNickname, opponentProfileImageURI: paramProfileImageURI } = route.params;
+  const { roomId } = route.params;
   const queryClient = useQueryClient();
 
   const [messageInput, setMessageInput] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
   const [fileDownloadStates, setFileDownloadStates] = useState<Record<string, FileDownloadState>>({});
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
@@ -74,8 +78,14 @@ export default function ChatDetailsContainer() {
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didVerifyDownloadStatesRef = useRef<string | null>(null);
 
-  // Fetch chat room info (cache first, then API if needed)
-  const { data: chatRoom } = useChatRoomQuery(roomId);
+  // ✅ 채팅 이벤트 추적용 상태
+  const [messageCount, setMessageCount] = useState(0);
+  const [isFirstMessage, setIsFirstMessage] = useState(true);
+  const lastUserMessageTimeRef = useRef<number | null>(null);
+  const photographerFirstResponseRef = useRef(true);
+
+  // Fetch chat room detail (nickname, profile image, blocked status)
+  const { data: chatRoomDetail } = useChatRoomDetailQuery(roomId);
 
   // Fetch messages with infinite scroll
   const {
@@ -84,6 +94,10 @@ export default function ChatDetailsContainer() {
     hasNextPage,
     isFetchingNextPage,
   } = useChatMessagesInfiniteQuery(roomId, { size: 50 });
+
+  const { mutate: blockMutate } = useBlockChatUserMutation();
+  const { mutate: unblockMutate } = useUnblockChatUserMutation();
+  const { mutate: leaveMutate } = useLeaveChatRoomMutation();
 
   // Flatten messages for UI rendering (oldest -> newest)
   // Be robust to whatever ordering/pagination the API returns by sorting by sentAt.
@@ -110,10 +124,11 @@ export default function ChatDetailsContainer() {
     });
   }, [messagesData]);
 
-  // Extract partner info from params first, then fall back to chatRoom data
-  const partnerNickname = paramNickname || chatRoom?.opponentNickname || '';
-  const profileImageURI = paramProfileImageURI || chatRoom?.profileImageURI || '';
-  const opponentId = chatRoom?.opponentId || '';
+  // Extract partner info from chatRoomDetail API
+  const partnerNickname = chatRoomDetail?.opponentNickname || '';
+  const profileImageURI = chatRoomDetail?.opponentProfileImage || '';
+  const isBlocked = chatRoomDetail?.blocked || false;
+  const opponentId = chatRoomDetail?.opponentId || '';
 
   // Upload file mutation
   const uploadFileMutation = useUploadChatFileMutation();
@@ -205,6 +220,35 @@ export default function ChatDetailsContainer() {
         stompClient.subscribeRoom(roomId, (message: ChatMessage) => {
           console.log('[ChatDetails] Received message:', JSON.stringify(message, null, 2));
 
+          // ✅ 작가 응답 추적 (상대방이 작가인 경우)
+          if (message.senderId !== userId && userType === 'user') {
+            const now = Date.now();
+            const responseTime = lastUserMessageTimeRef.current ? (now - lastUserMessageTimeRef.current) / 1000 : null;
+
+            analytics().logEvent('photographer_response', {
+              photographer_id: message.senderId,
+              room_id: roomId,
+              is_first_response: photographerFirstResponseRef.current,
+              response_time_seconds: responseTime,
+              user_id: userId,
+            });
+
+            crashlytics().log(`✉️ Photographer responded in room ${roomId} (${responseTime}s)`);
+
+            if (photographerFirstResponseRef.current) {
+              photographerFirstResponseRef.current = false;
+
+              // 첫 응답 시간 별도 추적
+              if (responseTime !== null) {
+                analytics().logEvent('photographer_first_response_time', {
+                  photographer_id: message.senderId,
+                  response_time_seconds: responseTime,
+                  response_time_minutes: Math.round(responseTime / 60),
+                });
+              }
+            }
+          }
+
           // Update query cache with new message
           queryClient.setQueryData(
             chatQueryKeys.messagesInfinite(roomId, { size: 50 }),
@@ -244,7 +288,7 @@ export default function ChatDetailsContainer() {
       stompClientRef.current?.disconnect();
       stompClientRef.current = null;
     };
-  }, [roomId, queryClient]);
+  }, [roomId, queryClient, userId, userType]);
 
   const handlePressBack = () => {
     navigation.goBack();
@@ -297,6 +341,25 @@ export default function ChatDetailsContainer() {
       };
       console.log('[ChatDetails] Sending message:', JSON.stringify(messageData, null, 2));
 
+      // ✅ 메시지 전송 이벤트 로깅
+      analytics().logEvent('chat_message_sent', {
+        user_id: userId,
+        room_id: roomId,
+        is_first_message: isFirstMessage,
+        message_length: messageInput.trim().length,
+        message_count: messageCount + 1,
+      });
+
+      crashlytics().log(`💬 Message sent in room ${roomId} (count: ${messageCount + 1})`);
+
+      if (isFirstMessage) {
+        setIsFirstMessage(false);
+      }
+      setMessageCount(prev => prev + 1);
+
+      // 사용자 메시지 전송 시각 기록 (작가 응답 시간 계산용)
+      lastUserMessageTimeRef.current = Date.now();
+
       stompClientRef.current.sendMessage(messageData);
       setMessageInput('');
       console.log('[ChatDetails] Message sent successfully');
@@ -307,7 +370,7 @@ export default function ChatDetailsContainer() {
         message: '메시지 전송에 실패했습니다.',
       });
     }
-  }, [messageInput, roomId]);
+  }, [messageInput, roomId, userId, isFirstMessage, messageCount]);
 
   const handlePressAlbum = useCallback(async () => {
     requestPermission('photo', async () => {
@@ -491,31 +554,104 @@ export default function ChatDetailsContainer() {
     setIsModalVisible(false);
   }
 
-  const handleCloseReportModal = () => {
-    setIsReportModalVisible(false);
-  }
-
   const handlePressBlock = () => {
-    Alert.show({
-      title: '사용자 차단',
-      message: '해당 사용자를 차단하시겠습니까?',
-      buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
-        { text: '차단', onPress: () => {
-          Alert.show({
-            title: '차단 완료',
-            message: '해당 사용자가 차단되었습니다.',
-            buttons: [
-              { text: '확인', onPress: () => navigation.goBack()}
-            ]
-          })
-          }, type: 'destructive' },
-      ]
-    })
+    if (isBlocked) {
+      // 차단 해제
+      Alert.show({
+        title: '차단 해제',
+        message: '해당 사용자를 차단 해제하시겠습니까?',
+        buttons: [
+          { text: '취소', onPress: () => {}, type: 'cancel' },
+          { text: '차단 해제', onPress: () => {
+            unblockMutate(opponentId, {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
+                Alert.show({
+                  title: '차단 해제 완료',
+                  message: '해당 사용자가 차단 해제되었습니다.',
+                  buttons: [
+                    { text: '확인', onPress: () => {}}
+                  ]
+                });
+              }
+            })
+            }, type: 'default' },
+        ]
+      })
+    } else {
+      // 차단
+      Alert.show({
+        title: '사용자 차단',
+        message: '해당 사용자를 차단하시겠습니까?',
+        buttons: [
+          { text: '취소', onPress: () => {}, type: 'cancel' },
+          { text: '차단', onPress: () => {
+            blockMutate(opponentId, {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
+                Alert.show({
+                  title: '차단 완료',
+                  message: '해당 사용자가 차단되었습니다.',
+                  buttons: [
+                    { text: '확인', onPress: () => {}}
+                  ]
+                });
+              }
+            })
+            }, type: 'destructive' },
+        ]
+      })
+    }
+    setIsModalVisible(false);
   }
 
   const handlePressReport = () => {
-    setIsReportModalVisible(true);
+    openReportModal(
+      opponentId,
+      'CHAT',
+      userType === 'user' ? 'photographer' : 'user',
+      async ({ reason, description }) => {
+        setReportModalLoading(true);
+        try {
+          await reportUser({
+            targetId: opponentId,
+            targetType: 'CHAT',
+            reason,
+            customReason: reason === 'OTHER' ? description : '',
+            description: reason === 'OTHER' ? '' : description,
+          });
+          setReportModalLoading(false);
+          Alert.show({
+            title: '소중한 의견 감사합니다',
+            message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.'
+          });
+        } catch (error) {
+          setReportModalLoading(false);
+          Alert.show({
+            title: '신고 실패',
+            message: '신고 처리 중 오류가 발생했습니다.'
+          });
+        }
+      }
+    );
+  }
+
+  const handleLeaveChatRoom = () => {
+    Alert.show({
+      title: '채팅방 나가기',
+      message: '채팅방을 나가시겠습니까?',
+      buttons: [
+        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '차단', onPress: () => {
+            leaveMutate(roomId, {
+              onSuccess: () => {
+                navigation.goBack();
+              }
+            })
+          }, type: 'destructive' },
+      ]
+    })
+    leaveMutate
   }
 
   // 파일 메타데이터 가져오기 (HEAD 요청)
@@ -692,6 +828,7 @@ export default function ChatDetailsContainer() {
 
   // 이미지 다운로드 (프리뷰에서)
   const handleDownloadImage = useCallback(async (imageUrl: string) => {
+    setImagePreviewVisible(false);
     requestPermission('photo', async () => {
       try {
         const fileName = `image_${Date.now()}.jpg`;
@@ -800,24 +937,24 @@ export default function ChatDetailsContainer() {
     <ChatDetailsView
       userType={userType}
       partnerNickname={partnerNickname}
-      opponentId={opponentId}
+      myUserId={userId}
       opponentProfileImageURI={profileImageURI}
       messages={messages}
       messageInput={messageInput}
       isModalVisible={isModalVisible}
-      isReportModalVisible={isReportModalVisible}
+      isBlocked={isBlocked}
       onChangeMessageInput={setMessageInput}
       onPressSend={handlePressSend}
       onPressBack={handlePressBack}
       recommendedMessages={recommdationMessages}
       onPressRecommendedMessage={handlePressRecommendedMessage}
       onCloseModal={handleCloseModal}
-      onCloseReportModal={handleCloseReportModal}
       onPressTool={handlePressTool}
       onPressBlock={handlePressBlock}
       onPressReport={handlePressReport}
       onPressAlbum={handlePressAlbum}
       onPressFile={handlePressFile}
+      onLeaveChatRoom={handleLeaveChatRoom}
       onLoadMore={handleLoadMore}
       hasNextPage={!!hasNextPage}
       isFetchingNextPage={isFetchingNextPage}

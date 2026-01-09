@@ -105,16 +105,14 @@ export default function BookingView({
 
   const isDateSelected = !!currentDate;
   const isTimeSelected = !!selectedTime;
-  const isRegionSelected = selectedRegionId > 0;
   const isProductSelected = selectedProductId > 0;
 
   const disabledHint = useMemo(() => {
     if (!isDateSelected) return '날짜를 선택해 주세요';
     if (!isTimeSelected) return '시간을 선택해 주세요';
-    if (!isRegionSelected) return '장소를 선택해 주세요';
     if (!isProductSelected) return '촬영 상품을 선택해 주세요';
     return '';
-  }, [isDateSelected, isTimeSelected, isRegionSelected, isProductSelected]);
+  }, [isDateSelected, isTimeSelected, isProductSelected]);
 
   return (
     <ScreenContainer
@@ -148,14 +146,9 @@ export default function BookingView({
                 2 시간 {isTimeSelected ? '✓' : ''}
               </Typography>
             </StepItem>
-            <StepItem active={isRegionSelected}>
-              <Typography fontSize={12} color={isRegionSelected ? '#fff' : '#333'}>
-                3 장소 {isRegionSelected ? '✓' : ''}
-              </Typography>
-            </StepItem>
             <StepItem active={isProductSelected}>
               <Typography fontSize={12} color={isProductSelected ? '#fff' : '#333'}>
-                4 상품 {isProductSelected ? '✓' : ''}
+                3 상품 {isProductSelected ? '✓' : ''}
               </Typography>
             </StepItem>
           </StepRow>
@@ -245,7 +238,7 @@ export default function BookingView({
               marginTop={10}
               marginBottom={17}
             >
-              장소
+              장소 (선택사항)
             </Typography>
             <RegionRow>
               {availbleRegions.map((v) => (

@@ -43,6 +43,10 @@ export default function BookingContainer() {
   const selectedProductIdField = watch('productId');
   const isInitialDateSet = useRef(false);
 
+  // Track booking form abandonment
+  const formStartTimeRef = useRef<number | null>(null);
+  const formCompletedRef = useRef(false);
+
   // State for option quantities
   const [optionQuantities, setOptionQuantities] = useState<Record<number, number>>({});
   const [today, setToday] = useState(() => new Date());
@@ -63,7 +67,29 @@ export default function BookingContainer() {
       photographer_id: photographerId,
       screen: 'Booking',
     });
-  }, [userId, photographerId, userType]);
+
+    // Record form start time
+    formStartTimeRef.current = Date.now();
+
+    // Cleanup: Log abandonment if form not completed
+    return () => {
+      if (!formCompletedRef.current && formStartTimeRef.current) {
+        const timeSpentSeconds = (Date.now() - formStartTimeRef.current) / 1000;
+
+        analytics().logEvent('booking_form_abandoned', {
+          user_id: userId,
+          user_type: userType,
+          photographer_id: photographerId,
+          step: 'product_selection',
+          time_spent_seconds: Math.round(timeSpentSeconds),
+          had_date: !!selectedDate,
+          had_time: !!selectedTime,
+          had_product: !!selectedProductIdField,
+          had_region: !!selectedRegionId,
+        });
+      }
+    };
+  }, [userId, photographerId, userType, selectedDate, selectedProductIdField, selectedRegionId, selectedTime]);
 
 
   // Fetch shooting products
@@ -239,10 +265,7 @@ export default function BookingContainer() {
     const isToday = selectedDate === todayStr;
 
     return availableTimes.filter((slot) => {
-      // 1) Never allow unavailable slots
-      if (!slot.available) return false;
-
-      // 2) If booking for today, disallow past (or same-minute) times
+      // 1) If booking for today, disallow past (or same-minute) times
       if (isToday) {
         const [hour, minute] = slot.startTime.split(':').map(Number);
         const slotTime = new Date(
@@ -318,6 +341,9 @@ export default function BookingContainer() {
   }, [selectedProductIdField, shootingProducts, shootingOptions, optionQuantities]);
 
   const onSubmit = (data: BookingFormInputs) => {
+    // Mark form as completed to prevent abandonment event
+    formCompletedRef.current = true;
+
     // Collect selected options with quantities (only options with quantity > 0)
     const options = Object.entries(optionQuantities)
       .filter(([_, quantity]) => quantity > 0)

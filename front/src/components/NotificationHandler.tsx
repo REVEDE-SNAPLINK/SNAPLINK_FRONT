@@ -3,6 +3,7 @@ import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { notificationsQueryKeys } from '@/queries/keys';
+import { navigateByDeepLink } from '@/navigation';
 
 /**
  * NotificationHandler
@@ -60,8 +61,9 @@ export default function NotificationHandler({ children }: { children: React.Reac
         // 알림 탭 시 처리
         console.log('[Notification] User tapped notification:', detail.notification);
 
-        // TODO: 알림 타입에 따라 화면 이동 등 처리
-        // 예: navigation.navigate(...)
+        if (detail.notification?.data && detail.notification.data.link && typeof detail.notification.data.link === "string") {
+          navigateByDeepLink(detail.notification.data.link);
+        }
       }
     });
 

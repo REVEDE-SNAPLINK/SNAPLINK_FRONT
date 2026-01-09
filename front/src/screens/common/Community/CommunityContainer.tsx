@@ -37,6 +37,8 @@ export default function CommunityContainer() {
     isFetchingNextPage,
     refetch,
     isRefetching,
+    isLoading,
+    isError,
   } = useCommunityPostsQuery(listParams);
 
   const { mutate: createPostMutation, isPending: isCreatePostPending } = useCreateCommunityPostMutation();
@@ -62,7 +64,6 @@ export default function CommunityContainer() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(query) ||
         post.content.toLowerCase().includes(query) ||
         post.categoryLabel.toLowerCase().includes(query) ||
         post.author.nickname.toLowerCase().includes(query)
@@ -151,6 +152,8 @@ export default function CommunityContainer() {
       isLoadingMore={isFetchingNextPage}
       onRefresh={handleRefresh}
       isRefreshing={isRefetching}
+      isLoading={isLoading}
+      isError={isError}
     />
   );
 }

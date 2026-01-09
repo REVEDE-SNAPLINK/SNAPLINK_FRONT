@@ -142,7 +142,7 @@ export default function AccountManageScreen() {
       headerShown={true}
       headerTitle="계정 관리"
       onPressBack={handlePressBack}
-      paddingHorizontal={33}
+      paddingHorizontal={20}
     >
       <InfoContainer>
         <InfoButton onPress={handlePressLogout} name="계정 로그아웃" />

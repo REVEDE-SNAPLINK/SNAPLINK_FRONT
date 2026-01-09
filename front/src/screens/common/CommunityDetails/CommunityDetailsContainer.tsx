@@ -3,7 +3,11 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Share, TextInput, InteractionManager, Platform } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
-import { CreateCommunityPostParams } from '@/api/community.ts';
+import {
+  COMMUNITY_CATEGORY_ENUM,
+  COMMUNITY_CATEGORY_VALUE,
+  CreateCommunityPostParams,
+} from '@/api/community.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
 import { useCommunityPostQuery, useCommunityCommentsQuery } from '@/queries/community.ts';
@@ -17,8 +21,19 @@ import {
 } from '@/mutations/community.ts';
 import { Alert } from '@/components/theme';
 import analytics from '@react-native-firebase/analytics';
+import { usePhotographerProfileQuery } from '@/queries/photographers.ts';
+import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
+import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
 
 type CommunityDetailsRouteProp = RouteProp<MainStackParamList, 'CommunityDetails'>;
+
+const mappingCategory = (label: COMMUNITY_CATEGORY_VALUE): COMMUNITY_CATEGORY_ENUM => {
+  switch (label) {
+    case '스냅일상': return 'DAILY';
+    case '촬영꿀팁': return 'TIPS';
+    case '스냅소식': return 'NEWS'
+  }
+}
 
 export default function CommunityDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -30,12 +45,25 @@ export default function CommunityDetailsContainer() {
 
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isTagModalVisible, setIsTagModalVisible] = useState(false);
+  const [isSearchingPhotographerModalVisible, setIsSearchingPhotographerModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [shouldFocusCommentInput, setShouldFocusCommentInput] = useState(false);
   const [replyTo, setReplyTo] = useState<{ parentId: number; nickname: string } | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [searchPhotographerKey, setSearchPhotographerKey] = useState<string>('');
+  const [debouncedSearchKey, setDebouncedSearchKey] = useState<string>('');
 
   const commentInputRef = useRef<TextInput | null>(null);
+
+  // Debounce searchPhotographerKey
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchKey(searchPhotographerKey);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchPhotographerKey]);
 
   // Safe focus utility for comment input (iOS release modal animation/layout fix)
   const focusCommentInputSafely = () => {
@@ -57,11 +85,26 @@ export default function CommunityDetailsContainer() {
   }, [isCommentModalVisible, shouldFocusCommentInput]);
 
   // Fetch post details
-  const { data: post } = useCommunityPostQuery(postId);
+  const { data: post, isLoading: isLoadingPost, isError: isErrorPost } = useCommunityPostQuery(postId);
 
   // Fetch comments
-  const { data: commentsData } = useCommunityCommentsQuery(postId);
+  const { data: commentsData, isLoading: isLoadingComments, isError: isErrorComments } = useCommunityCommentsQuery(postId);
   const comments = commentsData?.content || [];
+
+  const { data: taggedPhotographer } = usePhotographerProfileQuery(post?.taggedUsers?.[0]?.userId ?? '');
+
+  // Search users (photographers only)
+  const {
+    data: searchUsersData,
+    fetchNextPage: fetchNextSearchUsers,
+    hasNextPage: hasNextSearchUsers,
+    isFetchingNextPage: isFetchingNextSearchUsers,
+  } = useSearchUsersInfiniteQuery(debouncedSearchKey, { size: 20 });
+
+  // Filter to get photographers only (exclude self)
+  const searchedPhotographers = searchUsersData?.pages
+    .flatMap(page => page.content)
+    .filter(user => user.role === 'PHOTOGRAPHER' && user.userId !== userId) || [];
 
   // Mutations
   const toggleLikeMutation = useToggleLikeMutation();
@@ -70,6 +113,7 @@ export default function CommunityDetailsContainer() {
   const deleteCommentMutation = useDeleteCommentMutation();
   const { mutate: updatePostMutation, isPending: isUpdatePostPending } = useUpdatePostMutation();
   const deletePostMutation = useDeletePostMutation();
+  const scrapPhotographerMutation = useTogglePhotographerScrapMutation();
 
   useEffect(() => {
     if (!post) return;
@@ -96,7 +140,7 @@ export default function CommunityDetailsContainer() {
     // setIsShareModalVisible(true);
     if (post) {
       Share.share({
-        message: `${post.title}\nhttps://link.snaplink.run/post/${post.id}`,
+        message: `${post.content.substring(0, 10)+"..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}`,
       });
       // Firebase Analytics: 공유 이벤트
       analytics().logEvent('community_post_share', {
@@ -225,9 +269,9 @@ export default function CommunityDetailsContainer() {
         postId: post.id,
         request: {
           category: params.category,
-          title: params.title,
           content: params.content,
           deletePhotoIds: params.deletePhotoIds || [],
+          taggedUserIds: params.taggedUserIds || [],
         },
         images: params.images,
       },
@@ -304,7 +348,6 @@ export default function CommunityDetailsContainer() {
   };
 
   const handlePressReply = (commentId: number, nickname: string) => {
-    console.log(commentId, nickname);
     setReplyTo({ parentId: commentId, nickname });
     setCommentInput(`@${nickname} `);
     setShouldFocusCommentInput(true);
@@ -339,6 +382,64 @@ export default function CommunityDetailsContainer() {
     commentInputRef.current?.blur();
   };
 
+  const handlePressTag = () => {
+    setIsTagModalVisible(true);
+  }
+
+  const handleCloseTagModal = () => {
+    setIsTagModalVisible(false);
+  }
+
+  const handlePressTaggedPhotographer = () => {
+    if (post?.taggedUsers && post?.taggedUsers.length > 0 && taggedPhotographer) {
+      navigation.navigate('PhotographerDetails', { photographerId: post.taggedUsers[0].userId });
+    }
+  }
+
+  const handleToggleTaggedPhotographerScrap = () => {
+    if (post?.taggedUsers && post?.taggedUsers.length > 0 && taggedPhotographer) {
+      scrapPhotographerMutation.mutate(post.taggedUsers[0].userId);
+    }
+  }
+
+  const handleAddTaggedUser = () => {
+    setIsSearchingPhotographerModalVisible(true);
+  }
+
+  const handleCloseSearchingPhotographerModal = () => {
+    setIsSearchingPhotographerModalVisible(false);
+    setSearchPhotographerKey('');
+  }
+
+  const handleChangeTaggedPhotographer = (photographerId: string) => {
+    if (post !== undefined) {
+      updatePostMutation(
+        {
+          postId: post.id,
+          request: {
+            category: mappingCategory(post.categoryLabel),
+            content: post.content,
+            deletePhotoIds: [],
+            taggedUserIds: [ photographerId ],
+          },
+          images: [],
+        },
+        {
+          onSuccess: () => {
+            setIsSearchingPhotographerModalVisible(false);
+            setSearchPhotographerKey('');
+          }
+        }
+      );
+    }
+  }
+
+  const handleLoadMoreSearchedPhotographers = () => {
+    if (hasNextSearchUsers && !isFetchingNextSearchUsers) {
+      fetchNextSearchUsers();
+    }
+  }
+
   const isMyPost = post?.author.userId === userId;
 
   return (
@@ -347,13 +448,22 @@ export default function CommunityDetailsContainer() {
       comments={comments}
       isMyPost={isMyPost}
       userId={userId}
+      isLoading={isLoadingPost || isLoadingComments}
+      isError={isErrorPost}
       isCommentModalVisible={isCommentModalVisible}
       isEditModalVisible={isEditModalVisible}
+      isTagModalVisible={isTagModalVisible}
+      isSearchingPhotographerModalVisible={isSearchingPhotographerModalVisible}
       commentInput={commentInput}
       commentInputRef={commentInputRef}
       replyTo={replyTo}
       editingCommentId={editingCommentId}
+      taggedPhotographer={taggedPhotographer}
+      searchPhotographerKey={searchPhotographerKey}
+      searchedPhotographers={searchedPhotographers}
+      setSearchPhotographerKey={setSearchPhotographerKey}
       onChangeCommentInput={setCommentInput}
+      onLoadMoreSearchedPhotographers={handleLoadMoreSearchedPhotographers}
       onPressBack={handlePressBack}
       onPressShare={handlePressShare}
       onPressLike={handlePressLike}
@@ -370,6 +480,13 @@ export default function CommunityDetailsContainer() {
       onPressEditComment={handlePressEditComment}
       onPressDeleteComment={handlePressDeleteComment}
       onCancelEdit={handleCancelEdit}
+      onPressTag={handlePressTag}
+      onCloseTagModal={handleCloseTagModal}
+      onPressTaggedPhotographer={handlePressTaggedPhotographer}
+      onToggleTaggedPhotographerScrap={handleToggleTaggedPhotographerScrap}
+      onAddTaggedUser={handleAddTaggedUser}
+      onCloseSearchingPhotographerModal={handleCloseSearchingPhotographerModal}
+      onChangeTaggedPhotographer={handleChangeTaggedPhotographer}
     />
   );
 }

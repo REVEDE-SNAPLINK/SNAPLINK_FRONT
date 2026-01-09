@@ -1,14 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton } from '@/components/theme';
+import { Alert, SubmitButton } from '@/components/theme';
 import FormInput from '@/components/form/FormInput';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { usePatchMyEmailMutation } from '@/mutations/user.ts';
+import { checkEmail } from '@/api/user.ts';
 
 type EmailEditFormData = {
   email: string;
@@ -22,6 +23,8 @@ export default function EmailEditScreen() {
   const { data: meData } = useMeQuery();
   const patchMyEmailMutation = usePatchMyEmailMutation();
 
+  const [emailError, setEmailError] = useState<string | null>(null);
+
   const defaultValues = useMemo<EmailEditFormData>(() => ({
     email: meData?.email || ''
   }), [meData?.email]);
@@ -29,26 +32,58 @@ export default function EmailEditScreen() {
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors, isValid },
   } = useForm<EmailEditFormData>({
     defaultValues,
     mode: 'onChange',
   });
 
-  const isSubmitDisabled = !isValid;
+  const watchedEmail = watch('email');
+
+  // 이메일이 변경되면 중복 에러 초기화
+  useEffect(() => {
+    setEmailError(null);
+  }, [watchedEmail]);
+
+  const isSubmitDisabled = !isValid || (meData?.email !== undefined && meData?.email === watchedEmail);
   const submitButtonText = '저장';
 
   const handlePressBack = () => navigation.goBack();
 
-  const handleSubmitEmail = async (data: EmailEditFormData) => {
-    const trimmedEmail = data.email.trim();
+  const handleSubmitEmail = (data: EmailEditFormData) => {
+    Alert.show({
+      title: '이메일 변경',
+      message: '해당 이메일로 변경하시겠습니까?',
+      buttons: [
+        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '변경', onPress: async () => {
+            const trimmedEmail = data.email.trim();
 
-    try {
-      await patchMyEmailMutation.mutateAsync(trimmedEmail);
-      navigation.goBack();
-    } catch (error) {
-      console.error('Failed to update email:', error);
-    }
+            // 이메일 중복 체크
+            try {
+              const isDuplicate = await checkEmail(trimmedEmail);
+              if (isDuplicate) {
+                setEmailError('이미 사용 중인 이메일이에요!');
+                return;
+              }
+            } catch (error) {
+              console.error('Failed to check email:', error);
+              setEmailError('이메일 확인 중 오류가 발생했습니다.');
+              return;
+            }
+
+            try {
+              await patchMyEmailMutation.mutateAsync(trimmedEmail);
+              navigation.goBack();
+            } catch (error) {
+              console.error('Failed to update email:', error);
+              setEmailError('이메일 저장에 실패했습니다. 다시 시도해주세요.');
+            }
+          }
+        },
+      ]
+    })
   };
 
   const handlePressSubmit = handleSubmit(handleSubmitEmail);
@@ -79,7 +114,7 @@ export default function EmailEditScreen() {
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
-                  errorMessage={errors.email?.message}
+                  errorMessage={emailError || errors.email?.message}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -114,8 +149,8 @@ const ScrollContainer = styled.ScrollView`
 `;
 
 const Content = styled.View`
-  padding: 0 40px;
-  margin-top: 40px;
+  padding: 0 20px;
+  margin-top: 20px;
 `;
 
 const Footer = styled.View`

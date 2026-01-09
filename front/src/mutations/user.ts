@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   patchUserProfileImage,
   PatchUserProfileImageParams,
-  patchMe,
+  patchMe, NotificationSettings, updateNotificationSettings,
 } from '@/api/user';
 import { userQueryKeys } from '@/queries/keys';
 
@@ -60,3 +60,14 @@ export const usePatchMyEmailMutation = () => {
     },
   });
 };
+
+export const usePatchNotificationSettingMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: NotificationSettings) => updateNotificationSettings(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userQueryKeys.notifications() });
+    }
+  })
+}

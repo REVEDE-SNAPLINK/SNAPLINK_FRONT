@@ -19,7 +19,6 @@ import Icon from '@/components/Icon.tsx';
 import TypeUserImg from '@/assets/imgs/type-user.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import TypePhotographerImg from '@/assets/imgs/type-photographer.svg';
-import { TERMS_BASE_URL } from '@/config/api.ts';
 
 // Email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

@@ -88,7 +88,7 @@ export default function HomeView({
         persistentScrollbar={false}
         showsVerticalScrollIndicator={false}
       >
-        <Banner items={bannerItems} height={264} autoPlay autoPlayInterval={3000} />
+        <Banner items={bannerItems} />
         <ListWrapper>
           <PhotographerList
             items={allPhotographerItems}
@@ -138,7 +138,7 @@ const SearchFormWrapper = styled.View`
   height: 41px;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 15px;
   padding: 0 ${CONTAINER_MARGIN}px;
 `;
 

@@ -62,24 +62,37 @@ export default function BookingManageContainer() {
 
   const handlePressConfirmBooking = async (bookingId: number) => {
     Alert.show({
-      title: '예약 수락',
-      message: '예약을 수락하시겠습니까?',
+      title: '현재 예약을 수락하겠습니까?',
+      message: '동일한 시간 접수된 다른 예약 촬 건은 자동으로 거절됩니다.',
       buttons: [
         { text: '취소', onPress: () => {}, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
-            approveMutation({ bookingId });
-            analytics().logEvent('photographer_booking_approved', {
-              user_id: userId,
-              user_type: 'photographer',
-              bookingId,
-            });
-            Alert.show({
-              title: '예약 수락 완료',
-              message: '예약이 수락되었습니다.',
-              buttons: [{ text: '확인', onPress: () => refetch() }],
-            });
+            approveMutation(
+              { bookingId },
+              {
+                onSuccess: () => {
+                  analytics().logEvent('photographer_booking_approved', {
+                    user_id: userId,
+                    user_type: 'photographer',
+                    bookingId,
+                  });
+                  Alert.show({
+                    title: '예약 수락 완료',
+                    message: '수락이 완료되었습니다.',
+                    buttons: [{ text: '확인', onPress: () => refetch() }],
+                  });
+                },
+                onError: () => {
+                  Alert.show({
+                    title: '예약 수락 실패',
+                    message: '예약을 수락할 수 없습니다. 다시 시도해주세요.',
+                    buttons: [{ text: '확인', onPress: () => {} }],
+                  });
+                },
+              }
+            );
           },
         },
       ],
@@ -101,24 +114,37 @@ export default function BookingManageContainer() {
 
   const handlePressCompleteBooking = async (bookingId: number) => {
     Alert.show({
-      title: '촬영 완료',
-      message: '촬영을 완료하시겠습니까?',
+      title: '촬영을 완료하시겠습니까?',
+      message: '완료로 전환 후 사진 결과물을 업로드할 수 있습니다.',
       buttons: [
         { text: '취소', onPress: () => {}, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
-            completeMutaion({ bookingId });
-            analytics().logEvent('photographer_booking_completed', {
-              user_id: userId,
-              user_type: 'photographer',
-              bookingId,
-            });
-            Alert.show({
-              title: '촬영 완료',
-              message: '촬영이 완료되었습니다.',
-              buttons: [{ text: '확인', onPress: () => refetch() }],
-            });
+            completeMutaion(
+              { bookingId },
+              {
+                onSuccess: () => {
+                  analytics().logEvent('photographer_booking_completed', {
+                    user_id: userId,
+                    user_type: 'photographer',
+                    bookingId,
+                  });
+                  Alert.show({
+                    title: '촬영 완료',
+                    message: '촬영이 완료되었습니다.',
+                    buttons: [{ text: '확인', onPress: () => refetch() }],
+                  });
+                },
+                onError: () => {
+                  Alert.show({
+                    title: '촬영 완료 실패',
+                    message: '촬영 완료 처리할 수 없습니다. 다시 시도해주세요.',
+                    buttons: [{ text: '확인', onPress: () => {} }],
+                  });
+                },
+              }
+            );
           },
         },
       ],

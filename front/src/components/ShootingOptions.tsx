@@ -67,7 +67,7 @@ const QuantityInputWrapper = styled.View`
   border-radius: 5px;
   flex-direction: row;
   align-items: center;
-  padding: 7px 10px;
+  padding: 7px 5px;
   justify-content: space-between;
   border: 1px solid ${theme.colors.disabled};
 `;
@@ -75,8 +75,8 @@ const QuantityInputWrapper = styled.View`
 const ChangeQuantityButton = styled.TouchableOpacity`
   justify-content: center;
   align-items: center;
-  width: 10px;
-  height: 10px;
+  width: 20px;
+  height: 100%;
 `;
 
 interface QuantityInputProps {

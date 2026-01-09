@@ -18,6 +18,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Platform } from 'react-native';
 import { queryClient } from '@/config/queryClient.ts';
 import analytics from '@react-native-firebase/analytics';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 type AuthStatus = 'idle' | 'loading' | 'authed' | 'anon' | 'needs_signup';
 type UserType = 'user' | 'photographer';
@@ -149,10 +150,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           method: provider.toLowerCase(),
         });
 
+        // ✅ Analytics 사용자 속성 설정
         analytics().setUserId(response.userId);
         analytics().setUserProperties({
           user_type: userType,
         });
+
+        // ✅ Crashlytics 사용자 컨텍스트 설정
+        crashlytics().setUserId(response.userId);
+        crashlytics().setAttributes({
+          userType: userType,
+          loginMethod: provider.toLowerCase(),
+        });
+
+        crashlytics().log(`✅ User logged in: ${response.userId} (${userType})`);
 
         // Save tokens and user data to persistent storage
         await Promise.all([
@@ -189,6 +200,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async signOut() {
+    // 서버 로그아웃/FCM 정리는 best-effort
+    await Promise.allSettled([
+      logoutApi(),
+      safeDeleteFcmToken(),
+    ]);
+
     set({ status: 'anon', accessToken: null, userId: '' });
 
     // Clear all persistent storage
@@ -201,11 +218,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Query 캐시 초기화
     queryClient.clear();
 
-    // 서버 로그아웃/FCM 정리는 best-effort
-    await Promise.allSettled([
-      logoutApi(),
-      safeDeleteFcmToken(),
-    ]);
   },
 
   async signUp(formData: SignUpFormData) {
@@ -215,13 +227,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
+        const signupDate = new Date().toISOString().split('T')[0];
 
-        await analytics().logEvent('sign_up');
+        await analytics().logEvent('sign_up', {
+          user_id: response.userId,
+          user_type: userType,
+          signup_date: signupDate,
+        });
 
+        // ✅ Analytics 사용자 속성 설정
         analytics().setUserId(response.userId);
         analytics().setUserProperties({
           user_type: userType,
+          signup_date: signupDate,
         });
+
+        // ✅ Crashlytics 사용자 컨텍스트 설정
+        crashlytics().setUserId(response.userId);
+        crashlytics().setAttributes({
+          userType: userType,
+          signupDate: signupDate,
+        });
+
+        crashlytics().log(`✅ User signed up: ${response.userId} (${userType})`);
 
         // Save tokens and user data to persistent storage
         await Promise.all([

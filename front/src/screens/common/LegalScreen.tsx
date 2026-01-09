@@ -27,7 +27,7 @@ export default function LegalScreen() {
       headerShown={true}
       headerTitle="계정 관리"
       onPressBack={handlePressBack}
-      paddingHorizontal={33}
+      paddingHorizontal={20}
     >
       <InfoContainer>
         {TERM_ROUTE_LIST.map((item, index) => (

@@ -19,7 +19,6 @@ import ServerImage from '@/components/ServerImage.tsx';
 import FileDownloadButton from '@/components/FileDownloadButton.tsx';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
 import DownloadIcon from '@/assets/icons/download.svg';
-import ReportModal from '@/components/ReportModal.tsx';
 import { UserType } from '@/types/auth.ts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -36,25 +35,25 @@ export interface FileDownloadState {
 interface ChatDetailsViewProps {
   userType: UserType;
   partnerNickname: string;
-  opponentId: string;
+  myUserId: string;
   opponentProfileImageURI: string;
   messages: ChatMessage[];
   messageInput: string;
   isModalVisible: boolean;
-  isReportModalVisible: boolean;
+  isBlocked: boolean;
   onChangeMessageInput: (text: string) => void;
   onPressSend: () => void;
   onPressBack: () => void;
   recommendedMessages: string[];
   onPressRecommendedMessage: (message: string) => void;
   onCloseModal: () => void;
-  onCloseReportModal: () => void;
   onPressBlock: () => void;
   onPressReport: () => void;
   onPressTool: () => void;
   onPressAlbum?: () => void;
   onPressFile?: () => void;
   onLoadMore?: () => void;
+  onLeaveChatRoom: () => void;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   fileDownloadStates: Record<string, FileDownloadState>;
@@ -70,14 +69,13 @@ interface ChatDetailsViewProps {
 }
 
 export default function ChatDetailsView({
-  userType,
   partnerNickname,
-  opponentId,
+  myUserId,
   opponentProfileImageURI,
   messages,
   messageInput,
   isModalVisible,
-  isReportModalVisible,
+  isBlocked,
   onChangeMessageInput,
   onPressSend,
   onPressBack,
@@ -85,12 +83,12 @@ export default function ChatDetailsView({
   onPressRecommendedMessage,
   onPressTool,
   onCloseModal,
-  onCloseReportModal,
   onPressBlock,
   onPressReport,
   onPressAlbum,
   onPressFile,
   onLoadMore,
+  onLeaveChatRoom,
   isFetchingNextPage,
   fileDownloadStates,
   onPressFileDownload,
@@ -105,6 +103,7 @@ export default function ChatDetailsView({
   navigation,
 }: ChatDetailsViewProps) {
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const [inputHeight, setInputHeight] = useState(40);
   const scrollRef = useRef<any>(null);
 
   // Refs for end-reached throttling
@@ -114,6 +113,11 @@ export default function ChatDetailsView({
   const hasRecommendedMessages = recommendedMessages.length > 0;
   const hasInputValue = messageInput.trim().length > 0;
 
+  const scrollToBottom = () => {
+    // animated: true를 주어 부드럽게 이동
+    scrollRef.current?.scrollToEnd({ animated: true });
+  };
+
   const handlePressCross = () => {
     setShowExtraButtons(!showExtraButtons);
   };
@@ -121,7 +125,7 @@ export default function ChatDetailsView({
   const insets = useSafeAreaInsets();
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
-    const isMyMessage = opponentId !== item.senderId;
+    const isMyMessage = myUserId === item.senderId;
 
     // FILE 타입 메시지
     if (item.type === 'FILE') {
@@ -306,14 +310,21 @@ export default function ChatDetailsView({
         onPressTool={onPressTool}
         alignItemsCenter={false}
         navigation={navigation}
+        iconSize={30}
       >
         {/* 채팅 내역 */}
         <MessagesContainer>
           <FlatList
             ref={scrollRef}
-            data={messages.filter((v) => v.messageId !== null)}
-            keyExtractor={(item, index) => String((item as any).messageId ?? `${item.senderId}-${item.sentAt}-${index}`)}
+            data={messages.filter(v => v.messageId !== null)}
+            keyExtractor={(item, index) =>
+              String(
+                (item as any).messageId ??
+                  `${item.senderId}-${item.sentAt}-${index}`,
+              )
+            }
             renderItem={renderMessage}
+            onContentSizeChange={scrollToBottom}
             contentContainerStyle={{ padding: 16 }}
             ListFooterComponent={
               isFetchingNextPage ? (
@@ -324,7 +335,7 @@ export default function ChatDetailsView({
                 </LoadingContainer>
               ) : null
             }
-            onScroll={(e) => {
+            onScroll={e => {
               if (!onLoadMore) return;
               if (isFetchingNextPage) return;
               if (hasNextPage === false) return;
@@ -347,65 +358,99 @@ export default function ChatDetailsView({
             }}
             scrollEventThrottle={16}
           />
+          {/* 차단 상태 Overlay */}
+          {isBlocked && (
+            <BlockedOverlay>
+              <Typography fontSize={16} fontWeight="semiBold" color="#fff">
+                차단된 사용자입니다{'\n'}
+                차단을 해제하면 메시지를 보낼 수 있습니다
+              </Typography>
+            </BlockedOverlay>
+          )}
         </MessagesContainer>
         {/* 하단 입력 영역 */}
-        <InputContainer>
-          {/* 추천 메시지 버튼들 */}
-          {hasRecommendedMessages && (
-            <RecommendedMessagesContainer>
-              {recommendedMessages.slice(0, 8).map((msg, index) => (
-                <RecommendedMessageButton
-                  key={index}
-                  onPress={() => onPressRecommendedMessage(msg)}
-                >
-                  <RecommendedMessageText fontSize={12} color="#fff">
-                    {msg}
-                  </RecommendedMessageText>
-                </RecommendedMessageButton>
-              ))}
-            </RecommendedMessagesContainer>
-          )}
+        {!isBlocked &&
+          <InputContainer>
+            {/* 추천 메시지 버튼들 */}
+            {hasRecommendedMessages && (
+              <RecommendedMessagesContainer>
+                {recommendedMessages.slice(0, 8).map((msg, index) => (
+                  <RecommendedMessageButton
+                    key={index}
+                    onPress={() => onPressRecommendedMessage(msg)}
+                  >
+                    <RecommendedMessageText fontSize={12} color="#fff">
+                      {msg}
+                    </RecommendedMessageText>
+                  </RecommendedMessageButton>
+                ))}
+              </RecommendedMessagesContainer>
+            )}
 
-          {/* 입력 줄 */}
-          <InputRow>
-            <CrossButton onPress={handlePressCross} showExtraButtons={showExtraButtons}>
-              <Icon width={20} height={20} Svg={CrossBlackIcon} />
-            </CrossButton>
-            <MessageInputWrapper hasInputValue={hasInputValue}>
-              <MessageInput
-                value={messageInput}
-                onChangeText={onChangeMessageInput}
-                onSubmitEditing={onPressSend}
-                onFocus={() => {
-                  requestAnimationFrame(() => {
-                    if (scrollRef.current?.scrollToEnd) {
-                      scrollRef.current.scrollToEnd({ animated: true });
-                    }
-                  });
-                }}
-              />
-              <IconButton width={20} height={20} Svg={SendIcon} onPress={onPressSend} disabled={!hasInputValue} />
-            </MessageInputWrapper>
-          </InputRow>
+            {/* 입력 줄 */}
+            <InputRow>
+              <CrossButton
+                onPress={handlePressCross}
+                showExtraButtons={showExtraButtons}
+              >
+                <Icon width={20} height={20} Svg={CrossBlackIcon} />
+              </CrossButton>
+              <MessageInputWrapper hasInputValue={hasInputValue} height={inputHeight}>
+                <MessageInput
+                  height={inputHeight}
+                  value={messageInput}
+                  onChangeText={onChangeMessageInput}
+                  onSubmitEditing={() => {
+                    onPressSend();
+                    scrollRef.current
+                  }}
+                  onContentSizeChange={(event) => {
+                    setInputHeight(
+                      Math.min(120, Math.max(event.nativeEvent.contentSize.height, 40)),
+                    );
+                  }}
+                  multiline
+                  onFocus={() => {
+                    requestAnimationFrame(() => {
+                      if (scrollRef.current?.scrollToEnd) {
+                        scrollRef.current.scrollToEnd({ animated: true });
+                      }
+                    });
+                  }}
+                />
+                <IconButton
+                  width={20}
+                  height={20}
+                  Svg={SendIcon}
+                  onPress={onPressSend}
+                  disabled={!hasInputValue}
+                />
+              </MessageInputWrapper>
+            </InputRow>
 
-          {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
-          {showExtraButtons && (
-            <ExtraButtonsContainer>
-              <ExtraButtonWrapper onPress={onPressAlbum}>
-                <ExtraButton>
-                  <Icon width={24} height={24} Svg={ImageIcon} />
-                </ExtraButton>
-                <Typography fontSize={9} color="#000" lineHeight={20}>앨범</Typography>
-              </ExtraButtonWrapper>
-              <ExtraButtonWrapper onPress={onPressFile}>
-                <ExtraButton>
-                  <Icon width={24} height={24} Svg={PaperPlusIcon} />
-                </ExtraButton>
-                <Typography fontSize={9} color="#000" lineHeight={20}>파일</Typography>
-              </ExtraButtonWrapper>
-            </ExtraButtonsContainer>
-          )}
-        </InputContainer>
+            {/* 앨범/파일 버튼 (cross 버튼 클릭 시 표시) */}
+            {showExtraButtons && (
+              <ExtraButtonsContainer>
+                <ExtraButtonWrapper onPress={onPressAlbum}>
+                  <ExtraButton>
+                    <Icon width={24} height={24} Svg={ImageIcon} />
+                  </ExtraButton>
+                  <Typography fontSize={9} color="#000" lineHeight={20}>
+                    앨범
+                  </Typography>
+                </ExtraButtonWrapper>
+                <ExtraButtonWrapper onPress={onPressFile}>
+                  <ExtraButton>
+                    <Icon width={24} height={24} Svg={PaperPlusIcon} />
+                  </ExtraButton>
+                  <Typography fontSize={9} color="#000" lineHeight={20}>
+                    파일
+                  </Typography>
+                </ExtraButtonWrapper>
+              </ExtraButtonsContainer>
+            )}
+          </InputContainer>
+        }
       </ScreenContainer>
 
       <SlideModal
@@ -418,7 +463,7 @@ export default function ChatDetailsView({
         <EditModalWrapper>
           <EditModalButton onPress={onPressBlock}>
             <Typography fontSize={16} letterSpacing="-2.5%">
-              차단하기
+              {isBlocked ? '차단 해제' : '차단하기'}
             </Typography>
           </EditModalButton>
           <EditModalDivider />
@@ -427,16 +472,14 @@ export default function ChatDetailsView({
               신고하기
             </Typography>
           </EditModalButton>
+          <EditModalDivider />
+          <EditModalButton onPress={onLeaveChatRoom}>
+            <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
+              채팅방 나가기
+            </Typography>
+          </EditModalButton>
         </EditModalWrapper>
       </SlideModal>
-
-      <ReportModal
-        visible={isReportModalVisible}
-        onClose={onCloseReportModal}
-        targetId={opponentId}
-        targetType="CHAT"
-        targetUserType={userType === 'user' ? 'photographer' : 'user'}
-      />
 
       {/* 이미지 프리뷰 모달 */}
       <Modal
@@ -452,7 +495,11 @@ export default function ChatDetailsView({
             </CloseButton>
             <ImageCounter>
               <Typography fontSize={16} color="#fff" fontWeight="semiBold">
-                {Math.min(imagePreviewIndex + 1, Math.max(imagePreviewUrls.length, 1))} / {imagePreviewUrls.length}
+                {Math.min(
+                  imagePreviewIndex + 1,
+                  Math.max(imagePreviewUrls.length, 1),
+                )}{' '}
+                / {imagePreviewUrls.length}
               </Typography>
             </ImageCounter>
             <DownloadButton
@@ -484,7 +531,9 @@ export default function ChatDetailsView({
                 <PreviewImage uri={item} />
               </ImagePreviewWrapper>
             )}
-            initialScrollIndex={imagePreviewUrls.length > 0 ? imagePreviewIndex : 0}
+            initialScrollIndex={
+              imagePreviewUrls.length > 0 ? imagePreviewIndex : 0
+            }
             getItemLayout={(data: any, index: number) => ({
               length: SCREEN_WIDTH,
               offset: SCREEN_WIDTH * index,
@@ -505,6 +554,19 @@ const MessagesContainer = styled.View`
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: #C8C8C8;
+  position: relative;
+`;
+
+const BlockedOverlay = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 `;
 
 const InputContainer = styled.View`
@@ -572,22 +634,24 @@ const CrossButton = styled.TouchableOpacity<{ showExtraButtons: boolean }>`
   transform: ${({ showExtraButtons }) => showExtraButtons ? 'rotate(45deg)' : 'rotate(0deg)'};
 `;
 
-const MessageInputWrapper = styled.View<{ hasInputValue: boolean }>`
+const MessageInputWrapper = styled.View<{ hasInputValue: boolean, height: number }>`
   flex: 1;
   flex-direction: row;
   padding-horizontal: 12px;
   border: 1px solid ${({ hasInputValue }) => hasInputValue ? theme.colors.primary : theme.colors.disabled};
   border-radius: 8px;
-  height: 41px;
+  height: ${({ height }) => height}px;
   align-items: center;
 `;
 
-const MessageInput = styled.TextInput`
+const MessageInput = styled.TextInput<{ height: number }>`
   flex: 1;
   color: #000;
   font-size: 14px;
   font-family: Pretendard-Regular;
   margin-right: 10px;
+  padding-top: 10px;
+  height: 100%;
 `;
 
 // 메시지 스타일

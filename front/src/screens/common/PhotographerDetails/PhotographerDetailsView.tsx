@@ -28,7 +28,6 @@ import DocumentIcon from '@/assets/icons/document.svg';
 import EditIcon from '@/assets/icons/edit.svg';
 import LocationIcon from '@/assets/icons/location.svg';
 import DangerCircleIcon from '@/assets/icons/danger-circle.svg';
-import ReportModal from '@/components/ReportModal.tsx';
 
 export interface ShareLink {
   name: string;
@@ -69,6 +68,7 @@ interface PhotographerDetailsViewProps {
   onPressAddPortfolio: () => void;
   portfolioImages: PhotographerPortfolioThumb[];
   isLoadingPhotographer: boolean;
+  isError?: boolean;
   isFetchingNextPage: boolean;
   activeTab: 'portfolio' | 'reviews';
   portfolioCount: number;
@@ -80,9 +80,7 @@ interface PhotographerDetailsViewProps {
   isMoreModalVisible: boolean;
   onCloseMoreModal: () => void;
   onPressMore: () => void;
-  isReportModalVisible: boolean;
   onPressReportStart: () => void;
-  onCloseReportModal: () => void;
   onPressEditProfile: () => void;
   onPressEditConceptTag: () => void;
   onPressEditRegion: () => void;
@@ -90,7 +88,6 @@ interface PhotographerDetailsViewProps {
   isProfileInfoModalVisible: boolean;
   onCloseProfileInfoModal: () => void;
   profileInfoData: ProfileInfoData;
-  onPressBack: () => void;
   onPressShare: () => void;
   onPressFavorite: () => void;
   onPressInquiry: () => void;
@@ -100,11 +97,11 @@ interface PhotographerDetailsViewProps {
   onPressPortfolioImage: (id: number) => void;
   onPressShowAllReviews: () => void;
   onPressShowAllReviewPhotos: () => void;
+  onScroll?: (event: any) => void;
   navigation?: any;
 }
 
 export default function PhotographerDetailsView({
-  photographerId,
   photographer,
   isPhotographer,
   isMyProfile,
@@ -113,6 +110,7 @@ export default function PhotographerDetailsView({
   onPressAddPortfolio,
   portfolioImages,
   isLoadingPhotographer,
+  isError,
   isFetchingNextPage,
   activeTab,
   portfolioCount,
@@ -124,9 +122,7 @@ export default function PhotographerDetailsView({
   isMoreModalVisible,
   onCloseMoreModal,
   onPressMore,
-  isReportModalVisible,
   onPressReportStart,
-  onCloseReportModal,
   onPressEditProfile,
   onPressEditConceptTag,
   onPressEditRegion,
@@ -134,7 +130,6 @@ export default function PhotographerDetailsView({
   isProfileInfoModalVisible,
   onCloseProfileInfoModal,
   profileInfoData,
-  onPressBack,
   onPressShare,
   onPressFavorite,
   onPressInquiry,
@@ -144,6 +139,7 @@ export default function PhotographerDetailsView({
   onPressPortfolioImage,
   onPressShowAllReviews,
   onPressShowAllReviewPhotos,
+  onScroll,
   navigation,
 }: PhotographerDetailsViewProps) {
   const insets = useSafeAreaInsets();
@@ -309,7 +305,7 @@ export default function PhotographerDetailsView({
 
   const renderReviewsContent = () => {
     const filledStars = Math.round(avgRating);
-    const totalImages = reviewPreviewImages.length + reviewCount;
+    const totalImages = reviewPreviewImages.length;
 
     return (
       <ReviewsContainer>
@@ -406,7 +402,6 @@ export default function PhotographerDetailsView({
       <ScreenContainer
         headerShown={true}
         headerTitle=""
-        onPressBack={onPressBack}
         navigation={navigation}
       >
         <Loading size="large" variant="fullscreen" />
@@ -414,17 +409,17 @@ export default function PhotographerDetailsView({
     );
   }
 
-  if (!photographer) {
+  if (isError || !photographer) {
     return (
       <ScreenContainer
         headerShown={true}
         headerTitle=""
-        onPressBack={onPressBack}
         navigation={navigation}
       >
         <ContentContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Typography fontSize={14} color={theme.colors.textSecondary}>
-            작가 정보를 불러울 수 없습니다.
+          <Typography fontSize={16} color={theme.colors.disabled}>
+            작가 정보를 불러올 수 없습니다.{'\n'}
+            다시 시도해주세요.
           </Typography>
         </ContentContainer>
       </ScreenContainer>
@@ -432,14 +427,13 @@ export default function PhotographerDetailsView({
   }
 
   const photoHour = shootingData !== undefined ? ~~(shootingData?.photoTime / 60) : 0;
-  const photoMinute = shootingData !== undefined ? shootingData?.photoTime : 0;
+  const photoMinute = shootingData !== undefined ? shootingData?.photoTime % 60 : 0;
 
   return (
     <>
       <ScreenContainer
         headerShown={true}
         headerTitle={photographer.nickname}
-        onPressBack={onPressBack}
         navigation={navigation}
         headerToolIcon={UploadIcon}
         onPressTool={onPressShare}
@@ -459,6 +453,7 @@ export default function PhotographerDetailsView({
               ListFooterComponent={renderFooter}
               onEndReached={onEndReached}
               onEndReachedThreshold={0.5}
+              onScroll={onScroll}
               showsVerticalScrollIndicator={false}
               columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: HORIZONTAL_PADDING }}
               contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
@@ -472,6 +467,7 @@ export default function PhotographerDetailsView({
               renderItem={() => null}
               ListHeaderComponent={renderHeader}
               ListEmptyComponent={renderReviewsContent}
+              onScroll={onScroll}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 93 + insets.bottom }}
             />
@@ -608,13 +604,6 @@ export default function PhotographerDetailsView({
       )}
     </SlideModal>
 
-    <ReportModal
-      visible={isReportModalVisible}
-      onClose={onCloseReportModal}
-      targetId={photographerId}
-      targetType="PROFILE"
-      targetUserType="photographer"
-    />
 
     <SlideModal
       visible={isProfileInfoModalVisible}

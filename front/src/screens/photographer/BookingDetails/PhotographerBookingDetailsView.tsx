@@ -5,18 +5,17 @@ import Loading from '@/components/Loading.tsx';
 import { theme } from '@/theme';
 import Icon from '@/components/Icon.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
-import { BookingStatus } from '@/api/bookings.ts';
 
 interface PhotographerBookingDetailsViewProps {
   onPressBack: () => void;
   customerName: string;
   bookingOption: string;
   datetime: string;
+  region: string;
   additionalRequest: string;
-  status: BookingStatus;
   onPressViewPhotos?: () => void;
+  onOpenChatRoom?: () => void;
   isLoading?: boolean;
-
   navigation?: any;
 }
 
@@ -25,9 +24,10 @@ export default function PhotographerBookingDetailsView({
   customerName,
   bookingOption,
   datetime,
+  region,
   additionalRequest,
-  // status,
   onPressViewPhotos,
+  onOpenChatRoom,
   isLoading = false,
   navigation,}: PhotographerBookingDetailsViewProps) {
   if (isLoading) {
@@ -48,8 +48,8 @@ export default function PhotographerBookingDetailsView({
       onPressBack={onPressBack}
       headerTitle="촬영 예약 관리"
       backgroundColor={theme.colors.bgSecondary}
-    
-      navigation={navigation}>
+      navigation={navigation}
+    >
       <InfoContainer>
         <Typography
           fontSize={16}
@@ -63,7 +63,11 @@ export default function PhotographerBookingDetailsView({
         <Description name="고객명" value={customerName} />
         <Description name="촬영 항목" value={bookingOption} />
         <Description name="촬영 일시" value={datetime} />
-        <Description name="요청 사항" value={additionalRequest} />
+        <Description
+          name="촬영 장소"
+          value={region === '' || region === null ? '선택 안함' : region}
+        />
+        {additionalRequest !== '' && <Description name="요청 사항" value={additionalRequest} />}
       </InfoContainer>
 
       {onPressViewPhotos && (
@@ -76,6 +80,20 @@ export default function PhotographerBookingDetailsView({
             color="#000"
           >
             촬영 사진 관리
+          </Typography>
+          <Icon width={24} height={24} Svg={ArrowRightIcon} />
+        </ViewPhotosButton>
+      )}
+      {onOpenChatRoom && (
+        <ViewPhotosButton onPress={onOpenChatRoom}>
+          <Typography
+            fontSize={16}
+            fontWeight="semiBold"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+            color="#000"
+          >
+            채팅하기
           </Typography>
           <Icon width={24} height={24} Svg={ArrowRightIcon} />
         </ViewPhotosButton>

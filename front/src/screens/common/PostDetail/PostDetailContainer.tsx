@@ -103,7 +103,7 @@ export default function PostDetailContainer() {
   const handleSharePost = () => {
     if (post) {
       Share.share({
-        message: `${post.title}\nhttps://link.snaplink.run/portfolio/${postId}`,
+        message: `${post.content.substring(0, 10)+"..."}\nhttps://link.snaplink.run/tab/home/photographer/${post.photographerId}/portfolio/${postId}`,
       });
     }
   }

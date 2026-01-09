@@ -1,7 +1,8 @@
 import { API_BASE_URL } from '@/config/api';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
-import { generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
+import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
 import RNBlobUtil from 'react-native-blob-util';
+import { GetPageable, PageResponse } from '@/api/photographers.ts';
 
 const USER_BASE = `${API_BASE_URL}/api/user`;
 
@@ -27,7 +28,7 @@ export const getMe = async (): Promise<GetMeResponse> => {
   const response = await authFetch(`${USER_BASE}/me`, { method: 'GET' });
 
   if (!response.ok) {
-    throw new Error(`Failed to get me ${response.status}`);
+    throw new Error('프로필 정보를 불러올 수 없습니다.');
   }
 
   return response.json();
@@ -37,17 +38,15 @@ export const getMe = async (): Promise<GetMeResponse> => {
  * PATCH /api/user/me
  * 내 기본 프로필 수정 (nickname/email 부분 업데이트 가능)
  */
-export const patchMe = async (body: PatchMeRequest): Promise<GetMeResponse> => {
+export const patchMe = async (body: PatchMeRequest) => {
   const response = await authFetch(`${USER_BASE}/me`, {
     method: 'PATCH',
-    json: body, // authFetch가 stringify + Content-Type 처리
+    json: body,
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to patch me ${response.status}`);
+    throw new Error('프로필을 업데이트할 수 없습니다.');
   }
-
-  return response.json();
 };
 
 /** 프로필 이미지 업로드/변경 (multipart/form-data) */
@@ -102,7 +101,7 @@ export const patchUserProfileImage = async (
   );
 
   if (response.info().status < 200 || response.info().status >= 300) {
-    throw new Error(`Failed to patch user profile image ${response.info().status}`);
+    throw new Error('프로필 사진을 업데이트할 수 없습니다.');
   }
 
   // CloudFront key 반환
@@ -116,7 +115,7 @@ export const checkNickname = async (
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to check nickname ${response.status}`);
+  if (!response.ok) throw new Error('닉네임 중복 확인을 할 수 없습니다.');
 
   return response.json();
 }
@@ -128,7 +127,62 @@ export const checkEmail = async (
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to check email ${response.status}`);
+  if (!response.ok) throw new Error('이메일 중복 확인을 할 수 없습니다.');
+
+  return response.json();
+}
+
+export interface NotificationSettings {
+  consentMarketing: boolean;
+  consentCommunity: boolean;
+  consentChat: boolean;
+  consentSystem: boolean;
+  consentSchedule: boolean;
+}
+
+export const getNotificationSettings = async (): Promise<NotificationSettings> => {
+  const response = await authFetch(`${USER_BASE}/me/notifications`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error('알림 설정을 불러올 수 없습니다.');
+
+  return response.json();
+}
+
+export const updateNotificationSettings = async (body: NotificationSettings) => {
+  const response = await authFetch(`${USER_BASE}/me/notifications`, {
+    method: 'PATCH',
+    json: body,
+  });
+
+  if (!response.ok) throw new Error('알림 설정을 업데이트할 수 없습니다.');
+}
+
+export interface GetSearchUserResponse {
+  userId: string;
+  nickname: string;
+  name: string;
+  profileImageUrl: string;
+  role: "USER" | "PHOTOGRAPHER";
+}
+
+export type GetSearchUsersResponse = PageResponse<GetSearchUserResponse>;
+
+export const searchUsersFromNickname = async (
+  nickname: string,
+  pageable?: GetPageable,
+): Promise<GetSearchUsersResponse> => {
+  const params = { ...pageable, nickname };
+  const qs = buildQuery(params);
+
+  const url = `${USER_BASE}/search?${qs}`;
+
+  const response = await authFetch(url, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error('사용자 검색을 완료할 수 없습니다.');
 
   return response.json();
 }

@@ -38,8 +38,8 @@ export default function ReviewPhotosView({
         onPressBack={onPressBack}
         headerShown={true}
         headerTitle="포토 리뷰 전체보기"
-      
-      navigation={navigation}>
+        navigation={navigation}
+      >
         <FlatList
           data={photos}
           keyExtractor={(item, index) => `${item}-${index}`}

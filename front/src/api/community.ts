@@ -36,8 +36,8 @@ export const CATEGORY_KEYS = Object.keys(
 
 export interface CreateCommunityPostParams {
   category: COMMUNITY_CATEGORY_ENUM;
-  title: string;
   content: string;
+  taggedUserIds: string[];
   images: UploadImageParams[];
 }
 
@@ -51,8 +51,8 @@ export const createCommunityPost = async (data: CreateCommunityPostParams) => {
       type: 'application/json',
       data: JSON.stringify({
         category: data.category,
-        title: data.title,
         content: data.content,
+        taggedUserIds: data.taggedUserIds,
       }),
     },
 
@@ -68,7 +68,7 @@ export const createCommunityPost = async (data: CreateCommunityPostParams) => {
   const res = await authMultipartFetch(url, parts, 'POST');
 
   if (res.info().status < 200 || res.info().status >= 300) {
-    throw new Error(`Failed to create post ${res.info().status}`);
+    throw new Error('게시글을 등록할 수 없습니다.');
   }
 }
 
@@ -80,14 +80,17 @@ export interface CommunityPostImage {
 export interface CommunityPost {
   id: number;
   categoryLabel: COMMUNITY_CATEGORY_VALUE;
-  title: string;
   content: string;
   images: CommunityPostImage[];
   author: {
     userId: string;
     nickname: string;
     profileImageUrl: string;
-  }
+  },
+  taggedUsers: {
+    userId: string;
+    nickname: string;
+  }[];
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
@@ -204,7 +207,7 @@ export const getCommunityPosts = async (params: GetPageable): Promise<GetCommuni
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get posts ${response.status}`);
+  if (!response.ok) throw new Error('게시글을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -214,7 +217,7 @@ export const getCommunityPost = async (postId: number): Promise<CommunityPost> =
     method: 'GET',
   })
 
-  if (!response.ok) throw new Error(`Failed to get post ${response.status}`);
+  if (!response.ok) throw new Error('게시글을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -224,7 +227,7 @@ export const getMyPosts = async (pageable: GetPageable): Promise<GetCommunityPos
   const url = qs ? `${COMMUNITY_BASE}/posts/me?${qs}` : `${COMMUNITY_BASE}/posts/me`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get my posts ${response.status}`);
+  if (!response.ok) throw new Error('내 게시글을 불러올 수 없습니다.');
   return response.json();
 };
 
@@ -233,16 +236,16 @@ export const deletePost = async (postId: number) => {
     method: 'DELETE',
   })
 
-  if (!response.ok) throw new Error(`Failed to delete post ${response.status}`);
+  if (!response.ok) throw new Error('게시글을 삭제할 수 없습니다.');
 }
 
 export interface UpdateCommunityPostParams {
   postId: number;
   request: {
     category: COMMUNITY_CATEGORY_ENUM;
-    title: string;
     content: string;
     deletePhotoIds: number[];
+    taggedUserIds: string[];
   };
   images: UploadImageParams[];
 }
@@ -257,9 +260,9 @@ export const updatePost = async (params: UpdateCommunityPostParams) => {
       type: 'application/json',
       data: JSON.stringify({
         category: params.request.category,
-        title: params.request.title,
         content: params.request.content,
         deletePhotoIds: params.request.deletePhotoIds,
+        taggedUserIds: params.request.taggedUserIds,
       }),
     },
 
@@ -275,7 +278,7 @@ export const updatePost = async (params: UpdateCommunityPostParams) => {
   const res = await authMultipartFetch(url, parts, 'PUT');
 
   if (res.info().status < 200 || res.info().status >= 300) {
-    throw new Error(`Failed to update post ${res.info().status}`);
+    throw new Error('게시글을 수정할 수 없습니다.');
   }
 }
 
@@ -286,7 +289,7 @@ export const getComments = async (postId: number, pageable: GetPageable): Promis
     method: 'GET',
   })
 
-  if (!response.ok) throw new Error(`Failed to get post ${response.status}`);
+  if (!response.ok) throw new Error('댓글을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -300,7 +303,7 @@ export const createComment = async (postId: number, content: string, parentId: n
     }
   });
 
-  if (!response.ok) throw new Error(`Failed to create comment ${response.status}`);
+  if (!response.ok) throw new Error('댓글을 작성할 수 없습니다.');
 }
 
 export const updateComment = async (commentId: number, content: string) => {
@@ -311,7 +314,7 @@ export const updateComment = async (commentId: number, content: string) => {
     }
   });
 
-  if (!response.ok) throw new Error(`Failed to update comment ${response.status}`);
+  if (!response.ok) throw new Error('댓글을 수정할 수 없습니다.');
 }
 
 export const deleteComment = async (commentId: number) => {
@@ -319,7 +322,7 @@ export const deleteComment = async (commentId: number) => {
     method: 'DELETE',
   })
 
-  if (!response.ok) throw new Error(`Failed to delete comment ${response.status}`);
+  if (!response.ok) throw new Error('댓글을 삭제할 수 없습니다.');
 }
 
 export const toggleLike = async (postId: number) => {
@@ -327,5 +330,5 @@ export const toggleLike = async (postId: number) => {
     method: 'POST',
   });
 
-  if (!response.ok) throw new Error(`Failed to update post ${response.status}`);
+  if (!response.ok) throw new Error('좋아요를 변경할 수 없습니다.');
 }

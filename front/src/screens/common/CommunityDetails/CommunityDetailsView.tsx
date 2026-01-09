@@ -8,7 +8,9 @@ import {
   ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Animated, View,
+  Animated,
+  View,
+  FlatList,
 } from 'react-native';
 import IconButton from '@/components/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
@@ -26,6 +28,11 @@ import LinearGradient from 'react-native-linear-gradient';
 import ArrowLeftIcon from '@/assets/icons/arrow-left-white.svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SlideModal from '@/components/theme/SlideModal.tsx';
+import { GetPhotographerProfileResponse } from '@/api/photographers.ts';
+import AddTagIcon from '@/assets/icons/add-tag.svg';
+import Icon from '@/components/Icon.tsx';
+import SearchIcon from '@/assets/icons/search-white.svg';
+import { GetSearchUserResponse } from '@/api/user.ts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -34,13 +41,22 @@ interface CommunityDetailsViewProps {
   comments: Comment[];
   isMyPost: boolean;
   userId: string;
+  isLoading?: boolean;
+  isError?: boolean;
   isCommentModalVisible: boolean;
   isEditModalVisible: boolean;
+  isTagModalVisible: boolean;
+  isSearchingPhotographerModalVisible: boolean;
   commentInput: string;
   commentInputRef: RefObject<TextInput | null>;
   replyTo: { parentId: number; nickname: string } | null;
   editingCommentId: number | null;
+  taggedPhotographer?: GetPhotographerProfileResponse;
+  searchPhotographerKey: string;
+  searchedPhotographers: GetSearchUserResponse[];
+  setSearchPhotographerKey: (searchPhotographerKey: string) => void;
   onChangeCommentInput: (text: string) => void;
+  onLoadMoreSearchedPhotographers: () => void;
   onPressBack: () => void;
   onPressShare: () => void;
   onPressLike: () => void;
@@ -57,6 +73,13 @@ interface CommunityDetailsViewProps {
   onPressEditComment: (commentId: number, content: string) => void;
   onPressDeleteComment: (commentId: number) => void;
   onCancelEdit: () => void;
+  onPressTag: () => void;
+  onCloseTagModal: () => void;
+  onPressTaggedPhotographer: () => void;
+  onToggleTaggedPhotographerScrap: () => void;
+  onAddTaggedUser: () => void;
+  onCloseSearchingPhotographerModal: () => void;
+  onChangeTaggedPhotographer: (photographerId: string) => void;
 }
 
 // Image Carousel Component
@@ -268,13 +291,22 @@ export default function CommunityDetailsView({
   comments,
   isMyPost,
   userId,
+  isLoading,
+  isError,
   isCommentModalVisible,
   isEditModalVisible,
+  isTagModalVisible,
+  isSearchingPhotographerModalVisible,
   commentInput,
   commentInputRef,
   replyTo,
   editingCommentId,
+  taggedPhotographer,
+  searchPhotographerKey,
+  searchedPhotographers,
+  setSearchPhotographerKey,
   onChangeCommentInput,
+  onLoadMoreSearchedPhotographers,
   onPressBack,
   onPressShare,
   onPressLike,
@@ -291,14 +323,31 @@ export default function CommunityDetailsView({
   onPressEditComment,
   onPressDeleteComment,
   onCancelEdit,
+  onPressTag,
+  onCloseTagModal,
+  onPressTaggedPhotographer,
+  onToggleTaggedPhotographerScrap,
+  onAddTaggedUser,
+  onCloseSearchingPhotographerModal,
+  onChangeTaggedPhotographer
 }: CommunityDetailsViewProps) {
   const insets = useSafeAreaInsets();
   const statusBarHeight = Platform.OS === 'ios' ? insets.top : 0;
 
-  if (!post) {
+  if (isError || !post) {
     return (
       <Container snapToOffsets={[]} snapToAlignment="start" decelerationRate="fast">
-        <BackButton onPress={onPressBack} />
+        <ErrorWrapper>
+          <BackButton onPress={onPressBack}/>
+          {isError && (
+            <ErrorTextWrapper>
+              <Typography fontSize={16} color={theme.colors.disabled}>
+                게시글을 불러올 수 없습니다.{'\n'}
+                다시 시도해주세요.
+              </Typography>
+            </ErrorTextWrapper>
+          )}
+        </ErrorWrapper>
       </Container>
     );
   }
@@ -350,6 +399,11 @@ export default function CommunityDetailsView({
               locations={[0, 0.3, 1]}
             />
             <ImageCarousel images={post.images} />
+            {isMyPost && (
+              <AddTagButton onPress={onAddTaggedUser}>
+                <Icon width={35} height={35} Svg={AddTagIcon} />
+              </AddTagButton>
+            )}
           </PostImageWrapper>
           <PostHeader statusBarHeight={statusBarHeight}>
             <IconButton
@@ -380,38 +434,42 @@ export default function CommunityDetailsView({
             </PostHeaderRightWrapper>
           </PostHeader>
           <ContentHeader>
-            {post.author.profileImageUrl ? (
-              <WriterProfileImage uri={post.author.profileImageUrl} />
-            ) : (
-              <WriterProfileImage />
-            )}
+            {post.categoryLabel !== '스냅소식' &&
+              (post.author.profileImageUrl ? (
+                <WriterProfileImage uri={post.author.profileImageUrl} />
+              ) : (
+                <WriterProfileImage />
+              ))}
             <Typography
               fontSize={14}
               fontWeight="semiBold"
               letterSpacing="-2.5%"
               marginLeft={8}
             >
-              {post.author.nickname}
+              {post.categoryLabel === '스냅소식'
+                ? '스냅링크 관리자'
+                : post.author.nickname}
             </Typography>
           </ContentHeader>
           <ContentContainer>
-            <Typography
-              fontSize={16}
-              fontWeight="bold"
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginBottom={10}
-            >
-              {post.title}
-            </Typography>
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginBottom={10}
-            >
-              {post.content}
-            </Typography>
+            <ContentTextWrapper>
+              {post.taggedUsers.length > 0 && (
+                <TagButton onPress={onPressTag}>
+                  <Typography
+                    fontSize={14}
+                    lineHeight="140%"
+                    letterSpacing="-2.5%"
+                    color="primary"
+                    style={{ textDecorationLine: 'underline' }}
+                  >
+                    @{post.taggedUsers[0].nickname}
+                  </Typography>
+                </TagButton>
+              )}
+              <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%">
+                {post.content}
+              </Typography>
+            </ContentTextWrapper>
             <ActionWrapper>
               <ActionButton onPress={onPressLike}>
                 <IconButton
@@ -520,8 +578,9 @@ export default function CommunityDetailsView({
         title={`댓글  ${post.commentCount}`}
         headerAlign="left"
         scrollable
-        autoGrowToMax
         minHeight={SCREEN_HEIGHT * 0.6}
+        maxHeight={SCREEN_HEIGHT * 0.8}
+        autoGrowToMax={true}
         footerHeight={75}
         keyboardAvoid
         footer={
@@ -594,6 +653,98 @@ export default function CommunityDetailsView({
           </EditModalButton>
         </EditModalWrapper>
       </SlideModal>
+
+      <SlideModal
+        visible={isSearchingPhotographerModalVisible}
+        onClose={onCloseSearchingPhotographerModal}
+        showHeader={false}
+        scrollable={false}
+        minHeight={SCREEN_HEIGHT * 0.8}
+      >
+        <SearchHeaderWrapper>
+          <SearchInputWrapper>
+            <SearchInput
+              value={searchPhotographerKey}
+              onChangeText={setSearchPhotographerKey}
+              placeholder="작가 검색"
+              placeholderTextColor="#A4A4A4"
+            />
+            <Icon width={24} height={24} Svg={SearchIcon} />
+          </SearchInputWrapper>
+          <CancelSearchButton onPress={onCloseSearchingPhotographerModal}>
+            <Typography
+              fontSize={18}
+            >취소</Typography>
+          </CancelSearchButton>
+        </SearchHeaderWrapper>
+        <FlatList
+          data={searchedPhotographers}
+          keyExtractor={(item) => item.userId}
+          renderItem={({ item }) => (
+            <TaggedPhotographerButton onPress={() => onChangeTaggedPhotographer(item.userId)}>
+              <TaggedPhotographerInfo>
+                <TaggedPhotographerProfileImageWrapper>
+                  <TaggedPhotographerProfileImage uri={item.profileImageUrl} />
+                </TaggedPhotographerProfileImageWrapper>
+                <Typography
+                  fontSize={14}
+                  fontWeight="semiBold"
+                  marginLeft={4}
+                >
+                  {item.nickname}
+                </Typography>
+              </TaggedPhotographerInfo>
+            </TaggedPhotographerButton>
+          )}
+          onEndReached={onLoadMoreSearchedPhotographers}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            searchPhotographerKey.trim().length > 0 ? (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Typography fontSize={14} color="#A4A4A4">
+                  검색 결과가 없습니다
+                </Typography>
+              </View>
+            ) : null
+          }
+        />
+      </SlideModal>
+
+      {taggedPhotographer !== undefined &&
+        <SlideModal
+          visible={isTagModalVisible}
+          onClose={onCloseTagModal}
+          showHeader={true}
+          scrollable={false}
+          minHeight={200}
+          title="이 사진에 태그된 작가"
+        >
+          <TaggedPhotographerButton onPress={onPressTaggedPhotographer}>
+            <TaggedPhotographerInfo>
+              <TaggedPhotographerProfileImageWrapper>
+                <TaggedPhotographerProfileImage uri={taggedPhotographer.profileImageUrl} />
+              </TaggedPhotographerProfileImageWrapper>
+              <Typography
+                fontSize={14}
+                fontWeight="semiBold"
+                marginLeft={4}
+              >
+                {taggedPhotographer.nickname}
+              </Typography>
+            </TaggedPhotographerInfo>
+            <ScrapButton isChecked={taggedPhotographer.scrapped} onPress={(e) => {
+              e.stopPropagation();
+              onToggleTaggedPhotographerScrap();
+            }}>
+              <Typography
+                fontSize={12}
+                fontWeight="bold"
+                color={taggedPhotographer.scrapped ? "#fff" : "#000"}
+              >스크랩</Typography>
+            </ScrapButton>
+          </TaggedPhotographerButton>
+        </SlideModal>
+      }
     </>
   );
 }
@@ -682,6 +833,13 @@ const AnimatedDotView = styled(Animated.View)`
   margin-horizontal: 3px;
 `;
 
+const AddTagButton = styled.TouchableOpacity`
+  position: absolute;
+  z-index: 5;
+  left: 20px;
+  bottom: 10px;
+`
+
 const ContentHeader = styled.View`
   flex-direction: row;
   align-items: center;
@@ -696,6 +854,16 @@ const ContentHeader = styled.View`
 const ContentContainer = styled.View`
   padding: 0 20px;
 `;
+
+const ContentTextWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 10px;
+`;
+
+const TagButton = styled.Pressable`
+  margin-right: 5px;
+`
 
 const WriterProfileImage = styled(ServerImage)`
   width: 40px;
@@ -829,3 +997,76 @@ const EditModalDivider = styled.View`
   height: 1px;
   background-color: #e0e0e0;
 `;
+
+const TaggedPhotographerButton = styled.Pressable`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+`
+
+const TaggedPhotographerInfo = styled.View`
+  flex-direction: row;
+  align-items: center;
+`
+
+const ScrapButton = styled.TouchableOpacity<{ isChecked: boolean }>`
+  width: 97px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: ${({ isChecked }) => (isChecked ? theme.colors.primary : theme.colors.disabled)};
+`
+
+const TaggedPhotographerProfileImageWrapper = styled.View`
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  overflow: hidden;
+  background-color: #aaa;
+`
+
+const TaggedPhotographerProfileImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
+`
+
+const SearchHeaderWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+`
+
+const SearchInputWrapper = styled.View`
+  flex: 1;
+  flex-direction: row;
+  padding-horizontal: 12px;
+  border: 1px solid ${theme.colors.disabled};
+  border-radius: 8px;
+  height: 41px;
+  margin-left: 13px;
+  align-items: center;
+  margin-right: 15px;
+`;
+
+const SearchInput = styled.TextInput`
+  flex: 1;
+  color: #000;
+  font-size: 14px;
+  font-family: Pretendard-Regular;
+  margin-right: 10px;
+`;
+
+const CancelSearchButton = styled.TouchableOpacity`
+  margin-left: 16px;
+`
+
+const ErrorWrapper = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`
+
+const ErrorTextWrapper = styled.View`
+  padding: 20px;
+`

@@ -89,14 +89,22 @@ export default function ReviewsView({
                 style={{ marginRight: index < 3 ? REVIEW_GRID_MARGIN : 0 }}
               >
                 <ReviewPreviewImage uri={key} />
+                {reviewSummary.topPhotoKeys.length - 1 === index &&
+                  <ShowAllPreviewButton onPress={onPressAllPhotos}>
+                    <Typography
+                      fontSize={11}
+                      lineHeight="140%"
+                      letterSpacing="-2.5%"
+                      color="#fff"
+                      style={{ textAlign: 'center' }}
+                    >
+                      {reviewSummary.topPhotoKeys.length}장{'\n'}전체보기
+                    </Typography>
+                  </ShowAllPreviewButton>
+                }
               </ReviewPreviewImageButton>
             ))}
           </ReviewPreviewImageList>
-          <AllPhotosButton onPress={onPressAllPhotos}>
-            <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
-              전체보기
-            </Typography>
-          </AllPhotosButton>
         </ReviewPreviewImageContainer>
       )}
     </>
@@ -105,9 +113,11 @@ export default function ReviewsView({
   const renderReviewItem = ({ item: review }: { item: PhotographerReviewItem }) => (
     <ReviewItem onPress={() => onPressReview(review)}>
       <ReviewItemHeader>
-        <ReviewWriterProfileImage
-          {...(review.writerProfileKey ? { uri: review.writerProfileKey } :  {})}
-        />
+        <ReivewWriterProfileImageWrapper>
+          <ReviewWriterProfileImage
+            {...(review.writerProfileKey ? { uri: review.writerProfileKey } :  {})}
+          />
+        </ReivewWriterProfileImageWrapper>
         <ReviewWriterInfoWrapper>
           <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
             {review.writerNickname}
@@ -117,7 +127,7 @@ export default function ReviewsView({
               <RatingStarWrapper key={i}>{star.props.children}</RatingStarWrapper>
             ))}
             <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
-              {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+              {review.createdAt}
             </Typography>
           </ReviewInfoWrapper>
         </ReviewWriterInfoWrapper>
@@ -195,21 +205,19 @@ const ReviewPreviewImageContainer = styled.View`
 const ReviewPreviewImageList = styled.View`
   flex-direction: row;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 `;
 
 const ReviewPreviewImageButton = styled.TouchableOpacity`
   width: ${REVIEW_PREVIEW_IMAGE_SIZE}px;
   height: ${REVIEW_PREVIEW_IMAGE_SIZE}px;
+  margin-bottom: 2px;
 `;
 
 const ReviewPreviewImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
   background-color: #e0e0e0;
-`;
-
-const AllPhotosButton = styled.TouchableOpacity`
-  align-items: flex-end;
 `;
 
 const ReviewItem = styled.TouchableOpacity`
@@ -226,11 +234,16 @@ const ReviewItemHeader = styled.View`
   margin-bottom: 10px;
 `;
 
-const ReviewWriterProfileImage = styled(ServerImage)`
+const ReivewWriterProfileImageWrapper = styled.View`
   width: 45px;
   height: 45px;
   border-radius: 45px;
   background-color: #e0e0e0;
+`
+
+const ReviewWriterProfileImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
 `;
 
 const ReviewWriterInfoWrapper = styled.View`
@@ -253,3 +266,15 @@ const ReviewImage = styled(ServerImage)`
   margin-right: 10px;
   background-color: #e0e0e0;
 `;
+
+const ShowAllPreviewButton = styled.TouchableOpacity`
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  border-radius: 2px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(47, 44, 43, .2);
+`

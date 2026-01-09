@@ -35,7 +35,6 @@ const days = [
   '금요일',
   '토요일',
   '일요일',
-  '공휴일',
 ];
 
 export default function ScheduleFormView({

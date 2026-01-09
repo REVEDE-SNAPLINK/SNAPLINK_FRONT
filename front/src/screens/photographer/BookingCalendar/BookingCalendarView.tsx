@@ -6,7 +6,7 @@ import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetPhotographerDayDetailResponse } from '@/api/schedules';
 import { formatTime } from '@/utils/format.ts';
-import { useEffect, useMemo, useState } from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import { Dimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -61,7 +61,7 @@ export default function BookingCalendarView({
   const [containerHeight, setContainerHeight] = useState(0);
   const [defaultHeight, setDefaultHeight] = useState(0);
   const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('DEFAULT');
-  const [calculatedDayMarginBottom, setCalculatedDayMarginBottom] = useState(0);
+  const prevDateRef = useRef(selectedDate);
 
   const bookings = useMemo(() => {
     if (!dayDetailData?.bookings) return [];
@@ -131,10 +131,15 @@ export default function BookingCalendarView({
 
   // HIDDEN 상태에서 날짜 선택 시 DEFAULT로 전환
   useEffect(() => {
-    if (renderType === 'HIDDEN' && selectedDate) {
+    // 1. 이전 날짜와 현재 날짜가 다를 때만 (즉, 사용자가 다른 날을 클릭했을 때만)
+    // 2. 현재 상태가 HIDDEN이라면 DEFAULT로 전환
+    if (prevDateRef.current !== selectedDate && renderType === 'HIDDEN') {
       setRenderType('DEFAULT');
     }
-  }, [selectedDate]);
+
+    // 현재 날짜를 ref에 업데이트
+    prevDateRef.current = selectedDate;
+  }, [selectedDate, renderType]);
 
   const DRAG_DAMPING = 0.8;
 
@@ -150,55 +155,66 @@ export default function BookingCalendarView({
     })
     .onEnd((e) => {
       const current = sheetHeight.value;
-      const SNAP_HIDDEN = defaultHeight * 0.5;
-      const SNAP_FULL = defaultHeight + (containerHeight - defaultHeight) * 0.5;
+      const velocity = e.velocityY; // 아래로 빠르게 던지면 양수
 
+      const SNAP_HIDDEN = defaultHeight * 0.4; // 조금 더 아래에서 반응하도록 조정
+      const SNAP_FULL = defaultHeight + (containerHeight - defaultHeight) * 0.6;
+
+      // 1. FULL 상태에서의 처리
       if (renderTypeSV.value === 'FULL') {
-        if (e.velocityY > 600 || current < SNAP_FULL) {
-          sheetHeight.value = withTiming(defaultHeight);
-          renderTypeSV.value = 'DEFAULT';
-          runOnJS(setRenderType)('DEFAULT');
+        if (velocity > 500 || current < SNAP_FULL) {
+          sheetHeight.value = withTiming(defaultHeight, {}, () => {
+            renderTypeSV.value = 'DEFAULT';
+            runOnJS(setRenderType)('DEFAULT');
+          });
         } else {
           sheetHeight.value = withTiming(containerHeight);
         }
         return;
       }
 
-      if (current <= SNAP_HIDDEN) {
-        sheetHeight.value = withTiming(0);
-        renderTypeSV.value = 'HIDDEN';
-        runOnJS(setRenderType)('HIDDEN');
-        return;
+      // 2. DEFAULT/HIDDEN 상태에서의 처리
+      // 속도가 빠르거나(아래로 던짐), 높이가 임계값보다 낮을 때
+      if (velocity > 500 || current < SNAP_HIDDEN) {
+        sheetHeight.value = withTiming(0, { duration: 250 }, () => {
+          renderTypeSV.value = 'HIDDEN';
+          runOnJS(setRenderType)('HIDDEN');
+        });
       }
-
-      if (current >= SNAP_FULL) {
-        sheetHeight.value = withTiming(containerHeight);
-        renderTypeSV.value = 'FULL';
-        runOnJS(setRenderType)('FULL');
-        return;
+      // 위로 던지거나 높이가 FULL 임계값보다 높을 때
+      else if (velocity < -500 || current > SNAP_FULL) {
+        sheetHeight.value = withTiming(containerHeight, {}, () => {
+          renderTypeSV.value = 'FULL';
+          runOnJS(setRenderType)('FULL');
+        });
       }
-
-      sheetHeight.value = withTiming(defaultHeight);
-      renderTypeSV.value = 'DEFAULT';
-      runOnJS(setRenderType)('DEFAULT');
+      // 그 외에는 다시 DEFAULT로
+      else {
+        sheetHeight.value = withTiming(defaultHeight, {}, () => {
+          renderTypeSV.value = 'DEFAULT';
+          runOnJS(setRenderType)('DEFAULT');
+        });
+      }
     });
 
   // renderType 변경 시 sheetHeight 애니메이션
   useEffect(() => {
-    if (!containerHeight || weekCount <= 0 || !defaultHeight) return;
+    if (!containerHeight || !defaultHeight) return;
 
-    switch (renderType) {
-      case 'HIDDEN':
-        sheetHeight.value = withTiming(0, { duration: 300 });
-        break;
-      case 'DEFAULT':
-        sheetHeight.value = withTiming(defaultHeight, { duration: 300 });
-        break;
-      case 'FULL':
-        sheetHeight.value = withTiming(containerHeight, { duration: 300 });
-        break;
+    // 현재 애니메이션이 이미 목표치에 도달했는지 확인 (불필요한 withTiming 방지)
+    const targetMap = {
+      HIDDEN: 0,
+      DEFAULT: defaultHeight,
+      FULL: containerHeight,
+    };
+
+    const targetValue = targetMap[renderType];
+
+    // 현재 sheetHeight.value가 targetValue와 차이가 클 때만 실행
+    if (Math.abs(sheetHeight.value - targetValue) > 1) {
+      sheetHeight.value = withTiming(targetValue, { duration: 300 });
     }
-  }, [renderType, containerHeight, weekCount, defaultHeight, sheetHeight]);
+  }, [renderType, containerHeight, defaultHeight, sheetHeight]);
 
   const floatingAnimatedStyle = useAnimatedStyle(() => {
     /**

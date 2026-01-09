@@ -54,6 +54,8 @@ interface SearchPhotographerViewProps {
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
   onPressPhotographer: (photographerId: string) => void;
+  isLoading?: boolean;
+  isError?: boolean;
 
   navigation?: any;
 }
@@ -82,10 +84,11 @@ export default function SearchPhotographerView({
   isRefreshing,
   isFetchingNextPage,
   onPressPhotographer,
+  isError,
   navigation,}: SearchPhotographerViewProps) {
   return (
     <>
-      <ScreenContainer paddingHorizontal={20} headerShown={false}
+      <ScreenContainer headerShown={false}
       navigation={navigation}>
         <Header>
           <BackButton onPress={onPressBack} />
@@ -98,34 +101,47 @@ export default function SearchPhotographerView({
             <Icon width={24} height={24} Svg={SearchIcon} />
           </SearchInputWrapper>
         </Header>
-        <Filter
-          categories={filterCategories}
-          activeCategoryIds={activeCategoryIds}
-          filterChips={filterChips}
-          onPressFilterButton={onPressFilter}
-          onPressCategoryChip={onPressCategoryChip}
-          onPressFilterChip={onPressFilterChip}
-        />
-        <SearchResultHeader>
-          <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color={theme.colors.disabled}>
-            {totalCount}명
-          </Typography>
-          <SortButton
-            options={SORT_OPTIONS}
-            selectedKey={sortBy}
-            onSelect={onChangeSortBy}
+        <FilterWrapper>
+          <Filter
+            categories={filterCategories}
+            activeCategoryIds={activeCategoryIds}
+            filterChips={filterChips}
+            onPressFilterButton={onPressFilter}
+            onPressCategoryChip={onPressCategoryChip}
+            onPressFilterChip={onPressFilterChip}
           />
-        </SearchResultHeader>
-        <SearchResultWrapper>
-          <SearchPhotographerList
-            photographers={photographers}
-            onEndReached={onLoadMore}
-            onRefresh={onRefresh}
-            isRefreshing={isRefreshing}
-            isFetchingNextPage={isFetchingNextPage}
-            onPressItem={onPressPhotographer}
-          />
-        </SearchResultWrapper>
+        </FilterWrapper>
+        {isError ? (
+          <EmptyContainer>
+            <Typography fontSize={16} color={theme.colors.disabled}>
+              작가 목록을 불러올 수 없습니다.{'\n'}
+              다시 시도해주세요.
+            </Typography>
+          </EmptyContainer>
+        ) : (
+          <>
+            <SearchResultHeader>
+              <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color={theme.colors.disabled}>
+                검색결과 총 {totalCount}명
+              </Typography>
+              <SortButton
+                options={SORT_OPTIONS}
+                selectedKey={sortBy}
+                onSelect={onChangeSortBy}
+              />
+            </SearchResultHeader>
+            <SearchResultWrapper>
+              <SearchPhotographerList
+                photographers={photographers}
+                onEndReached={onLoadMore}
+                onRefresh={onRefresh}
+                isRefreshing={isRefreshing}
+                isFetchingNextPage={isFetchingNextPage}
+                onPressItem={onPressPhotographer}
+              />
+            </SearchResultWrapper>
+          </>
+        )}
       </ScreenContainer>
 
       {isFilterModalOpen && (
@@ -140,11 +156,14 @@ export default function SearchPhotographerView({
   );
 }
 
+const CONTAINER_PADDING = 20;
+
 const Header = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-top: 24px;
+  margin-top: 10px;
+  padding: 0 ${CONTAINER_PADDING}px;
 `
 
 const SearchInputWrapper = styled.View`
@@ -166,9 +185,14 @@ const SearchInput = styled.TextInput`
   margin-right: 10px;
 `;
 
+const FilterWrapper = styled.View`
+  width: 100%;
+  padding: 0 ${CONTAINER_PADDING}px;
+`
+
 const SearchResultHeader = styled.View`
   flex-direction: row;
-  padding-horizontal: 3px;
+  padding-horizontal: ${CONTAINER_PADDING}px;
   align-items: center;
   justify-content: space-between;
   width: 100%;
@@ -181,4 +205,10 @@ const SearchResultHeader = styled.View`
 const SearchResultWrapper = styled.View`
   flex: 1;
   width: 100%;
+`
+
+const EmptyContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 `

@@ -18,7 +18,7 @@ export const getNoticeDetail = async (
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get notice ${id} ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error('공지사항을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -42,6 +42,6 @@ export const getNotices = async (pageable: { page: number; size?: number }): Pro
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get notice ${response.status}`);
+  if (!response.ok) throw new Error('공지사항 목록을 불러올 수 없습니다.');
   return response.json();
 }

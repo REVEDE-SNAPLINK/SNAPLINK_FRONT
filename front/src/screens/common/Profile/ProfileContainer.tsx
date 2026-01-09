@@ -13,11 +13,11 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { requestPermission } from '@/utils/permissions.ts';
 import { Alert } from '@/components/theme';
 import { usePatchUserProfileImageMutation } from '@/mutations/user.ts';
-import { usePatchPhotographerProfileImageMutation } from '@/mutations/photographers.ts';
 import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useEffect, useState } from 'react';
 import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
+import { openTermUrl } from '@/utils/link.ts';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -28,7 +28,9 @@ export default function ProfileContainer () {
   const isPhotographer = userType === 'photographer';
 
   const { data: userProfile, isSuccess } = useMeQuery();
-  const { data: photographerStatus } = usePhotographerStatusQuery();
+  const { data: photographerStatus } = usePhotographerStatusQuery({
+    enabled: isPhotographer,
+  });
 
   useEffect(() => {
     if (isSuccess && userProfile?.profileImageURI) {
@@ -37,13 +39,8 @@ export default function ProfileContainer () {
     }
   }, [isSuccess, userProfile?.profileImageURI]);
 
-  // Upload profile image mutation
-  const updateUserProfileImageMutation = usePatchUserProfileImageMutation();
-  const updatePhotographerProfileMutation = usePatchPhotographerProfileImageMutation();
-
-  const uploadProfileImageMutation = isPhotographer
-    ? updatePhotographerProfileMutation
-    : updateUserProfileImageMutation;
+  // Upload profile image mutation (unified for all user types)
+  const uploadProfileImageMutation = usePatchUserProfileImageMutation();
 
   const handleToggleExpertMode = () => toggleExpertModeAction()
 
@@ -237,6 +234,18 @@ export default function ProfileContainer () {
       });
       return;
     }
+    const isPending = photographerStatus === 'PENDING';
+    if (isPending) {
+      Alert.show({
+        title: '포트폴리오 등록을 완료하세요',
+        message: '아직 포트폴리오를 등록하지 않으셨어요.\n등록 이후에 예약을 받을 수 있어요.',
+        buttons: [
+          { text: '뒤로', type: 'cancel', onPress: () => {} },
+          { text: '등록하러가기', onPress: () => navigation.navigate('PortfolioOnboarding') },
+        ]
+      });
+      return;
+    }
     navigation.navigate('BookingManage');
   }
 
@@ -264,11 +273,23 @@ export default function ProfileContainer () {
       });
       return;
     }
+    const isPending = photographerStatus === 'PENDING';
+    if (isPending) {
+      Alert.show({
+        title: '포트폴리오 등록을 완료하세요',
+        message: '아직 포트폴리오를 등록하지 않으셨어요.\n등록 이후에 촬영 상품을 관리해보세요',
+        buttons: [
+          { text: '뒤로', type: 'cancel', onPress: () => {} },
+          { text: '등록하러가기', onPress: () => navigation.navigate('PortfolioOnboarding') },
+        ]
+      });
+      return;
+    }
     navigation.navigate('ShootingManage');
   }
 
   const handlePressCustomerCenter = () => {
-
+    openTermUrl("/customer-service")
   };
 
   const handlePressNotice = () => navigation.navigate('Notice');

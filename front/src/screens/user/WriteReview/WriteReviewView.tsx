@@ -9,6 +9,7 @@ import TextInput from '@/components/theme/TextInput.tsx';
 import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
+import { openTermUrl } from '@/utils/link.ts';
 
 interface WriteReviewViewProps {
   headerTitle: string;
@@ -132,7 +133,9 @@ export default function WriteReviewView({
               {'    '}등이 포함된 경우, 스냅링크 서비스 이용약관 00조에 의거, 통보없이 삭제, {'\n'}
               {'    '}숨김 처리를 할 수 있습니다.
             </Typography>
-            <TermLinkButton>
+            <TermLinkButton onPress={() => {
+              openTermUrl("/terms")
+            }}>
               <Typography
                 fontSize={11}
                 lineHeight="160%"

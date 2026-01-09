@@ -100,7 +100,7 @@ export const getPhotographerProfile = async (
     : `${PHOTOGRAPHERS_BASE}/${photographerId}/profile`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get photographer profile ${response.status}`);
+  if (!response.ok) throw new Error('작가 프로필을 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -161,7 +161,7 @@ export const patchPhotographerProfileImage = async (
   );
 
   if (response.info().status < 200 || response.info().status >= 300) {
-    throw new Error(`Failed to patch profile image ${response.info().status}`);
+    throw new Error('프로필 사진을 업데이트할 수 없습니다.');
   }
 
   // CloudFront key 반환
@@ -232,7 +232,7 @@ export const signPhotographer = async (
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) throw new Error(`Failed to sign photographer ${response.status}`);
+  if (!response.ok) throw new Error('작가 등록을 완료할 수 없습니다.');
 };
 
 /* ---------------------------------------------
@@ -240,7 +240,7 @@ export const signPhotographer = async (
  * 작가 검색 (pageable param + body filter)
  * -------------------------------------------- */
 
-export type Gender = 'MAN' | 'WOMAN';
+export type Gender = 'MALE' | 'FEMALE';
 
 export interface SearchPhotographersBody {
   gender: Gender | null;
@@ -248,7 +248,8 @@ export interface SearchPhotographersBody {
   conceptIds: number[] | null;
   maxPrice: number | null;
   minPrice: number | null;
-  query: string;
+  query: string | null;
+  sort: "RECOMMENDED" | "LATEST" | "REVIEW"
 }
 
 export interface PhotographerSearchItem {
@@ -285,7 +286,7 @@ export const searchPhotographers = async (
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) throw new Error(`Failed to search photographers ${response.status}`);
+  if (!response.ok) throw new Error('작가 검색을 완료할 수 없습니다.');
   return response.json();
 };
 
@@ -301,7 +302,6 @@ export interface UploadImageFile {
 }
 
 export interface CreatePortfolioParams {
-  title: string;
   content: string;
   isLinked: boolean;
   images: UploadImageFile[];
@@ -339,12 +339,6 @@ export const createPortfolio = async (
   }
 
   const parts: MultipartPart[] = [
-    // request는 JSON 파트
-    {
-      name: 'title',
-      type: 'application/json',
-      data: params.title,
-    },
     {
       name: 'contetnt',
       type: 'application/json',
@@ -380,7 +374,7 @@ export const createPortfolio = async (
   );
 
   if (response.info().status < 200 || response.info().status >= 300) {
-    throw new Error(`Failed to create portfolio ${response.info().status}`);
+    throw new Error('포트폴리오를 등록할 수 없습니다.');
   }
 };
 
@@ -422,7 +416,7 @@ export const getPhotographerReviews = async (
     : `${REVIEWS_BASE}/${photographerId}/reviews`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get photographer reviews ${response.status}`);
+  if (!response.ok) throw new Error('리뷰를 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -456,7 +450,7 @@ export const getPhotographerReviewSummary = async (
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get photographer review summary ${response.status}`);
+  if (!response.ok) throw new Error('리뷰 요약을 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -476,7 +470,7 @@ export const getMyScrappedPhotographers = async (
     : `${PHOTOGRAPHERS_BASE}/me/scrapped`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get scrapped photographers ${response.status}`);
+  if (!response.ok) throw new Error('스크랩한 작가를 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -498,7 +492,7 @@ export const togglePhotographerScrap = async (
     method: 'POST',
   });
 
-  if (!response.ok) throw new Error(`Failed to toggle photographer scrap ${response.status}`);
+  if (!response.ok) throw new Error('스크랩을 변경할 수 없습니다.');
   return response.json();
 };
 
@@ -509,7 +503,7 @@ export const deleteHoliday = async (
     method: 'DELETE',
   });
 
-  if (!response.ok) throw new Error(`Failed to delete holiday ${response.status}`);
+  if (!response.ok) throw new Error('휴가를 삭제할 수 없습니다.');
 }
 
 export interface GetHolidayResponse {
@@ -530,7 +524,7 @@ export const createHolidays = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to create holiday ${response.status}`);
+  if (!response.ok) throw new Error('휴가를 등록할 수 없습니다.');
   return response.json();
 }
 
@@ -544,7 +538,7 @@ export const getTags = async (): Promise<Tag[]> => {
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get tags ${response.status}`);
+  if (!response.ok) throw new Error('태그를 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -557,7 +551,6 @@ export interface PortfolioPhoto {
 
 export interface GetPortfolioResponse {
   postId: number;
-  title: string;
   content: string;
   representativeImageUrl: string;
   createdAt: string;
@@ -571,14 +564,13 @@ export const getPortfolioPost = async (postId: number): Promise<GetPortfolioResp
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get portfolio ${response.status}`);
+  if (!response.ok) throw new Error('포트폴리오를 불러올 수 없습니다.');
 
   return response.json();
 }
 
 export interface UpdatePortfolioPostRequest {
   request: {
-    title: string;
     content: string;
     deletePhotoIds: number[];
     photoOrders: {
@@ -643,7 +635,7 @@ export const updatePortfolioPost = async (
   );
 
   if (response.info().status < 200 || response.info().status >= 300) {
-    throw new Error(`Failed to update portfolio ${response.info().status}`);
+    throw new Error('포트폴리오를 수정할 수 없습니다.');
   }
 }
 
@@ -654,7 +646,7 @@ export const deletePortfolioPost = async (
     method: 'DELETE',
   });
 
-  if (!response.ok) throw new Error(`Failed to delete post ${response.status}`);
+  if (!response.ok) throw new Error('포트폴리오를 삭제할 수 없습니다.');
 }
 
 export type PhotographerStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'REJECTED' | 'SUSPENDED';
@@ -664,7 +656,7 @@ export const getStatusMe = async (): Promise<PhotographerStatus> => {
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get status ${response.status}`);
+  if (!response.ok) throw new Error('작가 상태를 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -674,7 +666,7 @@ export const activePhotographer = async () => {
     method: 'POST',
   });
 
-  if (!response.ok) throw new Error(`Failed to get active photographer ${response.status}`);
+  if (!response.ok) throw new Error('작가를 활성화할 수 없습니다.');
 }
 
 export const inactivePhotographer = async () => {
@@ -682,7 +674,7 @@ export const inactivePhotographer = async () => {
     method: 'POST',
   });
 
-  if (!response.ok) throw new Error(`Failed to get active photographer ${response.status}`);
+  if (!response.ok) throw new Error('작가를 비활성화할 수 없습니다.');
 }
 
 export interface GetPhotographerRegionsAndConceptsAndTagsResponse {
@@ -698,7 +690,7 @@ export const getPhotographerRegionsAndConceptsAndTags = async (
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get photographer region ${response.status}`);
+  if (!response.ok) throw new Error('작가 정보를 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -718,5 +710,5 @@ export const updatePhotographerProfile = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to update profile ${response.status}`);
+  if (!response.ok) throw new Error('프로필을 업데이트할 수 없습니다.');
 }

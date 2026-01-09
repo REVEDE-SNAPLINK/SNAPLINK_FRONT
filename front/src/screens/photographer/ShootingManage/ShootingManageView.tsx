@@ -29,7 +29,9 @@ interface ShootingManageViewProps {
   onPressEditProduct: (productId: number) => void;
   onPressDeleteProduct: (productId: number) => void;
   onPressEditSchedule: () => void;
+  onChangeDefault: (productId: number) => void;
   shootings: ShootingWithOptions[];
+  hasDefault: boolean;
   weeklySchedule: GetWeeklyScheduleRespnose[];
 
   navigation?: any;
@@ -56,10 +58,13 @@ export default function ShootingManageView({
   onPressEditProduct,
   onPressDeleteProduct,
   onPressEditSchedule,
+  onChangeDefault,
   shootings,
+  hasDefault,
   weeklySchedule,
   navigation,}: ShootingManageViewProps) {
   const [productId, setProductId] = useState<number | null>(null);
+  const [isDefaultSelectedProduct, setIsDefaultSelectedProduct] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [scheduleModalVisible, setScheduleModalVisible] = useState<boolean>(false);
 
@@ -103,33 +108,38 @@ export default function ShootingManageView({
                   >
                     설정된 요일 없음
                   </Typography>
-                ) : weeklySchedule.map((w) => (
-                  <Typography
-                    fontSize={12}
-                    lineHeight="140%"
-                    letterSpacing="-2.5%"
-                    color="textSecondary"
-                  >
-                    {DAY_OF_WEEK_MAP[w.dayOfWeek]} : {formatLocalTime(w.startTime)} ~ {formatLocalTime(w.endTime)}
-                  </Typography>
-                ))}
+                ) : (
+                  weeklySchedule.map((w, index) => (
+                    <Typography
+                      key={index}
+                      fontSize={12}
+                      lineHeight="140%"
+                      letterSpacing="-2.5%"
+                      color="textSecondary"
+                    >
+                      {DAY_OF_WEEK_MAP[w.dayOfWeek]} :{' '}
+                      {formatLocalTime(w.startTime)} ~{' '}
+                      {formatLocalTime(w.endTime)}
+                    </Typography>
+                  ))
+                )}
               </ShootingOptionValueWrapper>
             </ShootingOptionContent>
           </ShootingOptionContainer>
           {shootings.length > 0 &&
-            shootings.map(shooting => (
+            shootings.map((shooting, index) => (
               <ShootingOption
                 key={shooting.id}
                 id={shooting.id}
+                isDefault={hasDefault ? shooting.isDefault : index === 0}
                 onPressMore={() => {
+                  setIsDefaultSelectedProduct(shooting.isDefault);
                   setProductId(shooting.id);
                   setModalVisible(true);
                 }}
                 name={shooting.shoootingName}
                 // days={''}
-                type={`${shooting.personnel}인 ${
-                  shooting.isDefault ? '기본 ' : ''
-                }촬영`}
+                type={`${shooting.personnel}인 촬영`}
                 photoTime={shooting.photoTime}
                 basePrice={shooting.basePrice}
                 providesRawFile={shooting.providesRawFile}
@@ -154,9 +164,24 @@ export default function ShootingManageView({
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         showHeader={false}
-        minHeight={200}
+        minHeight={isDefaultSelectedProduct ? 250 : 300}
       >
         <EditModalWrapper>
+          {!isDefaultSelectedProduct &&
+            <EditModalButton
+              onPress={() => {
+                if (productId !== null) {
+                  onChangeDefault(productId);
+                  setModalVisible(false);
+                }
+              }}
+            >
+              <Typography fontSize={16} letterSpacing="-2.5%">
+                기본상품으로 변경
+              </Typography>
+            </EditModalButton>
+          }
+          <EditModalDivider />
           <EditModalButton
             onPress={() => {
               if (productId !== null) {
@@ -194,7 +219,7 @@ export default function ShootingManageView({
         visible={scheduleModalVisible}
         onClose={() => setScheduleModalVisible(false)}
         showHeader={false}
-        minHeight={150}
+        minHeight={200}
       >
         <EditModalWrapper>
           <EditModalButton
@@ -240,6 +265,18 @@ const ShootingOptionHeader = styled.View`
   justify-content: space-between;
 `
 
+const ShootingOptionHeaderTextWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+`
+
+const ShootingOptionHeaderDefaultLabel = styled.View`
+  border: 1px solid #737373;
+  padding: 3px 5px;
+  border-radius: 10px;
+  margin-left: 10px;
+`
+
 const ShootingOptionContent = styled.View`
   width: 100%;
   flex-direction: row;
@@ -253,7 +290,7 @@ const ShootingOptionValueWrapper = styled.View`
 export interface ShootingOptionResponse {
   id: number;
   name: string;
-  // days: string[];
+  isDefault: boolean;
   type: string;
   photoTime: number;
   basePrice: number;
@@ -272,7 +309,7 @@ interface ShootingOptionProps extends ShootingOptionResponse{
 const ShootingOption = ({
   onPressMore,
   name,
-  // days,
+  isDefault,
   type,
   photoTime,
   basePrice,
@@ -289,9 +326,16 @@ const ShootingOption = ({
   return (
     <ShootingOptionContainer>
       <ShootingOptionHeader>
-        <Typography fontSize={16} fontWeight="semiBold">
-          {name}
-        </Typography>
+        <ShootingOptionHeaderTextWrapper>
+          <Typography fontSize={16} fontWeight="semiBold">
+            {name}
+          </Typography>
+          {isDefault && (
+            <ShootingOptionHeaderDefaultLabel>
+              <Typography fontSize={12} color="#737373">기본상품</Typography>
+            </ShootingOptionHeaderDefaultLabel>
+          )}
+        </ShootingOptionHeaderTextWrapper>
         <IconButton width={24} height={24} Svg={MoreIcon} onPress={onPressMore} />
       </ShootingOptionHeader>
       <ShootingOptionContent>

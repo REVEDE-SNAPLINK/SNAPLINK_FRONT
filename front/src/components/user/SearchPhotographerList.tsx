@@ -8,6 +8,7 @@ import Loading from '@/components/Loading.tsx';
 import AIIcon from '@/assets/icons/ai-button-small.svg';
 import StarIcon from '@/assets/icons/star-review.svg';
 import ServerImage from '@/components/ServerImage.tsx';
+import { formatNumber } from '@/utils/format.ts';
 
 interface SearchPhotographerListProps {
   photographers: PhotographerSearchItem[];
@@ -53,6 +54,7 @@ export default function SearchPhotographerList({
           <ScrollSpacer />
         )
       }
+      ItemSeparatorComponent={ItemSeparator}
       showsVerticalScrollIndicator={false}
     />
   );
@@ -66,11 +68,7 @@ interface SearchPhotographerItemProps {
 }
 
 const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
-  const formatPrice = (price: number) => {
-    return price.toLocaleString();
-  };
-
-  const genderLabel = photographer.gender === 'MAN' ? '남성작가' : '여성작가';
+  const genderLabel = photographer.gender === 'MALE' ? '남성작가' : '여성작가';
 
   return (
     <SearchPhotographerItemContainer>
@@ -78,26 +76,24 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
         {aiRecommendationScore !== undefined && (
           <ResultCaption>
             <Icon width={13} height={13} Svg={AIIcon} />
-            <Typography
-              fontSize={10}
-              color="primary"
-              marginLeft={5}
-            >
+            <Typography fontSize={10} color="primary" marginLeft={5}>
               AI 추천 적합도 {aiRecommendationScore}%
             </Typography>
           </ResultCaption>
         )}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 5 }}
-        >
-          {photographer.portfolioImages.map((item, index) => (
-            <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
-              <PhotofolioImage uri={item} />
-            </PhotofolioImageWrapper>
-          ))}
-        </ScrollView>
+        {photographer.portfolioImages.length > 0 &&
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 5 }}
+          >
+            {photographer.portfolioImages.map((item, index) => (
+              <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
+                <PhotofolioImage uri={item} />
+              </PhotofolioImageWrapper>
+            ))}
+          </ScrollView>
+        }
         <PhotographerInfoWrapper>
           <Typography
             fontSize={12}
@@ -108,20 +104,35 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
           >
             {photographer.nickname}
           </Typography>
-          <Icon width={13} height={12} Svg={StarIcon}/>
-          <Typography fontSize={11} lineHeight="140%" letterSpacing="-2.5%" color="textSecondary">
+          <Icon width={13} height={12} Svg={StarIcon} />
+          <Typography
+            fontSize={11}
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+            color="textSecondary"
+          >
             {photographer.averageRating.toFixed(1)} ({photographer.reviewCount})
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerInfoWrapper>
-          <Typography fontSize={11} fontWeight="medium" lineHeight="140%" letterSpacing="-2.5%">
-            기본촬영/{photographer.baseTime}시간 {formatPrice(photographer.basePrice)}원
+          <Typography
+            fontSize={11}
+            fontWeight="medium"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+          >
+            기본촬영/{photographer.baseTime}시간{' '}
+            {formatNumber(photographer.basePrice)}원
           </Typography>
         </PhotographerInfoWrapper>
         <PhotographerLabelWrapper>
           <PhotographerLabel text={genderLabel} special={isAIRecommendation} />
           {photographer.concepts.map((concept, index) => (
-            <PhotographerLabel key={index} text={concept} special={isAIRecommendation} />
+            <PhotographerLabel
+              key={index}
+              text={concept}
+              special={isAIRecommendation}
+            />
           ))}
         </PhotographerLabelWrapper>
       </TouchableOpacity>
@@ -131,7 +142,7 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
 
 const SearchPhotographerItemContainer = styled.View`
   width: 100%;
-  margin-bottom: 19px;
+  padding: 0 20px;
 `
 
 const PhotofolioImageWrapper = styled.View`
@@ -143,9 +154,8 @@ const PhotofolioImageWrapper = styled.View`
 `
 
 const PhotofolioImage = styled(ServerImage)`
-  width: 101px;
-  height: 101px;
-  resize-mode: cover;
+  width: 100%;
+  height: 100%;
 `
 
 const PhotographerInfoWrapper = styled.View`
@@ -200,3 +210,9 @@ const ResultCaption = styled.View`
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
 `;
+
+const ItemSeparator = styled.View`
+  height: 1px;
+  background: ${theme.colors.disabled};
+  margin-vertical: 15px;
+`

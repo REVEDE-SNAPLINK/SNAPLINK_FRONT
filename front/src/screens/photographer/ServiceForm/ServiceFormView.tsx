@@ -13,7 +13,7 @@ import { Platform, ScrollView } from 'react-native';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import Checkbox from '@/components/theme/Checkbox.tsx';
-import OptionItem, { Option, TimeOptionCheckboxWrapper } from '@/components/OptionItem.tsx';
+import OptionItem, { Option, TimeOptionItem } from '@/components/OptionItem.tsx';
 import { theme } from '@/theme';
 
 export interface DaySchedule {
@@ -319,7 +319,7 @@ const ServiceFormStep2 = ({
   onDeleteOption,
   isEditMode,
 }: ServiceFormStep2Props) => {
-  const [isTimeOptions, setTimeOptions] = useState<boolean[]>(!isEditMode ? [false] : []);
+  const [addTimeOption, setAddTimeOption] = useState<boolean>(false);
 
   return (
     <>
@@ -362,31 +362,6 @@ const ServiceFormStep2 = ({
                       onChange(newOptions);
                     }}
                   />
-                  <TimeOptionCheckboxWrapper>
-                    <Checkbox isChecked={isTimeOptions[0]} onPress={() => setTimeOptions([!isTimeOptions[0], ...isTimeOptions.slice(1)])} />
-                    <Typography
-                      fontSize={14}
-                      letterSpacing="-2.5%"
-                      marginLeft={12}
-                    >
-                      시간 추가 옵션
-                    </Typography>
-                  </TimeOptionCheckboxWrapper>
-                  {isTimeOptions[0] && (
-                    <FormInput
-                      placeholder="추가 옵션이 시간일 경우 입력해주세요.(분)"
-                      value={firstOption.time || ''}
-                      onChangeText={(time: string) => {
-                        const newOptions = [...optionList];
-                        if (newOptions.length === 0) {
-                          newOptions.push({ name: '', description: '', price: '', time });
-                        } else {
-                          newOptions[0] = { ...newOptions[0], time };
-                        }
-                        onChange(newOptions);
-                      }}
-                    />
-                  )}
                   <Typography
                     fontSize={16}
                     letterSpacing="-2.5%"
@@ -439,7 +414,11 @@ const ServiceFormStep2 = ({
               {/* 옵션 추가 버튼 */}
               <AddOptionButton
                 onPress={() => {
-                  const newOptions = [...optionList, { name: '', description: '', price: '', time: '' }];
+                  const newOptions = [...optionList];
+                  if (newOptions.length === 0) {
+                    newOptions.push({ name: '', description: '', price: '', time: '' });
+                  }
+                  newOptions.push({ name: '', description: '', price: '', time: '' });
                   onChange(newOptions);
                 }}
               >
@@ -448,83 +427,131 @@ const ServiceFormStep2 = ({
                   fontWeight="bold"
                   color="primary"
                 >
-                  옵션 추가
+                  부가옵션 추가하기
                 </Typography>
               </AddOptionButton>
 
-              {/* 수정 모드: 모든 옵션을 OptionItem으로 표시 */}
-              {isEditMode && optionList.map((option: Option, index: number) => (
-                <OptionItem
-                  key={index}
-                  id={option.id}
-                  name={option.name}
-                  description={option.description}
-                  price={option.price}
-                  isTimeOption={isTimeOptions[index]}
-                  time={option.time}
-                  setName={(name: string) => {
+              {!addTimeOption && (
+                <AddOptionButton
+                  onPress={() => {
                     const newOptions = [...optionList];
-                    newOptions[index] = { ...newOptions[index], name };
+                    if (newOptions.length === 0) {
+                      newOptions.push({ name: '', description: '', price: '', time: '' });
+                    }
+                    newOptions.push({ name: '시간 추가', description: '', price: '', time: '', isTimeOption: true });
+                    setAddTimeOption(true);
                     onChange(newOptions);
                   }}
-                  setDescription={(description: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index] = { ...newOptions[index], description };
-                    onChange(newOptions);
-                  }}
-                  setPrice={(price: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index] = { ...newOptions[index], price };
-                    onChange(newOptions);
-                  }}
-                  setIsTimeOption={(isTimeOption: boolean) => {
-                    setTimeOptions([...isTimeOptions.slice(0, index), isTimeOption, ...isTimeOptions.slice(index + 1)]);
-                  }}
-                  setTime={(time: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index] = { ...newOptions[index], time };
-                    onChange(newOptions);
-                  }}
-                  onDelete={() => onDeleteOption(index)}
-                />
-              ))}
+                >
+                  <Typography
+                    fontSize={14}
+                    fontWeight="bold"
+                    color="primary"
+                  >
+                    시간 옵션 추가하기
+                  </Typography>
+                </AddOptionButton>
+              )}
 
-              {/* 신규 등록 모드: 두 번째 이후 옵션들만 OptionItem으로 표시 */}
-              {!isEditMode && restOptions.map((option: Option, index: number) => (
-                <OptionItem
-                  key={index}
-                  id={option.id}
-                  name={option.name}
-                  description={option.description}
-                  price={option.price}
-                  time={option.time}
-                  isTimeOption={isTimeOptions[index + 1]}
-                  setName={(name: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], name };
-                    onChange(newOptions);
-                  }}
-                  setDescription={(description: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], description };
-                    onChange(newOptions);
-                  }}
-                  setPrice={(price: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], price };
-                    onChange(newOptions);
-                  }}
-                  setIsTimeOption={(isTimeOption: boolean) => {
-                    setTimeOptions([...isTimeOptions.slice(0, index + 1), isTimeOption, ...isTimeOptions.slice(index + 2)]);
-                  }}
-                  setTime={(time: string) => {
-                    const newOptions = [...optionList];
-                    newOptions[index + 1] = { ...newOptions[index + 1], time };
-                    onChange(newOptions);
-                  }}
-                  onDelete={() => onDeleteOption(index + 1)}
-                />
-              ))}
+              {/* 수정 모드: 모든 옵션 표시 */}
+              {isEditMode && optionList.map((option: Option, index: number) =>
+                option.isTimeOption ? (
+                  <TimeOptionItem
+                    key={index}
+                    price={option.price}
+                    setPrice={(price: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index] = { ...newOptions[index], price };
+                      onChange(newOptions);
+                    }}
+                    time={option.time}
+                    setTime={(time: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index] = { ...newOptions[index], time };
+                      onChange(newOptions);
+                    }}
+                    onDelete={() => {
+                      onDeleteOption(index);
+                      setAddTimeOption(false);
+                    }}
+                  />
+                ) : (
+                  <OptionItem
+                    key={index}
+                    id={option.id}
+                    name={option.name}
+                    description={option.description}
+                    price={option.price}
+                    time={option.time}
+                    setName={(name: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index] = { ...newOptions[index], name };
+                      onChange(newOptions);
+                    }}
+                    setDescription={(description: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index] = { ...newOptions[index], description };
+                      onChange(newOptions);
+                    }}
+                    setPrice={(price: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index] = { ...newOptions[index], price };
+                      onChange(newOptions);
+                    }}
+                    onDelete={() => onDeleteOption(index)}
+                  />
+                )
+              )}
+
+              {/* 신규 등록 모드: 두 번째 이후 옵션들만 표시 */}
+              {!isEditMode && restOptions.map((option: Option, index: number) =>
+                option.isTimeOption ? (
+                  <TimeOptionItem
+                    key={index}
+                    price={option.price}
+                    setPrice={(price: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], price };
+                      onChange(newOptions);
+                    }}
+                    time={option.time}
+                    setTime={(time: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], time };
+                      onChange(newOptions);
+                    }}
+                    onDelete={() => {
+                      onDeleteOption(index + 1);
+                      setAddTimeOption(false);
+                    }}
+                  />
+                ) : (
+                  <OptionItem
+                    key={index}
+                    id={option.id}
+                    name={option.name}
+                    description={option.description}
+                    price={option.price}
+                    time={option.time}
+                    setName={(name: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], name };
+                      onChange(newOptions);
+                    }}
+                    setDescription={(description: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], description };
+                      onChange(newOptions);
+                    }}
+                    setPrice={(price: string) => {
+                      const newOptions = [...optionList];
+                      newOptions[index + 1] = { ...newOptions[index + 1], price };
+                      onChange(newOptions);
+                    }}
+                    onDelete={() => onDeleteOption(index + 1)}
+                  />
+                )
+              )}
             </>
           );
         }}
@@ -619,7 +646,7 @@ const ServiceFormStep3 = ({
               marginBottom={10}
               marginTop={25}
             >
-              제공하는 사진 장수
+              제공하는 보정 사진 수
             </Typography>
             <Controller
               control={control}

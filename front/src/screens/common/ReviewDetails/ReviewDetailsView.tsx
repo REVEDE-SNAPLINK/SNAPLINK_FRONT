@@ -51,21 +51,17 @@ export default function ReviewDetailsView({
     return stars;
   };
 
-  const reviewDate = new Date(review.createdAt);
-  const formattedDate = `${reviewDate.getFullYear()}.${String(reviewDate.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}.${String(reviewDate.getDate()).padStart(2, '0')}`;
-
   return (
     <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰"
       navigation={navigation}>
       <ReviewDetailsContainer showsVerticalScrollIndicator={false}>
         <ReviewItemHeader>
           <ReviewWriterWrapper>
-            <ReviewWriterProfileImage
-              uri={profileImage}
-            />
+            <ReviewWriterProfileImageWrapper>
+              <ReviewWriterProfileImage
+                uri={profileImage}
+              />
+            </ReviewWriterProfileImageWrapper>
             <ReviewWriterInfoWrapper>
               <Typography fontSize={14} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
                 {nickname}
@@ -73,7 +69,7 @@ export default function ReviewDetailsView({
               <ReviewInfoWrapper>
                 {renderStars(review.rating)}
                 <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color="#C8C8C8">
-                  {formattedDate}
+                  {review.createdAt}
                 </Typography>
               </ReviewInfoWrapper>
             </ReviewWriterInfoWrapper>
@@ -132,10 +128,17 @@ const ReviewWriterWrapper = styled.View`
   flex: 1;
 `
 
-const ReviewWriterProfileImage = styled(ServerImage)`
+const ReviewWriterProfileImageWrapper = styled.View`
   width: 45px;
   height: 45px;
   border-radius: 45px;
+  overflow: hidden;
+  background-color: #e0e0e0;
+`
+
+const ReviewWriterProfileImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
 `
 
 const ReviewWriterInfoWrapper = styled.View`

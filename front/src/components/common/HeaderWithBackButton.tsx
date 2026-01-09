@@ -59,7 +59,7 @@ export default function HeaderWithBackButton({
         )}
         {onPressMore && (
           <MoreButtonWrapper onPress={onPressMore}>
-            <Icon width={24} height={24} Svg={MoreCircleIcon} />
+            <Icon width={iconSize} height={iconSize} Svg={MoreCircleIcon} />
           </MoreButtonWrapper>
         )}
       </ToolButtonWrapper>

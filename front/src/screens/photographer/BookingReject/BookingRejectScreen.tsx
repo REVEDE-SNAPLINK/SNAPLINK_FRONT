@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton, Typography, TextInput } from '@/components/theme';
+import { SubmitButton, Typography, TextInput, Alert } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useRejectBookingMutation } from '@/mutations/bookings.ts';
 
@@ -26,21 +26,31 @@ export default function BookingRejectScreen() {
     setReason(text);
   };
 
-  const handlePressSubmit = async () => {
-    const trimmedReason = reason.trim();
+  const handlePressSubmit = () => {
+    Alert.show({
+      title: '현재 예약을 거절하시겠습니까?',
+      message: '거절 후에는 다시 수락할 수 없습니다.',
+      buttons: [
+        { text: '취소', type: "cancel", onPress: () => {} },
+        { text: '에약 거절', onPress: async () => {
+            const trimmedReason = reason.trim();
 
-    if (!trimmedReason) {
-      setError('거부 사유를 입력해주세요.');
-      return;
-    }
+            if (!trimmedReason) {
+              setError('거부 사유를 입력해주세요.');
+              return;
+            }
 
-    try {
-      await rejectBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
-      navigation.goBack();
-    } catch (e: any) {
-      const message = e?.message ?? '예약을 거부할 수 없어요. 잠시 후 다시 시도해주세요.';
-      setError(message);
-    }
+            try {
+              await rejectBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
+              navigation.goBack();
+            } catch (e: any) {
+              const message = e?.message ?? '예약을 거부할 수 없어요. 잠시 후 다시 시도해주세요.';
+              setError(message);
+            }
+          }
+        },
+      ]
+    })
   };
 
   const isSubmitDisabled = reason.trim().length === 0;
@@ -48,7 +58,7 @@ export default function BookingRejectScreen() {
   return (
     <ScreenContainer
       headerShown={true}
-      headerTitle="예약 거부"
+      headerTitle="예약 거절"
       onPressBack={handlePressBack}
     >
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -61,10 +71,10 @@ export default function BookingRejectScreen() {
               color="#3C3C3C"
               marginBottom={16}
             >
-              거부 사유를 입력해주세요.
+              예약을 거절하는 사유를 입력해주세요
             </Typography>
             <TextInput
-              placeholder="거부 사유를 입력하세요"
+              placeholder="내용을 작성해주세요."
               value={reason}
               onChangeText={handleChangeReason}
               multiline={true}
@@ -108,8 +118,8 @@ const ScrollContainer = styled.ScrollView`
 `;
 
 const Content = styled.View`
-  padding: 0 40px;
-  margin-top: 40px;
+  padding: 0 20px;
+  margin-top: 20px;
 `;
 
 const Footer = styled.View`

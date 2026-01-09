@@ -13,7 +13,7 @@ export const getAllRegions = async (): Promise<GetRegionsResponse[]> => {
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`get regions failed: ${response.status}`);
+  if (!response.ok) throw new Error('지역 목록을 불러올 수 없습니다.');
 
   return response.json();
 }

@@ -20,7 +20,9 @@ export const usePhotographerMonthSchedulesQuery = (
     queryKey: schedulesQueryKeys.photographerMonth(params),
     queryFn: () => getPhotographerMonthSchedules(params),
     enabled,
-    staleTime: 1000 * 30,
+    staleTime: 3000,
+    refetchInterval: 3000,
+    refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
   });
 
@@ -32,7 +34,9 @@ export const usePhotographerDayDetailQuery = (
     queryKey: schedulesQueryKeys.photographerDay(params),
     queryFn: () => getPhotographerDayDetail(params),
     enabled,
-    staleTime: 1000 * 30,
+    staleTime: 3000,
+    refetchInterval: 3000,
+    refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
   });
 
@@ -44,7 +48,9 @@ export const useAvailableBookingDaysQuery = (
     queryKey: schedulesQueryKeys.availableDays(params),
     queryFn: () => getAvailableBookingDays(params),
     enabled,
-    staleTime: 1000 * 30,
+    staleTime: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
 export const useAvailableBookingTimesQuery = (
@@ -55,7 +61,9 @@ export const useAvailableBookingTimesQuery = (
     queryKey: schedulesQueryKeys.availableTimes(params),
     queryFn: () => getAvailableBookingTimes(params),
     enabled,
-    staleTime: 1000 * 60 * 2, // 2분 캐시
+    staleTime: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
   });
 

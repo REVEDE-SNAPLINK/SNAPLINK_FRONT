@@ -29,7 +29,7 @@ export const createReviewReply = async (
     body: JSON.stringify(params.content), // ✅ body가 string이라 JSON string으로 보냄
   });
 
-  if (!response.ok) throw new Error(`Failed to create review reply ${response.status}`);
+  if (!response.ok) throw new Error('답글을 작성할 수 없습니다.');
 };
 
 /** 촬영 리뷰 작성 요청(request 파트) */
@@ -74,7 +74,7 @@ export const createBookingReview = async (
       name: 'images',
       filename: img.name,
       type: img.type,
-      data: RNBlobUtil.wrap(img.uri),
+      data: RNBlobUtil.wrap(img.uri.replace('file://', '')),
     })),
   ];
 
@@ -85,7 +85,7 @@ export const createBookingReview = async (
   );
 
   if (response.info().status >= 400) {
-    throw new Error(`Failed to create reservation review ${response.info().status}`);
+    throw new Error('리뷰를 작성할 수 없습니다.');
   }
 };
 
@@ -148,7 +148,7 @@ export const updateReview = async (params: UpdateReviewParams): Promise<void> =>
   );
 
   if (response.info().status >= 400) {
-    throw new Error(`Failed to update review ${response.info().status}`);
+    throw new Error('리뷰를 수정할 수 없습니다.');
   }
 };
 
@@ -161,7 +161,7 @@ export const deleteReview = async (reviewId: number): Promise<void> => {
     method: 'DELETE',
   });
 
-  if (!response.ok) throw new Error(`Failed to delete review ${response.status}`);
+  if (!response.ok) throw new Error('리뷰를 삭제할 수 없습니다.');
 };
 
 
@@ -185,7 +185,7 @@ export const getBookingReviewMe = async (bookingId: number): Promise<GetBookingR
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`Failed to get booking review ${response.status}`);
+  if (!response.ok) throw new Error('리뷰를 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -216,6 +216,6 @@ export const getMyReviews = async (
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok)
-    throw new Error(`Failed to get my reviews ${response.status}`);
+    throw new Error('내 리뷰를 불러올 수 없습니다.');
   return response.json();
 };

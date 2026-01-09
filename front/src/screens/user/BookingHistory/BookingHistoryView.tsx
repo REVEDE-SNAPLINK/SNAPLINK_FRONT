@@ -44,6 +44,8 @@ export default function BookingHistoryView({
   onPressShowMyReivew,
   navigation,}: BookingHistoryViewProps) {
   const renderItem = ({ item }: { item: UserBookingListItem }) => {
+    console.log(item.isReview)
+
     return (
       <HistoryCard
         onPress={() => onPressBookingDetail(item.bookingId)}
@@ -63,12 +65,12 @@ export default function BookingHistoryView({
             : undefined
         }
         onPressWriteReview={
-          item.status === 'USER_PHOTO_CHECK' && onPressWriteReview
+          item.status === 'USER_PHOTO_CHECK' && !item.isReview && onPressWriteReview
             ? () => onPressWriteReview(item.bookingId)
             : undefined
         }
         onPressViewMyReivew={
-          item.status === 'USER_PHOTO_CHECK' && item.isreview && onPressShowMyReivew
+          item.status === 'USER_PHOTO_CHECK' && item.isReview && onPressShowMyReivew
             ? () => onPressShowMyReivew(item.bookingId)
             : undefined
         }
@@ -112,7 +114,8 @@ export default function BookingHistoryView({
       headerTitle="촬영 내역"
       headerShown={true}
     
-      navigation={navigation}>
+      navigation={navigation}
+    >
       <ContentContainer>
         <FlatList
           testID="booking-history-list"
@@ -121,7 +124,7 @@ export default function BookingHistoryView({
           keyExtractor={(item) => item.bookingId.toString()}
           contentContainerStyle={{
             paddingTop: 24,
-            paddingHorizontal: 27,
+            paddingHorizontal: 20,
             paddingBottom: 50,
           }}
           showsVerticalScrollIndicator={false}

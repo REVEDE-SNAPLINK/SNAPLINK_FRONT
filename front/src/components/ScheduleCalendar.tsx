@@ -74,11 +74,14 @@ export default function ScheduleCalendar({
     if (scheduleItem.hasBooking) {
       return 'rgba(0, 169, 128, 0.2)'; // primary color
     }
-    if (scheduleItem.photographerHoliday || scheduleItem.publicHoliday) {
+    if (scheduleItem.photographerHoliday) {
       return 'rgba(232, 78, 78, 0.2)'; // red for holiday
     }
     if (scheduleItem.hasPersonalSchedule) {
       return `${theme.colors.textPrimary}33`; // textPrimary with 20% opacity
+    }
+    if (scheduleItem.publicHoliday) {
+      return 'rgba(255, 178, 63, 0.2)'; // red for holiday
     }
     return null;
   };

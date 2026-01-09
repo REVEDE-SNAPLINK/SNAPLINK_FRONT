@@ -43,7 +43,7 @@ export interface GetChatMessagesParams {
  */
 export const getChatRooms = async (): Promise<ChatRoomItem[]> => {
   const response = await authFetch(`${CHAT_BASE}/rooms`, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get chat rooms ${response.status}`);
+  if (!response.ok) throw new Error('채팅 목록을 불러올 수 없습니다.');
   return response.json();
 };
 
@@ -53,7 +53,7 @@ export const getChatRooms = async (): Promise<ChatRoomItem[]> => {
  */
 export const getChatRoom = async (roomId: number): Promise<ChatRoomItem> => {
   const response = await authFetch(`${CHAT_BASE}/rooms/${roomId}/messages`, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get chat room ${response.status}`);
+  if (!response.ok) throw new Error('채팅방 정보를 불러올 수 없습니다.');
   return response.json();
 };
 
@@ -71,7 +71,7 @@ export const getChatMessages = async (
   const url = qs ? `${CHAT_BASE}/rooms/${roomId}/messages?${qs}` : `${CHAT_BASE}/rooms/${roomId}/messages`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get chat messages ${response.status}`);
+  if (!response.ok) throw new Error('채팅 메시지를 불러올 수 없습니다.');
   return response.json();
 };
 
@@ -80,24 +80,19 @@ export interface CreateOrGetRoomRequest {
   receiverId: string;
 }
 
-/** 채팅방 생성/조회 응답 (스웨거에 roomId 반환이라고 했으니 최소로) */
-export interface CreateOrGetRoomResponse {
-  roomId: number;
-}
-
 /**
  * POST /api/chat/rooms
  * 1:1 채팅방 생성 또는 조회
  */
 export const createOrGetChatRoom = async (
   body: CreateOrGetRoomRequest,
-): Promise<CreateOrGetRoomResponse> => {
+): Promise<number> => {
   const response = await authFetch(`${CHAT_BASE}/rooms`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!response.ok) throw new Error(`Failed to create/get room ${response.status}`);
+  if (!response.ok) throw new Error('채팅방을 생성할 수 없습니다.');
   return response.json();
 };
 
@@ -136,7 +131,7 @@ export const uploadChatFile = async (
   );
 
   if (response.info().status < 200 || response.info().status >= 300) {
-    throw new Error(`Failed to upload chat file ${response.info().status}`);
+    throw new Error('파일을 업로드할 수 없습니다.');
   }
 
   // 서버가 plain text URL 또는 JSON string으로 반환할 수 있음
@@ -147,3 +142,53 @@ export const uploadChatFile = async (
     return response.data;
   }
 };
+
+export const unblockChatUser = async (
+  targetId: string,
+) => {
+  const response = await authFetch(`${CHAT_BASE}/block/${targetId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) throw new Error('차단을 해제할 수 없습니다.');
+}
+
+export const leaveChatRoom = async (
+  roomId: number,
+)=> {
+  const response = await authFetch(`${CHAT_BASE}/rooms/${roomId}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) throw new Error('채팅방을 나갈 수 없습니다.');
+};
+
+export const blockChatUser = async (
+  targetId: string,
+)=> {
+  const response = await authFetch(`${CHAT_BASE}/block/${targetId}`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) throw new Error('사용자를 차단할 수 없습니다.');
+}
+
+export interface GetChatRoomDetail {
+  roomId: number;
+  opponentId: string;
+  opponentNickname: string;
+  opponentProfileImage: string;
+  blocked: boolean;
+}
+
+export const getChatRoomDetail = async (
+  roomId: number,
+): Promise<GetChatRoomDetail> => {
+  const response = await authFetch(`${CHAT_BASE}/detail/${roomId}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) throw new Error('채팅방 정보를 불러올 수 없습니다.');
+
+  return response.json();
+}

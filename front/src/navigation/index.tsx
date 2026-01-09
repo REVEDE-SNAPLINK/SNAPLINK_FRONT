@@ -3,10 +3,9 @@ import {
   createNavigationContainerRef,
   Route,
   NavigationState,
-  getStateFromPath, getActionFromState,
 } from '@react-navigation/native';
 import RootNavigator from '@/navigation/RootNavigator.tsx';
-import { AppState, Platform } from 'react-native';
+import { AppState, Platform, Linking } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore.ts';
 import analytics from '@react-native-firebase/analytics';
@@ -17,74 +16,25 @@ export const navigationRef = createNavigationContainerRef();
 const linking = {
   prefixes: [
     'snaplink://',
-    'https://link.snaplink.run',
+    'https://link.snaplink.run/',
   ],
   config: {
     screens: {
       Main: {
-        path: 'tab/:tab',
-        parse: {
-          tab: (tab: string) => tab,
-        },
+        path: '',
         screens: {
-          PostDetail: {
-            path: 'portfolio/:postId',
-            parse: {
-              postId: Number,
-            },
-          },
-          CommunityDetails: {
-            path: 'post/:postId',
-            parse: {
-              postId: Number,
-            },
-          },
-          PhotographerDetails: {
-            path: 'photographer/:photographerId',
-            parse: {
-              photographerId: Number,
-            },
-          },
-          BookingManage: {
-            path: 'bookings/photographer'
-          },
-          BookingHistory: {
-            path: 'bookings/user',
-          },
-          ViewPhotos: {
-            path: 'booking/:bookingId/photos',
-            parse: {
-              bookingId: Number,
-            }
-          },
-          WriteReview: {
-            path: 'booking/:bookingId/writeReview',
-            parse: {
-              bookingId: Number,
-            }
-          },
-          BookingDetails: {
-            path: 'booking/:bookingId',
-            parse: {
-              bookingId: Number,
-            }
-          },
-          ChatDetails: {
-            path: 'chat/:roomId',
-            parse: {
-              roomId: Number,
-            }
-          },
-          ReviewDetails: {
-            path: 'review/:reviewId',
-            parse: { reviewId: Number },
-          },
-          NoticeDetails: {
-            path: 'notice/:noticeId',
-            parse: {
-              noticeId: Number,
-            }
-          },
+          Home: 'tab/:tab',
+          PhotographerDetails: 'tab/home/photographer/:photographerId',
+          PostDetail: 'tab/home/photographer/:photographerId/portfolio/:postId',
+          ReviewDetails: 'tab/home/review/:reviewId',
+          CommunityDetails: 'tab/community/post/:postId',
+          ChatDetails: 'tab/chat/:roomId',
+          BookingManage: 'tab/profile/bookings/photographer',
+          BookingHistory: 'tab/profile/bookings/user',
+          BookingDetails: 'tab/profile/booking/:bookingId',
+          ViewPhotos: 'tab/profile/booking/:bookingId/photos',
+          WriteReview: 'tab/profile/booking/:bookingId/writeReview',
+          NoticeDetails: 'tab/profile/notice/:noticeId',
         },
       },
     },
@@ -92,25 +42,165 @@ const linking = {
 };
 
 export const navigateByDeepLink = (url: string) => {
-  if (navigationRef.isReady()) {
-    // 스킴 제거 (snaplink://tab/home -> /tab/home)
-    const routePath = url.includes('://') ? url.split('://')[1] : url;
+  console.log('🔗 Processing deep link:', url);
 
-    // 경로에 시작 슬래시가 없다면 추가 (getStateFromPath 요구사항)
-    const fullPath = routePath.startsWith('/') ? routePath : `/${routePath}`;
+  if (!navigationRef.isReady()) {
+    console.log('⚠️ Navigation not ready, retrying in 500ms...');
+    setTimeout(() => navigateByDeepLink(url), 500);
+    return;
+  }
 
-    // 2. 문자열 경로를 네비게이션 상태 객체로 변환
-    const state = getStateFromPath(fullPath, linking.config);
+  // 스킴 제거 (snaplink://tab/home -> tab/home or https://link.snaplink.run/tab/home -> tab/home)
+  let routePath = url;
+  if (url.includes('://')) {
+    const parts = url.split('://');
+    routePath = parts[1];
 
-    if (state) {
-      // 3. 상태 객체로부터 이동 액션 생성 및 실행
-      const action = getActionFromState(state, linking.config);
-      if (action) {
-        navigationRef.dispatch(action);
-      }
-    } else {
-      console.warn('매칭되는 경로를 찾을 수 없습니다:', fullPath);
+    // Remove domain for https links
+    if (routePath.startsWith('link.snaplink.run/')) {
+      routePath = routePath.replace('link.snaplink.run/', '');
     }
+  }
+
+  console.log('📍 Route path:', routePath);
+
+  // Parse the path
+  const pathMatch = routePath.match(/^tab\/(\w+)(?:\/(.+))?(?:\?(.+))?$/);
+
+  if (!pathMatch) {
+    console.warn('❌ Invalid deeplink format:', routePath);
+    return;
+  }
+
+  const [, tab, remainingPath, queryString] = pathMatch;
+  console.log('✅ Parsed - tab:', tab, 'remaining:', remainingPath, 'query:', queryString);
+
+  // Parse query parameters
+  const params: any = {};
+  if (queryString) {
+    queryString.split('&').forEach(param => {
+      const [key, value] = param.split('=');
+      params[key] = decodeURIComponent(value);
+    });
+  }
+
+  // If only tab is specified (e.g., snaplink://tab/home)
+  if (!remainingPath) {
+    (navigationRef as any).reset({
+      index: 0,
+      routes: [
+        {
+          name: 'Main',
+          state: {
+            index: 0,
+            routes: [{ name: 'Home', params: { ...params } }],
+          },
+        },
+      ],
+    });
+    return;
+  }
+
+  // Handle different tab types
+  let screenName: string | null = null;
+  let screenParams: any = {};
+
+  // Tab-specific routing
+  if (tab === 'chat') {
+    // tab/chat/:roomId
+    screenName = 'ChatDetails';
+    screenParams = { roomId: Number(remainingPath) };
+  } else if (tab === 'home') {
+    // tab/home/photographer/:id or tab/home/photographer/:id/portfolio/:postId or tab/home/review/:id
+    const parts = remainingPath.split('/');
+    const firstSegment = parts[0];
+
+    if (firstSegment === 'photographer') {
+      if (parts.length === 2) {
+        // tab/home/photographer/:id
+        screenName = 'PhotographerDetails';
+        screenParams = { photographerId: parts[1] };
+      } else if (parts.length === 4 && parts[2] === 'portfolio') {
+        // tab/home/photographer/:id/portfolio/:postId
+        screenName = 'PostDetail';
+        screenParams = {
+          photographerId: parts[1],
+          postId: Number(parts[3])
+        };
+      }
+    } else if (firstSegment === 'review') {
+      // tab/home/review/:id
+      screenName = 'ReviewDetails';
+      screenParams = { reviewId: Number(parts[1]) };
+    }
+  } else if (tab === 'community') {
+    // tab/community/post/:id
+    const firstSegment = remainingPath.split('/')[0];
+    const idPart = remainingPath.split('/')[1];
+
+    if (firstSegment === 'post') {
+      screenName = 'CommunityDetails';
+      screenParams = { postId: Number(idPart) };
+    }
+  } else if (tab === 'profile') {
+    // tab/profile/bookings/photographer, tab/profile/booking/:id, tab/profile/notice/:id
+    if (remainingPath === 'bookings/photographer') {
+      screenName = 'BookingManage';
+    } else if (remainingPath === 'bookings/user') {
+      screenName = 'BookingHistory';
+    } else if (remainingPath.startsWith('booking/')) {
+      const parts = remainingPath.split('/');
+      const bookingId = Number(parts[1]);
+
+      if (remainingPath.includes('/photos')) {
+        screenName = 'ViewPhotos';
+        screenParams = { bookingId };
+      } else if (remainingPath.includes('/writeReview')) {
+        screenName = 'WriteReview';
+        screenParams = { bookingId };
+      } else {
+        screenName = 'BookingDetails';
+        screenParams = { bookingId };
+      }
+    } else if (remainingPath.startsWith('notice/')) {
+      const noticeId = Number(remainingPath.split('/')[1]);
+      screenName = 'NoticeDetails';
+      screenParams = { noticeId };
+    }
+  }
+
+  if (screenName) {
+    console.log('🎯 Navigating to:', screenName, 'with params:', screenParams);
+
+    // Reset navigation stack with Home first, then target screen
+    // This ensures goBack() works properly from the target screen
+    let routes: any[] = [{ name: 'Home', params: { tab } }];
+    let stackIndex = 1;
+
+    // For PostDetail, add PhotographerDetails in between
+    if (screenName === 'PostDetail' && screenParams.photographerId) {
+      routes.push({ name: 'PhotographerDetails', params: { photographerId: screenParams.photographerId } });
+      routes.push({ name: screenName, params: screenParams });
+      stackIndex = 2;
+    } else {
+      routes.push({ name: screenName, params: screenParams });
+      stackIndex = 1;
+    }
+
+    (navigationRef as any).reset({
+      index: 0,
+      routes: [
+        {
+          name: 'Main',
+          state: {
+            index: stackIndex,
+            routes,
+          },
+        },
+      ],
+    });
+  } else {
+    console.warn('❌ Unknown route:', tab, remainingPath);
   }
 };
 
@@ -129,6 +219,45 @@ export default function AppNavigator() {
   const appState = useRef(AppState.currentState)
 
   const { userId, userType } = useAuthStore();
+
+  // Handle initial deep link (when app is opened via deep link)
+  useEffect(() => {
+    const handleInitialURL = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+        console.log('🚀 Initial URL from Linking:', initialUrl);
+        if (initialUrl) {
+          // Wait for navigation to be ready
+          setTimeout(() => {
+            navigateByDeepLink(initialUrl);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('❌ Error getting initial URL:', error);
+      }
+    };
+
+    handleInitialURL();
+  }, []);
+
+  // Handle deep links when app is already open
+  useEffect(() => {
+    console.log('🎧 Setting up deep link listener...');
+
+    const handleUrl = ({ url }: { url: string }) => {
+      console.log('📱 Deep link received (app already open):', url);
+      navigateByDeepLink(url);
+    };
+
+    const subscription = Linking.addEventListener('url', handleUrl);
+
+    console.log('✅ Deep link listener registered');
+
+    return () => {
+      console.log('🛑 Removing deep link listener');
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextState => {

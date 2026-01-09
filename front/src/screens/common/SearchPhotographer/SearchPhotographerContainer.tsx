@@ -138,15 +138,16 @@ export default function SearchPhotographerContainer() {
       conceptIds: null,
       maxPrice: null,
       minPrice: null,
-      query: searchKey,
+      query: searchKey === '' ? null : searchKey,
+      sort: sortBy === "DEFAULT" ? "RECOMMENDED" : sortBy === "LATEST" ? "LATEST" : "REVIEW"
     };
 
     selectedFilters.forEach((filter) => {
       if (filter.categoryId === 'gender' && filter.type === 'ENUM') {
         // '여성작가' -> 'WOMAN', '남성작가' -> 'MAN'
         const genderValue = filter.values[0];
-        if (genderValue === '여성작가') body.gender = 'WOMAN';
-        else if (genderValue === '남성작가') body.gender = 'MAN';
+        if (genderValue === '여성작가') body.gender = 'FEMALE';
+        else if (genderValue === '남성작가') body.gender = 'MALE';
       } else if (filter.categoryId === 'region' && filter.type === 'ENUM') {
         // Map region names to regionIds
         const regionIds = filter.values
@@ -178,7 +179,7 @@ export default function SearchPhotographerContainer() {
     });
 
     return body;
-  }, [searchKey, selectedFilters, regions, concepts]);
+  }, [searchKey, selectedFilters, regions, concepts, sortBy]);
 
   /**
    * Infinite query for photographer search
@@ -190,12 +191,12 @@ export default function SearchPhotographerContainer() {
     isFetchingNextPage,
     refetch,
     isRefetching,
-    isSuccess
+    isSuccess,
+    isLoading,
+    isError
   } = useSearchPhotographersInfiniteQuery(
     { size: PAGE_SIZE,
-      sort: sortBy === 'REVIEWS'
-        ? ['reviewCount,desc']
-        : sortBy === 'HIGH_PRICE'
+      sort: sortBy === 'HIGH_PRICE'
       ? ['basePrice,desc']
           : sortBy === 'LOW_PRICE'
       ? ['basePrice,asc']
@@ -336,6 +337,8 @@ export default function SearchPhotographerContainer() {
       isRefreshing={isRefetching}
       isFetchingNextPage={isFetchingNextPage}
       onPressPhotographer={handlePressPhotographer}
+      isLoading={isLoading}
+      isError={isError}
       navigation={navigation}
     />
   );

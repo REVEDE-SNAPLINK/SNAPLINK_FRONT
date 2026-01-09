@@ -13,7 +13,7 @@ export const getAllConcepts = async () => {
     method: 'GET',
   });
 
-  if (!response.ok) throw new Error(`get concepts failed: ${response.status}`);
+  if (!response.ok) throw new Error('컨셉 목록을 불러올 수 없습니다.');
 
   return response.json();
 }

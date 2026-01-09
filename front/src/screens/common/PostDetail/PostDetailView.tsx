@@ -59,7 +59,7 @@ export default function PostDetailView({
   if (!post) {
     return (
       <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}
-      navigation={navigation}>
+        navigation={navigation}>
           <Typography fontSize={16} color="#999">
             포트폴리오를 불러올 수 없습니다.
           </Typography>
@@ -106,6 +106,7 @@ export default function PostDetailView({
               <Carousel
                 width={SCREEN_WIDTH}
                 height={SCREEN_WIDTH}
+                loop={post.photos.length > 1}
                 data={post.photos}
                 onSnapToItem={setCurrentIndex}
                 renderItem={({ item }) => (
@@ -155,7 +156,7 @@ export default function PostDetailView({
         title="더보기"
         headerAlign="center"
       >
-        <ModalButton onPress={() => onSharePost}>
+        <ModalButton onPress={onSharePost}>
           <Icon width={18} height={18} Svg={UploadIcon} />
           <Typography
             fontSize={14}

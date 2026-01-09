@@ -39,7 +39,7 @@ const TextInputWrapper = styled.View<{
 
 const StyledTextInput = styled(RNTextInput)<{ multiline?: boolean }>`
   flex: 1;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 20px;
   color: #000000;
   padding: 0px;

@@ -71,7 +71,7 @@ export interface BookingListItem {
 export interface UserBookingListItem extends BookingListItem {
   photographerName: string;
   photographerNickName: string;
-  isreview: boolean;
+  isReview: boolean;
 }
 
 export interface PhotographerBookingListItem extends BookingListItem {
@@ -167,9 +167,12 @@ export interface UploadBookingZipRequest {
 export interface BookingDetail {
   bookingId: number;
   customerName: string;
+  customerId: string;
   photographerName: string;
+  photographerId: string;
   shootingItems: string;
   shootingDate: string;
+  region: string;
   startTime: string;
   endTime: string;
   requestDetails: string;
@@ -190,7 +193,7 @@ export const getUserBookings = async (
     : `${BOOKINGS_BASE}/list/user`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get user bookings ${response.status}`);
+  if (!response.ok) throw new Error('예약 내역을 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -208,7 +211,7 @@ export const getPhotographerBookings = async (
     : `${BOOKINGS_BASE}/list/photographer`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get photographer bookings ${response.status}`);
+  if (!response.ok) throw new Error('예약 내역을 불러올 수 없습니다.');
 
   return response.json();
 };
@@ -227,7 +230,7 @@ export const rejectBooking = async (
     json: { reason },
   });
 
-  if (!response.ok) throw new Error(`Failed to reject booking ${response.status}`);
+  if (!response.ok) throw new Error('예약을 거절할 수 없습니다.');
 }
 
 /**
@@ -243,7 +246,7 @@ export const completeBooking = async (
     method: 'PATCH',
   });
 
-  if (!response.ok) throw new Error(`Failed to complete booking ${response.status}`);
+  if (!response.ok) throw new Error('촬영 완료 처리할 수 없습니다.');
 }
 
 /**
@@ -260,7 +263,7 @@ export const cancelBooking = async (
     json: { reason },
   });
 
-  if (!response.ok) throw new Error(`Failed to cancel booking ${response.status}`);
+  if (!response.ok) throw new Error('예약을 취소할 수 없습니다.');
 }
 
 /**
@@ -276,7 +279,7 @@ export const approveBooking = async (
     method: 'PATCH',
   });
 
-  if (!response.ok) throw new Error(`Failed to approve booking ${response.status}`);
+  if (!response.ok) throw new Error('예약을 승인할 수 없습니다.');
 }
 
 /**
@@ -291,7 +294,7 @@ export const createBooking = async (
     json: body,
   });
 
-  if (!response.ok) throw new Error(`Failed to create booking ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error('예약을 생성할 수 없습니다.');
 }
 
 /**
@@ -307,7 +310,7 @@ export const getBookingPhotos = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get booking photos ${response.status}`);
+    throw new Error('촬영 사진을 불러올 수 없습니다.');
   }
 
   return response.json();
@@ -353,7 +356,7 @@ export const updateBookingPhotos = async (
   );
 
   if (response.info().status >= 400) {
-    throw new Error(`Failed to update booking photos ${response.info().status}`);
+    throw new Error('촬영 사진을 업데이트할 수 없습니다.');
   }
 };
 
@@ -380,7 +383,7 @@ export const uploadBookingZip = async (params: UploadBookingZipRequest): Promise
   );
 
   if (response.info().status >= 400) {
-    throw new Error(`Failed to upload booking zip ${response.info().status}`);
+    throw new Error('ZIP 파일을 업로드할 수 없습니다.');
   }
 };
 
@@ -396,7 +399,7 @@ export const getBookingDetail = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get booking detail ${response.status}`);
+    throw new Error('예약 상세 정보를 불러올 수 없습니다.');
   }
 
   return response.json();
@@ -409,5 +412,5 @@ export const cancelBookingFromCustomer = async (
     method: 'PATCH',
   });
 
-  if (!response.ok) throw new Error(`Failed to cancel booking ${response.status}`);
+  if (!response.ok) throw new Error('예약을 취소할 수 없습니다.');
 }

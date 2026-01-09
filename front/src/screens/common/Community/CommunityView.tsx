@@ -13,6 +13,7 @@ import { CommunityPost, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/
 import ServerImage from '@/components/ServerImage.tsx';
 import NotificationButton from '@/components/theme/NotificationButton.tsx';
 import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
+import { formatTimeAgo } from '@/utils/format.ts';
 
 export const SORT_BY_ENUM = {
   'LATEST': '최신순',
@@ -35,6 +36,8 @@ interface CommunityViewProps {
   searchKey: string;
   isLoadingMore?: boolean;
   isRefreshing?: boolean;
+  isLoading?: boolean;
+  isError?: boolean;
   onChangeSearchKey: (key: string) => void;
   onSubmitSearch: () => void;
   onPressTab: (category: COMMUNITY_CATEGORY_ENUM) => void;
@@ -59,6 +62,7 @@ export default function CommunityView({
   searchKey,
   isLoadingMore = false,
   isRefreshing = false,
+  isError = false,
   onChangeSearchKey,
   onSubmitSearch,
   onPressTab,
@@ -69,11 +73,6 @@ export default function CommunityView({
   onLoadMore,
   onRefresh,
 }: CommunityViewProps) {
-  // Add empty item if posts count is odd to align items to left
-  const displayPosts = posts.length % 2 === 1
-    ? [...posts, { id: 'empty', isEmpty: true } as any]
-    : posts;
-
   return (
     <Container>
       <Header>
@@ -91,13 +90,19 @@ export default function CommunityView({
       </Header>
       <TabNavigator>
         {CATEGORIES.map(({ key, label }) => (
-          <Tab key={key} isSelected={selectedCategory === key} onPress={() => onPressTab(key)}>
+          <Tab
+            key={key}
+            isSelected={selectedCategory === key}
+            onPress={() => onPressTab(key)}
+          >
             <Typography
               fontSize={14}
               fontWeight="bold"
               lineHeight="140%"
               letterSpacing="-2.5%"
-              color={selectedCategory === key ? theme.colors.textPrimary : '#C8C8C8'}
+              color={
+                selectedCategory === key ? theme.colors.textPrimary : '#C8C8C8'
+              }
             >
               {label}
             </Typography>
@@ -105,8 +110,15 @@ export default function CommunityView({
         ))}
       </TabNavigator>
       <SearchResultHeader>
-        <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" color={theme.colors.disabled}>
-          {selectedCategory ? `${COMMUNITY_CATEGORIES[selectedCategory]} ${totalCount}개` : `최근 인기글🔥`}
+        <Typography
+          fontSize={12}
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          color={theme.colors.disabled}
+        >
+          {selectedCategory
+            ? `${COMMUNITY_CATEGORIES[selectedCategory]} ${totalCount}개`
+            : `최근 인기글🔥`}
         </Typography>
         <SortButton
           options={SORT_OPTIONS}
@@ -114,100 +126,165 @@ export default function CommunityView({
           onSelect={onChangeSortBy}
         />
       </SearchResultHeader>
-      <FlatList
-        data={displayPosts}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        renderItem={({ item }) => {
-          // Render empty space for dummy item
-          if ((item as any).isEmpty) {
-            return <EmptyPostItem />;
+      {isError ? (
+        <ErrorContainer>
+          <Typography fontSize={16} color={theme.colors.disabled}>
+            게시글을 불러올 수 없습니다.{'\n'}
+            다시 시도해주세요.
+          </Typography>
+        </ErrorContainer>
+      ) : selectedCategory === 'NEWS' ? (
+        // NEWS 카테고리일 때는 NewsItem으로 표시
+        <FlatList
+          key="news-list"
+          data={posts}
+          keyExtractor={item => String(item.id)}
+          renderItem={({ item }) => (
+            <NewsItem
+              onPress={() => onPressPost(item.id)}
+              title={item.content}
+              createdAt={item.createdAt}
+              imageUri={item.images?.[0]?.urls || ''}
+              commentCount={item.commentCount}
+            />
+          )}
+          showsVerticalScrollIndicator={false}
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.primary}
+              />
+            ) : undefined
           }
-
-          return (
-            <PostItem onPress={() => onPressPost(item.id)}>
-              {item.images?.length > 0 ? (
-                <PostImage uri={item.images[0].urls} />
-              ) : (
-                <PostImage />
-              )}
-              <PostContent>
-                <PostHeader>
-                  {item.author.profileImageUrl ? (
-                    <PostWriterProfileImage uri={item.author.profileImageUrl} />
-                  ) : (
-                    <PostWriterProfileImage />
-                  )
-                  }
-                  <Typography fontSize={12} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%">
-                    {item.author.nickname}
-                  </Typography>
-                </PostHeader>
-                <Typography fontSize={12} lineHeight="140%" letterSpacing="-2.5%" numberOfLines={2}>
-                  {item.title}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <LoadingIndicator>
+                <Typography fontSize={12} color="textSecondary">
+                  로딩 중...
                 </Typography>
-                <PostInfoWrapper>
-                  <IconButton
-                    width={13}
-                    height={12}
-                    disabled={true}
-                    Svg={item.isLiked ? HeartRedIcon : HeartIcon}
-                    onPress={() => onPressLike(item.id)}
-                  />
+              </LoadingIndicator>
+            ) : null
+          }
+        />
+      ) : (
+        // 다른 카테고리는 기존 2열 그리드 방식
+        <FlatList
+          key="grid-list"
+          data={posts}
+          keyExtractor={item => item.id.toString()}
+          numColumns={2}
+          renderItem={({ item }) => {
+            // Render empty space for dummy item
+            if ((item as any).isEmpty) {
+              return <EmptyPostItem />;
+            }
+
+            return (
+              <PostItem onPress={() => onPressPost(item.id)}>
+                {item.images?.length > 0 ? (
+                  <PostImage uri={item.images[0].urls} />
+                ) : (
+                  <PostImage />
+                )}
+                <PostContent>
+                  <PostHeader>
+                    {item.author.profileImageUrl ? (
+                      <PostWriterProfileImage uri={item.author.profileImageUrl} />
+                    ) : (
+                      <PostWriterProfileImage />
+                    )}
+                    <Typography
+                      fontSize={12}
+                      fontWeight="semiBold"
+                      lineHeight="140%"
+                      letterSpacing="-2.5%"
+                    >
+                      {item.author.nickname}
+                    </Typography>
+                  </PostHeader>
                   <Typography
                     fontSize={12}
+                    lineHeight="140%"
                     letterSpacing="-2.5%"
-                    color="textSecondary"
-                    marginLeft={2}
-                    marginRight={3}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
                   >
-                    {item.likeCount}
+                    {item.content}
                   </Typography>
-                  <Icon width={13} height={12} Svg={ChatIcon} />
-                  <Typography fontSize={12} letterSpacing="-2.5%" color="textSecondary" marginLeft={2}>
-                    {item.commentCount}
-                  </Typography>
-                </PostInfoWrapper>
-              </PostContent>
-            </PostItem>
-          );
-        }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 0 }}
-        onEndReached={onLoadMore}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.colors.primary}
-            />
-          ) : undefined
-        }
-        ListFooterComponent={
-          isLoadingMore ? (
-            <LoadingIndicator>
-              <Typography fontSize={12} color="textSecondary">
-                로딩 중...
-              </Typography>
-            </LoadingIndicator>
-          ) : null
-        }
-      />
-      <WritePostButton onPress={onPressWritePost}>
-        <Icon width={10} height={10} Svg={CrossIcon} />
-        <Typography
-          fontSize={14}
-          fontWeight="bold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          color="#FFFFFF"
-          marginLeft={5}
-        >
-          글쓰기
-        </Typography>
-      </WritePostButton>
+                  <PostInfoWrapper>
+                    <IconButton
+                      width={13}
+                      height={12}
+                      disabled={true}
+                      Svg={item.isLiked ? HeartRedIcon : HeartIcon}
+                      onPress={() => onPressLike(item.id)}
+                    />
+                    <Typography
+                      fontSize={12}
+                      letterSpacing="-2.5%"
+                      color="textSecondary"
+                      marginLeft={2}
+                      marginRight={3}
+                    >
+                      {item.likeCount}
+                    </Typography>
+                    <Icon width={13} height={12} Svg={ChatIcon} />
+                    <Typography
+                      fontSize={12}
+                      letterSpacing="-2.5%"
+                      color="textSecondary"
+                      marginLeft={2}
+                    >
+                      {item.commentCount}
+                    </Typography>
+                  </PostInfoWrapper>
+                </PostContent>
+              </PostItem>
+            );
+          }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 0 }}
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.primary}
+              />
+            ) : undefined
+          }
+          ListFooterComponent={
+            isLoadingMore ? (
+              <LoadingIndicator>
+                <Typography fontSize={12} color="textSecondary">
+                  로딩 중...
+                </Typography>
+              </LoadingIndicator>
+            ) : null
+          }
+        />
+      )}
+      {selectedCategory !== 'NEWS' && !isError &&
+        <WritePostButton onPress={onPressWritePost}>
+          <Icon width={10} height={10} Svg={CrossIcon} />
+          <Typography
+            fontSize={14}
+            fontWeight="bold"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+            color="#FFFFFF"
+            marginLeft={5}
+          >
+            글쓰기
+          </Typography>
+        </WritePostButton>
+      }
     </Container>
   );
 }
@@ -216,12 +293,29 @@ const Container = styled.View`
   flex: 1;
 `
 
+const ErrorContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`
+
 const Header = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
   margin-top: 24px;
+`;
+
+const TabNavigator = styled.View`
+  width: 100%;
+  height: 50px;
+  padding-top: 18px;
+  flex-direction: row;
+  padding-left: 17px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #c8c8c8;
 `;
 
 const SearchInputWrapper = styled.View`
@@ -242,17 +336,6 @@ const SearchInput = styled.TextInput`
   font-size: 14px;
   font-family: Pretendard-Regular;
   margin-right: 10px;
-`;
-
-const TabNavigator = styled.View`
-  width: 100%;
-  height: 50px;
-  padding-top: 18px;
-  flex-direction: row;
-  padding-left: 17px;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: #c8c8c8;
 `;
 
 const Tab = styled.TouchableOpacity<{ isSelected: boolean }>`
@@ -344,3 +427,107 @@ const WritePostButton = styled.TouchableOpacity`
   bottom: 34px;
   right: 15px;
 `;
+
+const NewsLabel = styled.View`
+  height: 19px;
+  padding: 0 5px;
+  justify-content: center;
+  border: 1px solid ${theme.colors.primary};
+  margin-bottom: 10px;
+  background-color: #EAFFFA;
+  border-radius: 5px;
+  align-self: flex-start;
+`
+
+const NewsItemWrapper = styled.TouchableOpacity`
+  width: 100%;
+  padding: 10px 14px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #c8c8c8;
+`
+
+const NewsItemContentWrapper = styled.View`
+  flex-direction: row;
+`
+
+const NewsItemInfoWrapper = styled.View`
+  padding-right: 20px;
+`
+
+const NewsItemBottomWrapper = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+`
+
+const NewsItemImageWrapper = styled.View`
+  width: 70px;
+  height: 70px;
+  border-radius: 5px;
+  overflow: hidden;
+`
+
+const NewsItemImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
+`
+
+const NewsItemCommentWrapper = styled.View`
+  flex-direction: row;
+  margin-top: 9px;
+  align-items: center;
+`
+
+interface NewsItemProps {
+  onPress: () => void;
+  title: string;
+  createdAt: string;
+  imageUri: string;
+  commentCount: number;
+}
+
+const NewsItem = ({
+  onPress,
+  title,
+  createdAt,
+  imageUri,
+  commentCount,
+}: NewsItemProps) => {
+  return (
+    <NewsItemWrapper
+      onPress={onPress}
+    >
+      <NewsItemContentWrapper>
+        <NewsItemInfoWrapper>
+          <NewsLabel>
+            <Typography
+              fontSize={12}
+              color="primary"
+            >
+              공지사항
+            </Typography>
+          </NewsLabel>
+          <Typography fontSize={14} color="#000">
+            {title}
+          </Typography>
+        </NewsItemInfoWrapper>
+        <NewsItemImageWrapper>
+          <NewsItemImage uri={imageUri} />
+        </NewsItemImageWrapper>
+      </NewsItemContentWrapper>
+      <NewsItemBottomWrapper>
+        <Typography fontSize={12} color="#C8C8C8">
+          스냅링크 관리자 ㆍ {formatTimeAgo(createdAt)}
+        </Typography>
+        <NewsItemCommentWrapper>
+          <Icon width={14} height={14} Svg={ChatIcon} />
+          <Typography fontSize={12} color="#3C3C3C" marginLeft={2}>
+            {commentCount}
+          </Typography>
+        </NewsItemCommentWrapper>
+      </NewsItemBottomWrapper>
+    </NewsItemWrapper>
+  );
+}

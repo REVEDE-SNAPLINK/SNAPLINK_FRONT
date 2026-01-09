@@ -116,7 +116,8 @@ export const useMainPhotographersLatestTop3Query = () =>
           conceptIds: null,
           maxPrice: null,
           minPrice: null,
-          query: '',
+          query: null,
+          sort: "LATEST"
         },
       ),
     staleTime: 1000 * 30,
@@ -134,7 +135,8 @@ export const useMainPhotographersTopRatedTop3Query = () =>
           conceptIds: null,
           maxPrice: null,
           minPrice: null,
-          query: '',
+          query: null,
+          sort: "REVIEW"
         },
       ),
     staleTime: 1000 * 30,
@@ -168,10 +170,11 @@ export const usePortfolioPostQuery = (postId: number | undefined) =>
 /**
  * 작가 상태 조회 (PENDING, ACTIVE, INACTIVE, REJECTED, SUSPENDED)
  */
-export const usePhotographerStatusQuery = () =>
+export const usePhotographerStatusQuery = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: photographersQueryKeys.statusMe(),
     queryFn: () => getStatusMe(),
+    ...options,
   });
 
 /** 작가 지역, 컨셉, 태그 조회 */

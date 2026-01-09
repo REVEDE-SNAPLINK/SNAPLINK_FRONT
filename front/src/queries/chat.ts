@@ -4,6 +4,7 @@ import {
   getChatMessages,
   getChatRooms,
   getChatRoom,
+  getChatRoomDetail,
   uploadChatFile,
   type CreateOrGetRoomRequest,
   type GetChatMessagesParams,
@@ -17,6 +18,8 @@ export const useChatRoomsQuery = () =>
     queryKey: chatQueryKeys.rooms(),
     queryFn: () => getChatRooms(),
     staleTime: 1000 * 10,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
   });
 
 /** 특정 채팅방 조회 (캐시 우선, 없으면 API 호출) */
@@ -54,6 +57,21 @@ export const useChatRoomQuery = (roomId: number | undefined) => {
     },
     enabled: typeof roomId === 'number',
     staleTime: 1000 * 60, // 1 minute
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+  });
+};
+
+/** 특정 채팅방 상세 정보 조회 (닉네임, 프로필 이미지, 차단 상태) */
+export const useChatRoomDetailQuery = (roomId: number | undefined) => {
+  return useQuery({
+    queryKey: roomId ? chatQueryKeys.roomDetail(roomId) : [],
+    queryFn: () => {
+      if (!roomId) throw new Error('roomId is required');
+      return getChatRoomDetail(roomId);
+    },
+    enabled: typeof roomId === 'number',
+    staleTime: 1000 * 30, // 30 seconds
   });
 };
 
@@ -98,3 +116,5 @@ export const useUploadChatFileMutation = () => {
     mutationFn: (params: UploadChatFileParams) => uploadChatFile(params),
   });
 };
+
+

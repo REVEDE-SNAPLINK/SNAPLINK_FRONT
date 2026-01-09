@@ -9,6 +9,7 @@ import Animated, {
 import styled from '@/utils/scale/CustomStyled';
 import { theme } from '@/theme';
 import Typography from '@/components/theme/Typography';
+import { formatNumber } from '@/utils/format.ts';
 
 interface RangeSliderProps {
   min: number;
@@ -43,7 +44,7 @@ export default function RangeSlider({
     if (value >= 10000) {
       return `${Math.floor(value / 10000)}만${unit}`;
     }
-    return `${value.toLocaleString()}${unit}`;
+    return `${formatNumber(value)}${unit}`;
   };
 
 

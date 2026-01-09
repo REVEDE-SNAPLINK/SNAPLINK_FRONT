@@ -12,12 +12,13 @@ interface UserBookingDetailsViewProps {
   name: string;
   bookingOption: string;
   datetime: string;
+  region: string;
   additionalRequest: string;
   onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
   onPressShowMyReview?: () => void;
+  onOpenChatRoom?: () => void;
   isLoading?: boolean;
-
   navigation?: any;
 }
 
@@ -26,10 +27,12 @@ export default function UserBookingDetailsView({
   name,
   bookingOption,
   datetime,
+  region,
   additionalRequest,
   onPressViewPhotos,
   onPressWriteReview,
   onPressShowMyReview,
+  onOpenChatRoom,
   isLoading = false,
   navigation,}: UserBookingDetailsViewProps) {
   if (isLoading) {
@@ -64,8 +67,23 @@ export default function UserBookingDetailsView({
         <Description name="작가명" value={name} />
         <Description name="촬영 항목" value={bookingOption} />
         <Description name="촬영 일시" value={datetime} />
-        <Description name="요청 사항" value={additionalRequest} />
+        <Description name="촬영 장소" value={region === '' || region === null ? '선택 안함' : region} />
+        {additionalRequest !== '' && <Description name="요청 사항" value={additionalRequest} />}
       </InfoContainer>
+      {onOpenChatRoom && (
+        <ViewPhotosButton onPress={onOpenChatRoom}>
+          <Typography
+            fontSize={16}
+            fontWeight="semiBold"
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+            color="#000"
+          >
+            채팅 하기
+          </Typography>
+          <Icon width={24} height={24} Svg={ArrowRightIcon} />
+        </ViewPhotosButton>
+      )}
       {onPressViewPhotos && (
         <ViewPhotosButton onPress={onPressViewPhotos}>
           <Typography

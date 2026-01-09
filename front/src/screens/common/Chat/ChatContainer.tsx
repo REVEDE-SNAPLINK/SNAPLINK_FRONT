@@ -10,7 +10,7 @@ export default function ChatContainer() {
   const { data: chatRooms = [] } = useChatRoomsQuery();
 
   const handlePressChatRoom = (roomId: number, opponentNickname: string, opponentProfileImageURI: string) => {
-    navigation.navigate('ChatDetails', { roomId, opponentNickname, opponentProfileImageURI });
+    navigation.navigate('ChatDetails', { roomId });
   };
 
   return (

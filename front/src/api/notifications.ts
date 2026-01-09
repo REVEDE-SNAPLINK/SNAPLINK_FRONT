@@ -18,7 +18,7 @@ export interface NotificationItem {
  */
 export const getNotifications = async (): Promise<NotificationItem[]> => {
   const response = await authFetch(`${NOTIFICATIONS_BASE}`, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get notifications ${response.status}`);
+  if (!response.ok) throw new Error('알림 목록을 불러올 수 없습니다.');
   return response.json();
 };
 
@@ -28,7 +28,7 @@ export const getNotifications = async (): Promise<NotificationItem[]> => {
  */
 export const getUnreadNotificationStatus = async (): Promise<boolean> => {
   const response = await authFetch(`${NOTIFICATIONS_BASE}/unread-status`, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get unread status ${response.status}`);
+  if (!response.ok) throw new Error('알림 상태를 불러올 수 없습니다.');
   return response.json();
 };
 
@@ -47,5 +47,5 @@ export const patchNotificationRead = async (
     method: 'PATCH',
   });
 
-  if (!response.ok) throw new Error(`Failed to patch notification read ${response.status}`);
+  if (!response.ok) throw new Error('알림을 읽음 처리할 수 없습니다.');
 };

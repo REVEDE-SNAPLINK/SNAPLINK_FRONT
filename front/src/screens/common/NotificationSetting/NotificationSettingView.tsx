@@ -9,13 +9,13 @@ interface NotificationSettingViewProps {
   serviceNotifications: boolean;
   communityNotifications: boolean;
   advertisementNotifications: boolean;
-  followNotifications: boolean;
+  systemNotifications: boolean;
   onToggleAllNotifications: (value: boolean) => void;
   onToggleChatNotifications: (value: boolean) => void;
   onToggleServiceNotifications: (value: boolean) => void;
   onToggleCommunityNotifications: (value: boolean) => void;
   onToggleAdvertisementNotifications: (value: boolean) => void;
-  onToggleFollowNotifications: (value: boolean) => void;
+  onToggleSystemNotifications: (value: boolean) => void;
 
   navigation?: any;
 }
@@ -27,13 +27,13 @@ export default function NotificationSettingView({
   serviceNotifications,
   communityNotifications,
   advertisementNotifications,
-  followNotifications,
+  systemNotifications,
   onToggleAllNotifications,
   onToggleChatNotifications,
   onToggleServiceNotifications,
   onToggleCommunityNotifications,
   onToggleAdvertisementNotifications,
-  onToggleFollowNotifications,
+  onToggleSystemNotifications,
   navigation,
 }: NotificationSettingViewProps) {
   return (
@@ -132,16 +132,16 @@ export default function NotificationSettingView({
             color="#000"
             marginBottom={4}
           >
-            팔로우 알림
+            시스템 알림
           </Typography>
           <Typography
             fontSize={12}
             color="#aaa"
           >
-            팔로우 한 작가 게시글, 포트폴리오 등 소식 안내
+            공지사항 등 스냅링크 시스템 관련 안내
           </Typography>
         </NotificationItemTextWrapper>
-        <PrimaryToggleButton value={followNotifications} onToggle={onToggleFollowNotifications} />
+        <PrimaryToggleButton value={systemNotifications} onToggle={onToggleSystemNotifications} />
       </NotificationItem>
     </ScreenContainer>
   )
@@ -156,5 +156,6 @@ const NotificationItem = styled.View`
 `
 
 const NotificationItemTextWrapper = styled.View`
-  
+  flex: 1;
+  padding-right: 20px;
 `

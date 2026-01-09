@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { CommunityPost, CreateCommunityPostParams } from '@/api/community.ts';
+import { REASON, TargetType } from '@/api/reports.ts';
+import { UserType } from '@/types/auth.ts';
 
 export type ScheduleType = 'personal' | 'holiday';
 
@@ -37,6 +39,21 @@ interface ScheduleDetailModalState {
   onDuplicate?: (schedule: PersonalSchedule) => void;
 }
 
+export interface ReportModalParams {
+  reason: REASON;
+  description: string;
+}
+
+interface ReportModalState {
+  visible: boolean;
+  targetId?: string;
+  targetType?: TargetType;
+  targetUserType?: UserType;
+  initialReason?: REASON;
+  onSubmit?: (params: ReportModalParams) => void;
+  isLoading?: boolean;
+}
+
 interface ModalStore {
   communityPostModal: CommunityPostModalState;
   openCommunityPostModal: (
@@ -63,6 +80,17 @@ interface ModalStore {
     onDuplicate: (schedule: PersonalSchedule) => void,
   ) => void;
   closeScheduleDetailModal: () => void;
+
+  reportModal: ReportModalState;
+  openReportModal: (
+    targetId: string,
+    targetType: TargetType,
+    targetUserType: UserType,
+    onSubmit: (params: ReportModalParams) => void,
+    initialReason?: REASON,
+  ) => void;
+  closeReportModal: () => void;
+  setReportModalLoading: (isLoading: boolean) => void;
 }
 
 export const useModalStore = create<ModalStore>((set) => ({
@@ -153,4 +181,45 @@ export const useModalStore = create<ModalStore>((set) => ({
         onDuplicate: undefined,
       },
     }),
+
+  reportModal: {
+    visible: false,
+    targetId: undefined,
+    targetType: undefined,
+    targetUserType: undefined,
+    initialReason: undefined,
+    onSubmit: undefined,
+    isLoading: false,
+  },
+  openReportModal: (targetId, targetType, targetUserType, onSubmit, initialReason) =>
+    set({
+      reportModal: {
+        visible: true,
+        targetId,
+        targetType,
+        targetUserType,
+        initialReason,
+        onSubmit,
+        isLoading: false,
+      },
+    }),
+  closeReportModal: () =>
+    set({
+      reportModal: {
+        visible: false,
+        targetId: undefined,
+        targetType: undefined,
+        targetUserType: undefined,
+        initialReason: undefined,
+        onSubmit: undefined,
+        isLoading: false,
+      },
+    }),
+  setReportModalLoading: (isLoading) =>
+    set((state) => ({
+      reportModal: {
+        ...state.reportModal,
+        isLoading,
+      },
+    })),
 }));

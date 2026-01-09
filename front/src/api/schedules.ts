@@ -71,7 +71,7 @@ export const getPhotographerMonthSchedules = async (
   const url = `${SCHEDULES_BASE}/photographer/month/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get photographer month schedule ${response.status}`);
+  if (!response.ok) throw new Error('월간 스케줄을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -83,7 +83,7 @@ export const getPhotographerDayDetail = async (
   const url = `${SCHEDULES_BASE}/photographer/day/detail/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get photographer day detail ${response.status}`);
+  if (!response.ok) throw new Error('일일 스케줄 상세를 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -95,7 +95,7 @@ export const getAvailableBookingDays = async (
   const url = `${SCHEDULES_BASE}/month/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get available booking days ${response.status}`);
+  if (!response.ok) throw new Error('예약 가능한 날짜를 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -107,7 +107,7 @@ export const getAvailableBookingTimes = async (
   const url = `${SCHEDULES_BASE}/day/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
-  if (!response.ok) throw new Error(`Failed to get available time ${response.status}`);
+  if (!response.ok) throw new Error('예약 가능한 시간을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -125,7 +125,7 @@ export const getWeeklySchedule = async (
     method: 'GET'
   });
 
-  if (!response.ok) throw new Error(`Failed to get weekly schedule ${response.status}`);
+  if (!response.ok) throw new Error('주간 스케줄을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -138,7 +138,7 @@ export const updateWeeklySchedule = async (
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to update weekly schedule ${response.status}`);
+  if (!response.ok) throw new Error('주간 스케줄을 업데이트할 수 없습니다.');
 }
 
 export const deletePersonalSchedule = async (id: number) => {
@@ -146,7 +146,7 @@ export const deletePersonalSchedule = async (id: number) => {
     method: 'DELETE'
   });
 
-  if (!response.ok) throw new Error(`Failed to delete personal schedule ${response.status}`);
+  if (!response.ok) throw new Error('개인 일정을 삭제할 수 없습니다.');
 }
 
 export interface PersonalSchedule {
@@ -167,7 +167,7 @@ export const getPersonalSchedule = async (id: number): Promise<PersonalScheduleR
     method: 'GET'
   });
 
-  if (!response.ok) throw new Error(`Failed to get personal schedule ${response.status}`);
+  if (!response.ok) throw new Error('개인 일정을 불러올 수 없습니다.');
 
   return response.json();
 }
@@ -178,7 +178,7 @@ export const createPersonalSchedule = async (body: PersonalSchedule): Promise<nu
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to create personal schedule ${response.status}`);
+  if (!response.ok) throw new Error('개인 일정을 생성할 수 없습니다.');
 
   return response.json();
 }
@@ -189,6 +189,6 @@ export const updatePersonalSchedule = async (id: number, body: PersonalSchedule)
     json: body
   });
 
-  if (!response.ok) throw new Error(`Failed to update personal schedule ${response.status}`);
+  if (!response.ok) throw new Error('개인 일정을 수정할 수 없습니다.');
 
 }

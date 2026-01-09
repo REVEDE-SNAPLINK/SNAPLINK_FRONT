@@ -67,7 +67,7 @@ export default function BookingManageView({
         type={item.type}
         datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
         onPressViewPhotos={
-          (item.status === 'COMPLETED' || item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK') && onPressViewPhotos
+          (item.status === 'COMPLETED') && onPressViewPhotos
             ? () => onPressViewPhotos(item.bookingId)
             : undefined
         }
@@ -140,7 +140,7 @@ export default function BookingManageView({
           keyExtractor={(item) => item.bookingId.toString()}
           contentContainerStyle={{
             paddingTop: 24,
-            paddingHorizontal: 27,
+            paddingHorizontal: 20,
             paddingBottom: 50,
           }}
           showsVerticalScrollIndicator={false}

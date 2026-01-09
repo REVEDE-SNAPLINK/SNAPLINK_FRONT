@@ -14,91 +14,23 @@ import timezone from 'dayjs/plugin/timezone';
  * ```
  */
 export function formatNumber(value: number | string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+  // 1. 문자열인 경우 숫자로 변환
+  const numStr = typeof value === 'string' ? value : String(value);
+  const num = parseFloat(numStr);
 
+  // 2. 유효한 숫자인지 확인
   if (isNaN(num)) {
     return '0';
   }
 
-  return num.toLocaleString('en-US');
-}
+  // 3. 정수 부분과 소수 부분 분리 (소수점 유지 목적)
+  const parts = numStr.split('.');
 
-/**
- * 숫자를 통화 형식으로 포맷팅합니다.
- *
- * @example
- * ```typescript
- * formatCurrency(1000) // "₩1,000"
- * formatCurrency(1234567) // "₩1,234,567"
- * formatCurrency(1234567, '$') // "$1,234,567"
- * ```
- */
-export function formatCurrency(value: number | string, symbol: string = '₩'): string {
-  return `${symbol}${formatNumber(value)}`;
-}
+  // 4. 정수 부분에 콤마 추가
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-/**
- * 숫자를 축약 형식으로 포맷팅합니다.
- *
- * @example
- * ```typescript
- * formatCompactNumber(1000) // "1K"
- * formatCompactNumber(1234567) // "1.2M"
- * formatCompactNumber(1234) // "1.2K"
- * ```
- */
-export function formatCompactNumber(value: number | string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-
-  if (isNaN(num)) {
-    return '0';
-  }
-
-  if (num < 1000) {
-    return num.toString();
-  }
-
-  if (num < 1000000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-  }
-
-  if (num < 1000000000) {
-    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  }
-
-  return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
-}
-
-/**
- * 한국 통화 형식으로 포맷팅합니다 (만원 단위).
- *
- * @example
- * ```typescript
- * formatKoreanCurrency(5000) // "5,000원"
- * formatKoreanCurrency(50000) // "5만원"
- * formatKoreanCurrency(1234567) // "123만원"
- * formatKoreanCurrency(200000, '원') // "20만원"
- * ```
- */
-export function formatKoreanCurrency(value: number, unit: string = '원'): string {
-  if (value >= 10000) {
-    const manValue = Math.floor(value / 10000);
-    return `${manValue.toLocaleString()}만${unit}`;
-  }
-  return `${value.toLocaleString()}${unit}`;
-}
-
-/**
- * 필터 가격 범위를 포맷팅합니다.
- *
- * @example
- * ```typescript
- * formatPriceRange(5000, 50000) // "5,000원 ~ 5만원"
- * formatPriceRange(10000, 1000000) // "1만원 ~ 100만원"
- * ```
- */
-export function formatPriceRange(min: number, max: number, unit: string = '원'): string {
-  return `${formatKoreanCurrency(min, unit)} ~ ${formatKoreanCurrency(max, unit)}`;
+  // 5. 합쳐서 반환
+  return parts.join('.');
 }
 
 /**
@@ -116,6 +48,14 @@ export function formatDateTime(date: string, time: string): string {
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getDate()).padStart(2, '0');
   return `${year}.${month}.${day} ${time}`;
+}
+
+export function formatDate(date: string): string {
+  const dateObj = new Date(date);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
 }
 
 const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
@@ -203,17 +143,31 @@ dayjs.extend(timezone);
 
 export const formatChatDayjs = (iso: string) => {
   if (!iso) return '';
-  const date = dayjs(iso);
+  // Z 없는 ISO 문자열을 UTC로 파싱하고 9시간 더해서 한국 시간으로 변환
+  const date = dayjs.utc(iso).add(9, 'hour');
   if (!date.isValid()) return '';
-  return date.tz('Asia/Seoul').format('A hh:mm')  // "오전 10:24"
+  return date.format('A hh:mm')  // "오전 10:24"
     .replace('AM', '오전')
     .replace('PM', '오후');
 };
 
 export const formatTimeAgo = (dateString: string): string => {
-  const now = new Date();
-  const past = new Date(dateString);
-  const diff = now.getTime() - past.getTime();
+  // 서버에서 UTC 시간을 Z 없이 보냄
+  const past = dayjs.utc(dateString);
+
+  // Invalid date 체크
+  if (!past.isValid()) {
+    return '날짜 오류';
+  }
+
+  // 둘 다 UTC 기준으로 비교
+  const now = dayjs.utc();
+  const diff = now.diff(past);  // 밀리초
+
+  // 음수 diff 처리 (미래 시간)
+  if (diff < 0) {
+    return '방금 전';
+  }
 
   const second = 1000;
   const minute = 60 * second;
@@ -229,8 +183,11 @@ export const formatTimeAgo = (dateString: string): string => {
   } else if (diff < day) {
     const hours = Math.floor(diff / hour);
     return `${hours}시간 전`;
-  } else {
+  } else if (diff < 30 * day) {
     const days = Math.floor(diff / day);
     return `${days}일 전`;
+  } else {
+    // 30일 이상은 날짜 형식으로 표시 (한국 시간으로 변환)
+    return past.add(9, 'hour').format('YYYY.MM.DD');
   }
 }

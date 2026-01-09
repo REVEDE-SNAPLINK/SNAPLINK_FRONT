@@ -1,10 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '@/store/authStore.ts';
-import { useModalStore, PersonalSchedule } from '@/store/modalStore.ts';
+import { useModalStore, PersonalSchedule, ReportModalParams } from '@/store/modalStore.ts';
 import MainStack from '@/navigation/stacks/MainStack.tsx';
 import AuthStack from '@/navigation/stacks/AuthStack.tsx';
 import { RootStackParamList } from '@/types/navigation';
 import CommunityPostModal from '@/components/common/CommunityPostModal';
+import ReportModal from '@/components/common/ReportModal';
 import AddScheduleModal from '@/screens/photographer/BookingCalendar/AddScheduleModal';
 import ScheduleDetailModal from '@/screens/photographer/BookingCalendar/ScheduleDetailModal';
 import { CreateCommunityPostParams } from '@/api/community.ts';
@@ -20,6 +21,8 @@ export default function RootNavigator() {
     closeAddScheduleModal,
     scheduleDetailModal,
     closeScheduleDetailModal,
+    reportModal,
+    closeReportModal,
   } = useModalStore();
 
   const handleCloseCommunityPostModal = () => {
@@ -52,6 +55,14 @@ export default function RootNavigator() {
 
   const handleDuplicateSchedule = (schedule: PersonalSchedule) => {
     scheduleDetailModal.onDuplicate?.(schedule);
+  };
+
+  const handleCloseReportModal = () => {
+    closeReportModal();
+  };
+
+  const handleSubmitReport = (params: ReportModalParams) => {
+    reportModal.onSubmit?.(params);
   };
 
   return (
@@ -91,6 +102,15 @@ export default function RootNavigator() {
         onEdit={handleEditSchedule}
         onDelete={handleDeleteSchedule}
         onDuplicate={handleDuplicateSchedule}
+      />
+
+      <ReportModal
+        visible={reportModal.visible}
+        onClose={handleCloseReportModal}
+        onSubmit={handleSubmitReport}
+        initialReason={reportModal.initialReason}
+        targetUserType={reportModal.targetUserType || 'user'}
+        isLoading={!!reportModal.isLoading}
       />
     </>
   );

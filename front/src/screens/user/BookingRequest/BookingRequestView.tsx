@@ -27,7 +27,7 @@ export default function BookingRequestView({
       navigation={navigation}>
       <ScrollContainer showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
         <Typography fontSize={16} fontWeight="semiBold" lineHeight="140%" letterSpacing="-2.5%" color="#000" marginBottom={16}>
-          요청사항을 작성해주세요 <Typography fontSize={12} letterSpacing="-2.5%" color="textSecondary">(최소 15자)</Typography>
+          요청사항을 작성해주세요
         </Typography>
 
         <TextInput

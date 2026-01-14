@@ -123,7 +123,7 @@ export default function BookingView({
     >
       <ScrollContainer
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20 }}
+        contentContainerStyle={{ paddingHorizontal: 0 }}
       >
         <CalendarWrapper>
           <Typography
@@ -132,6 +132,7 @@ export default function BookingView({
             lineHeight="140%"
             letterSpacing="-2.5%"
             marginBottom={32}
+            marginLeft={20}
           >
             날짜와 시간을 선택해 주세요
           </Typography>
@@ -162,233 +163,237 @@ export default function BookingView({
             maxDate={maxDate}
           />
         </CalendarWrapper>
-        <Divider />
 
-        {isFetchingTimes ? (
-          <TimeSkeletonRow>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <TimeSkeletonItem key={i} />
-            ))}
-          </TimeSkeletonRow>
-        ) : isTimesError ? (
-          <InlineState>
-            <InlineStateText>시간을 불러오지 못했어요.</InlineStateText>
-            <InlineAction onPress={onRetryTimes}>
-              <InlineActionText>재시도</InlineActionText>
-            </InlineAction>
-          </InlineState>
-        ) : timeSlots.length === 0 ? (
-          <InlineState>
-            <InlineStateText>
-              선택 가능한 시간이 없어요. 다른 날짜를 선택해 주세요.
-            </InlineStateText>
-          </InlineState>
-        ) : (
-          <>
-            {morningSlots.length > 0 && (
-              <>
-                <Typography
-                  fontSize={14}
-                  lineHeight="140%"
-                  letterSpacing="-2.5%"
-                  color="#000"
-                  marginBottom={17}
-                >
-                  오전
-                </Typography>
-                <TimeSelector
-                  timeSlots={morningSlots}
-                  selectedTime={selectedTime}
-                  onSelectTime={onSelectTime}
-                  currentDate={currentDate}
-                />
-              </>
-            )}
+        <ContentWrapper>
+          <Divider />
 
-            {afternoonSlots.length > 0 && (
-              <>
-                <Typography
-                  fontSize={14}
-                  lineHeight="140%"
-                  letterSpacing="-2.5%"
-                  color="#000"
-                  marginBottom={17}
-                  marginTop={morningSlots.length > 0 ? 10 : 0}
-                >
-                  오후
-                </Typography>
-                <TimeSelector
-                  timeSlots={afternoonSlots}
-                  selectedTime={selectedTime}
-                  onSelectTime={onSelectTime}
-                  currentDate={currentDate}
-                />
-              </>
-            )}
-          </>
-        )}
-
-        {availbleRegions.length > 0 && (
-          <>
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              color="#000"
-              marginTop={10}
-              marginBottom={17}
-            >
-              장소 (선택사항)
-            </Typography>
-            <RegionRow>
-              {availbleRegions.map((v) => (
-                <RegionWrapper key={v.id}>
-                  <Checkbox isChecked={selectedRegionId === v.id} onPress={() => onToggleRegion(v.id)} />
+          {isFetchingTimes ? (
+            <TimeSkeletonRow>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <TimeSkeletonItem key={i} />
+              ))}
+            </TimeSkeletonRow>
+          ) : isTimesError ? (
+            <InlineState>
+              <InlineStateText>시간을 불러오지 못했어요.</InlineStateText>
+              <InlineAction onPress={onRetryTimes}>
+                <InlineActionText>재시도</InlineActionText>
+              </InlineAction>
+            </InlineState>
+          ) : timeSlots.length === 0 ? (
+            <InlineState>
+              <InlineStateText>
+                선택 가능한 시간이 없어요. 다른 날짜를 선택해 주세요.
+              </InlineStateText>
+            </InlineState>
+          ) : (
+            <>
+              {morningSlots.length > 0 && (
+                <>
                   <Typography
                     fontSize={14}
-                    marginLeft={10}
+                    lineHeight="140%"
+                    letterSpacing="-2.5%"
+                    color="#000"
+                    marginBottom={17}
                   >
-                    {v.city}
+                    오전
                   </Typography>
-                </RegionWrapper>
-              ))}
-            </RegionRow>
-          </>
-        )}
+                  <TimeSelector
+                    timeSlots={morningSlots}
+                    selectedTime={selectedTime}
+                    onSelectTime={onSelectTime}
+                    currentDate={currentDate}
+                  />
+                </>
+              )}
 
-        <Typography
-          fontSize={16}
-          fontWeight="semiBold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          color="#000"
-          marginTop={51}
-        >
-          촬영 항목을 선택해 주세요
-        </Typography>
+              {afternoonSlots.length > 0 && (
+                <>
+                  <Typography
+                    fontSize={14}
+                    lineHeight="140%"
+                    letterSpacing="-2.5%"
+                    color="#000"
+                    marginBottom={17}
+                    marginTop={morningSlots.length > 0 ? 10 : 0}
+                  >
+                    오후
+                  </Typography>
+                  <TimeSelector
+                    timeSlots={afternoonSlots}
+                    selectedTime={selectedTime}
+                    onSelectTime={onSelectTime}
+                    currentDate={currentDate}
+                  />
+                </>
+              )}
+            </>
+          )}
 
-        <OptionLabel>
-          <Typography
-            fontSize={14}
-            fontWeight="semiBold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#fff"
-          >
-            필수 항목
-          </Typography>
-        </OptionLabel>
+          {availbleRegions.length > 0 && (
+            <>
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                color="#000"
+                marginTop={10}
+                marginBottom={17}
+              >
+                장소 (선택사항)
+              </Typography>
+              <RegionRow>
+                {availbleRegions.map((v) => (
+                  <RegionWrapper key={v.id}>
+                    <Checkbox isChecked={selectedRegionId === v.id} onPress={() => onToggleRegion(v.id)} />
+                    <Typography
+                      fontSize={14}
+                      marginLeft={10}
+                    >
+                      {v.city}
+                    </Typography>
+                  </RegionWrapper>
+                ))}
+              </RegionRow>
+            </>
+          )}
 
-        {isFetchingProducts ? (
-          <InlineState>
-            <ActivityIndicator />
-            <InlineStateText>촬영 항목을 불러오는 중...</InlineStateText>
-          </InlineState>
-        ) : isProductsError ? (
-          <InlineState>
-            <InlineStateText>촬영 항목을 불러오지 못했어요.</InlineStateText>
-            <InlineAction onPress={onRetryProducts}>
-              <InlineActionText>재시도</InlineActionText>
-            </InlineAction>
-          </InlineState>
-        ) : shootingProducts.length === 0 ? (
-          <InlineState>
-            <InlineStateText>등록된 촬영 항목이 없어요.</InlineStateText>
-          </InlineState>
-        ) : (
-          <>
-            {shootingProducts.map(product => (
-              <ShootingProduct
-                key={product.id}
-                isChecked={selectedProductId === product.id}
-                onPress={() => onPressShootingProduct(product.id)}
-                product={product}
-              />
-            ))}
-          </>
-        )}
-
-        <OptionLabel>
-          <Typography
-            fontSize={14}
-            fontWeight="semiBold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#fff"
-          >
-            선택 항목
-          </Typography>
-        </OptionLabel>
-
-        {isFetchingOptions && selectedProductId > 0 ? (
-          <InlineState>
-            <ActivityIndicator />
-            <InlineStateText>옵션을 불러오는 중...</InlineStateText>
-          </InlineState>
-        ) : isOptionsError ? (
-          <InlineState>
-            <InlineStateText>옵션을 불러오지 못했어요.</InlineStateText>
-            <InlineAction onPress={onRetryOptions}>
-              <InlineActionText>재시도</InlineActionText>
-            </InlineAction>
-          </InlineState>
-        ) : selectedProductId === 0 ? (
-          <InlineState>
-            <InlineStateText>
-              촬영 상품을 선택하면 옵션을 고를 수 있어요.
-            </InlineStateText>
-          </InlineState>
-        ) : shootingOptions.length === 0 ? (
-          <InlineState>
-            <InlineStateText>선택 옵션이 없어요.</InlineStateText>
-          </InlineState>
-        ) : (
-          <>
-            {shootingOptions.map((option: GetShootingOptionResponse) => (
-              <ShootingOption
-                key={option.id}
-                option={option}
-                quantity={optionalQuantities?.[option.id] || 0}
-                onQuantityChange={quantity =>
-                  onOptionalQuantityChange?.(option.id, quantity)
-                }
-              />
-            ))}
-          </>
-        )}
-
-        <TotalPriceWrapper>
           <Typography
             fontSize={16}
             fontWeight="semiBold"
             lineHeight="140%"
             letterSpacing="-2.5%"
             color="#000"
+            marginTop={51}
           >
-            합계
+            촬영 항목을 선택해 주세요
           </Typography>
-          <Typography
-            fontSize={16}
-            fontWeight="semiBold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#f00"
-          >
-            {formatNumber(totalPrice)}원
-          </Typography>
-        </TotalPriceWrapper>
 
-        <SubmitButton
-          disabled={isSubmitDisabled}
-          text="다음"
-          onPress={onSubmit}
-          marginBottom={12}
-          marginTop={22}
-        />
+          <OptionLabel>
+            <Typography
+              fontSize={14}
+              fontWeight="semiBold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#fff"
+            >
+              필수 항목
+            </Typography>
+          </OptionLabel>
 
-        {isSubmitDisabled && !!disabledHint && (
-          <HintText>{disabledHint}</HintText>
-        )}
+          {isFetchingProducts ? (
+            <InlineState>
+              <ActivityIndicator />
+              <InlineStateText>촬영 항목을 불러오는 중...</InlineStateText>
+            </InlineState>
+          ) : isProductsError ? (
+            <InlineState>
+              <InlineStateText>촬영 항목을 불러오지 못했어요.</InlineStateText>
+              <InlineAction onPress={onRetryProducts}>
+                <InlineActionText>재시도</InlineActionText>
+              </InlineAction>
+            </InlineState>
+          ) : shootingProducts.length === 0 ? (
+            <InlineState>
+              <InlineStateText>등록된 촬영 항목이 없어요.</InlineStateText>
+            </InlineState>
+          ) : (
+            <>
+              {shootingProducts.map(product => (
+                <ShootingProduct
+                  key={product.id}
+                  isChecked={selectedProductId === product.id}
+                  onPress={() => onPressShootingProduct(product.id)}
+                  product={product}
+                />
+              ))}
+            </>
+          )}
+
+          <OptionLabel>
+            <Typography
+              fontSize={14}
+              fontWeight="semiBold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#fff"
+            >
+              선택 항목
+            </Typography>
+          </OptionLabel>
+
+          {isFetchingOptions && selectedProductId > 0 ? (
+            <InlineState>
+              <ActivityIndicator />
+              <InlineStateText>옵션을 불러오는 중...</InlineStateText>
+            </InlineState>
+          ) : isOptionsError ? (
+            <InlineState>
+              <InlineStateText>옵션을 불러오지 못했어요.</InlineStateText>
+              <InlineAction onPress={onRetryOptions}>
+                <InlineActionText>재시도</InlineActionText>
+              </InlineAction>
+            </InlineState>
+          ) : selectedProductId === 0 ? (
+            <InlineState>
+              <InlineStateText>
+                촬영 상품을 선택하면 옵션을 고를 수 있어요.
+              </InlineStateText>
+            </InlineState>
+          ) : shootingOptions.length === 0 ? (
+            <InlineState>
+              <InlineStateText>선택 옵션이 없어요.</InlineStateText>
+            </InlineState>
+          ) : (
+            <>
+              {shootingOptions.map((option: GetShootingOptionResponse) => (
+                <ShootingOption
+                  key={option.id}
+                  option={option}
+                  quantity={optionalQuantities?.[option.id] || 0}
+                  onQuantityChange={quantity =>
+                    onOptionalQuantityChange?.(option.id, quantity)
+                  }
+                />
+              ))}
+            </>
+          )}
+
+          <TotalPriceWrapper>
+            <Typography
+              fontSize={16}
+              fontWeight="semiBold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#000"
+            >
+              합계
+            </Typography>
+            <Typography
+              fontSize={16}
+              fontWeight="semiBold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+              color="#f00"
+            >
+              {formatNumber(totalPrice)}원
+            </Typography>
+          </TotalPriceWrapper>
+
+          <SubmitButton
+            disabled={isSubmitDisabled}
+            text="다음"
+            onPress={onSubmit}
+            marginBottom={12}
+            marginTop={22}
+          />
+
+          {isSubmitDisabled && !!disabledHint && (
+            <HintText>{disabledHint}</HintText>
+          )}
+
+        </ContentWrapper>
       </ScrollContainer>
     </ScreenContainer>
   );
@@ -425,6 +430,7 @@ const StepRow = styled.View`
   flex-direction: row;
   gap: 8px;
   margin-bottom: 12px;
+  margin-left: 20px;
 `;
 
 const StepItem = styled.View<{ active: boolean }>`
@@ -494,4 +500,8 @@ const RegionWrapper = styled.View`
   flex-direction: row;
   align-items: center;
   margin-right: 16px;
+`
+
+const ContentWrapper = styled.View`
+  padding: 0 20px;
 `

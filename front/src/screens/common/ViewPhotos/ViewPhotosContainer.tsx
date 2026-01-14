@@ -7,9 +7,9 @@ import PhotographerViewPhotosContainer from '@/screens/photographer/ViewPhotos/P
  * based on user type (user vs photographer)
  */
 export default function ViewPhotosContainer() {
-  const userType = useAuthStore((state) => state.userType);
+  const { userType, isExpertMode } = useAuthStore();
 
-  if (userType === 'photographer') {
+  if (userType === 'photographer' && isExpertMode) {
     return <PhotographerViewPhotosContainer />;
   }
 

@@ -15,10 +15,12 @@ import messaging from '@react-native-firebase/messaging';
 import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
 import { login } from '@react-native-kakao/user';
 import { jwtDecode } from 'jwt-decode';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import { queryClient } from '@/config/queryClient.ts';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { updateNotificationSettings } from '@/api/user.ts';
+import { Alert } from '@/components/theme';
 
 type AuthStatus = 'idle' | 'loading' | 'authed' | 'anon' | 'needs_signup';
 type UserType = 'user' | 'photographer';
@@ -385,7 +387,32 @@ const safeRegisterFcmDevice = async () => {
     console.log('[FCM] Platform:', Platform.OS, 'Permission status:', authStatus, 'enabled:', enabled);
 
     if (!enabled) {
-      console.warn('[FCM] 알림 권한 거부됨, FCM 등록 불가');
+      console.warn('[FCM] 알림 권한 거부됨');
+
+      // 권한 거부 시 안내 Alert
+      const settingsMessage = Platform.OS === 'android'
+        ? '알림을 받으려면 설정에서 알림 권한을 허용해주세요.'
+        : '알림을 받으려면 설정에서 알림 권한을 허용해주세요.\n\n설정 > Snaplink > 알림에서 변경할 수 있습니다.';
+
+      Alert.show({
+        title: '알림 권한이 거부되었습니다',
+        message: settingsMessage,
+        buttons: [
+          {
+            text: '나중에',
+            type: 'cancel',
+            onPress: () => {},
+          },
+          {
+            text: '설정 열기',
+            onPress: () => {
+              Linking.openSettings().catch(() => {
+                console.warn('설정 앱을 열 수 없습니다.');
+              });
+            },
+          },
+        ],
+      });
       return;
     }
 
@@ -422,6 +449,22 @@ const safeRegisterFcmDevice = async () => {
     console.log('[FCM] Registering FCM token with server...');
     await registerFCMdevice(fcmToken);
     console.log('[FCM] FCM device registration completed successfully');
+
+    // Step 6: 알림 설정 초기화 (모든 알림 허용)
+    console.log('[FCM] Setting notification preferences to all enabled...');
+    try {
+      await updateNotificationSettings({
+        consentMarketing: true,
+        consentCommunity: true,
+        consentChat: true,
+        consentSystem: true,
+        consentSchedule: true,
+      });
+      console.log('[FCM] Notification preferences updated successfully');
+    } catch (e) {
+      console.error('[FCM] Failed to update notification preferences:', e);
+      // 설정 업데이트 실패해도 FCM 등록은 성공으로 간주
+    }
   } catch (e) {
     console.error('[FCM] safeRegisterFcmDevice failed:', e);
   }

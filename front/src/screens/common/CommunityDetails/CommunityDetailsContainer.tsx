@@ -88,7 +88,7 @@ export default function CommunityDetailsContainer() {
   const { data: post, isLoading: isLoadingPost, isError: isErrorPost } = useCommunityPostQuery(postId);
 
   // Fetch comments
-  const { data: commentsData, isLoading: isLoadingComments, isError: isErrorComments } = useCommunityCommentsQuery(postId);
+  const { data: commentsData, isLoading: isLoadingComments } = useCommunityCommentsQuery(postId);
   const comments = commentsData?.content || [];
 
   const { data: taggedPhotographer } = usePhotographerProfileQuery(post?.taggedUsers?.[0]?.userId ?? '');
@@ -133,7 +133,11 @@ export default function CommunityDetailsContainer() {
   }, [isUpdatePostPending, setCommunityPostModalLoading]);
 
   const handlePressBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+    }
   };
 
   const handlePressShare = () => {

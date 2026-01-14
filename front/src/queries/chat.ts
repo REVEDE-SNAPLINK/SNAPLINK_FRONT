@@ -13,14 +13,49 @@ import {
 import { chatQueryKeys } from '@/queries/keys';
 
 /** 채팅방 목록 */
-export const useChatRoomsQuery = () =>
-  useQuery({
+export const useChatRoomsQuery = () => {
+  const queryClient = useQueryClient();
+
+  return useQuery({
     queryKey: chatQueryKeys.rooms(),
-    queryFn: () => getChatRooms(),
+    queryFn: async () => {
+      const newData = await getChatRooms();
+      const blockedRooms = queryClient.getQueryData<Set<number>>(chatQueryKeys.blockedRooms()) || new Set();
+
+      // If there are blocked rooms, preserve their specific fields
+      if (blockedRooms.size > 0) {
+        const oldData = queryClient.getQueryData<Awaited<ReturnType<typeof getChatRooms>>>(chatQueryKeys.rooms());
+
+        if (oldData) {
+          // Create a map of old data for quick lookup
+          const oldDataMap = new Map(oldData.map(room => [room.roomId, room]));
+
+          // Merge new data with preserved fields for blocked rooms
+          return newData.map(newRoom => {
+            if (blockedRooms.has(newRoom.roomId)) {
+              const oldRoom = oldDataMap.get(newRoom.roomId);
+              if (oldRoom) {
+                // Preserve unreadCount, lastMessageTime, lastMessage for blocked rooms
+                return {
+                  ...newRoom,
+                  unreadCount: oldRoom.unreadCount,
+                  lastMessageTime: oldRoom.lastMessageTime,
+                  lastMessage: oldRoom.lastMessage,
+                };
+              }
+            }
+            return newRoom;
+          });
+        }
+      }
+
+      return newData;
+    },
     staleTime: 1000 * 10,
     refetchInterval: 3000,
     refetchIntervalInBackground: true,
   });
+};
 
 /** 특정 채팅방 조회 (캐시 우선, 없으면 API 호출) */
 export const useChatRoomQuery = (roomId: number | undefined) => {
@@ -82,10 +117,22 @@ export const useChatRoomDetailQuery = (roomId: number | undefined) => {
 export const useChatMessagesInfiniteQuery = (
   roomId: number | undefined,
   paramsWithoutPage: Omit<GetChatMessagesParams, 'page'> = { size: 20 },
+  enabled?: boolean,
 ) => {
+  const queryClient = useQueryClient();
+
   return useInfiniteQuery({
     queryKey: roomId ? chatQueryKeys.messagesInfinite(roomId, paramsWithoutPage) : [],
-    enabled: typeof roomId === 'number',
+    enabled: (() => {
+      if (typeof roomId !== 'number') return false;
+      if (enabled !== undefined && !enabled) return false;
+
+      // Check if room is blocked
+      const blockedRooms = queryClient.getQueryData<Set<number>>(chatQueryKeys.blockedRooms()) || new Set();
+      if (blockedRooms.has(roomId)) return false;
+
+      return true;
+    })(),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => getChatMessages(roomId!, { ...paramsWithoutPage, page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {

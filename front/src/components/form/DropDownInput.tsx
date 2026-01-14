@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { TouchableOpacity, LayoutAnimation, Platform, UIManager, ScrollView } from 'react-native';
+import React, { useMemo, useState, useRef } from 'react';
+import { TouchableOpacity, LayoutAnimation, Platform, UIManager, ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
 import FormErrorMessage from '@/components/form/FormErrorMessage.tsx';
@@ -21,6 +21,9 @@ interface DropDownInputProps {
 
   // 확장 높이 제한
   maxVisibleOptions?: number; // 기본 5개 정도
+
+  // 자동 스크롤을 위한 ScrollView ref (ScrollView 또는 KeyboardAwareScrollView)
+  scrollViewRef?: React.RefObject<any>;
 }
 
 const ROW_HEIGHT = 50;
@@ -33,8 +36,10 @@ export default function DropDownInput({
   errorMessage,
   disabled = false,
   maxVisibleOptions = 4,
+  scrollViewRef,
 }: DropDownInputProps) {
   const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<View>(null);
 
   const rotate = useSharedValue(0); // 0 -> 180
 
@@ -59,6 +64,29 @@ export default function DropDownInput({
       duration: 180,
       easing: Easing.out(Easing.cubic),
     });
+
+    // 열릴 때 자동 스크롤
+    if (next && scrollViewRef?.current && wrapperRef.current) {
+      setTimeout(() => {
+        wrapperRef.current?.measureInWindow((x, y) => {
+          // 드롭다운 높이를 고려한 스크롤 위치 계산
+          const targetY = y - 100; // 상단에서 100px 여유 공간 확보
+          const scrollY = targetY > 0 ? targetY : 0;
+
+          // ScrollView와 KeyboardAwareScrollView 둘 다 지원
+          if (scrollViewRef.current.scrollTo) {
+            // 일반 ScrollView
+            scrollViewRef.current.scrollTo({
+              y: scrollY,
+              animated: true,
+            });
+          } else if (scrollViewRef.current.scrollToPosition) {
+            // KeyboardAwareScrollView
+            scrollViewRef.current.scrollToPosition(0, scrollY, true);
+          }
+        });
+      }, 200); // LayoutAnimation 완료 후 실행
+    }
   };
 
   const arrowStyle = useAnimatedStyle(() => ({
@@ -66,7 +94,7 @@ export default function DropDownInput({
   }));
 
   return (
-    <Wrapper>
+    <Wrapper ref={wrapperRef}>
       <TouchableOpacity onPress={toggle} activeOpacity={0.7} style={{ width: '100%' }} disabled={disabled}>
         <InputFieldWrapper $disabled={disabled}>
           {value ? (
@@ -121,7 +149,7 @@ export default function DropDownInput({
 
 /** ---------- styles ---------- */
 
-const Wrapper = styled.View`
+const Wrapper = styled(View)`
   width: 100%;
 `;
 

@@ -17,7 +17,7 @@ interface PortfolioFormViewProps {
   control: Control<PortfolioFormData>;
   photoURIs: UploadImageFile[];
   onRemoveImage: (index: number) => void;
-  onAddImages: () => void;
+  onAddImages: (images: UploadImageFile[]) => void;
   onPressBack: () => void;
   onPressSubmit: () => void;
   isSubmitDisabled: boolean;

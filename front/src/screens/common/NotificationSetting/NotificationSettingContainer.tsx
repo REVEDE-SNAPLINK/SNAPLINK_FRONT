@@ -143,7 +143,32 @@ export default function NotificationSettingContainer() {
     );
   };
 
-  const handleToggleChatNotifications = (value: boolean) => {
+  const handleToggleChatNotifications = async (value: boolean) => {
+    // 알림 켜기 시도 시 시스템 권한 확인
+    if (value) {
+      const status = await checkPermission('notification');
+      if (status === 'blocked' || status === 'denied') {
+        Alert.show({
+          title: '알림 권한 필요',
+          message: '알림을 받으려면 설정에서 알림 권한을 허용해주세요.\n\n설정 > Snaplink > 알림에서 변경할 수 있습니다.',
+          buttons: [
+            {
+              text: '취소',
+              type: 'cancel',
+              onPress: () => {},
+            },
+            {
+              text: '설정 열기',
+              onPress: () => {
+                requestPermission('notification', () => {}, () => {});
+              },
+            },
+          ],
+        });
+        return;
+      }
+    }
+
     const previousValue = chatNotifications;
     setChatNotifications(value);
 
@@ -168,7 +193,32 @@ export default function NotificationSettingContainer() {
     );
   };
 
-  const handleToggleServiceNotifications = (value: boolean) => {
+  const handleToggleServiceNotifications = async (value: boolean) => {
+    // 알림 켜기 시도 시 시스템 권한 확인
+    if (value) {
+      const status = await checkPermission('notification');
+      if (status === 'blocked' || status === 'denied') {
+        Alert.show({
+          title: '알림 권한 필요',
+          message: '알림을 받으려면 설정에서 알림 권한을 허용해주세요.\n\n설정 > Snaplink > 알림에서 변경할 수 있습니다.',
+          buttons: [
+            {
+              text: '취소',
+              type: 'cancel',
+              onPress: () => {},
+            },
+            {
+              text: '설정 열기',
+              onPress: () => {
+                requestPermission('notification', () => {}, () => {});
+              },
+            },
+          ],
+        });
+        return;
+      }
+    }
+
     const previousValue = serviceNotifications;
     setServiceNotifications(value);
 
@@ -193,7 +243,32 @@ export default function NotificationSettingContainer() {
     );
   };
 
-  const handleToggleCommunityNotifications = (value: boolean) => {
+  const handleToggleCommunityNotifications = async (value: boolean) => {
+    // 알림 켜기 시도 시 시스템 권한 확인
+    if (value) {
+      const status = await checkPermission('notification');
+      if (status === 'blocked' || status === 'denied') {
+        Alert.show({
+          title: '알림 권한 필요',
+          message: '알림을 받으려면 설정에서 알림 권한을 허용해주세요.\n\n설정 > Snaplink > 알림에서 변경할 수 있습니다.',
+          buttons: [
+            {
+              text: '취소',
+              type: 'cancel',
+              onPress: () => {},
+            },
+            {
+              text: '설정 열기',
+              onPress: () => {
+                requestPermission('notification', () => {}, () => {});
+              },
+            },
+          ],
+        });
+        return;
+      }
+    }
+
     const previousValue = communityNotifications;
     setCommunityNotifications(value);
 
@@ -218,7 +293,32 @@ export default function NotificationSettingContainer() {
     );
   };
 
-  const handleToggleAdvertisementNotifications = (value: boolean) => {
+  const handleToggleAdvertisementNotifications = async (value: boolean) => {
+    // 알림 켜기 시도 시 시스템 권한 확인
+    if (value) {
+      const status = await checkPermission('notification');
+      if (status === 'blocked' || status === 'denied') {
+        Alert.show({
+          title: '알림 권한 필요',
+          message: '알림을 받으려면 설정에서 알림 권한을 허용해주세요.\n\n설정 > Snaplink > 알림에서 변경할 수 있습니다.',
+          buttons: [
+            {
+              text: '취소',
+              type: 'cancel',
+              onPress: () => {},
+            },
+            {
+              text: '설정 열기',
+              onPress: () => {
+                requestPermission('notification', () => {}, () => {});
+              },
+            },
+          ],
+        });
+        return;
+      }
+    }
+
     const previousValue = advertisementNotifications;
     setAdvertisementNotifications(value);
 
@@ -243,7 +343,32 @@ export default function NotificationSettingContainer() {
     );
   };
 
-  const handleToggleSystemNotifications = (value: boolean) => {
+  const handleToggleSystemNotifications = async (value: boolean) => {
+    // 알림 켜기 시도 시 시스템 권한 확인
+    if (value) {
+      const status = await checkPermission('notification');
+      if (status === 'blocked' || status === 'denied') {
+        Alert.show({
+          title: '알림 권한 필요',
+          message: '알림을 받으려면 설정에서 알림 권한을 허용해주세요.\n\n설정 > Snaplink > 알림에서 변경할 수 있습니다.',
+          buttons: [
+            {
+              text: '취소',
+              type: 'cancel',
+              onPress: () => {},
+            },
+            {
+              text: '설정 열기',
+              onPress: () => {
+                requestPermission('notification', () => {}, () => {});
+              },
+            },
+          ],
+        });
+        return;
+      }
+    }
+
     const previousValue = systemNotifications;
     setSystemNotifications(value);
 

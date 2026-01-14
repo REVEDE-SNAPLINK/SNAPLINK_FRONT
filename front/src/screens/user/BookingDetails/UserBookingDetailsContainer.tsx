@@ -86,6 +86,7 @@ export default function UserBookingDetailsContainer() {
         region=""
         additionalRequest=""
         isLoading={isLoading}
+        onOpenChatRoom={() => {}}
       navigation={navigation}
     />
     );
@@ -94,7 +95,6 @@ export default function UserBookingDetailsContainer() {
   const canViewPhotos = bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
   const canWriteReview = !bookingDetails.isreview && bookingDetails.status === 'USER_PHOTO_CHECK';
   const canShowMyReview = bookingDetails.isreview;
-  const canOpenChatRoom = bookingDetails.status !== 'WAITING_FOR_APPROVAL' && bookingDetails.status !== 'CANCELLED' && bookingDetails.status !== 'REJECTED';
 
   return (
     <UserBookingDetailsView
@@ -107,7 +107,7 @@ export default function UserBookingDetailsContainer() {
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
       onPressWriteReview={canWriteReview ? handlePressWriteReview : undefined}
       onPressShowMyReview={canShowMyReview ? handlePressShowMyReview : undefined}
-      onOpenChatRoom={canOpenChatRoom ? handleOpenChatRoom : undefined}
+      onOpenChatRoom={handleOpenChatRoom}
       isLoading={isLoading}
       navigation={navigation}
     />

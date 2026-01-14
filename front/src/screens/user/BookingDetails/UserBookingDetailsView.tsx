@@ -17,7 +17,7 @@ interface UserBookingDetailsViewProps {
   onPressViewPhotos?: () => void;
   onPressWriteReview?: () => void;
   onPressShowMyReview?: () => void;
-  onOpenChatRoom?: () => void;
+  onOpenChatRoom: () => void;
   isLoading?: boolean;
   navigation?: any;
 }
@@ -70,20 +70,18 @@ export default function UserBookingDetailsView({
         <Description name="촬영 장소" value={region === '' || region === null ? '선택 안함' : region} />
         {additionalRequest !== '' && <Description name="요청 사항" value={additionalRequest} />}
       </InfoContainer>
-      {onOpenChatRoom && (
-        <ViewPhotosButton onPress={onOpenChatRoom}>
-          <Typography
-            fontSize={16}
-            fontWeight="semiBold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#000"
-          >
-            채팅 하기
-          </Typography>
-          <Icon width={24} height={24} Svg={ArrowRightIcon} />
-        </ViewPhotosButton>
-      )}
+      <ViewPhotosButton onPress={onOpenChatRoom}>
+        <Typography
+          fontSize={16}
+          fontWeight="semiBold"
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          color="#000"
+        >
+          채팅 하기
+        </Typography>
+        <Icon width={24} height={24} Svg={ArrowRightIcon} />
+      </ViewPhotosButton>
       {onPressViewPhotos && (
         <ViewPhotosButton onPress={onPressViewPhotos}>
           <Typography

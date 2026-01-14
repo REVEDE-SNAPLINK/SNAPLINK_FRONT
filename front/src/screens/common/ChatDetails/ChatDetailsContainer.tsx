@@ -87,6 +87,23 @@ export default function ChatDetailsContainer() {
   // Fetch chat room detail (nickname, profile image, blocked status)
   const { data: chatRoomDetail } = useChatRoomDetailQuery(roomId);
 
+  // Sync blocked status with QueryClient
+  useEffect(() => {
+    if (chatRoomDetail && roomId) {
+      const blockedRooms = queryClient.getQueryData<Set<number>>(chatQueryKeys.blockedRooms()) || new Set();
+
+      if (chatRoomDetail.blocked && !blockedRooms.has(roomId)) {
+        // Add to blocked list if blocked
+        blockedRooms.add(roomId);
+        queryClient.setQueryData(chatQueryKeys.blockedRooms(), new Set(blockedRooms));
+      } else if (!chatRoomDetail.blocked && blockedRooms.has(roomId)) {
+        // Remove from blocked list if unblocked
+        blockedRooms.delete(roomId);
+        queryClient.setQueryData(chatQueryKeys.blockedRooms(), new Set(blockedRooms));
+      }
+    }
+  }, [chatRoomDetail, roomId, queryClient]);
+
   // Fetch messages with infinite scroll
   const {
     data: messagesData,
@@ -563,7 +580,7 @@ export default function ChatDetailsContainer() {
         buttons: [
           { text: '취소', onPress: () => {}, type: 'cancel' },
           { text: '차단 해제', onPress: () => {
-            unblockMutate(opponentId, {
+            unblockMutate({ targetId: opponentId, roomId }, {
               onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
                 Alert.show({
@@ -586,14 +603,20 @@ export default function ChatDetailsContainer() {
         buttons: [
           { text: '취소', onPress: () => {}, type: 'cancel' },
           { text: '차단', onPress: () => {
-            blockMutate(opponentId, {
+            blockMutate({ targetId: opponentId, roomId }, {
               onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
                 Alert.show({
                   title: '차단 완료',
                   message: '해당 사용자가 차단되었습니다.',
                   buttons: [
-                    { text: '확인', onPress: () => {}}
+                    { text: '확인', onPress: () => {
+                      if (navigation.canGoBack()) {
+                        navigation.goBack();
+                      } else {
+                        navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+                      }
+                    }}
                   ]
                 });
               }

@@ -609,6 +609,7 @@ export default function PhotographerDetailsView({
       visible={isProfileInfoModalVisible}
       onClose={onCloseProfileInfoModal}
       minHeight={300}
+      showHeader={false}
     >
       <ProfileInfoSection>
         <Typography

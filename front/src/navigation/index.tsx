@@ -16,7 +16,7 @@ export const navigationRef = createNavigationContainerRef();
 const linking = {
   prefixes: [
     'snaplink://',
-    'https://link.snaplink.run/',
+    'https://link.snaplink.run',
   ],
   config: {
     screens: {
@@ -25,7 +25,7 @@ const linking = {
         screens: {
           Home: 'tab/:tab',
           PhotographerDetails: 'tab/home/photographer/:photographerId',
-          PostDetail: 'tab/home/photographer/:photographerId/portfolio/:postId',
+          PostDetail: 'tab/home/portfolio/:postId',
           ReviewDetails: 'tab/home/review/:reviewId',
           CommunityDetails: 'tab/community/post/:postId',
           ChatDetails: 'tab/chat/:roomId',
@@ -61,6 +61,9 @@ export const navigateByDeepLink = (url: string) => {
       routePath = routePath.replace('link.snaplink.run/', '');
     }
   }
+
+  // Remove leading slashes (snaplink:///tab/home -> tab/home)
+  routePath = routePath.replace(/^\/+/, '');
 
   console.log('📍 Route path:', routePath);
 
@@ -111,23 +114,21 @@ export const navigateByDeepLink = (url: string) => {
     screenName = 'ChatDetails';
     screenParams = { roomId: Number(remainingPath) };
   } else if (tab === 'home') {
-    // tab/home/photographer/:id or tab/home/photographer/:id/portfolio/:postId or tab/home/review/:id
+    // tab/home/photographer/:id or tab/home/portfolio/:postId or tab/home/review/:id
     const parts = remainingPath.split('/');
     const firstSegment = parts[0];
 
     if (firstSegment === 'photographer') {
-      if (parts.length === 2) {
-        // tab/home/photographer/:id
-        screenName = 'PhotographerDetails';
-        screenParams = { photographerId: parts[1] };
-      } else if (parts.length === 4 && parts[2] === 'portfolio') {
-        // tab/home/photographer/:id/portfolio/:postId
-        screenName = 'PostDetail';
-        screenParams = {
-          photographerId: parts[1],
-          postId: Number(parts[3])
-        };
-      }
+      // tab/home/photographer/:id
+      screenName = 'PhotographerDetails';
+      screenParams = { photographerId: parts[1] };
+    } else if (firstSegment === 'portfolio') {
+      // tab/home/portfolio/:postId?profileImageURI=...
+      screenName = 'PostDetail';
+      screenParams = {
+        postId: Number(parts[1]),
+        profileImageURI: params.profileImageURI || '',
+      };
     } else if (firstSegment === 'review') {
       // tab/home/review/:id
       screenName = 'ReviewDetails';

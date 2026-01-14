@@ -63,7 +63,7 @@ export default function BookingManageContainer() {
   const handlePressConfirmBooking = async (bookingId: number) => {
     Alert.show({
       title: '현재 예약을 수락하겠습니까?',
-      message: '동일한 시간 접수된 다른 예약 촬 건은 자동으로 거절됩니다.',
+      message: '동일한 시간 접수된 다른 예약 촬영 건은 자동으로 거절됩니다.',
       buttons: [
         { text: '취소', onPress: () => {}, type: 'cancel' },
         {

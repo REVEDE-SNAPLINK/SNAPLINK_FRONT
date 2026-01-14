@@ -209,7 +209,6 @@ export default function PhotographerDetailsContainer() {
 
     navigation.navigate('PostDetail', {
       postId: id,
-      photographerId,
       profileImageURI: profileData?.profileImageUrl || ''
     });
   }, [navigation, profileData, photographerId, userId, userType]);

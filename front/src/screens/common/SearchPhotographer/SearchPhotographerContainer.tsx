@@ -76,6 +76,7 @@ export default function SearchPhotographerContainer() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
   const [sortBy, setSortBy] = useState<SortByKey>('DEFAULT');
+  const [totalCount, setTotalCount] = useState(0);
 
   const filterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
@@ -139,7 +140,7 @@ export default function SearchPhotographerContainer() {
       maxPrice: null,
       minPrice: null,
       query: searchKey === '' ? null : searchKey,
-      sort: sortBy === "DEFAULT" ? "RECOMMENDED" : sortBy === "LATEST" ? "LATEST" : "REVIEW"
+      sort: sortBy === "DEFAULT" ? "RECOMMENDED" : sortBy === "LATEST" ? "LATEST" : sortBy === "HIGH_PRICE" ? "MAXPRICE" : sortBy === "LOW_PRICE" ? "MINPRICE" : "REVIEW"
     };
 
     selectedFilters.forEach((filter) => {
@@ -191,32 +192,23 @@ export default function SearchPhotographerContainer() {
     isFetchingNextPage,
     refetch,
     isRefetching,
-    isSuccess,
     isLoading,
     isError
   } = useSearchPhotographersInfiniteQuery(
-    { size: PAGE_SIZE,
-      sort: sortBy === 'HIGH_PRICE'
-      ? ['basePrice,desc']
-          : sortBy === 'LOW_PRICE'
-      ? ['basePrice,asc']
-            : []
-    },
+    { size: PAGE_SIZE },
     searchBody,
   );
-
-  useEffect(() => {
-    if (isSuccess) {
-      console.log("data", data);
-    }
-  }, [data, isSuccess]);
 
   /**
    * Flatten paginated data into single array
    */
   const photographers = data?.pages.flatMap((page) => page.content);
 
-  const totalCount = (data?.pages[0]?.numberOfElements ?? 0); // +1 for dummy data
+  useEffect(() => {
+    if (photographers) {
+      setTotalCount(photographers.length);
+    }
+  }, [photographers]);
 
   const handlePressBack = () => {
     navigation.goBack();

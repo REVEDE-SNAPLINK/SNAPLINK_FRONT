@@ -70,6 +70,9 @@ interface SearchPhotographerItemProps {
 const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
   const genderLabel = photographer.gender === 'MALE' ? '남성작가' : '여성작가';
 
+  const baseHour = ~~(photographer.baseTime / 60);
+  const baseMinute = photographer.baseTime % 60;
+
   return (
     <SearchPhotographerItemContainer>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
@@ -121,7 +124,7 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
             lineHeight="140%"
             letterSpacing="-2.5%"
           >
-            기본촬영/{photographer.baseTime}시간{' '}
+            기본촬영/{baseHour}시간{baseMinute > 0 ? ` ${baseMinute}분` : ''}{' '}
             {formatNumber(photographer.basePrice)}원
           </Typography>
         </PhotographerInfoWrapper>

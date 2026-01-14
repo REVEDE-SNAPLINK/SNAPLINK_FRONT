@@ -6,7 +6,7 @@ import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetPhotographerDayDetailResponse } from '@/api/schedules';
 import { formatTime } from '@/utils/format.ts';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import { Dimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -60,8 +60,7 @@ export default function BookingCalendarView({
 }: BookingCalendarViewProps) {
   const [containerHeight, setContainerHeight] = useState(0);
   const [defaultHeight, setDefaultHeight] = useState(0);
-  const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('DEFAULT');
-  const prevDateRef = useRef(selectedDate);
+  const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
 
   const bookings = useMemo(() => {
     if (!dayDetailData?.bookings) return [];
@@ -81,6 +80,7 @@ export default function BookingCalendarView({
   const hasPhotographerHoliday = dayDetailData?.holidayId !== null;
 
   const hasSchedules = bookings.length > 0 || personalSchedules.length > 0 || hasPublicHoliday || hasPhotographerHoliday;
+  const isDateSelected = selectedDate && selectedDate.trim() !== '';
 
   const sheetHeight = useSharedValue(0);
   const dragStartHeight = useSharedValue(0);
@@ -129,17 +129,13 @@ export default function BookingCalendarView({
     renderTypeSV.value = renderType;
   }, [renderType, renderTypeSV]);
 
-  // HIDDEN 상태에서 날짜 선택 시 DEFAULT로 전환
-  useEffect(() => {
-    // 1. 이전 날짜와 현재 날짜가 다를 때만 (즉, 사용자가 다른 날을 클릭했을 때만)
-    // 2. 현재 상태가 HIDDEN이라면 DEFAULT로 전환
-    if (prevDateRef.current !== selectedDate && renderType === 'HIDDEN') {
+  // 날짜 선택 핸들러 - HIDDEN 상태에서 날짜를 선택하면 DEFAULT로 전환
+  const handleSelectDate = (date: string) => {
+    if (renderType === 'HIDDEN') {
       setRenderType('DEFAULT');
     }
-
-    // 현재 날짜를 ref에 업데이트
-    prevDateRef.current = selectedDate;
-  }, [selectedDate, renderType]);
+    onSelectDate(date);
+  };
 
   const DRAG_DAMPING = 0.8;
 
@@ -197,6 +193,42 @@ export default function BookingCalendarView({
       }
     });
 
+  // HIDDEN 상태에서 캘린더 영역 드래그로 시트 올리기
+  const calendarPanGesture = Gesture.Pan()
+    .onBegin(() => {
+      // HIDDEN 상태일 때만 동작
+      if (renderTypeSV.value !== 'HIDDEN') return;
+      dragStartHeight.value = sheetHeight.value;
+    })
+    .onUpdate((e) => {
+      // HIDDEN 상태가 아니거나 위로 드래그가 아니면 무시
+      if (renderTypeSV.value !== 'HIDDEN' || e.translationY > 0) return;
+
+      const nextHeight = dragStartHeight.value - e.translationY * DRAG_DAMPING;
+      // DEFAULT 높이까지만 올라가도록 제한
+      sheetHeight.value = Math.min(defaultHeight, Math.max(0, nextHeight));
+    })
+    .onEnd((e) => {
+      // HIDDEN 상태가 아니면 무시
+      if (renderTypeSV.value !== 'HIDDEN') return;
+
+      const current = sheetHeight.value;
+      const velocity = e.velocityY;
+
+      const THRESHOLD = defaultHeight * 0.3;
+
+      // 위로 빠르게 드래그하거나 임계값을 넘으면 DEFAULT로 전환
+      if (velocity < -300 || current > THRESHOLD) {
+        sheetHeight.value = withTiming(defaultHeight, { duration: 250 }, () => {
+          renderTypeSV.value = 'DEFAULT';
+          runOnJS(setRenderType)('DEFAULT');
+        });
+      } else {
+        // 아니면 HIDDEN으로 되돌림
+        sheetHeight.value = withTiming(0, { duration: 250 });
+      }
+    });
+
   // renderType 변경 시 sheetHeight 애니메이션
   useEffect(() => {
     if (!containerHeight || !defaultHeight) return;
@@ -239,22 +271,24 @@ export default function BookingCalendarView({
 
   return (
     <Container
-      onLayout={(e) => {
+      onLayout={e => {
         setContainerHeight(e.nativeEvent.layout.height);
       }}
     >
-      <ScheduleCalendar
-        initialDate={`${currentYearMonth}-01`}
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        scheduleData={scheduleData}
-        onMonthChange={onMonthChange}
-        dayMarginBottom={dayMarginBottom}
-        containerHeight={containerHeight}
-      />
-      <BookingContentContainer
-        style={animatedStyle}
-      >
+      <GestureDetector gesture={calendarPanGesture}>
+        <View style={{ flex: 1 }}>
+          <ScheduleCalendar
+            initialDate={`${currentYearMonth}-01`}
+            selectedDate={selectedDate}
+            onSelectDate={handleSelectDate}
+            scheduleData={scheduleData}
+            onMonthChange={onMonthChange}
+            dayMarginBottom={dayMarginBottom}
+            containerHeight={containerHeight}
+          />
+        </View>
+      </GestureDetector>
+      <BookingContentContainer style={animatedStyle}>
         <GestureDetector gesture={panGesture}>
           <View>
             <BookingSlideBarWrapper>
@@ -262,7 +296,9 @@ export default function BookingCalendarView({
             </BookingSlideBarWrapper>
             <BookingContentHeader>
               <Typography fontSize={16} fontWeight="semiBold">
-                {formatDateToKorean(selectedDate)}
+                {isDateSelected
+                  ? formatDateToKorean(selectedDate)
+                  : '날짜를 선택해주세요'}
               </Typography>
             </BookingContentHeader>
           </View>
@@ -272,7 +308,16 @@ export default function BookingCalendarView({
             showsVerticalScrollIndicator={false}
             scrollEnabled={renderType === 'FULL'}
           >
-            {!hasSchedules ? (
+            {!isDateSelected ? (
+              <BookingItem disabled>
+                <BookingInfoWrapper>
+                  <BookingEmptyBar />
+                  <Typography fontSize={14} color="#AAA">
+                    날짜를 선택하면 일정을 확인할 수 있습니다
+                  </Typography>
+                </BookingInfoWrapper>
+              </BookingItem>
+            ) : !hasSchedules ? (
               <BookingItem disabled>
                 <BookingInfoWrapper>
                   <BookingEmptyBar />
@@ -293,12 +338,17 @@ export default function BookingCalendarView({
                     </BookingInfoWrapper>
                   </BookingItem>
                 )}
-                {bookings.map((booking) => (
-                  <BookingItem key={`booking-${booking.id}`} onPress={() => onPressBookingItem(booking.id)}>
+                {bookings.map(booking => (
+                  <BookingItem
+                    key={`booking-${booking.id}`}
+                    onPress={() => onPressBookingItem(booking.id)}
+                  >
                     <BookingInfoWrapper>
                       <BookingBar />
                       <Typography fontSize={14}>
-                        {booking.customerName}ㆍ{booking.productName}ㆍ{formatTime(booking.startTime)}~{formatTime(booking.endTime)}
+                        {booking.customerName}ㆍ{booking.productName}ㆍ
+                        {formatTime(booking.startTime)}~
+                        {formatTime(booking.endTime)}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
@@ -311,9 +361,7 @@ export default function BookingCalendarView({
                   <BookingItem onPress={onPressHoliday}>
                     <BookingInfoWrapper>
                       <PhotographerHolidayBar />
-                      <Typography fontSize={14}>
-                        휴가
-                      </Typography>
+                      <Typography fontSize={14}>휴가</Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
                       <Typography fontSize={11}>상세보기</Typography>
@@ -321,12 +369,16 @@ export default function BookingCalendarView({
                   </BookingItem>
                 )}
 
-                {personalSchedules.map((schedule) => (
-                  <BookingItem key={`schedule-${schedule.id}`} onPress={() => onPressPersonalSchedule(schedule.id)}>
+                {personalSchedules.map(schedule => (
+                  <BookingItem
+                    key={`schedule-${schedule.id}`}
+                    onPress={() => onPressPersonalSchedule(schedule.id)}
+                  >
                     <BookingInfoWrapper>
                       <PersonalScheduleBar />
                       <Typography fontSize={14}>
-                        {schedule.title}ㆍ{formatTime(schedule.startTime)}~{formatTime(schedule.endTime)}
+                        {schedule.title}ㆍ{formatTime(schedule.startTime)}~
+                        {formatTime(schedule.endTime)}
                       </Typography>
                     </BookingInfoWrapper>
                     <BookingDetailButton>
@@ -339,14 +391,18 @@ export default function BookingCalendarView({
           </BookingContentScrollView>
         </BookingContent>
         <Animated.View style={floatingAnimatedStyle} pointerEvents="box-none">
-          <ScheduleDDayBlock>
-            <Typography fontSize={14} fontWeight="bold">
-              {dDayText}
-            </Typography>
-          </ScheduleDDayBlock>
-          <FloatingButton onPress={onPressAddSchedule}>
-            <Icon width={20} height={20} Svg={CrossIcon} />
-          </FloatingButton>
+          {isDateSelected &&
+            <>
+              <ScheduleDDayBlock>
+                <Typography fontSize={14} fontWeight="bold">
+                  {dDayText}
+                </Typography>
+              </ScheduleDDayBlock>
+              <FloatingButton onPress={onPressAddSchedule}>
+                <Icon width={20} height={20} Svg={CrossIcon} />
+              </FloatingButton>
+            </>
+          }
         </Animated.View>
       </BookingContentContainer>
     </Container>

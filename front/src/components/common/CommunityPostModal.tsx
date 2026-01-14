@@ -358,7 +358,7 @@ export default function CommunityPostModal({
   }, [content, taggedUserId, taggedNickname]);
 
   const handleSubmit = () => {
-    if (!selectedCategory || !content.trim()) {
+    if (!selectedCategory) {
       // Show validation error
       return;
     }
@@ -372,14 +372,14 @@ export default function CommunityPostModal({
 
     onSubmit({
       category: selectedCategory,
-      content: submitContent,
+      content: submitContent || '',
       taggedUserIds: taggedUserId === '' ? [] : [taggedUserId],
       images,
       deletePhotoIds: initialPost ? deletedImageIndices : undefined,
     });
   };
 
-  const canSubmit = selectedCategory !== null && content.trim().length > 0;
+  const canSubmit = selectedCategory !== null;
 
   if (!visible) return null;
 
@@ -499,6 +499,7 @@ export default function CommunityPostModal({
         showHeader={false}
         scrollable={false}
         minHeight={SCREEN_HEIGHT * 0.8}
+        maxHeight={SCREEN_HEIGHT * 0.8}
       >
         <SearchHeaderWrapper>
           <SearchInputWrapper>

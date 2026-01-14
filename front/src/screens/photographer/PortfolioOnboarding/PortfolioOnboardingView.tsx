@@ -184,13 +184,13 @@ export default function PortfolioOnboardingView({
           />
         );
       case 5:
-        return <PortfolioOnboardingStep6 control={control} />;
+        return <PortfolioOnboardingStep6 control={control} scrollViewRef={scrollRef} />;
       case 6:
         return <PortfolioOnboardingStep7 control={control} onDeleteOption={onDeleteOption} />;
       case 7:
-        return <PortfolioOnboardingStep8 control={control} />;
+        return <PortfolioOnboardingStep8 control={control} scrollViewRef={scrollRef} />;
       case 8:
-        return <PortfolioOnboardingStep9 control={control} onToggleDay={onToggleDay} />;
+        return <PortfolioOnboardingStep9 control={control} onToggleDay={onToggleDay} scrollViewRef={scrollRef} />;
       default:
         return null;
     }
@@ -550,10 +550,12 @@ const PortfolioOnboardingStep5 = ({
 
 interface PortfolioOnboardingStep6Props {
   control: Control<PortfolioOnboardingFormData>;
+  scrollViewRef: React.RefObject<any>;
 }
 
 const PortfolioOnboardingStep6 = ({
   control,
+  scrollViewRef,
 }: PortfolioOnboardingStep6Props) => {
   // @ts-ignore
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
@@ -663,6 +665,7 @@ const PortfolioOnboardingStep6 = ({
                     const newValue = hour + (minute / 60);
                     onChange(newValue.toString());
                   }}
+                  scrollViewRef={scrollViewRef}
                 />
               </DurationDropdownWrapper>
               <DurationDropdownWrapper>
@@ -677,6 +680,7 @@ const PortfolioOnboardingStep6 = ({
                     onChange(newValue.toString());
                   }}
                   disabled={is6HoursOrMore}
+                  scrollViewRef={scrollViewRef}
                 />
               </DurationDropdownWrapper>
             </DurationWrapper>
@@ -700,6 +704,7 @@ const PortfolioOnboardingStep6 = ({
             options={['1명', '2명', '3명', '4명', '5명', '6명 이상']}
             value={value || undefined}
             onChange={onChange}
+            scrollViewRef={scrollViewRef}
           />
         )}
       />
@@ -932,10 +937,12 @@ const PortfolioOnboardingStep7 = ({
 
 interface PortfolioOnboardingStep8Props {
   control: Control<PortfolioOnboardingFormData>;
+  scrollViewRef: React.RefObject<any>;
 }
 
 const PortfolioOnboardingStep8 = ({
-  control
+  control,
+  scrollViewRef,
 }: PortfolioOnboardingStep8Props) => {
   const retouchingType = useWatch({ control, name: 'shootingProductEditingType' });
   const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
@@ -966,6 +973,7 @@ const PortfolioOnboardingStep8 = ({
             options={['얼굴 보정', '색감 보정', '얼굴, 색감 보정', '제공하지 않음']}
             value={value || undefined}
             onChange={onChange}
+            scrollViewRef={scrollViewRef}
           />
         )}
       />
@@ -988,6 +996,7 @@ const PortfolioOnboardingStep8 = ({
                 options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내', '7일 이상']}
                 value={value || undefined}
                 onChange={onChange}
+                scrollViewRef={scrollViewRef}
               />
             )}
           />
@@ -1008,6 +1017,7 @@ const PortfolioOnboardingStep8 = ({
                 options={['작가 선택', '고객 선택', '작가와 고객 함께 선택']}
                 value={value || undefined}
                 onChange={onChange}
+                scrollViewRef={scrollViewRef}
               />
             )}
           />
@@ -1051,11 +1061,13 @@ const days = [
 interface PortfolioOnboardingStep9Props {
   control: Control<PortfolioOnboardingFormData>;
   onToggleDay: (day: string) => void;
+  scrollViewRef: React.RefObject<any>;
 }
 
 const PortfolioOnboardingStep9 = ({
   control,
   onToggleDay,
+  scrollViewRef,
 }: PortfolioOnboardingStep9Props) => {
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, '0')}:00`
@@ -1145,6 +1157,7 @@ const PortfolioOnboardingStep9 = ({
                           [day]: { ...daySchedule, startTime: date }
                         });
                       }}
+                      scrollViewRef={scrollViewRef}
                     />
                   </TimeDropDownInputWrapper>
                   <TimeBarWrapper>
@@ -1164,6 +1177,7 @@ const PortfolioOnboardingStep9 = ({
                           [day]: { ...daySchedule, endTime: date }
                         });
                       }}
+                      scrollViewRef={scrollViewRef}
                     />
                   </TimeDropDownInputWrapper>
                 </TimeOptionWrapper>

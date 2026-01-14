@@ -9,8 +9,8 @@ const formatTime = (time: string) => {
 }
 
 const TimeWrapper = styled.TouchableOpacity<{ isSelected: boolean; isDisabled: boolean }>`
-  width: 57px;
-  height: 25px;
+  width: 59px;
+  height: 28px;
   border-radius: 5px;
   justify-content: center;
   align-items: center;
@@ -47,6 +47,7 @@ export const SelectTime = ({ isSelected, isDisabled, time, onPress }: SelectTime
 
 const TimeListWrapper = styled.View`
   width: 100%;
+  flex: 1;
   flex-direction: row;
   flex-wrap: wrap;
   margin-bottom: 15px;

@@ -4,10 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import PortfolioFormView, { PortfolioFormData } from './PortfolioFormView';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
 import { useCreatePortfolioMutation, useUpdatePortfolioMutation } from '@/mutations/photographers';
-import { Alert, requestPermission } from '@/components/theme';
-import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
-import { Image as ImageCompressor } from 'react-native-compressor';
-import { generateImageFilename } from '@/utils/format';
+import { Alert } from '@/components/theme';
 import { UploadImageFile } from '@/api/photographers';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
 import { usePortfolioPostQuery } from '@/queries/photographers';
@@ -77,66 +74,13 @@ export default function PortfolioFormContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handleRemoveImage = useCallback((index: number) => {
-    setPhotoURIs(prev => prev.filter((_, i) => i !== index));
-  }, []);
+    const newPhotoURIs = photoURIs.filter((_, i) => i !== index);
+    setPhotoURIs(newPhotoURIs);
+  }, [photoURIs]);
 
-  const handleAddImages = useCallback(() => {
-    requestPermission('photo', async () => {
-      try {
-        const result: ImagePickerResponse = await launchImageLibrary({
-          mediaType: 'photo',
-          selectionLimit: 0,
-          quality: 0.8,
-        });
-
-        if (result.didCancel) return;
-        if (result.errorCode) {
-          Alert.show({
-            title: '갤러리 오류',
-            message: result.errorMessage || '알 수 없는 오류',
-          });
-          return;
-        }
-
-        if (result.assets && result.assets.length > 0) {
-          const newImages: UploadImageFile[] = [];
-
-          for (const asset of result.assets) {
-            if (!asset.uri) continue;
-
-            try {
-              const compressed = await ImageCompressor.compress(asset.uri, {
-                compressionMethod: 'auto',
-                maxWidth: 1920,
-                maxHeight: 1920,
-                quality: 0.8,
-              });
-
-              newImages.push({
-                uri: compressed,
-                type: asset.type || 'image/jpeg',
-                name: generateImageFilename(),
-              });
-            } catch (err) {
-              console.error('Image compression failed:', err);
-              Alert.show({
-                title: '이미지 처리 실패',
-                message: '이미지 처리 중 오류가 발생했습니다.',
-              });
-            }
-          }
-
-          setPhotoURIs(prev => [...prev, ...newImages]);
-        }
-      } catch (err) {
-        console.error('Image picker error:', err);
-        Alert.show({
-          title: '이미지 선택 실패',
-          message: '이미지를 불러올 수 없습니다.',
-        });
-      }
-    });
-  }, []);
+  const handleAddImages = useCallback(async (newImages: UploadImageFile[]) => {
+    setPhotoURIs([...photoURIs, ...newImages]);
+  }, [photoURIs]);
 
   const handleSubmitForm = handleSubmit(async (data) => {
     if (photoURIs.length === 0) {

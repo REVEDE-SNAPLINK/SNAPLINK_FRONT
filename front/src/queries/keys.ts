@@ -174,6 +174,9 @@ export const chatQueryKeys = {
   blocks: () => [...chatQueryKeys.all, 'blocks'] as const,
   blockList: () => [...chatQueryKeys.blocks(), 'list'] as const,
   block: (targetId: string) => [...chatQueryKeys.blocks(), 'item', targetId] as const,
+
+  // blocked chat rooms list (roomIds)
+  blockedRooms: () => [...chatQueryKeys.all, 'blockedRooms'] as const,
 };
 
 // Schedules

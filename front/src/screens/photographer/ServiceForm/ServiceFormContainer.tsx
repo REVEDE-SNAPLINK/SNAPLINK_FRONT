@@ -55,6 +55,13 @@ export default function ServiceFormContainer() {
   const updateOptionMutation = useUpdateShootingOptionMutation();
   const deleteOptionMutation = useDeleteShootingOptionMutation();
 
+  const isAnyMutationPending =
+    createShootingMutation.isPending ||
+    updateShootingMutation.isPending ||
+    createOptionMutation.isPending ||
+    updateOptionMutation.isPending ||
+    deleteOptionMutation.isPending;
+
   const {
     control,
     handleSubmit,
@@ -467,7 +474,7 @@ export default function ServiceFormContainer() {
       errors={errors}
       onPressBack={handlePressBack}
       onPressSubmit={handlePressSubmit}
-      isSubmitDisabled={!isStepValid}
+      isSubmitDisabled={!isStepValid || isAnyMutationPending}
       submitButtonText={submitButtonText}
       onDeleteOption={handleDeleteOption}
       isEditMode={isEditMode}

@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Control, Controller, useWatch } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled.ts';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import { SubmitButton, Typography } from '@/components/theme';
-import { Platform } from 'react-native';
+import { Platform, ScrollView } from 'react-native';
 import Checkbox from '@/components/theme/Checkbox';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 
@@ -45,6 +45,8 @@ export default function ScheduleFormView({
   submitButtonText = '저장하기',
   navigation,
 }: ScheduleFormViewProps) {
+  const scrollViewRef = useRef<any>(null);
+
   const timeOptions = useMemo(
     () => Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`),
     []
@@ -69,10 +71,12 @@ export default function ScheduleFormView({
     
       navigation={navigation}>
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer
+        <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
           scrollEventThrottle={16}
+          style={{ flex: 1, width: '100%', paddingBottom: 120 }}
         >
           <FormContainer>
             <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -163,6 +167,7 @@ export default function ScheduleFormView({
                                   },
                                 });
                               }}
+                              scrollViewRef={scrollViewRef}
                             />
                           </TimeDropDownInputWrapper>
 
@@ -193,6 +198,7 @@ export default function ScheduleFormView({
                                 });
                               }}
                               disabled={!startTime}
+                              scrollViewRef={scrollViewRef}
                             />
                           </TimeDropDownInputWrapper>
                         </TimeOptionWrapper>
@@ -205,7 +211,7 @@ export default function ScheduleFormView({
 
             <ScrollViewSpacer />
           </FormContainer>
-        </ScrollContainer>
+        </ScrollView>
 
         {/* Footer 고정 */}
         <Footer>
@@ -225,12 +231,6 @@ export default function ScheduleFormView({
 const KeyboardFormView = styled.KeyboardAvoidingView`
   flex: 1;
   width: 100%;
-`;
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 120px;
 `;
 
 const FormContainer = styled.View`

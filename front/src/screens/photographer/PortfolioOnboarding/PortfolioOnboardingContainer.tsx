@@ -76,12 +76,11 @@ export default function PortfolioOnboardingContainer() {
 
   const { mutate: uploadProfile } = usePatchUserProfileImageMutation();
   const { mutate: uploadPortfolio } = useCreatePortfolioMutation();
-  const { mutate: signPhotographer } = useSignPhotographerMutation();
+  const { mutate: signPhotographer, isPending: isSigningPhotographer } = useSignPhotographerMutation();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [profileImageURI, setProfileImageURI] = useState<UploadImageFile | undefined>(undefined);
   const [photoURIs, setPhotoURIs] = useState<UploadImageFile[]>([]);
-  const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
   const [pendingNextStep, setPendingNextStep] = useState<null | 2 | 3 | 4>(null);
 
   // Load profile image from getMe on mount
@@ -152,13 +151,7 @@ export default function PortfolioOnboardingContainer() {
           return profileImageURI !== undefined && watchedDescription.trim() !== '';
         case 1:
           // Step2: 포트폴리오 사진 (최소 1장), 커뮤니티 게시 체크 시 제목/내용 필수
-          const hasPhotos = photoURIs.length >= 1;
-          const hasTitleAndDescription = watchedPortfolioDescription.trim() !== '';
-
-          if (watchedPortfolioIsLinked) {
-            return hasPhotos && hasTitleAndDescription;
-          }
-          return hasPhotos && hasTitleAndDescription;
+          return photoURIs.length >= 1;
         case 2:
           // Step3: 활동 지역 (최소 1개)
           return watchedRegionIds.length >= 1;
@@ -229,8 +222,6 @@ export default function PortfolioOnboardingContainer() {
       profileImageURI,
       photoURIs,
       watchedDescription,
-      watchedPortfolioDescription,
-      watchedPortfolioIsLinked,
       watchedRegionIds,
       watchedTagIds,
       watchedConceptIds,
@@ -252,13 +243,7 @@ export default function PortfolioOnboardingContainer() {
       case 0:
         return profileImageURI !== undefined && watchedDescription.trim() !== '';
       case 1: {
-        const hasPhotos = photoURIs.length >= 1;
-        const hasTitleAndDescription = watchedPortfolioDescription.trim() !== '';
-
-        if (watchedPortfolioIsLinked) {
-          return hasPhotos && hasTitleAndDescription;
-        }
-        return hasPhotos && hasTitleAndDescription;
+        return photoURIs.length >= 1;
       }
       case 2:
         return watchedRegionIds.length >= 1;
@@ -324,8 +309,6 @@ export default function PortfolioOnboardingContainer() {
     profileImageURI,
     photoURIs,
     watchedDescription,
-    watchedPortfolioDescription,
-    watchedPortfolioIsLinked,
     watchedRegionIds,
     watchedTagIds,
     watchedConceptIds,
@@ -489,7 +472,7 @@ export default function PortfolioOnboardingContainer() {
       // Upload portfolio if there are photos
       if (photoURIs.length >= 1) {
         uploadPortfolio({
-          content: watchedPortfolioDescription,
+          content: watchedPortfolioDescription || '',
           isLinked: watchedPortfolioIsLinked,
           images: photoURIs
         });
@@ -775,16 +758,12 @@ export default function PortfolioOnboardingContainer() {
 
   const handleRemoveImage = useCallback((index: number) => {
     const newPhotoURIs = photoURIs.filter((_, i) => i !== index);
-    const newCheckedImages = checkedImages.filter((_, i) => i !== index);
     setPhotoURIs(newPhotoURIs);
-    setCheckedImages(newCheckedImages);
-  }, [photoURIs, checkedImages]);
+  }, [photoURIs]);
 
   const handleAddImages = useCallback(async (newImages: UploadImageFile[]) => {
-    console.log(newImages);
     setPhotoURIs([...photoURIs, ...newImages]);
-    setCheckedImages([...checkedImages, ...Array(newImages.length).fill(false)]);
-  }, [photoURIs, checkedImages]);
+  }, [photoURIs]);
 
   const handleToggleRegion = useCallback((id: number) => {
     setValue(
@@ -839,7 +818,7 @@ export default function PortfolioOnboardingContainer() {
       onPressBack={handlePressBack}
       onPressClose={handlePressClose}
       onPressSubmit={handlePressSubmit}
-      isSubmitDisabled={!isStepValid}
+      isSubmitDisabled={!isStepValid || isSigningPhotographer}
       submitButtonText={submitButtonText}
       progress={progress}
       profileImageURI={profileImageURI?.uri || ''}

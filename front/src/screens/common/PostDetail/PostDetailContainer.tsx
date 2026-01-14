@@ -39,8 +39,12 @@ export default function PostDetailContainer() {
   }, [post, postId, userId, userType]);
 
   const handlePressBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.reset({ index: 1, routes: [{ name: 'Home' }, { name: 'PhotographerDetails', params: { photographerId: post?.photographerId ?? '' } }] });
+    }
+  }, [navigation, post]);
 
   const handlePressMore = () => {
     setIsMoreModalVisible(true);
@@ -101,9 +105,11 @@ export default function PostDetailContainer() {
   }
 
   const handleSharePost = () => {
+    const params = new URLSearchParams();
+    params.append('profileImageURI', profileImageURI);
     if (post) {
       Share.share({
-        message: `${post.content.substring(0, 10)+"..."}\nhttps://link.snaplink.run/tab/home/photographer/${post.photographerId}/portfolio/${postId}`,
+        message: `${post.content.substring(0, 10)+"..."}\nhttps://link.snaplink.run/tab/home/portfolio/${postId}?${params}`,
       });
     }
   }

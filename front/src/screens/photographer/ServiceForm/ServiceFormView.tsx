@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Control, FieldErrors, Controller, useWatch } from 'react-hook-form';
 import Animated, {
   useSharedValue,
@@ -59,6 +59,7 @@ export default function ServiceFormView({
   isEditMode,
   navigation,
 }: ServiceFormViewProps) {
+  const scrollViewRef = useRef<any>(null);
   const opacity = useSharedValue(1);
 
   useEffect(() => {
@@ -76,11 +77,11 @@ export default function ServiceFormView({
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <ServiceFormStep1 control={control} />;
+        return <ServiceFormStep1 control={control} scrollViewRef={scrollViewRef} />;
       case 1:
         return <ServiceFormStep2 control={control} onDeleteOption={onDeleteOption} isEditMode={isEditMode} />;
       case 2:
-        return <ServiceFormStep3 control={control} />;
+        return <ServiceFormStep3 control={control} scrollViewRef={scrollViewRef} />;
       default:
         return null;
     }
@@ -95,11 +96,15 @@ export default function ServiceFormView({
       navigation={navigation}
     >
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer showsVerticalScrollIndicator={false}>
+        <ScrollView
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1, width: '100%', paddingBottom: 100 }}
+        >
           <AnimatedFormContainer style={animatedStyle}>
             {renderStep()}
           </AnimatedFormContainer>
-        </ScrollContainer>
+        </ScrollView>
       </KeyboardFormView>
       <Footer>
         <SubmitButton
@@ -119,12 +124,6 @@ const KeyboardFormView = styled.KeyboardAvoidingView`
   width: 100%;
 `;
 
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 100px;
-`;
-
 const AnimatedFormContainer = styled(Animated.View)`
   flex: 1;
   width: 100%;
@@ -132,10 +131,12 @@ const AnimatedFormContainer = styled(Animated.View)`
 
 interface ServiceFormStep1Props {
   control: Control<ServiceFormData>;
+  scrollViewRef: React.RefObject<any>;
 }
 
 const ServiceFormStep1 = ({
   control,
+  scrollViewRef,
 }: ServiceFormStep1Props) => {
   return (
     <>
@@ -240,6 +241,7 @@ const ServiceFormStep1 = ({
                     const newValue = hour + (minute / 60);
                     onChange(newValue.toString());
                   }}
+                  scrollViewRef={scrollViewRef}
                 />
               </DurationDropdownWrapper>
               <DurationDropdownWrapper>
@@ -254,6 +256,7 @@ const ServiceFormStep1 = ({
                     onChange(newValue.toString());
                   }}
                   disabled={is6HoursOrMore}
+                  scrollViewRef={scrollViewRef}
                 />
               </DurationDropdownWrapper>
             </DurationWrapper>
@@ -277,6 +280,7 @@ const ServiceFormStep1 = ({
             options={['1명', '2명', '3명', '4명', '5명', '6명 이상']}
             value={value || undefined}
             onChange={onChange}
+            scrollViewRef={scrollViewRef}
           />
         )}
       />
@@ -562,10 +566,12 @@ const ServiceFormStep2 = ({
 
 interface ServiceFormStep3Props {
   control: Control<ServiceFormData>;
+  scrollViewRef: React.RefObject<any>;
 }
 
 const ServiceFormStep3 = ({
-  control
+  control,
+  scrollViewRef,
 }: ServiceFormStep3Props) => {
   const retouchingType = useWatch({ control, name: 'retouchingType' });
   const showRetouchingDetails = retouchingType && retouchingType !== '제공하지 않음';
@@ -595,6 +601,7 @@ const ServiceFormStep3 = ({
               options={['얼굴 보정', '색감 보정', '얼굴, 색감 보정', '제공하지 않음']}
               value={value || undefined}
               onChange={onChange}
+              scrollViewRef={scrollViewRef}
             />
           )}
         />
@@ -617,6 +624,7 @@ const ServiceFormStep3 = ({
                   options={['당일 보정', '2일 이내', '3일 이내', '4일 이내', '5일 이내', '7일 이내', '7일 이상']}
                   value={value || undefined}
                   onChange={onChange}
+                  scrollViewRef={scrollViewRef}
                 />
               )}
             />
@@ -637,6 +645,7 @@ const ServiceFormStep3 = ({
                   options={['작가 선택', '고객 선택', '작가와 고객 함께 선택']}
                   value={value || undefined}
                   onChange={onChange}
+                  scrollViewRef={scrollViewRef}
                 />
               )}
             />

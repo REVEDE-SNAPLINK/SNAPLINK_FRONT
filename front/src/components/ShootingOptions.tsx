@@ -62,8 +62,8 @@ export const ShootingProduct = ({ isChecked, isDisabled = false, onPress, produc
  * Quantity Input Component
  */
 const QuantityInputWrapper = styled.View`
-  width: 79.1px;
-  height: 31px;
+  width: 90px;
+  height: 35px;
   border-radius: 5px;
   flex-direction: row;
   align-items: center;
@@ -75,7 +75,7 @@ const QuantityInputWrapper = styled.View`
 const ChangeQuantityButton = styled.TouchableOpacity`
   justify-content: center;
   align-items: center;
-  width: 20px;
+  width: 30px;
   height: 100%;
 `;
 
@@ -90,7 +90,7 @@ export const QuantityInput = ({ quantity, onChange, maxQuantity = 100 }: Quantit
     <QuantityInputWrapper>
       <ChangeQuantityButton onPress={() => onChange(Math.max(0, quantity - 1))} disabled={quantity === 0}>
         <Typography
-          fontSize={11}
+          fontSize={14}
           lineHeight="100%"
           fontWeight="bold"
           color={quantity === 0 ? theme.colors.disabled : theme.colors.textPrimary}
@@ -103,7 +103,7 @@ export const QuantityInput = ({ quantity, onChange, maxQuantity = 100 }: Quantit
       </Typography>
       <ChangeQuantityButton onPress={() => onChange(Math.min(maxQuantity, quantity + 1))} disabled={quantity === maxQuantity}>
         <Typography
-          fontSize={11}
+          fontSize={14}
           fontWeight="bold"
           lineHeight="100%"
           color={quantity === maxQuantity ? theme.colors.disabled : theme.colors.textPrimary}

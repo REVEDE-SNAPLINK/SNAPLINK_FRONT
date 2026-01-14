@@ -33,9 +33,7 @@ export default function BookingCalendarContainer() {
   const deletePersonalSchedule = useDeletePersonalScheduleMutation();
 
   // Current date and selected date state
-  const [selectedDate, setSelectedDate] = useState<string>(() => {
-    return new Date().toISOString().split('T')[0];
-  });
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   // Deep link date mapping effect
   useEffect(() => {

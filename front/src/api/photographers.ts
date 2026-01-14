@@ -249,7 +249,7 @@ export interface SearchPhotographersBody {
   maxPrice: number | null;
   minPrice: number | null;
   query: string | null;
-  sort: "RECOMMENDED" | "LATEST" | "REVIEW"
+  sort: "RECOMMENDED" | "LATEST" | "REVIEW" | "MAXPRICE" | "MINPRICE";
 }
 
 export interface PhotographerSearchItem {

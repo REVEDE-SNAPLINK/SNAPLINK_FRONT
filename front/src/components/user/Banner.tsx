@@ -65,16 +65,27 @@ export default function Banner({
     const timer = setInterval(() => {
       if (!isManualScrolling.current) {
         const nextIndex = currentIndex + 1;
-        flatListRef.current?.scrollToIndex({
-          index: nextIndex,
-          animated: true,
-        });
-        setCurrentIndex(nextIndex);
+
+        // Check if nextIndex exceeds the bounds of infiniteItems
+        if (nextIndex >= infiniteItems.length) {
+          // Reset to first real item (index 1)
+          flatListRef.current?.scrollToIndex({
+            index: 1,
+            animated: false,
+          });
+          setCurrentIndex(1);
+        } else {
+          flatListRef.current?.scrollToIndex({
+            index: nextIndex,
+            animated: true,
+          });
+          setCurrentIndex(nextIndex);
+        }
       }
     }, autoPlayInterval);
 
     return () => clearInterval(timer);
-  }, [autoPlay, autoPlayInterval, items.length, currentIndex]);
+  }, [autoPlay, autoPlayInterval, items.length, currentIndex, infiniteItems.length]);
 
   const handleScrollBeginDrag = () => {
     isManualScrolling.current = true;

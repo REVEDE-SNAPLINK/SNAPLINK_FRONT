@@ -56,13 +56,13 @@ export default function PhotographerBookingDetailsContainer() {
         region=""
         additionalRequest=""
         isLoading={isLoading}
+        onOpenChatRoom={() => {}}
       navigation={navigation}
     />
     );
   }
 
   const canViewPhotos = bookingDetails.status === 'COMPLETED' || bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
-  const canOpenChatRoom = bookingDetails.status !== 'WAITING_FOR_APPROVAL' && bookingDetails.status !== 'CANCELLED' && bookingDetails.status !== 'REJECTED';
 
   return (
     <PhotographerBookingDetailsView
@@ -73,7 +73,7 @@ export default function PhotographerBookingDetailsContainer() {
       region={bookingDetails.region}
       additionalRequest={bookingDetails.requestDetails}
       onPressViewPhotos={canViewPhotos ? handlePressViewPhotos : undefined}
-      onOpenChatRoom={canOpenChatRoom ? handleOpenChatRoom : undefined}
+      onOpenChatRoom={handleOpenChatRoom}
       isLoading={isLoading}
       navigation={navigation}
     />

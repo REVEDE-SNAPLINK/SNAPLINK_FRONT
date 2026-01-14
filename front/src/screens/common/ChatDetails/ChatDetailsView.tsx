@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { FlatList, Dimensions, Modal, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { useState, useRef } from 'react';
+import { FlatList, Dimensions, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
@@ -18,8 +18,10 @@ import SlideModal from '@/components/theme/SlideModal.tsx';
 import ServerImage from '@/components/ServerImage.tsx';
 import FileDownloadButton from '@/components/FileDownloadButton.tsx';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
-import DownloadIcon from '@/assets/icons/download.svg';
+import DownloadIcon from '@/assets/icons/download-white.svg';
 import { UserType } from '@/types/auth.ts';
+import ChatWhiteIcon from '@/assets/icons/chat-white.svg';
+import ChatBlackIcon from '@/assets/icons/chat-black.svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -103,6 +105,7 @@ export default function ChatDetailsView({
   navigation,
 }: ChatDetailsViewProps) {
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const [showRecommandationMessages, setShowRecommandationMessages] = useState(false);
   const [inputHeight, setInputHeight] = useState(40);
   const scrollRef = useRef<any>(null);
 
@@ -114,7 +117,6 @@ export default function ChatDetailsView({
   const hasInputValue = messageInput.trim().length > 0;
 
   const scrollToBottom = () => {
-    // animated: true를 주어 부드럽게 이동
     scrollRef.current?.scrollToEnd({ animated: true });
   };
 
@@ -283,18 +285,6 @@ export default function ChatDetailsView({
     }
   };
 
-  useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => {
-      requestAnimationFrame(() => {
-        if (scrollRef.current?.scrollToEnd) {
-          scrollRef.current.scrollToEnd({ animated: true });
-        }
-      });
-    });
-    return () => {
-      showSub.remove();
-    };
-  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -372,7 +362,7 @@ export default function ChatDetailsView({
         {!isBlocked &&
           <InputContainer>
             {/* 추천 메시지 버튼들 */}
-            {hasRecommendedMessages && (
+            {showRecommandationMessages && hasRecommendedMessages && (
               <RecommendedMessagesContainer>
                 {recommendedMessages.slice(0, 8).map((msg, index) => (
                   <RecommendedMessageButton
@@ -395,7 +385,7 @@ export default function ChatDetailsView({
               >
                 <Icon width={20} height={20} Svg={CrossBlackIcon} />
               </CrossButton>
-              <MessageInputWrapper hasInputValue={hasInputValue} height={inputHeight}>
+              <MessageInputWrapper hasInputValue={hasInputValue}>
                 <MessageInput
                   height={inputHeight}
                   value={messageInput}
@@ -410,13 +400,6 @@ export default function ChatDetailsView({
                     );
                   }}
                   multiline
-                  onFocus={() => {
-                    requestAnimationFrame(() => {
-                      if (scrollRef.current?.scrollToEnd) {
-                        scrollRef.current.scrollToEnd({ animated: true });
-                      }
-                    });
-                  }}
                 />
                 <IconButton
                   width={20}
@@ -433,18 +416,26 @@ export default function ChatDetailsView({
               <ExtraButtonsContainer>
                 <ExtraButtonWrapper onPress={onPressAlbum}>
                   <ExtraButton>
-                    <Icon width={24} height={24} Svg={ImageIcon} />
+                    <Icon width={30} height={30} Svg={ImageIcon} />
                   </ExtraButton>
-                  <Typography fontSize={9} color="#000" lineHeight={20}>
+                  <Typography fontSize={12} color="#000" lineHeight={20}>
                     앨범
                   </Typography>
                 </ExtraButtonWrapper>
                 <ExtraButtonWrapper onPress={onPressFile}>
                   <ExtraButton>
-                    <Icon width={24} height={24} Svg={PaperPlusIcon} />
+                    <Icon width={30} height={30} Svg={PaperPlusIcon} />
                   </ExtraButton>
-                  <Typography fontSize={9} color="#000" lineHeight={20}>
+                  <Typography fontSize={12} color="#000" lineHeight={20}>
                     파일
+                  </Typography>
+                </ExtraButtonWrapper>
+                <ExtraButtonWrapper onPress={() => setShowRecommandationMessages(!showRecommandationMessages)}>
+                  <ExtraButton isChecked={showRecommandationMessages}>
+                    <Icon width={30} height={30} Svg={showRecommandationMessages ? ChatWhiteIcon : ChatBlackIcon} />
+                  </ExtraButton>
+                  <Typography fontSize={12} color="#000" lineHeight={20}>
+                    추천 메시지
                   </Typography>
                 </ExtraButtonWrapper>
               </ExtraButtonsContainer>
@@ -528,7 +519,7 @@ export default function ChatDetailsView({
             keyExtractor={(item: string, index: number) => `preview-${index}`}
             renderItem={({ item }: { item: string }) => (
               <ImagePreviewWrapper>
-                <PreviewImage uri={item} />
+                <PreviewImage uri={item} resizeMode="contain" />
               </ImagePreviewWrapper>
             )}
             initialScrollIndex={
@@ -609,11 +600,11 @@ const ExtraButtonWrapper = styled.TouchableOpacity`
   margin-right: 35px;
 `
 
-const ExtraButton = styled.View`
-  background-color: #EEEEEE;
-  width: 40px;
-  height: 40px;
-  border-radius: 40px;
+const ExtraButton = styled.View<{ isChecked?: boolean }>`
+  ${({ isChecked }) => `background-color: ${isChecked ? theme.colors.primary : "#EEEEEE"}`};
+  width: 45px;
+  height: 45px;
+  border-radius: 45px;
   margin-bottom: 3px;
   justify-content: center;
   align-items: center;
@@ -634,13 +625,12 @@ const CrossButton = styled.TouchableOpacity<{ showExtraButtons: boolean }>`
   transform: ${({ showExtraButtons }) => showExtraButtons ? 'rotate(45deg)' : 'rotate(0deg)'};
 `;
 
-const MessageInputWrapper = styled.View<{ hasInputValue: boolean, height: number }>`
+const MessageInputWrapper = styled.View<{ hasInputValue: boolean }>`
   flex: 1;
   flex-direction: row;
   padding-horizontal: 12px;
   border: 1px solid ${({ hasInputValue }) => hasInputValue ? theme.colors.primary : theme.colors.disabled};
   border-radius: 8px;
-  height: ${({ height }) => height}px;
   align-items: center;
 `;
 
@@ -651,7 +641,7 @@ const MessageInput = styled.TextInput<{ height: number }>`
   font-family: Pretendard-Regular;
   margin-right: 10px;
   padding-top: 10px;
-  height: 100%;
+  height: ${({ height }) => height}px;
 `;
 
 // 메시지 스타일

@@ -14,7 +14,7 @@ interface PhotographerBookingDetailsViewProps {
   region: string;
   additionalRequest: string;
   onPressViewPhotos?: () => void;
-  onOpenChatRoom?: () => void;
+  onOpenChatRoom: () => void;
   isLoading?: boolean;
   navigation?: any;
 }
@@ -69,7 +69,18 @@ export default function PhotographerBookingDetailsView({
         />
         {additionalRequest !== '' && <Description name="요청 사항" value={additionalRequest} />}
       </InfoContainer>
-
+      <ViewPhotosButton onPress={onOpenChatRoom}>
+        <Typography
+          fontSize={16}
+          fontWeight="semiBold"
+          lineHeight="140%"
+          letterSpacing="-2.5%"
+          color="#000"
+        >
+          채팅하기
+        </Typography>
+        <Icon width={24} height={24} Svg={ArrowRightIcon} />
+      </ViewPhotosButton>
       {onPressViewPhotos && (
         <ViewPhotosButton onPress={onPressViewPhotos}>
           <Typography
@@ -80,20 +91,6 @@ export default function PhotographerBookingDetailsView({
             color="#000"
           >
             촬영 사진 관리
-          </Typography>
-          <Icon width={24} height={24} Svg={ArrowRightIcon} />
-        </ViewPhotosButton>
-      )}
-      {onOpenChatRoom && (
-        <ViewPhotosButton onPress={onOpenChatRoom}>
-          <Typography
-            fontSize={16}
-            fontWeight="semiBold"
-            lineHeight="140%"
-            letterSpacing="-2.5%"
-            color="#000"
-          >
-            채팅하기
           </Typography>
           <Icon width={24} height={24} Svg={ArrowRightIcon} />
         </ViewPhotosButton>

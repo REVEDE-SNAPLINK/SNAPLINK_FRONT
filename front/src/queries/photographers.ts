@@ -175,6 +175,8 @@ export const usePhotographerStatusQuery = (options?: { enabled?: boolean }) =>
     queryKey: photographersQueryKeys.statusMe(),
     queryFn: () => getStatusMe(),
     ...options,
+    enabled: options?.enabled,
+    refetchOnWindowFocus: true,
   });
 
 /** 작가 지역, 컨셉, 태그 조회 */

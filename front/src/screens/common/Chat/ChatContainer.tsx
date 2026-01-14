@@ -9,7 +9,7 @@ export default function ChatContainer() {
   // Fetch chat rooms
   const { data: chatRooms = [] } = useChatRoomsQuery();
 
-  const handlePressChatRoom = (roomId: number, opponentNickname: string, opponentProfileImageURI: string) => {
+  const handlePressChatRoom = (roomId: number) => {
     navigation.navigate('ChatDetails', { roomId });
   };
 

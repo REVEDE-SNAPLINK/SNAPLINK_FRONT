@@ -7,9 +7,9 @@ import PhotographerBookingDetailsContainer from '@/screens/photographer/BookingD
  * based on user type (user vs photographer)
  */
 export default function BookingDetailsContainer() {
-  const userType = useAuthStore((state) => state.userType);
+  const { userType, isExpertMode } = useAuthStore();
 
-  if (userType === 'photographer') {
+  if (userType === 'photographer' && isExpertMode) {
     return <PhotographerBookingDetailsContainer />;
   }
 

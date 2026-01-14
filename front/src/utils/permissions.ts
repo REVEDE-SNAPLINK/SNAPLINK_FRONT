@@ -17,6 +17,12 @@ import {
 } from '@/constants/permissions';
 
 /**
+ * 앱 이름 (설정 안내용)
+ * iOS 설정 경로 안내에 사용됨
+ */
+const APP_NAME = 'Snaplink';
+
+/**
  * 권한 상태
  */
 export type PermissionStatus =
@@ -25,6 +31,28 @@ export type PermissionStatus =
   | 'blocked'
   | 'unavailable'
   | 'limited';
+
+/**
+ * Android 버전별 사진 권한 가져오기
+ * - Android 13+ (API 33+): READ_MEDIA_IMAGES
+ * - Android 12 이하 (API 32-): READ_EXTERNAL_STORAGE
+ */
+const getAndroidPhotoPermission = (): Permission => {
+  if (Platform.OS !== 'android') {
+    return PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE; // fallback (실제로는 사용되지 않음)
+  }
+
+  const androidVersion = Platform.Version as number;
+  console.log('[Permission] Android version:', androidVersion);
+
+  // Android 13+ (API 33+)
+  if (androidVersion >= 33) {
+    return PERMISSIONS.ANDROID.READ_MEDIA_IMAGES;
+  }
+
+  // Android 12 이하 (API 32-)
+  return PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+};
 
 /**
  * 플랫폼별 권한 매핑
@@ -38,7 +66,7 @@ const PERMISSION_MAP: Record<PermissionType, Permission | null> = {
   })!,
   photo: Platform.select({
     ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
-    android: PERMISSIONS.ANDROID.READ_MEDIA_IMAGES,
+    android: getAndroidPhotoPermission(),
   })!,
   notification: null, // 알림은 requestNotifications() 사용
 };
@@ -248,7 +276,7 @@ export function showSettingsAlert(
     title: `${permissionName} 권한 필요`,
     message: isAndroid
       ? `이 기능을 사용하려면 ${permissionName} 권한이 필요합니다.\n\n설정에서 권한을 허용해주세요.`
-      : `이 기능을 사용하려면 ${permissionName} 권한이 필요합니다.\n\n설정 > Snaplink > ${permissionName}에서 권한을 허용해주세요.`,
+      : `이 기능을 사용하려면 ${permissionName} 권한이 필요합니다.\n\n설정 > ${APP_NAME} > ${permissionName}에서 권한을 허용해주세요.`,
     buttons: isAndroid
       ? [
           {

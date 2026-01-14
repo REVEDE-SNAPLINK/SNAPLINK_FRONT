@@ -17,7 +17,7 @@ import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useEffect, useState } from 'react';
 import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
-import { openTermUrl } from '@/utils/link.ts';
+import { openUrl } from '@/utils/link.ts';
 
 export default function ProfileContainer () {
   const navigation = useNavigation<MainNavigationProp>();
@@ -29,12 +29,11 @@ export default function ProfileContainer () {
 
   const { data: userProfile, isSuccess } = useMeQuery();
   const { data: photographerStatus } = usePhotographerStatusQuery({
-    enabled: isPhotographer,
+    enabled: isPhotographer && isExpertMode,
   });
 
   useEffect(() => {
     if (isSuccess && userProfile?.profileImageURI) {
-      console.log('Profile image uri: ', userProfile.profileImageURI);
       setProfileImageURI(userProfile.profileImageURI);
     }
   }, [isSuccess, userProfile?.profileImageURI]);
@@ -289,7 +288,7 @@ export default function ProfileContainer () {
   }
 
   const handlePressCustomerCenter = () => {
-    openTermUrl("/customer-service")
+    openUrl("http://pf.kakao.com/_KasSn");
   };
 
   const handlePressNotice = () => navigation.navigate('Notice');

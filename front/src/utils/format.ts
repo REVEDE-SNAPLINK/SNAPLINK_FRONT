@@ -183,9 +183,6 @@ export const formatTimeAgo = (dateString: string): string => {
   } else if (diff < day) {
     const hours = Math.floor(diff / hour);
     return `${hours}시간 전`;
-  } else if (diff < 30 * day) {
-    const days = Math.floor(diff / day);
-    return `${days}일 전`;
   } else {
     // 30일 이상은 날짜 형식으로 표시 (한국 시간으로 변환)
     return past.add(9, 'hour').format('YYYY.MM.DD');

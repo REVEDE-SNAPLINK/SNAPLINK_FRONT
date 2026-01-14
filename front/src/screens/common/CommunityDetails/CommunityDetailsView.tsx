@@ -291,7 +291,7 @@ export default function CommunityDetailsView({
   comments,
   isMyPost,
   userId,
-  isLoading,
+  // isLoading,
   isError,
   isCommentModalVisible,
   isEditModalVisible,
@@ -356,6 +356,22 @@ export default function CommunityDetailsView({
 
   // ✅ 서버가 top-level comment 아래에 replies 트리로 내려줌
   const topLevelComments = comments.filter(c => c.parentId === null && !c.isDeleted);
+
+  // 삭제되지 않은 실제 댓글 수 계산 (최상위 댓글 + 모든 답글)
+  const countVisibleComments = (comments: Comment[]): number => {
+    let count = 0;
+    for (const comment of comments) {
+      if (!comment.isDeleted) {
+        count += 1;
+        if (comment.replies && comment.replies.length > 0) {
+          count += countVisibleComments(comment.replies);
+        }
+      }
+    }
+    return count;
+  };
+
+  const actualCommentCount = countVisibleComments(comments);
 
   // 프리뷰 영역(상단 3개)은 top-level만 보여주기
   const filteredComments = topLevelComments;
@@ -501,7 +517,7 @@ export default function CommunityDetailsView({
                   letterSpacing="-2.5%"
                   marginLeft={6}
                 >
-                  {post.commentCount}
+                  {actualCommentCount}
                 </Typography>
               </ActionButton>
             </ActionWrapper>
@@ -513,7 +529,7 @@ export default function CommunityDetailsView({
                 letterSpacing="-2.5%"
                 marginBottom={9}
               >
-                댓글 {post.commentCount}
+                댓글 {actualCommentCount}
               </Typography>
               {filteredComments.slice(0, 3).map(comment => (
                 <CommentItem key={comment.id}>
@@ -541,7 +557,7 @@ export default function CommunityDetailsView({
                   </CommentContentWrapper>
                 </CommentItem>
               ))}
-              {post.commentCount > 3 && (
+              {topLevelComments.length > 3 && (
                 <MoreCommentsButton onPress={onPressMoreComments}>
                   <Typography
                     fontSize={12}
@@ -575,7 +591,7 @@ export default function CommunityDetailsView({
         visible={isCommentModalVisible}
         onClose={onCloseCommentModal}
         showHeader
-        title={`댓글  ${post.commentCount}`}
+        title={`댓글  ${actualCommentCount}`}
         headerAlign="left"
         scrollable
         minHeight={SCREEN_HEIGHT * 0.6}

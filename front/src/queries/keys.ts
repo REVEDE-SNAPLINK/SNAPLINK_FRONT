@@ -229,3 +229,9 @@ export const noticeQueryKeys = {
 
   notice: (id: number) => [...noticeQueryKeys.all, 'notice', id] as const,
 }
+
+// Block
+export const blockKeys = {
+  all: ['block'] as const,
+  list: () => [...blockKeys.all, 'list'] as const,
+}

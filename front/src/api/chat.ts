@@ -143,16 +143,6 @@ export const uploadChatFile = async (
   }
 };
 
-export const unblockChatUser = async (
-  targetId: string,
-) => {
-  const response = await authFetch(`${CHAT_BASE}/block/${targetId}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) throw new Error('차단을 해제할 수 없습니다.');
-}
-
 export const leaveChatRoom = async (
   roomId: number,
 )=> {
@@ -162,16 +152,6 @@ export const leaveChatRoom = async (
 
   if (!response.ok) throw new Error('채팅방을 나갈 수 없습니다.');
 };
-
-export const blockChatUser = async (
-  targetId: string,
-)=> {
-  const response = await authFetch(`${CHAT_BASE}/block/${targetId}`, {
-    method: 'POST',
-  });
-
-  if (!response.ok) throw new Error('사용자를 차단할 수 없습니다.');
-}
 
 export interface GetChatRoomDetail {
   roomId: number;

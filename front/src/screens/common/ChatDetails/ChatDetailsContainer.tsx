@@ -20,8 +20,9 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
-import {useBlockChatUserMutation, useLeaveChatRoomMutation, useUnblockChatUserMutation} from "@/mutations/chat.ts";
-import { reportUser } from '@/api/reports.ts';
+import { useLeaveChatRoomMutation } from "@/mutations/chat.ts";
+import { useBlockChatUserMutation, useUnblockChatUserMutation } from "@/mutations/block.ts";
+import { REASON, reportUser } from '@/api/reports.ts';
 
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
@@ -39,6 +40,9 @@ const makeDownloadKey = (url: string) =>
 
 // --- verifyDownloaded util ---
 const DOWNLOAD_STATE_STORAGE_KEY = (roomId: number | string) => `chat:fileDownloadStates:${roomId}`;
+
+// --- 메시지 읽음 상태 저장 키 ---
+const MESSAGE_READ_STATE_STORAGE_KEY = (roomId: number | string) => `chat:messageReadStates:${roomId}`;
 const normalizeIosPath = (p: string) => {
   if (!p) return p;
   // RNBlobUtil sometimes returns `file://` URIs; fs.exists/stat expect a plain absolute path.
@@ -61,7 +65,7 @@ const verifyDownloaded = async (localPath?: string) => {
 export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
-  const { userId, userType } = useAuthStore();
+  const { userId, userType, isExpertMode } = useAuthStore();
   const { openReportModal, setReportModalLoading } = useModalStore();
 
   const { roomId } = route.params;
@@ -77,6 +81,11 @@ export default function ChatDetailsContainer() {
   const didHydrateDownloadStatesRef = useRef(false);
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didVerifyDownloadStatesRef = useRef<string | null>(null);
+
+  // ✅ 메시지 읽음 상태 관리 (messageId -> unreadCount: 1 = 상대방 안 읽음, 0 = 모두 읽음)
+  const [messageReadStates, setMessageReadStates] = useState<Record<number, number>>({});
+  const didHydrateReadStatesRef = useRef(false);
+  const readStatePersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ✅ 채팅 이벤트 추적용 상태
   const [messageCount, setMessageCount] = useState(0);
@@ -220,6 +229,58 @@ export default function ChatDetailsContainer() {
     };
   }, [fileDownloadStates, roomId]);
 
+  // ✅ 메시지 읽음 상태 hydrate (AsyncStorage에서 불러오기)
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateReadStates = async () => {
+      try {
+        didHydrateReadStatesRef.current = false;
+        const raw = await AsyncStorage.getItem(MESSAGE_READ_STATE_STORAGE_KEY(roomId));
+        if (!raw) {
+          didHydrateReadStatesRef.current = true;
+          return;
+        }
+        const parsed = JSON.parse(raw) as Record<number, number>;
+        if (cancelled || !parsed || typeof parsed !== 'object') {
+          didHydrateReadStatesRef.current = true;
+          return;
+        }
+        setMessageReadStates((prev) => ({ ...parsed, ...prev }));
+      } catch (e) {
+        console.warn('[ChatDetails] Failed to hydrate read states:', e);
+      } finally {
+        didHydrateReadStatesRef.current = true;
+      }
+    };
+
+    hydrateReadStates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId]);
+
+  // ✅ 메시지 읽음 상태 persist (AsyncStorage에 저장하기, debounced)
+  useEffect(() => {
+    if (!didHydrateReadStatesRef.current) return;
+
+    if (readStatePersistTimerRef.current) clearTimeout(readStatePersistTimerRef.current);
+    readStatePersistTimerRef.current = setTimeout(() => {
+      AsyncStorage.setItem(
+        MESSAGE_READ_STATE_STORAGE_KEY(roomId),
+        JSON.stringify(messageReadStates)
+      ).catch((e) => console.warn('[ChatDetails] Failed to persist read states:', e));
+    }, 250);
+
+    return () => {
+      if (readStatePersistTimerRef.current) {
+        clearTimeout(readStatePersistTimerRef.current);
+        readStatePersistTimerRef.current = null;
+      }
+    };
+  }, [messageReadStates, roomId]);
+
   // Initialize STOMP WebSocket connection
   useEffect(() => {
     const stompClient = new ChatStompClient();
@@ -234,8 +295,26 @@ export default function ChatDetailsContainer() {
         console.log('[ChatDetails] WebSocket connected successfully');
 
         console.log('[ChatDetails] Subscribing to room:', roomId);
-        stompClient.subscribeRoom(roomId, (message: ChatMessage) => {
+        stompClient.subscribeRoom(roomId, (message: ChatMessage & { type?: string }) => {
           console.log('[ChatDetails] Received message:', JSON.stringify(message, null, 2));
+
+          // ✅ READ_EVENT 처리: 상대방이 읽었으므로 내가 보낸 메시지들의 unreadCount를 0으로 업데이트
+          if ((message as any).type === 'READ_EVENT') {
+            console.log('[ChatDetails] READ_EVENT received from:', message.senderId);
+            // 상대방이 읽었으면 내가 보낸 모든 메시지의 unreadCount를 0으로
+            if (message.senderId !== userId) {
+              setMessageReadStates(prev => {
+                const updated = { ...prev };
+                Object.keys(updated).forEach(key => {
+                  if (updated[Number(key)] === 1) {
+                    updated[Number(key)] = 0;
+                  }
+                });
+                return updated;
+              });
+            }
+            return; // READ_EVENT는 메시지 목록에 추가하지 않음
+          }
 
           // ✅ 작가 응답 추적 (상대방이 작가인 경우)
           if (message.senderId !== userId && userType === 'user') {
@@ -264,6 +343,21 @@ export default function ChatDetailsContainer() {
                 });
               }
             }
+          }
+
+          // ✅ 내가 보낸 새 메시지의 읽음 상태 설정 (1 = 상대방 안 읽음)
+          if (message.senderId === userId && message.messageId) {
+            setMessageReadStates(prev => ({
+              ...prev,
+              [message.messageId]: 1,
+            }));
+          }
+
+          // ✅ 상대방 메시지를 받으면 enter를 다시 호출하여 읽음 처리
+          // (서버에서 READ_EVENT를 상대방에게 발행)
+          if (message.senderId !== userId) {
+            console.log('[ChatDetails] Received message from partner, calling enter for read receipt');
+            stompClient.enter(roomId);
           }
 
           // Update query cache with new message
@@ -632,14 +726,13 @@ export default function ChatDetailsContainer() {
     openReportModal(
       opponentId,
       'CHAT',
-      userType === 'user' ? 'photographer' : 'user',
       async ({ reason, description }) => {
         setReportModalLoading(true);
         try {
           await reportUser({
             targetId: opponentId,
             targetType: 'CHAT',
-            reason,
+            reason: reason as REASON,
             customReason: reason === 'OTHER' ? description : '',
             description: reason === 'OTHER' ? '' : description,
           });
@@ -655,7 +748,8 @@ export default function ChatDetailsContainer() {
             message: '신고 처리 중 오류가 발생했습니다.'
           });
         }
-      }
+      },
+      userType === 'user' ? 'photographer' : 'user',
     );
   }
 
@@ -956,8 +1050,14 @@ export default function ChatDetailsContainer() {
     };
   }, [roomId, fileDownloadStates]);
 
+  const handlePressPartnerProfile = () => {
+    navigation.navigate('PhotographerDetails', { photographerId: opponentId });
+  }
+
   return (
     <ChatDetailsView
+      isPhotographerPartner={userType === 'user' || !isExpertMode}
+      onPressPartnerProfile={handlePressPartnerProfile}
       userType={userType}
       partnerNickname={partnerNickname}
       myUserId={userId}
@@ -991,6 +1091,7 @@ export default function ChatDetailsContainer() {
       onChangeImagePreviewIndex={handleChangeImagePreviewIndex}
       onCloseImagePreview={handleCloseImagePreview}
       navigation={navigation}
+      messageReadStates={messageReadStates}
     />
   );
 }

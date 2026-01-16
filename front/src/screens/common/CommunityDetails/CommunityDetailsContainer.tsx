@@ -24,6 +24,8 @@ import analytics from '@react-native-firebase/analytics';
 import { usePhotographerProfileQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
+import { COMMUNITY_REASON, reportCommunityUser } from '@/api/reports.ts';
+import { useBlockUserMutation } from '@/mutations/block.ts';
 
 type CommunityDetailsRouteProp = RouteProp<MainStackParamList, 'CommunityDetails'>;
 
@@ -39,7 +41,7 @@ export default function CommunityDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<CommunityDetailsRouteProp>();
   const { userId, userType } = useAuthStore();
-  const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading } = useModalStore();
+  const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading, openReportModal, setReportModalLoading } = useModalStore();
 
   const { postId } = route.params;
 
@@ -114,6 +116,7 @@ export default function CommunityDetailsContainer() {
   const { mutate: updatePostMutation, isPending: isUpdatePostPending } = useUpdatePostMutation();
   const deletePostMutation = useDeletePostMutation();
   const scrapPhotographerMutation = useTogglePhotographerScrapMutation();
+  const blockUserMutation = useBlockUserMutation();
 
   useEffect(() => {
     if (!post) return;
@@ -444,6 +447,101 @@ export default function CommunityDetailsContainer() {
     }
   }
 
+  const handlePressReportPost = () => {
+    if (post) {
+      openReportModal(
+        post.id,
+        'POST',
+        async ({ reason, description }) => {
+          setReportModalLoading(true);
+          try {
+            await reportCommunityUser({
+              targetId: post.id,
+              targetType: 'POST',
+              reason: reason as COMMUNITY_REASON,
+              detailReason: description,
+            });
+            setReportModalLoading(false);
+            Alert.show({
+              title: '소중한 의견 감사합니다',
+              message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.'
+            });
+          } catch (error) {
+            setReportModalLoading(false);
+            Alert.show({
+              title: '신고 실패',
+              message: '신고 처리 중 오류가 발생했습니다.'
+            });
+          }
+        }
+      );
+    }
+  }
+
+  const handlePressReportComment = (commentId: number) => {
+    if (post) {
+      openReportModal(
+        commentId,
+        'COMMENT',
+        async ({ reason, description }) => {
+          setReportModalLoading(true);
+          try {
+            await reportCommunityUser({
+              targetId: commentId,
+              targetType: 'COMMENT',
+              reason: reason as COMMUNITY_REASON,
+              detailReason: description,
+            });
+            setReportModalLoading(false);
+            Alert.show({
+              title: '소중한 의견 감사합니다',
+              message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.'
+            });
+          } catch (error) {
+            setReportModalLoading(false);
+            Alert.show({
+              title: '신고 실패',
+              message: '신고 처리 중 오류가 발생했습니다.'
+            });
+          }
+        }
+      );
+    }
+  }
+
+  const handlePressBlock = () => {
+    if (!post) return;
+    setIsEditModalVisible(false);
+    Alert.show({
+      title: '차단하시겠습니까?',
+      message: `${post.author.nickname}님을 차단하시겠습니까?`,
+      buttons: [
+        { text: '취소', onPress: () => {}, type: 'cancel' },
+        {
+          text: '차단',
+          type: 'destructive',
+          onPress: () => {
+            blockUserMutation.mutate(post.author.userId, {
+              onSuccess: () => {
+                Alert.show({
+                  title: '차단 완료',
+                  message: `${post.author.nickname}님이 차단되었습니다.`,
+                  buttons: [{ text: '확인', onPress: () => navigation.goBack() }],
+                });
+              },
+              onError: () => {
+                Alert.show({
+                  title: '차단 실패',
+                  message: '차단 처리 중 오류가 발생했습니다.',
+                });
+              },
+            });
+          },
+        },
+      ],
+    });
+  }
+
   const isMyPost = post?.author.userId === userId;
 
   return (
@@ -472,6 +570,9 @@ export default function CommunityDetailsContainer() {
       onPressShare={handlePressShare}
       onPressLike={handlePressLike}
       onPressChat={handlePressChat}
+      onPressReportPost={handlePressReportPost}
+      onPressReportComment={handlePressReportComment}
+      onPressBlock={handlePressBlock}
       onPressMoreComments={handlePressMoreComments}
       onPressWriteComment={handlePressWriteComment}
       onCloseCommentModal={handleCloseCommentModal}

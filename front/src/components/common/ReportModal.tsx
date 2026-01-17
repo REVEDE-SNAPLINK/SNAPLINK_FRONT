@@ -7,7 +7,15 @@ import { Alert, Typography } from '@/components/theme';
 import Icon from '@/components/Icon.tsx';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
 import { theme } from '@/theme';
-import { mappingReason, REASON, REASONS } from '@/api/reports.ts';
+import {
+  COMMUNITY_REASON,
+  COMMUNITY_REASONS, CommunityTargetType,
+  mappingCommunityReason,
+  mappingReason,
+  REASON,
+  REASONS,
+  TargetType,
+} from '@/api/reports.ts';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 import { UserType } from '@/types/auth.ts';
 import { useFocusEffect } from '@react-navigation/native';
@@ -17,9 +25,10 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 interface ReportModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (params: { reason: REASON; description: string }) => void;
-  initialReason?: REASON;
-  targetUserType: UserType;
+  onSubmit: (params: { reason: REASON | COMMUNITY_REASON; description: string }) => void;
+  initialReason?: REASON | COMMUNITY_REASON;
+  targetType?: TargetType | CommunityTargetType;
+  targetUserType?: UserType;
   isLoading: boolean;
 }
 
@@ -28,14 +37,15 @@ export default function ReportModal({
   onClose,
   onSubmit,
   initialReason,
+  targetType,
   targetUserType,
   isLoading,
 }: ReportModalProps) {
-  const [selectedReason, setSelectedReason] = useState<REASON | null>(null);
+  const [selectedReason, setSelectedReason] = useState<REASON | COMMUNITY_REASON | null>(null);
   const [description, setDescription] = useState('');
   const [isReasonListVisible, setIsReasonListVisible] = useState(false);
 
-  const reasons = REASONS.filter((reason) => targetUserType === 'user' ? reason !== 'UNILATERAL_CANCELLATION' : true);
+  const reasons = targetType === 'POST' || targetType === 'COMMENT' ? COMMUNITY_REASONS : REASONS.filter((reason) => targetUserType === 'user' ? reason !== 'UNILATERAL_CANCELLATION' : true);
 
   const isDirty = selectedReason !== null || description !== '';
 
@@ -122,7 +132,7 @@ export default function ReportModal({
     setIsReasonListVisible(!isReasonListVisible);
   };
 
-  const handleSelectReason = (reason: REASON) => {
+  const handleSelectReason = (reason: REASON | COMMUNITY_REASON) => {
     setSelectedReason(reason);
     setIsReasonListVisible(false);
   };
@@ -132,10 +142,19 @@ export default function ReportModal({
       return;
     }
 
-    onSubmit({
-      reason: selectedReason,
-      description: description.trim(),
-    });
+    Alert.show({
+      title: '신고를 접수할까요?',
+      message: '신고 내용은 상대방에게 절대 공개되지 않으니 안심하고 접수해 주세요.',
+      buttons: [
+        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '완료', onPress: () => {
+            onSubmit({
+              reason: selectedReason,
+              description: description.trim(),
+            });
+        }},
+      ]
+    })
   };
 
   const canSubmit = selectedReason !== null && (selectedReason !== 'OTHER' || (selectedReason === 'OTHER' && description.trim() !== ''));
@@ -176,7 +195,7 @@ export default function ReportModal({
               <ReasonSelector>
                 <ReasonWrapper onPress={handlePressReasonSelector}>
                   <Typography fontSize={16} letterSpacing="-2.5%">
-                    {selectedReason ? mappingReason(selectedReason) : '신고 사유를 선택해주세요.'}
+                    {!selectedReason ? '신고 사유를 선택해주세요.' : targetType === 'POST' || targetType === 'COMMENT' ? mappingCommunityReason(selectedReason as COMMUNITY_REASON) : mappingReason(selectedReason as REASON) }
                   </Typography>
                   <Icon width={24} height={24} Svg={ArrowDownIcon} />
                 </ReasonWrapper>
@@ -185,7 +204,7 @@ export default function ReportModal({
                     {reasons.map((reason) => (
                       <ReasonItem key={reason} onPress={() => handleSelectReason(reason)}>
                         <Typography fontSize={16} letterSpacing="-2.5%">
-                          {mappingReason(reason)}
+                          {targetType === 'POST' || targetType === 'COMMENT' ? mappingCommunityReason(reason as COMMUNITY_REASON) : mappingReason(reason as REASON)}
                         </Typography>
                       </ReasonItem>
                     ))}

@@ -67,19 +67,30 @@ export default function BookingCalendarContainer() {
     return [parseInt(parts[0]), parseInt(parts[1])];
   }, [currentYearMonth]);
 
-  // Calculate prev and next month
-  const { prevYear, prevMonth, nextYear, nextMonth } = useMemo(() => {
+  // Calculate prev, prevPrev, next, nextNext month for pre-fetching
+  const { prevPrevYear, prevPrevMonth, prevYear, prevMonth, nextYear, nextMonth, nextNextYear, nextNextMonth } = useMemo(() => {
     const prev = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
+    const prevPrev = prev.month === 1 ? { year: prev.year - 1, month: 12 } : { year: prev.year, month: prev.month - 1 };
     const next = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+    const nextNext = next.month === 12 ? { year: next.year + 1, month: 1 } : { year: next.year, month: next.month + 1 };
     return {
+      prevPrevYear: prevPrev.year,
+      prevPrevMonth: prevPrev.month,
       prevYear: prev.year,
       prevMonth: prev.month,
       nextYear: next.year,
       nextMonth: next.month,
+      nextNextYear: nextNext.year,
+      nextNextMonth: nextNext.month,
     };
   }, [year, month]);
 
-  // Fetch monthly schedules for prev, current, and next month
+  // Fetch monthly schedules for prevPrev, prev, current, next, nextNext (5 months)
+  const { data: prevPrevMonthScheduleData } = usePhotographerMonthSchedulesQuery(
+    { photographerId: userId || '', year: prevPrevYear, month: prevPrevMonth },
+    !!userId
+  );
+
   const { data: prevMonthScheduleData } = usePhotographerMonthSchedulesQuery(
     { photographerId: userId || '', year: prevYear, month: prevMonth },
     !!userId
@@ -95,13 +106,18 @@ export default function BookingCalendarContainer() {
     !!userId
   );
 
+  const { data: nextNextMonthScheduleData } = usePhotographerMonthSchedulesQuery(
+    { photographerId: userId || '', year: nextNextYear, month: nextNextMonth },
+    !!userId
+  );
+
   // Fetch day detail for selected date
   const { data: dayDetailData } = usePhotographerDayDetailQuery(
     { photographerId: userId || '', date: selectedDate },
     !!userId && !!selectedDate
   );
 
-  // Enhanced schedule data from API (prev, current, next month)
+  // Enhanced schedule data from API (5 months: prevPrev, prev, current, next, nextNext)
   const enhancedScheduleData = useMemo(() => {
     const schedulesByDate = new Map<string, {
       hasBooking: boolean;
@@ -129,17 +145,22 @@ export default function BookingCalendarContainer() {
       });
     };
 
-    // Add prev, current, and next month data
+    // Add all 5 months data (prevPrev, prev, current, next, nextNext)
+    addMonthData(prevPrevMonthScheduleData, prevPrevYear, prevPrevMonth);
     addMonthData(prevMonthScheduleData, prevYear, prevMonth);
     addMonthData(monthScheduleData, year, month);
     addMonthData(nextMonthScheduleData, nextYear, nextMonth);
+    addMonthData(nextNextMonthScheduleData, nextNextYear, nextNextMonth);
 
     // Convert map to array
     return Array.from(schedulesByDate.entries()).map(([date, data]) => ({
       date,
       ...data,
     }));
-  }, [prevMonthScheduleData, monthScheduleData, nextMonthScheduleData, prevYear, prevMonth, year, month, nextYear, nextMonth]);
+  }, [
+    prevPrevMonthScheduleData, prevMonthScheduleData, monthScheduleData, nextMonthScheduleData, nextNextMonthScheduleData,
+    prevPrevYear, prevPrevMonth, prevYear, prevMonth, year, month, nextYear, nextMonth, nextNextYear, nextNextMonth,
+  ]);
 
   useEffect(() => {
     const [y, m] = currentYearMonth.split('-').map(Number);
@@ -339,28 +360,36 @@ export default function BookingCalendarContainer() {
     }, schedule, true); // isDuplicate = true
   };
 
-  // Calculate D-day from today to selected date
-  const dDayText = useMemo(() => {
-    const selected = new Date(selectedDate);
-    const current = new Date();
-    const diffTime = selected.getTime() - current.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  // // Calculate D-day from today to selected date
+  // const dDayText = useMemo(() => {
+  //   const selected = new Date(selectedDate);
+  //   const current = new Date();
+  //   const diffTime = selected.getTime() - current.getTime();
+  //   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  //
+  //   if (diffDays === 0) return '오늘';
+  //   if (diffDays === 1) return '내일';
+  //   if (diffDays === -1) return '어제';
+  //   if (diffDays > 0) return `D+${diffDays}`;
+  //   return `D-${Math.abs(diffDays)}`;
+  // }, [selectedDate]);
 
-    if (diffDays === 0) return '오늘';
-    if (diffDays === 1) return '내일';
-    if (diffDays === -1) return '어제';
-    if (diffDays > 0) return `D+${diffDays}`;
-    return `D-${Math.abs(diffDays)}`;
-  }, [selectedDate]);
+  const handlePressToday = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayYearMonth = today.slice(0, 7);
+    setSelectedDate(today);
+    setCurrentYearMonth(todayYearMonth);
+  }
 
   return (
     <BookingCalendarView
       selectedDate={selectedDate}
+      isToday={selectedDate !== '' && selectedDate === new Date().toISOString().split('T')[0]}
+      onSelectToday={handlePressToday}
       scheduleData={enhancedScheduleData}
       currentYearMonth={currentYearMonth}
       weekCount={currentWeekCount}
       dayDetailData={dayDetailData || null}
-      dDayText={dDayText}
       onPressBookingItem={handlePressBookingItem}
       onPressPersonalSchedule={handlePressPersonalSchedule}
       onPressHoliday={handlePressHoliday}

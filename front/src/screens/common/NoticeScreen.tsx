@@ -1,16 +1,74 @@
-import { useNavigation } from '@react-navigation/native';
+import { useState, useCallback } from 'react';
 import { FlatList, ActivityIndicator } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
 import ScreenContainer from '@/components/common/ScreenContainer';
-import { MainNavigationProp } from '@/types/navigation.ts';
 import { Typography } from '@/components/theme';
+import Icon from '@/components/Icon';
+import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
 import dayjs from 'dayjs';
-import { useNoticesInfiniteQuery } from '@/queries/notices';
+import { useNoticesInfiniteQuery, useNoticeDetailQuery } from '@/queries/notices';
+import { useNavigation } from '@react-navigation/native';
+import { MainNavigationProp } from '@/types/navigation';
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+  useSharedValue,
+} from 'react-native-reanimated';
+
+interface NoticeItemProps {
+  id: number;
+  title: string;
+  date: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+function NoticeItem({ id, title, date, isExpanded, onToggle }: NoticeItemProps) {
+  const { data: detail, isLoading } = useNoticeDetailQuery(isExpanded ? id : undefined);
+  const rotation = useSharedValue(0);
+
+  // 화살표 회전 애니메이션
+  rotation.value = withTiming(isExpanded ? 180 : 0, { duration: 200 });
+
+  const arrowStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+  return (
+    <ItemContainer>
+      <ItemHeader onPress={onToggle} activeOpacity={0.7}>
+        <ItemHeaderContent>
+          <Typography fontSize={16} fontWeight="semiBold" numberOfLines={isExpanded ? undefined : 1}>
+            {title}
+          </Typography>
+          <Typography fontSize={13} color="#8F8F8F" marginTop={4}>
+            {dayjs(date).format('YYYY.MM.DD')}
+          </Typography>
+        </ItemHeaderContent>
+        <Animated.View style={arrowStyle}>
+          <Icon width={24} height={24} Svg={ArrowDownIcon} />
+        </Animated.View>
+      </ItemHeader>
+
+      {isExpanded && (
+        <ItemBody>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#888" style={{ paddingVertical: 20 }} />
+          ) : (
+            <Typography fontSize={14} lineHeight={22} color="#555">
+              {detail?.body || '내용이 없습니다.'}
+            </Typography>
+          )}
+        </ItemBody>
+      )}
+    </ItemContainer>
+  );
+}
 
 export default function NoticeScreen() {
   const navigation = useNavigation<MainNavigationProp>();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  // 1. 무한 스크롤 쿼리 호출 (한 페이지에 15개씩)
   const {
     data,
     fetchNextPage,
@@ -20,16 +78,14 @@ export default function NoticeScreen() {
     refetch,
   } = useNoticesInfiniteQuery({ size: 15 });
 
-  // 2. 2차원 배열(pages)을 1차원 배열로 평탄화
   const notices = data?.pages.flatMap((page) => page.content) || [];
 
   const handlePressBack = () => navigation.goBack();
 
-  const handlePressNotice = (noticeId: number) => {
-    navigation.navigate('NoticeDetail', { noticeId });
-  };
+  const handleToggle = useCallback((id: number) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  }, []);
 
-  // 다음 페이지를 불러오는 함수
   const loadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -53,31 +109,23 @@ export default function NoticeScreen() {
       onPressBack={handlePressBack}
     >
       <FlatList
-        style={{
-          width: '100%',
-          flex: 1,
-          borderTopWidth: 1,
-          borderTopColor: '#AAA'
-        }}
+        style={{ width: '100%', flex: 1 }}
         data={notices}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <NoticeItem onPress={() => handlePressNotice(item.id)}>
-            <Typography fontSize={18} fontWeight="bold" marginBottom={6}>
-              {item.title}
-            </Typography>
-            <Typography fontSize={14} color="#8F8F8F">
-              {dayjs(item.date).format('YYYY-MM-DD HH:mm')}
-            </Typography>
-          </NoticeItem>
+          <NoticeItem
+            id={item.id}
+            title={item.title}
+            date={item.date}
+            isExpanded={expandedId === item.id}
+            onToggle={() => handleToggle(item.id)}
+          />
         )}
-        // 무한 스크롤 설정
         onEndReached={loadMore}
-        onEndReachedThreshold={0.5} // 바닥에서 50% 남았을 때 미리 호출
+        onEndReachedThreshold={0.5}
         ListFooterComponent={
           isFetchingNextPage ? <ActivityIndicator style={{ padding: 16 }} /> : null
         }
-        // 당겨서 새로고침 (옵션)
         onRefresh={refetch}
         refreshing={isLoading}
       />
@@ -85,12 +133,25 @@ export default function NoticeScreen() {
   );
 }
 
-const NoticeItem = styled.TouchableOpacity`
-  width: 100%;
-  padding: 16px;
+const ItemContainer = styled.View`
   border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: #AAA;
+  border-bottom-color: #E5E5E5;
+`;
+
+const ItemHeader = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+`;
+
+const ItemHeaderContent = styled.View`
+  flex: 1;
+  margin-right: 12px;
+`;
+
+const ItemBody = styled.View`
+  padding: 0 20px 20px 20px;
 `;
 
 const LoadingContainer = styled.View`

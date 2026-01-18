@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { notificationsQueryKeys } from '@/queries/keys';
+import { chatQueryKeys, notificationsQueryKeys } from '@/queries/keys';
 import { navigateByDeepLink } from '@/navigation';
 
 /**
@@ -47,6 +47,13 @@ export default function NotificationHandler({ children }: { children: React.Reac
       // 알림 목록 갱신 (새 알림이 있으므로)
       queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.list() });
       queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.unreadStatus() });
+
+      // 채팅 관련 알림이면 채팅 목록도 갱신
+      const link = remoteMessage.data?.link;
+      if (typeof link === 'string' && link.includes('/chat/')) {
+        console.log('[Foreground] Chat notification detected, invalidating chat rooms');
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
+      }
     });
 
     return unsubscribe;

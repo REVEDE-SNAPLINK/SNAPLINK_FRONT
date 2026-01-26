@@ -75,6 +75,7 @@ export default function SearchPhotographerContainer() {
   const [searchKey, setSearchKey] = useState(route.params.searchKey);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
+  const [initialFilterIndex, setInitialFilterIndex] = useState(0);
   const [sortBy, setSortBy] = useState<SortByKey>('DEFAULT');
   const [totalCount, setTotalCount] = useState(0);
 
@@ -191,7 +192,6 @@ export default function SearchPhotographerContainer() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-    isRefetching,
     isLoading,
     isError
   } = useSearchPhotographersInfiniteQuery(
@@ -267,8 +267,13 @@ export default function SearchPhotographerContainer() {
   /**
    * Remove all filters for a category when category chip is clicked
    */
-  const handlePressCategoryChip = (categoryId: string) => {
-    setSelectedFilters((prev) => prev.filter((f) => f.categoryId !== categoryId));
+  const handlePressCategoryChip = (categoryId: string, index: number) => {
+    if (selectedFilters.find((f) => f.categoryId === categoryId)) {
+      setSelectedFilters((prev) => prev.filter((f) => f.categoryId !== categoryId));
+    } else {
+      setInitialFilterIndex(index);
+      setIsFilterModalOpen(true);
+    }
   };
 
   /**
@@ -313,6 +318,7 @@ export default function SearchPhotographerContainer() {
       filterCategories={FILTER_CATEGORIES}
       activeCategoryIds={activeCategoryIds}
       filterChips={filterChips}
+      initialFilterIndex={initialFilterIndex}
       onPressFilter={handlePressFilter}
       onPressCategoryChip={handlePressCategoryChip}
       onPressFilterChip={handlePressFilterChip}
@@ -326,7 +332,6 @@ export default function SearchPhotographerContainer() {
       onChangeSortBy={handleChangeSortBy}
       onLoadMore={handleLoadMore}
       onRefresh={handleRefresh}
-      isRefreshing={isRefetching}
       isFetchingNextPage={isFetchingNextPage}
       onPressPhotographer={handlePressPhotographer}
       isLoading={isLoading}

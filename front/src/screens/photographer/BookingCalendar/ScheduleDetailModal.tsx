@@ -280,7 +280,7 @@ export default function ScheduleDetailModal({
                   {formatDate(displaySchedule.startDate)}
                   {!displaySchedule.isAllDay && ` ${formatTime(displaySchedule.startDate)}~`}
                 </Typography>
-                <Typography fontSize={16} marginTop={4}>
+                <Typography fontSize={16} marginTop={15}>
                   {formatDate(displaySchedule.endDate)}
                   {!displaySchedule.isAllDay && ` ${formatTime(displaySchedule.endDate)}`}
                 </Typography>

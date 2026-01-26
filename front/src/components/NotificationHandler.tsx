@@ -79,6 +79,42 @@ export default function NotificationHandler({ children }: { children: React.Reac
     };
   }, []);
 
+  useEffect(() => {
+    // Background 상태에서 알림 탭 시 처리
+    const unsubscribe = messaging().onNotificationOpenedApp(remoteMessage => {
+      console.log('[Background] Notification opened app:', remoteMessage);
+
+      const link = remoteMessage.data?.link;
+      if (typeof link === 'string') {
+        // 네비게이션이 준비될 때까지 약간 대기
+        setTimeout(() => {
+          navigateByDeepLink(link);
+        }, 500);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    // 앱이 종료된 상태에서 알림 탭으로 앱이 열렸을 때 처리
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        if (remoteMessage) {
+          console.log('[Quit] Notification opened app from quit state:', remoteMessage);
+
+          const link = remoteMessage.data?.link;
+          if (typeof link === 'string') {
+            // 앱 초기화 및 네비게이션 준비 시간 확보
+            setTimeout(() => {
+              navigateByDeepLink(link);
+            }, 1500);
+          }
+        }
+      });
+  }, []);
+
   return <>{children}</>;
 }
 

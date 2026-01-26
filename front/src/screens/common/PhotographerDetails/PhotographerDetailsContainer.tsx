@@ -20,7 +20,7 @@ import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.
 import { Alert } from '@/components/theme';
 import { Share } from 'react-native';
 import { useUpdatePhotographerProfileMutation } from '@/mutations/photographers';
-import { reportUser } from '@/api/reports.ts';
+import { REASON, reportUser } from '@/api/reports.ts';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
@@ -267,14 +267,13 @@ export default function PhotographerDetailsContainer() {
     openReportModal(
       photographerId,
       'PROFILE',
-      'photographer',
       async ({ reason, description }) => {
         setReportModalLoading(true);
         try {
           await reportUser({
             targetId: photographerId,
             targetType: 'PROFILE',
-            reason,
+            reason: reason as REASON,
             customReason: reason === 'OTHER' ? description : '',
             description: reason === 'OTHER' ? '' : description,
           });
@@ -290,7 +289,8 @@ export default function PhotographerDetailsContainer() {
             message: '신고 처리 중 오류가 발생했습니다.'
           });
         }
-      }
+      },
+      'photographer',
     );
   }
 

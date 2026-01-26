@@ -21,3 +21,14 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        // settings.gradle에 있는 것과 동일한 내용을 여기에 한 번 더 적습니다.
+        google()
+        mavenCentral()
+        maven { url 'https://devrepo.kakao.com/nexus/content/groups/public/' }
+        maven { url 'https://www.jitpack.io' }
+        maven { url "$rootDir/../node_modules/@notifee/react-native/android/libs" }
+    }
+}

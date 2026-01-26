@@ -104,10 +104,11 @@ export default function EditProfileContainer() {
               quality: 0.6,
             });
 
+            // 압축 후에는 JPEG로 변환되므로 type을 image/jpeg로 설정
             setProfileImageURI({
               uri: compressedUri,
-              name: response.assets[0].fileName,
-              type: response.assets[0].type,
+              name: 'profile.jpg',
+              type: 'image/jpeg',
             });
           } catch (error) {
             Alert.show({
@@ -148,10 +149,11 @@ export default function EditProfileContainer() {
               quality: 0.6,
             });
 
+            // 압축 후에는 JPEG로 변환되므로 type을 image/jpeg로 설정
             setProfileImageURI({
               uri: compressedUri,
-              name: response.assets[0].fileName,
-              type: response.assets[0].type,
+              name: 'profile.jpg',
+              type: 'image/jpeg',
             });
           } catch (error) {
             Alert.show({

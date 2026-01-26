@@ -8,6 +8,7 @@ import { FilterCategory, FilterValue } from '@/types/filter';
 import SlideModal from '@/components/theme/SlideModal.tsx';
 
 interface FilterModalProps {
+  initialIndex?: number;
   categories: FilterCategory[];
   selectedFilters: FilterValue[];
   onClose: () => void;
@@ -15,12 +16,13 @@ interface FilterModalProps {
 }
 
 export default function FilterModal({
+  initialIndex = 0,
   categories,
   selectedFilters,
   onClose,
   onApply,
 }: FilterModalProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [localFilters, setLocalFilters] = useState<FilterValue[]>(selectedFilters);
 
   useEffect(() => {

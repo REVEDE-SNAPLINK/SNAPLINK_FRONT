@@ -224,7 +224,7 @@ export default function HistoryCard({
     <HistoryContainer onPress={onPress}>
       <InfoWrapper>
         <Header title={headerTitle} />
-        <Description name={userType === 'user' ? "작가명" : "고객명"} value={userType === "photographer" && userName ? userName : photographerName} marginBottom={12} />
+        <Description name={userType === 'user' || !isExpertMode ? "작가명" : "고객명"} value={userType === "photographer" && userName ? userName : photographerName} marginBottom={12} />
         <Description name="촬영 항목" value={type} marginBottom={12} />
         <Description name="촬영 일시" value={datetime} />
       </InfoWrapper>
@@ -252,8 +252,12 @@ const HeaderContainer = styled.View`
   width: 100%;
   flex-direction: row;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 16px;
+`
+
+const HeaderTitleWrapper = styled.View`
+  flex: 1;
+  margin-right: 10px;
 `
 
 const ViewDetailButton = styled.View`
@@ -266,15 +270,17 @@ const ViewDetailButton = styled.View`
 
 const Header = ({ title }: {title: string}) => (
   <HeaderContainer>
-    <Typography
-      fontSize={16}
-      fontWeight="semiBold"
-      lineHeight="140%"
-      letterSpacing="-2.5%"
-      color="#000"
-    >
-      {title}
-    </Typography>
+    <HeaderTitleWrapper>
+      <Typography
+        fontSize={16}
+        fontWeight="semiBold"
+        lineHeight="140%"
+        letterSpacing="-2.5%"
+        color="#000"
+      >
+        {title}
+      </Typography>
+    </HeaderTitleWrapper>
     <ViewDetailButton>
       <Typography
         fontSize={11}

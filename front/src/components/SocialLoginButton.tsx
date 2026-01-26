@@ -53,7 +53,7 @@ export default function SocialLoginButton({
         lineHeight={20}
         marginLeft={27}
       >
-        {' '}{text} 계정으로 로그인
+        {' '}{text}로 로그인
       </Typography>
     </StyledButton>
   );

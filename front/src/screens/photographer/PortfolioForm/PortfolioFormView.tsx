@@ -58,14 +58,6 @@ export default function PortfolioFormView({
               </Typography>
               을 등록해 주세요.
             </Typography>
-            <Typography
-              fontSize={12}
-              letterSpacing={0.2}
-              marginBottom={12}
-              color="#737373"
-            >
-              *최초 등록은 1장만 업로드해도 포트폴리오 등록이 완료됩니다.
-            </Typography>
             <ImageUploadInput
               images={photoURIs}
               onRemoveImage={onRemoveImage}

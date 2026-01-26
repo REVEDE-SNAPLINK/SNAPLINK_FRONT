@@ -104,8 +104,8 @@ const ChatItem = styled.TouchableOpacity`
 `
 
 const ChatProfileImageWrapper = styled.View`
-  width: 65px;
-  height: 65px;
+  width: 60px;
+  height: 60px;
   border-radius: 65px;
   overflow: hidden;
   background-color: #ccc;
@@ -113,7 +113,6 @@ const ChatProfileImageWrapper = styled.View`
   border-style: solid;
   border-color: #C8C8C8;
 `
-
 const ChatProfileImage = styled(ServerImage)`
   width: 100%;
   height: 100%;

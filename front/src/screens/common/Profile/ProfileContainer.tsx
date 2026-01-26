@@ -84,11 +84,12 @@ export default function ProfileContainer () {
               quality: 0.6,
             });
 
+            // 압축 후에는 JPEG로 변환되므로 type을 image/jpeg로 설정
             uploadProfileImageMutation.mutate({
               image: {
                 uri: compressedUri,
-                name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
-                type: response.assets[0].type || 'image/jpeg',
+                name: generateImageFilename('image/jpeg', 'photographer_profile'),
+                type: 'image/jpeg',
               }
             }, {
               onSuccess: () => {
@@ -149,11 +150,12 @@ export default function ProfileContainer () {
               quality: 0.6,
             });
 
+            // 압축 후에는 JPEG로 변환되므로 type을 image/jpeg로 설정
             uploadProfileImageMutation.mutate({
               image: {
                 uri: compressedUri,
-                name: generateImageFilename(response.assets[0].type, 'photographer_profile'),
-                type: response.assets[0].type || 'image/jpeg',
+                name: generateImageFilename('image/jpeg', 'photographer_profile'),
+                type: 'image/jpeg',
               }
             }, {
               onSuccess: () => {
@@ -164,7 +166,7 @@ export default function ProfileContainer () {
               },
               onError: () => {
                 Alert.show({
-                  title: '업데이터 실패',
+                  title: '업데이트 실패',
                   message: '프로필 사진 업데이트에 실패했습니다.',
                 });
               },
@@ -301,6 +303,10 @@ export default function ProfileContainer () {
     navigation.navigate('OpenSourceLicense');
   };
 
+  const handlePressManageBlock = () => {
+    navigation.navigate('BlockManage');
+  };
+
   return (
     <ProfileView
       onToggleExpertMode={handleToggleExpertMode}
@@ -316,6 +322,7 @@ export default function ProfileContainer () {
       onPressManageBooking={handlePressManageBooking}
       onPressManageShootService={handlePressShootService}
       onPressManagePortfolio={handlePressManagePortfolio}
+      onPressManageBlock={handlePressManageBlock}
       onPressNotice={handlePressNotice}
       onPressFAQ={handlePressFAQ}
       onPressTerms={handlePressTerms}

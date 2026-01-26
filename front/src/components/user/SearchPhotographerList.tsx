@@ -3,18 +3,18 @@ import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import { FlatList, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
+import { FlatList, TouchableOpacity, RefreshControl, ScrollView, Pressable } from 'react-native';
 import Loading from '@/components/Loading.tsx';
 import AIIcon from '@/assets/icons/ai-button-small.svg';
 import StarIcon from '@/assets/icons/star-review.svg';
 import ServerImage from '@/components/ServerImage.tsx';
 import { formatNumber } from '@/utils/format.ts';
+import { useState } from 'react';
 
 interface SearchPhotographerListProps {
   photographers: PhotographerSearchItem[];
   onEndReached: () => void;
   onRefresh: () => void;
-  isRefreshing: boolean;
   isFetchingNextPage: boolean;
   onPressItem: (photographerId: string) => void;
   aiRecommendationScore?: number;
@@ -25,12 +25,22 @@ export default function SearchPhotographerList({
   photographers,
   onEndReached,
   onRefresh,
-  isRefreshing,
   isFetchingNextPage,
   onPressItem,
   aiRecommendationScore,
   isAIRecommendation = false,
 }: SearchPhotographerListProps) {
+  const [localRefreshing, setLocalRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setLocalRefreshing(true);
+    await onRefresh();
+    // 데이터가 로드된 후 레이아웃이 계산될 아주 짧은 시간을 벌어줌
+    setTimeout(() => {
+      setLocalRefreshing(false);
+    }, 100);
+  };
+
   return (
     <FlatList
       testID="photographer-list"
@@ -46,7 +56,7 @@ export default function SearchPhotographerList({
       )}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+      refreshControl={!isAIRecommendation ? <RefreshControl refreshing={localRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} /> : undefined}
       ListFooterComponent={
         isFetchingNextPage ? (
           <Loading size="small" variant="inline" />
@@ -56,6 +66,7 @@ export default function SearchPhotographerList({
       }
       ItemSeparatorComponent={ItemSeparator}
       showsVerticalScrollIndicator={false}
+      removeClippedSubviews={false}
     />
   );
 }
@@ -67,7 +78,7 @@ interface SearchPhotographerItemProps {
   isAIRecommendation?: boolean;
 }
 
-const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
+export const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
   const genderLabel = photographer.gender === 'MALE' ? '남성작가' : '여성작가';
 
   const baseHour = ~~(photographer.baseTime / 60);
@@ -75,28 +86,28 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
 
   return (
     <SearchPhotographerItemContainer>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        {aiRecommendationScore !== undefined && (
-          <ResultCaption>
-            <Icon width={13} height={13} Svg={AIIcon} />
-            <Typography fontSize={10} color="primary" marginLeft={5}>
-              AI 추천 적합도 {aiRecommendationScore}%
-            </Typography>
-          </ResultCaption>
-        )}
-        {photographer.portfolioImages.length > 0 &&
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginBottom: 5 }}
-          >
-            {photographer.portfolioImages.map((item, index) => (
-              <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
-                <PhotofolioImage uri={item} />
-              </PhotofolioImageWrapper>
-            ))}
-          </ScrollView>
-        }
+      {aiRecommendationScore !== undefined && (
+        <ResultCaption>
+          <Icon width={13} height={13} Svg={AIIcon} />
+          <Typography fontSize={10} color="primary" marginLeft={5}>
+            AI 추천 적합도 {aiRecommendationScore}%
+          </Typography>
+        </ResultCaption>
+      )}
+      {photographer.portfolioImages.length > 0 &&
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 5 }}
+        >
+          {photographer.portfolioImages.map((item, index) => (
+            <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
+              <PhotofolioImage uri={item} />
+            </PhotofolioImageWrapper>
+          ))}
+        </ScrollView>
+      }
+      <Pressable onPress={onPress}>
         <PhotographerInfoWrapper>
           <Typography
             fontSize={12}
@@ -138,7 +149,7 @@ const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, 
             />
           ))}
         </PhotographerLabelWrapper>
-      </TouchableOpacity>
+      </Pressable>
     </SearchPhotographerItemContainer>
   );
 };

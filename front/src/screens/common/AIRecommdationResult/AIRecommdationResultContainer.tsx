@@ -82,6 +82,7 @@ export default function AIRecommdationResultContainer() {
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
+  const [initialFilterIndex, setInitialFilterIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -243,8 +244,13 @@ export default function AIRecommdationResultContainer() {
     navigation.navigate('PhotographerDetails', { photographerId });
   };
 
-  const handlePressCategoryChip = (categoryId: string) => {
-    setSelectedFilters((prev) => prev.filter((f) => f.categoryId !== categoryId));
+  const handlePressCategoryChip = (categoryId: string, index: number) => {
+    if (selectedFilters.find((f) => f.categoryId === categoryId)) {
+      setSelectedFilters((prev) => prev.filter((f) => f.categoryId !== categoryId));
+    } else {
+      setInitialFilterIndex(index);
+      setIsFilterModalOpen(true);
+    }
   };
 
   const handlePressFilterChip = (chipId: string) => {
@@ -280,6 +286,7 @@ export default function AIRecommdationResultContainer() {
       filterCategories={FILTER_CATEGORIES}
       activeCategoryIds={activeCategoryIds}
       filterChips={filterChips}
+      initialFilterIndex={initialFilterIndex}
       onPressFilter={handlePressFilter}
       onPressCategoryChip={handlePressCategoryChip}
       onPressFilterChip={handlePressFilterChip}

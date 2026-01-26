@@ -23,8 +23,9 @@ interface AIRecommdationResultViewProps {
   filterCategories: FilterCategory[];
   activeCategoryIds: string[];
   filterChips: FilterChip[];
+  initialFilterIndex: number;
   onPressFilter: () => void;
-  onPressCategoryChip: (categoryId: string) => void;
+  onPressCategoryChip: (categoryId: string, index: number) => void;
   onPressFilterChip: (chipId: string) => void;
   isFilterModalOpen: boolean;
   onCloseFilterModal: () => void;
@@ -47,6 +48,7 @@ export default function AIRecommdationResultView({
   filterCategories,
   activeCategoryIds,
   filterChips,
+  initialFilterIndex,
   onPressFilter,
   onPressCategoryChip,
   onPressFilterChip,
@@ -68,43 +70,48 @@ export default function AIRecommdationResultView({
       <ScreenContainer
         headerTitle="AI 추천 작가 확인"
         onPressBack={onPressBack}
-        paddingHorizontal={20}
         navigation={navigation}
       >
-        <Header>
-          <Icon width={19} height={20} Svg={SearchIcon} />
-          <Typography
-            fontSize={16}
-            fontWeight="semiBold"
-            marginLeft={15}
-          >
-            {nickname}님 컨셉에 가장 잘 맞는 사진 작가들을{'\n'}
-            분석한 결과로 <Typography fontSize={16} fontWeight="semiBold" color="primary">{resultCounts}명</Typography>의 작가를 찾았어요!
-          </Typography>
-        </Header>
-        <DividerWrapper>
-          <Divider />
-        </DividerWrapper>
-        <Filter
-          categories={filterCategories}
-          activeCategoryIds={activeCategoryIds}
-          filterChips={filterChips}
-          onPressFilterButton={onPressFilter}
-          onPressCategoryChip={onPressCategoryChip}
-          onPressFilterChip={onPressFilterChip}
-        />
+        {!isLoading &&
+          <>
+            <Header>
+              <Icon width={19} height={20} Svg={SearchIcon} />
+              <Typography fontSize={16} fontWeight="semiBold" marginLeft={15}>
+                {nickname}님 컨셉에 가장 잘 맞는 사진 작가들을{'\n'}
+                분석한 결과로{' '}
+                <Typography fontSize={16} fontWeight="semiBold" color="primary">
+                  {resultCounts}명
+                </Typography>
+                의 작가를 찾았어요!
+              </Typography>
+            </Header>
+            <DividerWrapper>
+              <Divider />
+            </DividerWrapper>
+            <FilterWrapper>
+              <Filter
+                categories={filterCategories}
+                activeCategoryIds={activeCategoryIds}
+                filterChips={filterChips}
+                onPressFilterButton={onPressFilter}
+                onPressCategoryChip={onPressCategoryChip}
+                onPressFilterChip={onPressFilterChip}
+              />
+            </FilterWrapper>
+          </>
+        }
         <SearchResultWrapper>
           {!isLoading && (
             <FlatList
               testID="photographer-list"
               data={photographers}
-              keyExtractor={(item) => item.id}
+              keyExtractor={item => item.id}
+              ListHeaderComponent={SearchResultHeader}
               renderItem={({ item }) => (
                 <SearchPhotographerList
                   photographers={[item]}
                   onEndReached={() => {}}
                   onRefresh={onRefresh}
-                  isRefreshing={false}
                   isFetchingNextPage={false}
                   onPressItem={onPressPhotographer}
                   aiRecommendationScore={item.aiScore}
@@ -113,7 +120,12 @@ export default function AIRecommdationResultView({
               )}
               onEndReached={onLoadMore}
               onEndReachedThreshold={0.5}
-              refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={onRefresh}
+                />
+              }
               ListFooterComponent={
                 isFetchingNextPage ? (
                   <Loading size="small" variant="inline" />
@@ -127,6 +139,7 @@ export default function AIRecommdationResultView({
 
       {isFilterModalOpen && (
         <FilterModal
+          initialIndex={initialFilterIndex}
           categories={filterCategories}
           selectedFilters={selectedFilters}
           onClose={onCloseFilterModal}
@@ -136,7 +149,7 @@ export default function AIRecommdationResultView({
 
       <LoadingSpinner visible={isLoading} />
     </>
-  )
+  );
 }
 
 const Header = styled.View`
@@ -144,10 +157,13 @@ const Header = styled.View`
   align-items: center;
 `
 
+const FilterWrapper = styled.View`
+  padding-horizontal: 20px;
+`
+
 const DividerWrapper = styled.View`
   align-items: center;
   margin-top: 30px;
-  margin-bottom: 20px;
 `
 
 const Divider = styled.View`
@@ -159,5 +175,8 @@ const Divider = styled.View`
 const SearchResultWrapper = styled.View`
   flex: 1;
   width: 100%;
-  margin-top: 30px;
+`
+
+const SearchResultHeader = styled.View`
+  height: 30px;
 `

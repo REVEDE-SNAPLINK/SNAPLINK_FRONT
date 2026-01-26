@@ -6,17 +6,17 @@ import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import PhotoGrid from '@/components/PhotoGrid.tsx';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 import { Dimensions } from 'react-native';
+import { useMemo } from 'react';
 
 interface PhotographerViewPhotosViewProps {
   onPressBack: () => void;
   imageURIs: string[];
   checkedImages: boolean[];
   setCheckedImages: (index: number) => void;
-  onUploadPhotos: () => void;
+  onCheckAllPhotos: () => void;
   onDeletePhotos: () => void;
-  onAddImages?: () => void;
+  onAddImages: () => void;
   isLoading?: boolean;
-
   navigation?: any;
 }
 
@@ -28,28 +28,27 @@ export default function PhotographerViewPhotosView({
   imageURIs,
   checkedImages,
   setCheckedImages,
-  onUploadPhotos,
+  onCheckAllPhotos,
   onDeletePhotos,
   onAddImages,
   isLoading = false,
-  navigation,}: PhotographerViewPhotosViewProps) {
+  navigation,
+}: PhotographerViewPhotosViewProps) {
+  const canDeletePhotos = useMemo(() => checkedImages.filter((v) => v).length > 0, [checkedImages]);
+
   const getButtonText = () => {
-    return imageURIs.length > 0 ? '선택 사진 삭제하기' : '사진 등록하기';
+    return imageURIs.length === 0 ? '사진 등록하기' : canDeletePhotos ? '선택 사진 삭제하기' : '사진 전체 선택하기';
   };
 
   const handleButtonPress = () => {
     if (imageURIs.length > 0) {
-      onDeletePhotos();
+      if (canDeletePhotos) {
+        onDeletePhotos();
+      } else {
+        onCheckAllPhotos();
+      }
     } else {
-      onUploadPhotos();
-    }
-  };
-
-  const handleAddImage = () => {
-    if (onAddImages) {
       onAddImages();
-    } else {
-      onUploadPhotos();
     }
   };
 
@@ -78,8 +77,8 @@ export default function PhotographerViewPhotosView({
             imageURIs={imageURIs}
             checkedImages={checkedImages}
             setCheckedImage={setCheckedImages}
-            addable={imageURIs.length > 0 && !isLoading}
-            onPressAddImage={handleAddImage}
+            addable={imageURIs.length > 0}
+            onPressAddImage={onAddImages}
             width={SCREEN_WIDTH - SCREEN_PADDING * 2}
           />
         </ContentContainer>
@@ -87,7 +86,7 @@ export default function PhotographerViewPhotosView({
           <SubmitButton
             text={getButtonText()}
             onPress={handleButtonPress}
-            disabled={isLoading || (imageURIs.length > 0 && checkedImages.filter((v) => v).length === 0)}
+            disabled={isLoading}
           />
         </SubmitButtonWrapper>
       </ScreenContainer>

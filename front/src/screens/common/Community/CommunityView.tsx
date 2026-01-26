@@ -14,6 +14,7 @@ import ServerImage from '@/components/ServerImage.tsx';
 import NotificationButton from '@/components/theme/NotificationButton.tsx';
 import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
 import { formatTimeAgo } from '@/utils/format.ts';
+import { useState } from 'react';
 
 export const SORT_BY_ENUM = {
   'LATEST': '최신순',
@@ -35,7 +36,6 @@ interface CommunityViewProps {
   sortBy: SortByKey;
   searchKey: string;
   isLoadingMore?: boolean;
-  isRefreshing?: boolean;
   isLoading?: boolean;
   isError?: boolean;
   onChangeSearchKey: (key: string) => void;
@@ -46,7 +46,7 @@ interface CommunityViewProps {
   onPressLike: (postId: number) => void;
   onPressWritePost: () => void;
   onLoadMore?: () => void;
-  onRefresh?: () => void;
+  onRefresh: () => void;
 }
 
 const CATEGORIES = Object.entries(COMMUNITY_CATEGORIES).map(([key, value]) => ({
@@ -61,7 +61,6 @@ export default function CommunityView({
   sortBy,
   searchKey,
   isLoadingMore = false,
-  isRefreshing = false,
   isError = false,
   onChangeSearchKey,
   onSubmitSearch,
@@ -73,6 +72,17 @@ export default function CommunityView({
   onLoadMore,
   onRefresh,
 }: CommunityViewProps) {
+  const [localRefreshing, setLocalRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setLocalRefreshing(true);
+    await onRefresh();
+    // 데이터가 로드된 후 레이아웃이 계산될 아주 짧은 시간을 벌어줌
+    setTimeout(() => {
+      setLocalRefreshing(false);
+    }, 100);
+  };
+
   return (
     <Container>
       <Header>
@@ -152,13 +162,11 @@ export default function CommunityView({
           onEndReached={onLoadMore}
           onEndReachedThreshold={0.5}
           refreshControl={
-            onRefresh ? (
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={onRefresh}
-                tintColor={theme.colors.primary}
-              />
-            ) : undefined
+            <RefreshControl
+              refreshing={localRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+            />
           }
           ListFooterComponent={
             isLoadingMore ? (
@@ -169,6 +177,7 @@ export default function CommunityView({
               </LoadingIndicator>
             ) : null
           }
+          removeClippedSubviews={false}
         />
       ) : (
         // 다른 카테고리는 기존 2열 그리드 방식
@@ -210,7 +219,7 @@ export default function CommunityView({
                     fontSize={12}
                     lineHeight="140%"
                     letterSpacing="-2.5%"
-                    numberOfLines={2}
+                    numberOfLines={1}
                     ellipsizeMode="tail"
                   >
                     {item.content}
@@ -251,13 +260,11 @@ export default function CommunityView({
           onEndReached={onLoadMore}
           onEndReachedThreshold={0.5}
           refreshControl={
-            onRefresh ? (
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={onRefresh}
-                tintColor={theme.colors.primary}
-              />
-            ) : undefined
+            <RefreshControl
+              refreshing={localRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+            />
           }
           ListFooterComponent={
             isLoadingMore ? (
@@ -268,6 +275,7 @@ export default function CommunityView({
               </LoadingIndicator>
             ) : null
           }
+          removeClippedSubviews={false}
         />
       )}
       {selectedCategory !== 'NEWS' && !isError &&

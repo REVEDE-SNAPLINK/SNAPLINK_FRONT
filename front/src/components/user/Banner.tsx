@@ -94,18 +94,39 @@ export default function Banner({
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     isManualScrolling.current = false;
     const offsetX = event.nativeEvent.contentOffset.x;
-    // 패딩을 제외한 순수 이동 거리로 인덱스 계산
     const index = Math.round(offsetX / ITEM_WIDTH);
 
+    // 끝단(가짜 아이템)에 도달했을 때만 소리 없이 위치 이동
     if (index === 0) {
-      flatListRef.current?.scrollToIndex({ index: items.length, animated: false });
+      flatListRef.current?.scrollToOffset({
+        offset: items.length * ITEM_WIDTH,
+        animated: false
+      });
       setCurrentIndex(items.length);
     } else if (index === infiniteItems.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+      flatListRef.current?.scrollToOffset({
+        offset: ITEM_WIDTH,
+        animated: false
+      });
       setCurrentIndex(1);
-    } else {
-      setCurrentIndex(index);
     }
+  };
+
+  const updateIndex = (offsetX: number) => {
+    // ITEM_WIDTH만큼 이동할 때마다 인덱스가 1씩 변함
+    const index = Math.round(offsetX / ITEM_WIDTH);
+
+    // 무한 스크롤 범위를 벗어나지 않는 선에서 상태 업데이트
+    if (index >= 0 && index < infiniteItems.length) {
+      if (currentIndex !== index) {
+        setCurrentIndex(index);
+      }
+    }
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    updateIndex(offsetX);
   };
 
   // Dot 인덱스 계산
@@ -146,6 +167,7 @@ export default function Banner({
         pagingEnabled={false} // snapToInterval을 위해 false
         showsHorizontalScrollIndicator={false}
         onScrollBeginDrag={handleScrollBeginDrag}
+        onScroll={handleScroll}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         // 핵심: 카드 너비만큼씩 딱딱 멈추게 함
         snapToInterval={ITEM_WIDTH}

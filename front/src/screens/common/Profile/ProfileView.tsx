@@ -5,6 +5,7 @@ import ToggleButton from '@/components/theme/ToggleButton.tsx';
 import Icon from '@/components/Icon.tsx';
 import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
 import ChatIcon from '@/assets/icons/chat-black.svg'
+import ActivityIcon from '@/assets/icons/activity.svg'
 import DocumentIcon from '@/assets/icons/document.svg'
 import NotificationIcon from '@/assets/icons/notification.svg'
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg'
@@ -22,6 +23,7 @@ interface ProfileViewProps {
   onPressBookingHistory: () => void;
   onPressManageBooking: () => void;
   onPressManagePortfolio: () => void;
+  onPressManageBlock: () => void;
   onPressManageShootService: () => void;
   onPressCustomerCenter: () => void;
   onPressNotice: () => void;
@@ -48,6 +50,7 @@ export default function ProfileView({
   onPressBookingHistory,
   onPressManageBooking,
   onPressManagePortfolio,
+  onPressManageBlock,
   onPressManageShootService,
   onPressCustomerCenter,
   onPressNotice,
@@ -86,22 +89,32 @@ export default function ProfileView({
           marginBottom={32}
         />
         <IconNavigationButtonWrapper>
-          {((isPhotographer && !isExpertMode) || !isPhotographer) && (
-            <>
-              <IconNavigationButton onPress={onPressMyReviews}>
-                <Icon width={24} height={24} Svg={ChatIcon} />
-                <Typography
-                  fontSize={12}
-                  lineHeight="140%"
-                  letterSpacing="-2.5%"
-                  color={theme.colors.textSecondary}
-                >
-                  내 리뷰
-                </Typography>
-              </IconNavigationButton>
-              <Divider />
-            </>
+          {((isPhotographer && !isExpertMode) || !isPhotographer) ? (
+            <IconNavigationButton onPress={onPressMyReviews}>
+              <Icon width={24} height={24} Svg={ChatIcon} />
+              <Typography
+                fontSize={12}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                color={theme.colors.textSecondary}
+              >
+                내 리뷰
+              </Typography>
+            </IconNavigationButton>
+          ) : (
+            <IconNavigationButton onPress={onPressManagePortfolio}>
+              <Icon width={24} height={24} Svg={ActivityIcon} />
+              <Typography
+                fontSize={12}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                color={theme.colors.textSecondary}
+              >
+                포트폴리오
+              </Typography>
+            </IconNavigationButton>
           )}
+          <Divider />
           <IconNavigationButton onPress={onPressMyPosts}>
             <Icon width={24} height={24} Svg={DocumentIcon} />
             <Typography
@@ -136,27 +149,23 @@ export default function ProfileView({
           <InfoButton onPress={onPressEditEmail} name="이메일" value={email} />
           <InfoButton onPress={onPressManageAccount} name="계정 관리" isLast />
         </InfoContainer>
-        {isPhotographer && isExpertMode ? (
-          <InfoContainer>
-            <InfoButton
-              onPress={onPressManageBooking}
-              name="촬영 예약 관리"
-            />
-            <InfoButton
-              onPress={onPressManagePortfolio}
-              name="포트폴리오 관리"
-            />
-            <InfoButton
-              onPress={onPressManageShootService}
-              name="판매 관리"
-              isLast
-            />
-          </InfoContainer>
-        ) : (
-          <InfoContainer>
-            <InfoButton onPress={onPressBookingHistory} name="촬영 내역" isLast />
-          </InfoContainer>
-        )}
+        <InfoContainer>
+          {isPhotographer && isExpertMode ? (
+            <>
+              <InfoButton
+                onPress={onPressManageBooking}
+                name="촬영 예약 관리"
+              />
+              <InfoButton
+                onPress={onPressManageShootService}
+                name="판매 관리"
+              />
+            </>
+          ) : (
+            <InfoButton onPress={onPressBookingHistory} name="촬영 내역"/>
+          )}
+          <InfoButton onPress={onPressManageBlock} name="차단 관리" isLast />
+        </InfoContainer>
         <Typography
           fontSize={12}
           lineHeight="140%"

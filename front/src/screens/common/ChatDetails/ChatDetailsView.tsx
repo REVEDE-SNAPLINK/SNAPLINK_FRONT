@@ -22,6 +22,7 @@ import DownloadIcon from '@/assets/icons/download-white.svg';
 import { UserType } from '@/types/auth.ts';
 import ChatWhiteIcon from '@/assets/icons/chat-white.svg';
 import ChatBlackIcon from '@/assets/icons/chat-black.svg';
+import dayjs from 'dayjs';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -68,6 +69,7 @@ interface ChatDetailsViewProps {
   onChangeImagePreviewIndex: (index: number) => void;
   onCloseImagePreview: () => void;
   navigation?: any;
+  messageReadStates: Record<number, number>; // ✅ 메시지 읽음 상태 (messageId -> unreadCount)
 }
 
 export default function ChatDetailsView({
@@ -103,6 +105,7 @@ export default function ChatDetailsView({
   onCloseImagePreview,
   hasNextPage,
   navigation,
+  messageReadStates,
 }: ChatDetailsViewProps) {
   const [showExtraButtons, setShowExtraButtons] = useState(false);
   const [showRecommandationMessages, setShowRecommandationMessages] = useState(false);
@@ -126,165 +129,139 @@ export default function ChatDetailsView({
 
   const insets = useSafeAreaInsets();
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => {
+  const renderMessage = ({ item, index }: { item: ChatMessage, index: number }) => {
     const isMyMessage = myUserId === item.senderId;
 
-    // FILE 타입 메시지
-    if (item.type === 'FILE') {
-      // 다운로드 상태는 messageId가 아니라 fileUrl 기반(downloadKey)로 추적
-      const downloadKey = encodeURIComponent(String(item.content ?? '').replace(/^\/+/, ''));
+    // 1. 유효한 메시지만 필터링된 리스트를 가져옵니다 (FlatList data와 동일하게)
+    const validMessages = messages.filter(v => v.messageId !== null);
 
-      // (하위 호환) 과거 messageId 키로 저장된 상태가 있으면 fallback
-      const fileState =
-        fileDownloadStates[downloadKey] ||
-        fileDownloadStates[String(item.messageId)] || {
-          isDownloaded: false,
-          isDownloading: false,
-        };
+    // 2. 현재 메시지 날짜 (KST 기준)
+    const currentMessageDate = dayjs.utc(item.sentAt).add(9, 'hour');
 
-      if (isMyMessage) {
+    // 3. 이전 메시지 날짜 확인
+    // index > 0 일 때, 'validMessages' 배열에서 이전 아이템을 가져와 비교합니다.
+    const prevItem = index > 0 ? validMessages[index - 1] : null;
+    const prevMessageDate = prevItem ? dayjs.utc(prevItem.sentAt).add(9, 'hour') : null;
+
+    // 4. 날짜 문자열(YYYY-MM-DD) 비교 (가장 정확함)
+    const showDateSeparator =
+      index === 0 ||
+      (prevMessageDate && currentMessageDate.format('YYYY-MM-DD') !== prevMessageDate.format('YYYY-MM-DD'));
+
+    const dateDisplayText = currentMessageDate.format('YYYY년 MM월 DD일');
+
+    // --- 타입별 메시지 컨텐츠 렌더링 함수 ---
+    const renderContent = () => {
+      // 1. FILE 타입
+      if (item.type === 'FILE') {
+        const downloadKey = encodeURIComponent(String(item.content ?? '').replace(/^\/+/, ''));
+        const fileState =
+          fileDownloadStates[downloadKey] ||
+          fileDownloadStates[String(item.messageId)] || {
+            isDownloaded: false,
+            isDownloading: false,
+          };
+
         return (
-          <MyMessageContainer>
-            <MessageTime fontSize={10} color="#AAAAAA">
-              {formatChatDayjs(item.sentAt)}
-            </MessageTime>
-            <MessageContentWrapper isMyMessage={true}>
-              <FileDownloadButton
-                fileName={fileState.fileName || '파일'}
-                fileSize={fileState.fileSize}
-                isDownloaded={fileState.isDownloaded}
-                isDownloading={fileState.isDownloading}
-                onPress={() => onPressFileDownload(item.messageId, item.content)}
-              />
-            </MessageContentWrapper>
-          </MyMessageContainer>
-        );
-      } else {
-        return (
-          <PartnerMessageContainer>
-            <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
-            <PartnerMessageContent>
-              <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
-                {item.senderNickname}
-              </Typography>
-              <PartnerMessageRow>
-                <PartnerContentWrapper>
-                  <FileDownloadButton
-                    fileName={fileState.fileName || '파일'}
-                    fileSize={fileState.fileSize}
-                    isDownloaded={fileState.isDownloaded}
-                    isDownloading={fileState.isDownloading}
-                    onPress={() => onPressFileDownload(item.messageId, item.content)}
-                  />
-                </PartnerContentWrapper>
-                <MessageTime fontSize={10} color="#AAAAAA">
-                  {formatChatDayjs(item.sentAt)}
-                </MessageTime>
-              </PartnerMessageRow>
-            </PartnerMessageContent>
-          </PartnerMessageContainer>
+          <FileDownloadButton
+            fileName={fileState.fileName || '파일'}
+            fileSize={fileState.fileSize}
+            isDownloaded={fileState.isDownloaded}
+            isDownloading={fileState.isDownloading}
+            onPress={() => onPressFileDownload(item.messageId, item.content)}
+          />
         );
       }
-    }
 
-    // IMAGE 타입 메시지
-    if (item.type === 'IMAGE') {
-      // content를 JSON 배열로 파싱 (또는 단일 URL)
-      let imageUrls: string[] = [];
-      try {
-        const parsed = JSON.parse(item.content);
-        imageUrls = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        // JSON 파싱 실패시 단일 URL로 간주
-        imageUrls = [item.content];
-      }
-
-      const imageCount = imageUrls.length;
-      const resolvedImageUrls = imageUrls;
-
-      if (isMyMessage) {
+      // 2. IMAGE 타입
+      if (item.type === 'IMAGE') {
+        let imageUrls: string[] = [];
+        try {
+          const parsed = JSON.parse(item.content);
+          imageUrls = Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+          imageUrls = [item.content];
+        }
         return (
-          <MyMessageContainer>
-            <MessageTime fontSize={10} color="#AAAAAA">
-              {formatChatDayjs(item.sentAt)}
-            </MessageTime>
-            <MessageContentWrapper isMyMessage={true}>
-              <ImageList imageCount={imageCount} isMyMessage={isMyMessage}>
-                {imageUrls.map((imageUrl: string, index: number) => (
-                  <ImageWrapper key={index} onPress={() => onPressImage(imageUrl, resolvedImageUrls)}>
-                    <UploadImage uri={imageUrl} />
-                  </ImageWrapper>
-                ))}
-              </ImageList>
-            </MessageContentWrapper>
-          </MyMessageContainer>
-        );
-      } else {
-        return (
-          <PartnerMessageContainer>
-            <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
-            <PartnerMessageContent>
-              <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
-                {item.senderNickname}
-              </Typography>
-              <PartnerMessageRow>
-                <PartnerContentWrapper>
-                  <ImageList imageCount={imageCount} isMyMessage={isMyMessage}>
-                    {imageUrls.map((imageUrl: string, index: number) => (
-                      <ImageWrapper key={index} onPress={() => onPressImage(imageUrl, resolvedImageUrls)}>
-                        <UploadImage uri={imageUrl} />
-                      </ImageWrapper>
-                    ))}
-                  </ImageList>
-                </PartnerContentWrapper>
-                <MessageTime fontSize={10} color="#AAAAAA">
-                  {formatChatDayjs(item.sentAt)}
-                </MessageTime>
-              </PartnerMessageRow>
-            </PartnerMessageContent>
-          </PartnerMessageContainer>
+          <ImageList imageCount={imageUrls.length} isMyMessage={isMyMessage}>
+            {imageUrls.map((imageUrl: string, idx: number) => (
+              <ImageWrapper key={idx} onPress={() => onPressImage(imageUrl, imageUrls)}>
+                <UploadImage uri={imageUrl} />
+              </ImageWrapper>
+            ))}
+          </ImageList>
         );
       }
-    }
 
-    // TEXT 타입 메시지 (기본)
-    if (isMyMessage) {
+      // 3. TEXT 타입 (기본)
       return (
-        <MyMessageContainer>
-          <MessageTime fontSize={10} color="#AAAAAA">
-            {formatChatDayjs(item.sentAt)}
-          </MessageTime>
-          <MyMessageBubble>
-            <MessageText fontSize={14} color="#fff">
-              {item.content}
-            </MessageText>
-          </MyMessageBubble>
-        </MyMessageContainer>
+        <MessageText fontSize={14} color={isMyMessage ? '#fff' : '#000'}>
+          {item.content}
+        </MessageText>
       );
-    } else {
-      return (
-        <PartnerMessageContainer>
-          <PartnerProfileImage source={{ uri: opponentProfileImageURI }} />
-          <PartnerMessageContent>
-            <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
-              {item.senderNickname}
-            </Typography>
-            <PartnerMessageRow>
-              <PartnerMessageBubble>
-                <MessageText fontSize={14} color="#000">
-                  {item.content}
-                </MessageText>
-              </PartnerMessageBubble>
+    };
+
+    // --- 최종 UI 리턴 ---
+    return (
+      <MessageGroupContainer key={item.messageId || index}>
+        {/* 날짜 구분선 */}
+        {showDateSeparator && (
+          <DateSeparator>
+            <DateSeparatorLine />
+            <DateText fontSize={12} color="#8F8F8F" fontWeight="medium">
+              {dateDisplayText}
+            </DateText>
+            <DateSeparatorLine />
+          </DateSeparator>
+        )}
+
+        {/* 메시지 본문 */}
+        {isMyMessage ? (
+          <MyMessageContainer>
+            <MyMessageMetaContainer>
+              {/* ✅ 읽음 숫자 표시 (1이면 표시, 0이면 숨김) */}
+              {messageReadStates[item.messageId] === 1 && (
+                <UnreadCount fontSize={10} color={theme.colors.primary}>
+                  1
+                </UnreadCount>
+              )}
               <MessageTime fontSize={10} color="#AAAAAA">
                 {formatChatDayjs(item.sentAt)}
               </MessageTime>
-            </PartnerMessageRow>
-          </PartnerMessageContent>
-        </PartnerMessageContainer>
-      );
-    }
+            </MyMessageMetaContainer>
+            {item.type === 'TEXT' ? (
+              <MyMessageBubble>{renderContent()}</MyMessageBubble>
+            ) : (
+              <MessageContentWrapper isMyMessage={true}>
+                {renderContent()}
+              </MessageContentWrapper>
+            )}
+          </MyMessageContainer>
+        ) : (
+          <PartnerMessageContainer>
+            <PartnerProfileImageWrapper>
+              <PartnerProfileImage uri={opponentProfileImageURI} />
+            </PartnerProfileImageWrapper>
+            <PartnerMessageContent>
+              <Typography fontSize={12} fontWeight="semiBold" marginBottom={5}>
+                {item.senderNickname}
+              </Typography>
+              <PartnerMessageRow>
+                {item.type === 'TEXT' ? (
+                  <PartnerMessageBubble>{renderContent()}</PartnerMessageBubble>
+                ) : (
+                  <PartnerContentWrapper>{renderContent()}</PartnerContentWrapper>
+                )}
+                <MessageTime fontSize={10} color="#AAAAAA">
+                  {formatChatDayjs(item.sentAt)}
+                </MessageTime>
+              </PartnerMessageRow>
+            </PartnerMessageContent>
+          </PartnerMessageContainer>
+        )}
+      </MessageGroupContainer>
+    );
   };
-
 
   return (
     <KeyboardAvoidingView
@@ -300,7 +277,7 @@ export default function ChatDetailsView({
         onPressTool={onPressTool}
         alignItemsCenter={false}
         navigation={navigation}
-        iconSize={30}
+        iconSize={35}
       >
         {/* 채팅 내역 */}
         <MessagesContainer>
@@ -399,11 +376,12 @@ export default function ChatDetailsView({
                       Math.min(120, Math.max(event.nativeEvent.contentSize.height, 40)),
                     );
                   }}
+                  textAlignVertical="center"
                   multiline
                 />
                 <IconButton
-                  width={20}
-                  height={20}
+                  width={25}
+                  height={25}
                   Svg={SendIcon}
                   onPress={onPressSend}
                   disabled={!hasInputValue}
@@ -640,7 +618,9 @@ const MessageInput = styled.TextInput<{ height: number }>`
   font-size: 14px;
   font-family: Pretendard-Regular;
   margin-right: 10px;
-  padding-top: 10px;
+  padding-top: ${Platform.OS === 'ios' ? '10px' : '8px'};
+  padding-bottom: ${Platform.OS === 'ios' ? '10px' : '8px'};
+  
   height: ${({ height }) => height}px;
 `;
 
@@ -664,6 +644,18 @@ const MessageTime = styled(Typography)`
   margin-bottom: 2px;
 `;
 
+// ✅ 내 메시지의 읽음 숫자 + 시간을 담는 컨테이너
+const MyMessageMetaContainer = styled.View`
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+`;
+
+// ✅ 읽음 숫자 (카톡 스타일 "1")
+const UnreadCount = styled(Typography)`
+  margin-bottom: 2px;
+`;
+
 const MessageText = styled(Typography)`
 `;
 
@@ -684,12 +676,18 @@ const PartnerMessageContainer = styled.View`
   margin-bottom: 10px;
 `;
 
-const PartnerProfileImage = styled.Image`
+const PartnerProfileImageWrapper = styled.Pressable`
   width: 40px;
   height: 40px;
-  border-radius: 20px;
+  border-radius: 40px;
   background-color: #ccc;
   margin-right: 8px;
+  overflow: hidden;
+`
+
+const PartnerProfileImage = styled(ServerImage)`
+  width: 100%;
+  height: 100%;
 `;
 
 const PartnerMessageContent = styled.View`
@@ -810,4 +808,25 @@ const ImagePreviewWrapper = styled.View`
 const PreviewImage = styled(ServerImage)`
   width: 100%;
   height: 100%;
+`;
+
+const MessageGroupContainer = styled.View`
+  width: 100%;
+`;
+
+const DateSeparator = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-vertical: 24px;
+  padding-horizontal: 8px;
+`;
+
+const DateSeparatorLine = styled.View`
+  flex: 1;
+  height: 1px;
+  background-color: #EAEAEA;
+`;
+
+const DateText = styled(Typography)`
+  margin-horizontal: 12px;
 `;

@@ -21,6 +21,7 @@ interface Props {
   headerToolIcon?: ComponentType<SvgProps>;
   onPressTool?: () => void;
   onPressMore?: () => void;
+  onPressTitle?: () => void;
   iconSize?: number;
   navigation?: any;
 }
@@ -30,6 +31,7 @@ export default function ScreenContainer({
   onPressBack,
   onPressTool,
   onPressMore,
+  onPressTitle,
   barBackgroundColor = "#fff",
   backgroundColor = "#fff",
   paddingHorizontal,
@@ -87,6 +89,7 @@ export default function ScreenContainer({
         <HeaderWithBackButton
           onPressBack={backHandler}
           onPressTool={onPressTool}
+          onPressTitle={onPressTitle}
           title={headerTitle}
           ToolIcon={headerToolIcon}
           isShowLogo={isShowLogo}

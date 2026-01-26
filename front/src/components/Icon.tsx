@@ -17,6 +17,7 @@ export type IconProps =
   | (BaseIconProps & {
   Svg: ComponentType<SvgProps>;
   color?: string;
+  strokeWidth?: number;
 });
 
 const IconWrapper = styled.View<{ width: number; height: number }>`
@@ -43,6 +44,7 @@ export default function Icon(props: IconProps) {
           width={width}
           height={height}
           {...(props.color ? { fill: props.color, stroke: props.color } : {})}
+          {...(props.strokeWidth) ? { strokeWidth: props.strokeWidth } : {}}
         />
       </IconWrapper>
     );

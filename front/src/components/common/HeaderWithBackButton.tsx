@@ -7,11 +7,13 @@ import { ComponentType } from 'react';
 import Icon from '@/components/Icon.tsx';
 import Logo from '@/assets/imgs/logo-black.svg'
 import MoreCircleIcon from '@/assets/icons/more-circle.svg'
+import { Pressable } from 'react-native';
 
 interface HeaderWithBackButtonProps {
   onPressBack?: () => void;
   onPressTool?: () => void;
   onPressMore?: () => void;
+  onPressTitle?: () => void;
   title: string;
   ToolIcon?: ComponentType<SvgProps>;
   isShowLogo?: boolean;
@@ -23,6 +25,7 @@ export default function HeaderWithBackButton({
   onPressBack,
   onPressTool,
   onPressMore,
+  onPressTitle,
   title,
   ToolIcon,
   isShowLogo = false,
@@ -39,14 +42,16 @@ export default function HeaderWithBackButton({
       {title === "" && isShowLogo ? (
           <Icon width={89} height={20} Svg={Logo} />
         ) : (
-        <Typography
-          fontSize={18}
-          fontWeight="bold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-        >
-          {title}
-        </Typography>
+          <Pressable {...(onPressTitle !== undefined ? { onPress: onPressTitle } : {})} disabled={onPressTitle === undefined}>
+            <Typography
+              fontSize={18}
+              fontWeight="bold"
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+            >
+              {title}
+            </Typography>
+          </Pressable>
       )}
       <ToolButtonWrapper>
         {ToolIcon !== undefined && onPressTool && (

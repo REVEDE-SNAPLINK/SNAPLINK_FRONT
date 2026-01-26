@@ -109,6 +109,7 @@ export default function RootNavigator() {
         onClose={handleCloseReportModal}
         onSubmit={handleSubmitReport}
         initialReason={reportModal.initialReason}
+        targetType={reportModal.targetType}
         targetUserType={reportModal.targetUserType || 'user'}
         isLoading={!!reportModal.isLoading}
       />

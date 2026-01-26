@@ -1,8 +1,11 @@
 import { Image, ImageProps } from 'react-native';
+import FastImage, { FastImageProps, Priority, ResizeMode } from 'react-native-fast-image';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 
-interface ServerImageProps extends Omit<ImageProps, 'source'> {
+interface ServerImageProps extends Omit<ImageProps, 'source' | 'resizeMode'> {
   uri?: string;
+  priority?: Priority;
+  resizeMode?: ResizeMode;
 }
 
 /**
@@ -27,21 +30,33 @@ const isFullUrl = (uri: unknown): boolean => {
   return uri.startsWith('http://') || uri.startsWith('https://');
 };
 
-export default function ServerImage({ uri, ...rest }: ServerImageProps) {
-  // uri가 string이 아니면 이미지 자체를 렌더링하지 않거나 placeholder
+export default function ServerImage({
+  uri,
+  priority = FastImage.priority.normal,
+  resizeMode = FastImage.resizeMode.cover,
+  ...rest
+}: ServerImageProps) {
+  // uri가 string이 아니면 placeholder
   if (typeof uri !== 'string' || uri.trim() === '') {
     return <Image {...rest} />;
   }
 
+  // 로컬 파일은 기본 Image 사용 (FastImage는 로컬 파일 지원 제한적)
   if (isLocalUri(uri)) {
     return <Image {...rest} source={{ uri }} />;
   }
 
-  if (isFullUrl(uri)) {
-    return <Image {...rest} source={{ uri }} />;
-  }
+  const imageUri = isFullUrl(uri) ? uri : CLOUDFRONT_BASE_URL + uri;
 
-  const imageUri = CLOUDFRONT_BASE_URL + uri;
-
-  return <Image {...rest} source={{ uri: imageUri }} />;
+  return (
+    <FastImage
+      {...(rest as Omit<FastImageProps, 'source'>)}
+      source={{
+        uri: imageUri,
+        priority,
+        cache: FastImage.cacheControl.immutable,
+      }}
+      resizeMode={resizeMode}
+    />
+  );
 }

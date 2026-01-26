@@ -11,7 +11,7 @@ interface FilterProps {
   activeCategoryIds: string[];
   filterChips: FilterChip[];
   onPressFilterButton: () => void;
-  onPressCategoryChip: (categoryId: string) => void;
+  onPressCategoryChip: (categoryId: string, index: number) => void;
   onPressFilterChip: (chipId: string) => void;
 }
 
@@ -31,10 +31,10 @@ export default function Filter({
         contentContainerStyle={{ alignItems: 'center' }}
       >
         <FilterButton onPress={onPressFilterButton}>
-          <Icon width={20} height={20} Svg={FilterIcon} />
+          <Icon width={20} height={20} Svg={FilterIcon} strokeWidth={0.2} />
         </FilterButton>
 
-        {categories.map((category) => {
+        {categories.map((category, index) => {
           const isActive = activeCategoryIds.includes(category.id);
           const IconComponent = isActive ? category.activeIcon : category.icon;
 
@@ -44,7 +44,7 @@ export default function Filter({
               name={category.name}
               Icon={IconComponent}
               isActive={isActive}
-              onPress={() => onPressCategoryChip(category.id)}
+              onPress={() => onPressCategoryChip(category.id, index)}
             />
           );
         })}
@@ -110,6 +110,7 @@ const CategoryChip = ({ name, Icon: IconComponent, isActive, onPress }: Category
         height={20}
         Svg={IconComponent}
         color={isActive ? '#fff' : theme.colors.textPrimary}
+        strokeWidth={0.2}
       />
       <Typography
         fontSize={11}

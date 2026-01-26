@@ -41,7 +41,7 @@ export default function CommunityDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<CommunityDetailsRouteProp>();
   const { userId, userType } = useAuthStore();
-  const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading, openReportModal, setReportModalLoading } = useModalStore();
+  const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading, openReportModal, setReportModalLoading, closeReportModal } = useModalStore();
 
   const { postId } = route.params;
 
@@ -147,7 +147,7 @@ export default function CommunityDetailsContainer() {
     // setIsShareModalVisible(true);
     if (post) {
       Share.share({
-        message: `${post.content.substring(0, 10)+"..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}`,
+        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}`,
       });
       // Firebase Analytics: 공유 이벤트
       analytics().logEvent('community_post_share', {
@@ -302,7 +302,7 @@ export default function CommunityDetailsContainer() {
           Alert.show({
             title: '오류',
             message: '게시글 수정에 실패했습니다.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }
@@ -330,7 +330,8 @@ export default function CommunityDetailsContainer() {
       message: '삭제 하시면 다시 복구할 수 없습니다.',
       buttons: [
         { text: '취소', onPress: () => { }, type: 'cancel' },
-        { text: '삭제', onPress: () => {
+        {
+          text: '삭제', onPress: () => {
             // Firebase Analytics: 게시글 삭제 이벤트
             analytics().logEvent('community_post_delete', {
               post_id: postId,
@@ -344,12 +345,13 @@ export default function CommunityDetailsContainer() {
                   title: '삭제 완료',
                   message: '삭제되었습니다.',
                   buttons: [
-                    { text: '완료', onPress: () => navigation.goBack()},
+                    { text: '완료', onPress: () => navigation.goBack() },
                   ]
                 })
               },
             });
-          } },
+          }
+        },
       ]
     })
   };
@@ -427,7 +429,7 @@ export default function CommunityDetailsContainer() {
             category: mappingCategory(post.categoryLabel),
             content: post.content,
             deletePhotoIds: [],
-            taggedUserIds: [ photographerId ],
+            taggedUserIds: [photographerId],
           },
           images: [],
         },
@@ -464,7 +466,15 @@ export default function CommunityDetailsContainer() {
             setReportModalLoading(false);
             Alert.show({
               title: '소중한 의견 감사합니다',
-              message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.'
+              message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.',
+              buttons: [
+                {
+                  text: '확인', onPress: () => {
+                    closeReportModal();
+                    setIsEditModalVisible(false);
+                  }
+                }
+              ]
             });
           } catch (error) {
             setReportModalLoading(false);
@@ -495,7 +505,15 @@ export default function CommunityDetailsContainer() {
             setReportModalLoading(false);
             Alert.show({
               title: '소중한 의견 감사합니다',
-              message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.'
+              message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.',
+              buttons: [
+                {
+                  text: '확인', onPress: () => {
+                    closeReportModal();
+                    setIsEditModalVisible(false);
+                  }
+                }
+              ]
             });
           } catch (error) {
             setReportModalLoading(false);
@@ -513,10 +531,10 @@ export default function CommunityDetailsContainer() {
     if (!post) return;
     setIsEditModalVisible(false);
     Alert.show({
-      title: '차단하시겠습니까?',
-      message: `${post.author.nickname}님을 차단하시겠습니까?`,
+      title: `${post.author.nickname}님을 차단하시겠습니까?`,
+      message: "차단 시 상대방의 모든 게시물이 숨겨지며, 채팅을 주고받을 수 없습니다.",
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '취소', onPress: () => { }, type: 'cancel' },
         {
           text: '차단',
           type: 'destructive',
@@ -540,6 +558,11 @@ export default function CommunityDetailsContainer() {
         },
       ],
     });
+  }
+
+  const handlePressAuthor = () => {
+    if (!post) return;
+    navigation.navigate('PhotographerDetails', { photographerId: post.author.userId });
   }
 
   const isMyPost = post?.author.userId === userId;
@@ -592,6 +615,7 @@ export default function CommunityDetailsContainer() {
       onAddTaggedUser={handleAddTaggedUser}
       onCloseSearchingPhotographerModal={handleCloseSearchingPhotographerModal}
       onChangeTaggedPhotographer={handleChangeTaggedPhotographer}
+      onPressAuthor={handlePressAuthor}
     />
   );
 }

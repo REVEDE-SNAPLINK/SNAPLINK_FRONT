@@ -68,7 +68,7 @@ export default function ScheduleFormView({
       onPressBack={onPressBack}
       paddingHorizontal={40}
       iconSize={20}
-    
+
       navigation={navigation}>
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView

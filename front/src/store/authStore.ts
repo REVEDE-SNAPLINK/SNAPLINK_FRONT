@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { signInApi, refreshApi, signUpApi, SignUpFormData, logoutApi, withdrawApi } from '@/api/auth';
+import { signInApi, refreshApi, signUpApi, SignUpFormData, logoutApi, withdrawApi, RefreshTokenError } from '@/api/auth';
 import {
   saveRefreshToken,
   loadRefreshToken,
@@ -10,6 +10,8 @@ import {
   saveUserType,
   loadUserType,
   clearUserType,
+  saveAppleLoginInfo,
+  clearAppleLoginInfo,
 } from '@/auth/tokenStore.ts';
 import messaging from '@react-native-firebase/messaging';
 import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
@@ -21,6 +23,10 @@ import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { updateNotificationSettings } from '@/api/user.ts';
 import { Alert } from '@/components/theme';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
+
+let isRefreshing = false;
+let refreshPromise: Promise<any> | null = null;
 
 type AuthStatus = 'idle' | 'loading' | 'authed' | 'anon' | 'needs_signup';
 type UserType = 'user' | 'photographer';
@@ -43,8 +49,9 @@ type AuthState = {
 
   // actions
   bootstrap: () => Promise<void>;
-  signInWithKakao: () => Promise<string | null>;
-  signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE', token: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signInWithKakao: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signInWithApple: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE' | 'APPLE', token: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signOut: () => Promise<void>;
   signUp: (formData: SignUpFormData) => Promise<void>;
   withdraw: () => Promise<void>;
@@ -75,6 +82,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async bootstrap() {
+    // 이미 토큰 갱신 중이라면 그 결과를 기다림 (getAccessToken의 로직 공유)
+    if (isRefreshing && refreshPromise) {
+      console.log('[AuthStore] Bootstrap waiting for ongoing refresh...');
+      await refreshPromise;
+      return;
+    }
+
     try {
       console.log('[AuthStore] Bootstrap starting...');
       const refreshToken = await loadRefreshToken();
@@ -85,57 +99,102 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      console.log('[AuthStore] Refresh token found, attempting to refresh...');
-      const startTime = Date.now();
+      // getAccessToken을 통해 안전하게 갱신 시도 (Lock 적용됨)
+      const token = await get().getAccessToken();
 
-      // 5초 타임아웃 추가
-      const refreshPromise = refreshApi(refreshToken);
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Refresh timeout')), 5000)
-      );
+      if (token) {
+        const [savedUserId, savedUserType] = await Promise.all([
+          loadUserId(),
+          loadUserType(),
+        ]);
 
-      const refreshed = await Promise.race([refreshPromise, timeoutPromise]) as any;
-
-      const elapsed = Date.now() - startTime;
-      console.log(`[AuthStore] Token refreshed successfully in ${elapsed}ms`);
-
-      if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
-        console.log('[AuthStore] New refresh token received, saving...');
-        await saveRefreshToken(refreshed.refreshToken);
+        set({
+          accessToken: token,
+          status: 'authed',
+          userId: savedUserId || '',
+          userType: savedUserType || 'user',
+          bootstrapped: true,
+        });
+        console.log('[AuthStore] Bootstrap completed successfully');
+      } else {
+        throw new Error('Bootstrap failed to get access token');
       }
-
-      // Load userId and userType from persistent storage
-      const [savedUserId, savedUserType] = await Promise.all([
-        loadUserId(),
-        loadUserType(),
-      ]);
-
-      console.log('[AuthStore] Loaded userId:', savedUserId, 'userType:', savedUserType);
-
-      set({
-        accessToken: refreshed.accessToken,
-        status: 'authed',
-        userId: savedUserId || '',
-        userType: savedUserType || 'user',
-        bootstrapped: true,
-      });
-      console.log('[AuthStore] Bootstrap completed successfully');
     } catch (e) {
       console.error('[AuthStore] Bootstrap failed:', e);
-      await clearRefreshToken();
-      set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
+
+      const shouldClearToken = e instanceof RefreshTokenError && e.isTokenInvalid;
+
+      if (shouldClearToken) {
+        await clearRefreshToken();
+        await clearUserId();
+        await clearUserType();
+        set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
+      } else {
+        const [savedUserId, savedUserType] = await Promise.all([
+          loadUserId(),
+          loadUserType(),
+        ]);
+
+        if (savedUserId) {
+          set({
+            status: 'authed',
+            accessToken: null,
+            userId: savedUserId,
+            userType: savedUserType || 'user',
+            bootstrapped: true,
+          });
+        } else {
+          set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
+        }
+      }
     }
   },
 
-  async signInWithKakao(): Promise<string | null> {
+  async signInWithKakao(): Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'> {
     set({ status: 'loading' });
     try {
       const response = await login();
 
-      return new Promise(resolve => resolve(response.accessToken));
+      if (!response.accessToken) {
+        throw new Error('Kakao Login failed: No accessToken');
+      }
+
+      return await get().signInWithProviderToken('KAKAO', response.accessToken);
     } catch (e) {
       set({ status: 'anon' });
       console.error('signInWithKakaoCode error:', e);
+      throw e;
+    }
+  },
+
+  async signInWithApple(): Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'> {
+    set({ status: 'loading' });
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      });
+
+      const { identityToken, fullName, email } = appleAuthRequestResponse;
+
+      if (!identityToken) {
+        throw new Error('Apple Login failed: No identityToken');
+      }
+
+      // 애플은 최초 로그인 시에만 이름과 이메일을 반환하므로 저장해둠
+      const name = fullName ? `${fullName.familyName || ''}${fullName.givenName || ''}`.trim() : null;
+      if (name || email) {
+        await saveAppleLoginInfo(name, email ?? null);
+      }
+
+      return await get().signInWithProviderToken('APPLE', identityToken);
+    } catch (e: any) {
+      if (e.code === 'ERR_CANCELED') {
+        set({ status: 'anon' });
+        throw e; // 사용자가 취소한 경우
+      }
+      set({ status: 'anon' });
+      console.error('signInWithApple error:', e);
       throw e;
     }
   },
@@ -181,7 +240,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           userType,
         });
 
-        await safeRegisterFcmDevice();
+        // FCM 등록은 백그라운드에서 처리 (UI blocking 방지)
+        safeRegisterFcmDevice();
       } else {
         // Save userId even in needs_signup state
         await saveUserId(response.userId);
@@ -215,6 +275,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearRefreshToken(),
       clearUserId(),
       clearUserType(),
+      clearAppleLoginInfo(),
     ]);
 
     // Query 캐시 초기화
@@ -260,6 +321,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           saveUserType(userType),
         ]);
 
+        // 회원가입 완료 후 저장된 애플 로그인 정보 삭제
+        await clearAppleLoginInfo();
+
         set({
           status: 'authed',
           accessToken: response.tokens.accessToken,
@@ -267,7 +331,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           userType,
         });
 
-        await safeRegisterFcmDevice();
+        // FCM 등록은 백그라운드에서 처리 (UI blocking 방지)
+        safeRegisterFcmDevice();
       }
     } catch (e) {
       set({ status: 'anon', accessToken: null });
@@ -287,6 +352,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearRefreshToken(),
       clearUserId(),
       clearUserType(),
+      clearAppleLoginInfo(),
     ]);
 
     set({ status: 'anon', accessToken: null, userId: '' });
@@ -302,41 +368,61 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   getAccessToken: async () => {
+    // 1. 이미 리프레시 진행 중이면 생성된 Promise 반환 (Lock)
+    if (isRefreshing && refreshPromise) {
+      console.log('[getAccessToken] Already refreshing, returning existing promise');
+      return refreshPromise;
+    }
+
     const accessToken = get().accessToken;
 
+    // 2. 유효한 토큰이 있으면 즉시 반환
     if (accessToken && !isJwtExpired(accessToken)) {
       return accessToken;
     }
 
     const refreshToken = await loadRefreshToken();
-    if (!refreshToken) {
-      // refreshToken이 없어도 바로 로그아웃하지 않음
-      // 이미 authed 상태라면 유지 (UI에서 401 발생 시 처리)
-      console.log('[getAccessToken] No refresh token available');
-      return null;
-    }
+    if (!refreshToken) return null;
 
-    try {
-      const refreshed = await refreshApi(refreshToken);
+    // 3. 리프레시 시작 (Lock 설정)
+    isRefreshing = true;
+    refreshPromise = (async () => {
+      try {
+        console.log('[getAccessToken] Refreshing token...');
+        const refreshPromiseApi = refreshApi(refreshToken);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Refresh timeout')), 10000) // 10초로 연장
+        );
 
-      if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
-        await saveRefreshToken(refreshed.refreshToken);
+        const refreshed = await Promise.race([refreshPromiseApi, timeoutPromise]) as any;
+
+        if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
+          await saveRefreshToken(refreshed.refreshToken);
+        }
+
+        set({
+          status: 'authed',
+          accessToken: refreshed.accessToken,
+        });
+
+        console.log('[getAccessToken] Token refreshed successfully');
+        return refreshed.accessToken;
+      } catch (e) {
+        console.error('[getAccessToken] Token refresh failed:', e);
+        // 특정 에러 상황에서만 토큰 삭제 (세션 만료 등)
+        if (e instanceof RefreshTokenError && e.isTokenInvalid) {
+          await clearRefreshToken();
+        }
+        set({ accessToken: null });
+        return null;
+      } finally {
+        // 4. 완료 후 Lock 해제
+        isRefreshing = false;
+        refreshPromise = null;
       }
+    })();
 
-      set({
-        status: 'authed',
-        accessToken: refreshed.accessToken,
-      });
-
-      return refreshed.accessToken;
-    } catch (e) {
-      console.error('[getAccessToken] Token refresh failed:', e);
-      // Refresh 실패 시 토큰 정리하지만 status는 유지
-      // authFetch에서 401 처리 후 최종 실패 시에만 로그아웃
-      await clearRefreshToken();
-      set({ accessToken: null });
-      return null;
-    }
+    return refreshPromise;
   }
 }));
 

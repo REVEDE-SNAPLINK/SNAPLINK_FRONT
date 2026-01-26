@@ -155,6 +155,8 @@ export default function PostDetailView({
         onClose={onCloseMoreModal}
         title="더보기"
         headerAlign="center"
+        minHeight={250}
+        scrollable={false}
       >
         <ModalButton onPress={onSharePost}>
           <Icon width={18} height={18} Svg={UploadIcon} />

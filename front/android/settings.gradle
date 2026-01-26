@@ -6,14 +6,12 @@ include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
 
 dependencyResolutionManagement {
-  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+//   repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
   repositories {
     google()
     mavenCentral()
-    maven { url "https://devrepo.kakao.com/nexus/content/groups/public/" }
-    // jitpack 쓰면 유지
-    maven { url "https://www.jitpack.io" }
-    // notifee local maven repository
-    maven { url "../node_modules/@notifee/react-native/android/libs" }
+    maven { url 'https://devrepo.kakao.com/nexus/content/groups/public/' }
+    maven { url 'https://www.jitpack.io' }
+    maven { url "$rootDir/../node_modules/@notifee/react-native/android/libs" }
   }
 }

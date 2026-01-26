@@ -487,7 +487,7 @@ export default function PhotographerDetailsView({
                     <Icon width={20} height={20} Svg={CrossIcon} />
                     </FloatingButton>
                   )
-                : (
+                : !isMyProfile && (
                 <>
                   <ActionButton
                     onPress={onPressFavorite}
@@ -524,6 +524,7 @@ export default function PhotographerDetailsView({
       title="더보기"
       minHeight={276}
       headerAlign="center"
+      scrollable={false}
     >
       <ModalButton onPress={() => {
         onCloseMoreModal();
@@ -610,6 +611,7 @@ export default function PhotographerDetailsView({
       onClose={onCloseProfileInfoModal}
       minHeight={300}
       showHeader={false}
+      scrollable={false}
     >
       <ProfileInfoSection>
         <Typography
@@ -698,9 +700,8 @@ const ProfileImageWrapper = styled.View`
 `;
 
 const ProfileImage = styled(ServerImage)`
-  max-width: 100%;
-  max-height: 100%;
-  resize-mode: cover;
+  width: 100%;
+  height: 100%;
 `;
 
 const ProfileInfoWrapper = styled.View`

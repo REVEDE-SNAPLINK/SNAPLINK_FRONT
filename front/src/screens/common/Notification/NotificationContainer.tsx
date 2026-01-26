@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import NotificationView from '@/screens/common/Notification/NotificationView.tsx';
@@ -7,6 +8,7 @@ import { navigateByDeepLink } from '@/navigation';
 
 export default function NotificationContainer() {
   const navigation = useNavigation<MainNavigationProp>();
+  const didMarkAllAsReadRef = useRef(false);
 
   // TODO: 카테고리 필터 기능 - API 지원 시 활성화
   // const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>('일정');
@@ -16,6 +18,22 @@ export default function NotificationContainer() {
 
   // Mark as read mutation
   const markAsReadMutation = usePatchNotificationReadMutation();
+
+  // ✅ 화면 진입 시 안 읽은 알림 모두 읽음 처리
+  useEffect(() => {
+    if (didMarkAllAsReadRef.current) return;
+    if (notifications.length === 0) return;
+
+    const unreadNotifications = notifications.filter(n => !n.isRead);
+    if (unreadNotifications.length === 0) return;
+
+    didMarkAllAsReadRef.current = true;
+
+    // 모든 안 읽은 알림을 읽음 처리
+    unreadNotifications.forEach(n => {
+      markAsReadMutation.mutate({ notificationId: n.id });
+    });
+  }, [notifications]);
 
   const handlePressBack = () => navigation.goBack();
 

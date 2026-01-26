@@ -5,6 +5,7 @@ import { ComponentType } from 'react';
 import { SvgProps } from 'react-native-svg';
 import { theme } from '@/theme';
 import BadgeIcon from '@/components/theme/BadgeIcon.tsx';
+import { Dimensions } from 'react-native';
 
 export type TabItem = {
   key: string;
@@ -57,17 +58,19 @@ export default function BottomNavigation({
   );
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const TAB_WIDTH = SCREEN_WIDTH / 5;
+
 const Container = styled.View`
   height: 65px;
   background: #fff;
-  padding-horizontal: 27px;
   flex-direction: row;
-  justify-content: space-between;
   align-items: center;
   box-shadow: 0px -2px 2px rgba(0, 0, 0, 0.08);
 `;
 
 const TabButton = styled.TouchableOpacity`
+  width: ${TAB_WIDTH}px;
   align-items: center;
   justify-content: center;
   position: relative;

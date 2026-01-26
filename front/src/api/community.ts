@@ -91,6 +91,7 @@ export interface CommunityPost {
     userId: string;
     nickname: string;
   }[];
+  isisPhotographer: boolean;
   likeCount: number;
   commentCount: number;
   isLiked: boolean;

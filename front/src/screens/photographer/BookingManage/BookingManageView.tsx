@@ -21,11 +21,11 @@ interface BookingManageViewProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   onPressBack: () => void;
-  onPressViewPhotos?: (bookingId: number) => void;
-  onPressConfirmBooking?: (bookingId: number) => void;
-  onPressRejectBooking?: (bookingId: number) => void;
-  onPressCompleteBooking?: (bookingId: number) => void;
-  onPressCancelBooking?: (bookingId: number) => void;
+  onPressViewPhotos: (bookingId: number) => void;
+  onPressConfirmBooking: (bookingId: number) => void;
+  onPressRejectBooking: (bookingId: number) => void;
+  onPressCompleteBooking: (bookingId: number) => void;
+  onPressCancelBooking: (bookingId: number) => void;
 
   navigation?: any;
 }
@@ -67,27 +67,27 @@ export default function BookingManageView({
         type={item.type}
         datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
         onPressViewPhotos={
-          (item.status === 'COMPLETED') && onPressViewPhotos
+          item.status === 'COMPLETED'
             ? () => onPressViewPhotos(item.bookingId)
             : undefined
         }
         onPressCompleteBooking={
-          (item.status === 'APPROVED') && onPressCompleteBooking
+          item.status === 'APPROVED'
             ? () => onPressCompleteBooking(item.bookingId)
             : undefined
         }
         onPressCancelBooking={
-          (item.status === 'APPROVED') && onPressCancelBooking
+          item.status === 'APPROVED'
             ? () => onPressCancelBooking(item.bookingId)
             : undefined
         }
         onPressConfirmBooking={
-          item.status === 'WAITING_FOR_APPROVAL' && onPressConfirmBooking
+          item.status === 'WAITING_FOR_APPROVAL'
             ? () => onPressConfirmBooking(item.bookingId)
             : undefined
         }
         onPressRejectBooking={
-          item.status === 'WAITING_FOR_APPROVAL' && onPressRejectBooking
+          item.status === 'WAITING_FOR_APPROVAL'
             ? () => onPressRejectBooking(item.bookingId)
             : undefined
         }

@@ -345,7 +345,13 @@ export default function PortfolioOnboardingContainer() {
         message: '변경된 내용은 저장되지 않아요.',
         buttons: [
           { text: "취소", type: 'cancel', onPress: () => {} },
-          { text: "확인", onPress: () => navigation.goBack() },
+          { text: "확인", onPress: () => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+            }
+          }},
         ]
       })
     } else {
@@ -359,7 +365,13 @@ export default function PortfolioOnboardingContainer() {
       message: '변경된 내용은 저장되지 않아요.',
       buttons: [
         { text: "취소", type: 'cancel', onPress: () => {} },
-        { text: "확인", onPress: () => navigation.reset({ index: 0, routes: [{ name: "Home" }] }) },
+        { text: "확인", onPress: () => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+          }
+        }},
       ]
     })
   }
@@ -667,10 +679,11 @@ export default function PortfolioOnboardingContainer() {
               quality: 0.6,
             });
 
+            // 압축 후에는 JPEG로 변환되므로 type을 image/jpeg로 설정
             setProfileImageURI({
               uri: compressedUri,
-              name: response.assets[0].fileName,
-              type: response.assets[0].type,
+              name: 'profile.jpg',
+              type: 'image/jpeg',
             });
           } catch (error) {
             console.error('Camera image compression failed:', error);
@@ -715,10 +728,11 @@ export default function PortfolioOnboardingContainer() {
               quality: 0.6,
             });
 
+            // 압축 후에는 JPEG로 변환되므로 type을 image/jpeg로 설정
             setProfileImageURI({
               uri: compressedUri,
-              name: response.assets[0].fileName,
-              type: response.assets[0].type,
+              name: 'profile.jpg',
+              type: 'image/jpeg',
             });
           } catch (error) {
             console.error('Image compression failed:', error);

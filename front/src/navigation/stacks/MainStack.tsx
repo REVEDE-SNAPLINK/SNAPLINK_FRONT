@@ -40,6 +40,7 @@ import LegalScreen from '@/screens/common/LegalScreen.tsx';
 import NoticeScreen from '@/screens/common/NoticeScreen.tsx';
 import NoticeDetailScreen from '@/screens/common/NoticeDetailScreen.tsx';
 import FAQScreen from '@/screens/common/FAQScreen.tsx';
+import BlockManageContainer from '@/screens/common/BlockManage/BlockManageContainer.tsx';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -98,6 +99,7 @@ export default function MainStack() {
       <Stack.Screen name="NoticeDetail" component={NoticeDetailScreen} />
       <Stack.Screen name="FAQ" component={FAQScreen} />
       <Stack.Screen name="Legal" component={LegalScreen} />
+      <Stack.Screen name="BlockManage" component={BlockManageContainer} />
     </Stack.Navigator>
   )
 }

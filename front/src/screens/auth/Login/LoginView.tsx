@@ -1,22 +1,25 @@
-import React from 'react';
 import styled from '@/utils/scale/CustomStyled';
 import Typography from '@/components/theme/Typography';
 import SocialLoginButton from '@/components/SocialLoginButton';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import Icon from '@/components/Icon.tsx';
-import Logo from '@/assets/imgs/logo.svg'
+import Logo from '@/assets/imgs/logo.svg';
 import Kakao from '@/assets/icons/kakao.svg';
+import Apple from '@/assets/icons/apple.svg';
+import { Platform } from 'react-native';
 // import Naver from '@/assets/icons/naver.svg';
 // import Google from '@/assets/icons/google.svg';
 
 type LoginViewProps = {
   onKakaoLogin: () => void;
+  onAppleLogin: () => void;
   // onNaverLogin: () => void;
   // onGoogleLogin: () => void;
 }
 
 export default function LoginView({
   onKakaoLogin,
+  onAppleLogin,
   // onNaverLogin,
   // onGoogleLogin,
 }: LoginViewProps) {
@@ -37,11 +40,20 @@ export default function LoginView({
 
       <SocialLoginContainer>
         <SocialLoginButton
-          backgroundColor='#FEE500'
+          backgroundColor="#FEE500"
           Icon={Kakao}
-          text='카카오'
+          text="카카오"
           onPress={onKakaoLogin}
         />
+        {Platform.OS === 'ios' &&
+          <SocialLoginButton
+            backgroundColor="#000"
+            Icon={Apple}
+            text="Apple"
+            textColor="#fff"
+            onPress={onAppleLogin}
+          />
+        }
         {/* TODO: 비즈니스 문제로 추후 추가 */}
         {/*<SocialLoginButton*/}
         {/*  backgroundColor='#03C75A'*/}

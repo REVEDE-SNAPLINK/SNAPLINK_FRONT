@@ -356,7 +356,6 @@ useEffect(() => {
           contentContainerStyle={{
             paddingHorizontal: PADDING_HORIZONTAL,
             paddingTop: 22,
-            paddingBottom: resolvedFooterHeight ? resolvedFooterHeight + 22 : 22,
           }}
         >
           {MeasuredBodyContent}

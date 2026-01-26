@@ -40,7 +40,7 @@ interface BookingCalendarViewProps {
 const CALENDAR_HEADER_HEIGHT = 76;
 const DAY_HEIGHT = 62;
 const MAX_WEEK_COUNT = 6; // 캘린더 최대 주차 수 (높이 통일 기준)
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // 이전달 계산
 const getPrevMonth = (yearMonth: string) => {
@@ -66,7 +66,7 @@ const formatDateToKorean = (dateString: string) => {
   const day = date.getDate();
   const dayOfWeek = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][
     date.getDay()
-    ];
+  ];
   return `${month}월 ${day}일 ${dayOfWeek}`;
 };
 
@@ -85,8 +85,13 @@ export default function BookingCalendarView({
   onPressAddSchedule,
   onMonthChange,
 }: BookingCalendarViewProps) {
-  const [containerHeight, setContainerHeight] = useState(0);
-  const [defaultHeight, setDefaultHeight] = useState(0);
+  // 초기 높이를 미리 계산하여 깜빡임 방지
+  const initialContainerHeight = SCREEN_HEIGHT;
+  const initialCalendarHeight = CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT;
+  const initialDefaultHeight = initialContainerHeight - initialCalendarHeight + 20;
+
+  const [containerHeight, setContainerHeight] = useState(initialContainerHeight);
+  const [defaultHeight, setDefaultHeight] = useState(initialDefaultHeight);
   const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const isPickerActiveRef = useRef(false); // 다이얼로그가 열려있거나 처리 중인지 추적
@@ -359,19 +364,20 @@ export default function BookingCalendarView({
       }
     });
 
+  // renderType 변경 시 sheetHeight 애니메이션
   useEffect(() => {
     if (!containerHeight || !defaultHeight) return;
 
-    const targetMap = {
+    const sheetTargetMap = {
       HIDDEN: 0,
       DEFAULT: defaultHeight,
       FULL: containerHeight,
     };
 
-    const targetValue = targetMap[renderType];
+    const sheetTarget = sheetTargetMap[renderType];
 
-    if (Math.abs(sheetHeight.value - targetValue) > 1) {
-      sheetHeight.value = withTiming(targetValue, { duration: 300 });
+    if (Math.abs(sheetHeight.value - sheetTarget) > 1) {
+      sheetHeight.value = withTiming(sheetTarget, { duration: 300 });
     }
   }, [renderType, containerHeight, defaultHeight, sheetHeight]);
 
@@ -427,12 +433,11 @@ export default function BookingCalendarView({
                       selectedDate={selectedDate}
                       onSelectDate={handleSelectDate}
                       scheduleData={scheduleData}
-                      sheetHeight={sheetHeight}
                       containerHeight={containerHeight}
+                      sheetHeight={sheetHeight}
                       defaultHeight={defaultHeight}
                       calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
                       dayRowHeight={DAY_HEIGHT}
-                      maxWeekCount={MAX_WEEK_COUNT}
                     />
                   </View>
                 ))}
@@ -445,12 +450,11 @@ export default function BookingCalendarView({
                   selectedDate={selectedDate}
                   onSelectDate={handleSelectDate}
                   scheduleData={scheduleData}
-                  sheetHeight={sheetHeight}
                   containerHeight={containerHeight}
+                  sheetHeight={sheetHeight}
                   defaultHeight={defaultHeight}
                   calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
                   dayRowHeight={DAY_HEIGHT}
-                  maxWeekCount={MAX_WEEK_COUNT}
                 />
               </View>
             )}
@@ -701,7 +705,7 @@ const ScheduleDDayBlock = styled.TouchableOpacity`
   background-color: #fff;
   position: absolute;
   bottom: 20px;
-  left: ${SCREEN_WIDTH / 2  - 27}px;
+  left: ${SCREEN_WIDTH / 2 - 27}px;
 `
 
 const FloatingButton = styled.TouchableOpacity`

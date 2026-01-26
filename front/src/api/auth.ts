@@ -57,6 +57,19 @@ export async function signInApi (provider: string, token: string): Promise<SignI
   }
 }
 
+// 토큰 갱신 에러 클래스
+export class RefreshTokenError extends Error {
+  constructor(public statusCode: number, message: string) {
+    super(message);
+    this.name = 'RefreshTokenError';
+  }
+
+  // 토큰이 만료/무효화되어 삭제해야 하는 경우
+  get isTokenInvalid(): boolean {
+    return this.statusCode === 401 || this.statusCode === 403;
+  }
+}
+
 // 토큰 갱신
 export async function refreshApi(refreshToken: string): Promise<{ accessToken: string; refreshToken?: string }> {
   const response = await fetch(`${AUTH_BASE}/refresh`, {
@@ -65,7 +78,9 @@ export async function refreshApi(refreshToken: string): Promise<{ accessToken: s
     body: JSON.stringify({ refreshToken }),
   });
 
-  if (!response.ok) throw new Error('토큰을 갱신할 수 없습니다.');
+  if (!response.ok) {
+    throw new RefreshTokenError(response.status, `토큰 갱신 실패 (${response.status})`);
+  }
 
   const data = await response.json();
   return {

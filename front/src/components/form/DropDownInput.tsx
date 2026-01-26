@@ -1,5 +1,14 @@
-import React, { useMemo, useState, useRef } from 'react';
-import { TouchableOpacity, LayoutAnimation, Platform, UIManager, ScrollView, View } from 'react-native';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
+import {
+  TouchableOpacity,
+  Platform,
+  UIManager,
+  ScrollView,
+  View,
+  Modal,
+  TouchableWithoutFeedback,
+  Dimensions,
+} from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
 import FormErrorMessage from '@/components/form/FormErrorMessage.tsx';
@@ -24,9 +33,20 @@ interface DropDownInputProps {
 
   // 자동 스크롤을 위한 ScrollView ref (ScrollView 또는 KeyboardAwareScrollView)
   scrollViewRef?: React.RefObject<any>;
+  onOpen?: (open: boolean) => void;
 }
 
 const ROW_HEIGHT = 50;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const DROPDOWN_MARGIN = 8; // 드롭다운과 입력 필드 사이 간격
+
+interface DropdownPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  openUpward: boolean;
+}
 
 export default function DropDownInput({
   placeholder,
@@ -36,9 +56,10 @@ export default function DropDownInput({
   errorMessage,
   disabled = false,
   maxVisibleOptions = 4,
-  scrollViewRef,
+  onOpen,
 }: DropDownInputProps) {
   const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<DropdownPosition | null>(null);
   const wrapperRef = useRef<View>(null);
 
   const rotate = useSharedValue(0); // 0 -> 180
@@ -48,50 +69,89 @@ export default function DropDownInput({
     return visibleCount * ROW_HEIGHT;
   }, [options.length, maxVisibleOptions]);
 
-  const toggle = () => {
-    // 레이아웃 자체가 늘어나는 걸 부드럽게
-    LayoutAnimation.configureNext(
-      LayoutAnimation.create(
-        180,
-        LayoutAnimation.Types.easeInEaseOut,
-        LayoutAnimation.Properties.opacity
-      )
-    );
+  const measureAndOpen = useCallback(() => {
+    if (!wrapperRef.current) return;
 
-    const next = !open;
-    setOpen(next);
-    rotate.value = withTiming(next ? 180 : 0, {
+    wrapperRef.current.measureInWindow((x, y, width, height) => {
+      // 드롭다운이 아래로 열릴 경우의 하단 위치
+      const dropdownBottom = y + height + DROPDOWN_MARGIN + maxHeight;
+      // 화면 하단 여유 공간 (Footer 영역 고려해서 80px 여유)
+      const bottomThreshold = SCREEN_HEIGHT - 80;
+      // 아래 공간이 부족하면 위로 열기
+      const openUpward = dropdownBottom > bottomThreshold;
+
+      setPosition({
+        x,
+        y,
+        width,
+        height,
+        openUpward,
+      });
+      setOpen(true);
+      onOpen?.(true);
+
+      rotate.value = withTiming(180, {
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+      });
+    });
+  }, [maxHeight, onOpen, rotate]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    // position은 유지 - Modal이 닫히는 동안 위치가 튀지 않도록
+    // 다음에 열 때 새로 측정됨
+    onOpen?.(false);
+
+    rotate.value = withTiming(0, {
       duration: 180,
       easing: Easing.out(Easing.cubic),
     });
+  }, [onOpen, rotate]);
 
-    // 열릴 때 자동 스크롤
-    if (next && scrollViewRef?.current && wrapperRef.current) {
-      setTimeout(() => {
-        wrapperRef.current?.measureInWindow((x, y) => {
-          // 드롭다운 높이를 고려한 스크롤 위치 계산
-          const targetY = y - 100; // 상단에서 100px 여유 공간 확보
-          const scrollY = targetY > 0 ? targetY : 0;
-
-          // ScrollView와 KeyboardAwareScrollView 둘 다 지원
-          if (scrollViewRef.current.scrollTo) {
-            // 일반 ScrollView
-            scrollViewRef.current.scrollTo({
-              y: scrollY,
-              animated: true,
-            });
-          } else if (scrollViewRef.current.scrollToPosition) {
-            // KeyboardAwareScrollView
-            scrollViewRef.current.scrollToPosition(0, scrollY, true);
-          }
-        });
-      }, 200); // LayoutAnimation 완료 후 실행
+  const toggle = useCallback(() => {
+    if (open) {
+      close();
+    } else {
+      measureAndOpen();
     }
-  };
+  }, [open, close, measureAndOpen]);
+
+  const handleSelect = useCallback((option: string) => {
+    onChange?.(option);
+    close();
+  }, [onChange, close]);
 
   const arrowStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotate.value}deg` }],
   }));
+
+  // 드롭다운 위치 계산
+  const dropdownStyle = useMemo(() => {
+    if (!position) return {};
+
+    const { x, y, width, height, openUpward } = position;
+
+    if (openUpward) {
+      // 위로 열기: 입력 필드 위에 배치
+      return {
+        position: 'absolute' as const,
+        left: x,
+        bottom: SCREEN_HEIGHT - y + DROPDOWN_MARGIN,
+        width,
+        maxHeight,
+      };
+    } else {
+      // 아래로 열기: 입력 필드 아래에 배치
+      return {
+        position: 'absolute' as const,
+        left: x,
+        top: y + height + DROPDOWN_MARGIN,
+        width,
+        maxHeight,
+      };
+    }
+  }, [position, maxHeight]);
 
   return (
     <Wrapper ref={wrapperRef}>
@@ -108,34 +168,39 @@ export default function DropDownInput({
         </InputFieldWrapper>
       </TouchableOpacity>
 
-      {/* Inline Dropdown (부모 height가 늘어나서 아래 컴포넌트가 밀림) */}
-      {open && (
-        <DropDownBox
-          style={{
-            maxHeight,
-          }}
-        >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            nestedScrollEnabled={true}
-            scrollEventThrottle={16}
-          >
-            {options.map((option, index) => (
-              <OptionRow
-                key={`${option}-${index}`}
-                onPress={() => {
-                  onChange?.(option);
-                  toggle();
-                }}
-                activeOpacity={0.7}
-                $selected={value === option}
-              >
-                <OptionText $selected={value === option}>{option}</OptionText>
-              </OptionRow>
-            ))}
-          </ScrollView>
-        </DropDownBox>
-      )}
+      {/* Modal로 드롭다운 렌더링 (z-index 문제 해결) */}
+      <Modal
+        visible={open && position !== null}
+        transparent
+        animationType="none"
+        onRequestClose={close}
+      >
+        <TouchableWithoutFeedback onPress={close}>
+          <ModalOverlay>
+            <TouchableWithoutFeedback>
+              <DropDownBox style={dropdownStyle}>
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled={true}
+                  scrollEventThrottle={16}
+                  bounces={false}
+                >
+                  {options.map((option, index) => (
+                    <OptionRow
+                      key={`${option}-${index}`}
+                      onPress={() => handleSelect(option)}
+                      activeOpacity={0.7}
+                      $selected={value === option}
+                    >
+                      <OptionText $selected={value === option}>{option}</OptionText>
+                    </OptionRow>
+                  ))}
+                </ScrollView>
+              </DropDownBox>
+            </TouchableWithoutFeedback>
+          </ModalOverlay>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {errorMessage && (
         <>
@@ -151,6 +216,11 @@ export default function DropDownInput({
 
 const Wrapper = styled(View)`
   width: 100%;
+`;
+
+const ModalOverlay = styled.View`
+  flex: 1;
+  background-color: transparent;
 `;
 
 const InputFieldWrapper = styled.View<{ $disabled?: boolean }>`
@@ -186,33 +256,23 @@ const FormErrorMessageSpacer = styled.View`
   height: 10px;
 `;
 
-/**
- * 드롭다운 컨테이너
- * - input 아래에 붙어있고
- * - 레이아웃을 밀어내며 펼쳐짐
- * - shadow 적용
- */
 const DropDownBox = styled.View`
-  width: 100%;
-  margin-top: 8px;
-
   background-color: #fff;
   border-radius: 8px;
   overflow: hidden;
 
   /* iOS shadow */
-  shadow-opacity: 0.12;
-  shadow-radius: 10px;
-  shadow-offset: 0px 6px;
+  shadow-opacity: 0.15;
+  shadow-radius: 12px;
+  shadow-offset: 0px 4px;
+  shadow-color: #000;
+
+  /* Android shadow */
+  elevation: 8;
 
   border: 1px solid #eee;
 `;
 
-/**
- * 아이템 row
- * - input이랑 동일한 height/padding
- * - text 위치 동일
- */
 const OptionRow = styled.TouchableOpacity<{ $selected: boolean }>`
   width: 100%;
   height: ${ROW_HEIGHT}px;

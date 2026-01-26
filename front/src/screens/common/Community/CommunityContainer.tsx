@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import CommunityView, { SortByKey } from '@/screens/common/Community/CommunityView.tsx';
 import { CreateCommunityPostParams, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
@@ -36,13 +36,16 @@ export default function CommunityContainer() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-    isRefetching,
     isLoading,
     isError,
   } = useCommunityPostsQuery(listParams);
 
   const { mutate: createPostMutation, isPending: isCreatePostPending } = useCreateCommunityPostMutation();
   const toggleLikeMutation = useToggleLikeMutation();
+
+  useFocusEffect(() => {
+    refetch();
+  })
 
   // InfiniteQuery 데이터를 일반 배열로 변환
   const allPosts = useMemo(() => {
@@ -151,7 +154,6 @@ export default function CommunityContainer() {
       onLoadMore={hasNextPage ? fetchNextPage : undefined}
       isLoadingMore={isFetchingNextPage}
       onRefresh={handleRefresh}
-      isRefreshing={isRefetching}
       isLoading={isLoading}
       isError={isError}
     />

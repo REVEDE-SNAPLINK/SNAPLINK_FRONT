@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { CommunityPost, CreateCommunityPostParams } from '@/api/community.ts';
-import { REASON, TargetType } from '@/api/reports.ts';
+import { COMMUNITY_REASON, CommunityTargetType, REASON, TargetType } from '@/api/reports.ts';
 import { UserType } from '@/types/auth.ts';
 
 export type ScheduleType = 'personal' | 'holiday';
@@ -40,16 +40,16 @@ interface ScheduleDetailModalState {
 }
 
 export interface ReportModalParams {
-  reason: REASON;
+  reason: REASON | COMMUNITY_REASON;
   description: string;
 }
 
 interface ReportModalState {
   visible: boolean;
-  targetId?: string;
-  targetType?: TargetType;
-  targetUserType?: UserType;
-  initialReason?: REASON;
+  targetId?: string | number;
+  targetType?: TargetType | CommunityTargetType;
+  targetUserType?: UserType | undefined;
+  initialReason?: REASON | COMMUNITY_REASON;
   onSubmit?: (params: ReportModalParams) => void;
   isLoading?: boolean;
 }
@@ -83,10 +83,10 @@ interface ModalStore {
 
   reportModal: ReportModalState;
   openReportModal: (
-    targetId: string,
-    targetType: TargetType,
-    targetUserType: UserType,
+    targetId: string | number,
+    targetType: TargetType | CommunityTargetType,
     onSubmit: (params: ReportModalParams) => void,
+    targetUserType?: UserType,
     initialReason?: REASON,
   ) => void;
   closeReportModal: () => void;
@@ -191,7 +191,7 @@ export const useModalStore = create<ModalStore>((set) => ({
     onSubmit: undefined,
     isLoading: false,
   },
-  openReportModal: (targetId, targetType, targetUserType, onSubmit, initialReason) =>
+  openReportModal: (targetId, targetType, onSubmit, targetUserType, initialReason) =>
     set({
       reportModal: {
         visible: true,

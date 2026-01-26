@@ -405,8 +405,11 @@ const UserOnboardingStep6 = ({ control, errors }: UserOnboardingStep6Props) => {
         </Typography>
         을 입력해 주세요.
       </Typography>
-      <Typography fontSize={12} lineHeight="140%" color="#767676" marginBottom={10}>
+      <Typography fontSize={12} lineHeight="140%" color="#767676" marginBottom={4}>
         생년월일을 8자리로 입력해 주세요.
+      </Typography>
+      <Typography fontSize={12} lineHeight="140%" color="#767676" marginBottom={10}>
+        만 14세 이상 이용 확인을 위해 필요합니다.
       </Typography>
       <Controller
         control={control}
@@ -441,6 +444,9 @@ const UserOnboardingStep7 = ({ control, errors }: UserOnboardingStep7Props) => {
           성별
         </Typography>
         을 선택해 주세요.
+      </Typography>
+      <Typography fontSize={12} lineHeight="140%" color="#767676" marginBottom={10}>
+        작가의 성별 선택 및 안전한 촬영 매칭을 위해 필요합니다.
       </Typography>
       <Controller
         control={control}

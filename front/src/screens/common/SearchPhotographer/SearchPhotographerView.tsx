@@ -38,8 +38,9 @@ interface SearchPhotographerViewProps {
   filterCategories: FilterCategory[];
   activeCategoryIds: string[];
   filterChips: FilterChip[];
+  initialFilterIndex: number;
   onPressFilter: () => void;
-  onPressCategoryChip: (categoryId: string) => void;
+  onPressCategoryChip: (categoryId: string, index: number) => void;
   onPressFilterChip: (chipId: string) => void;
   isFilterModalOpen: boolean;
   onCloseFilterModal: () => void;
@@ -51,12 +52,10 @@ interface SearchPhotographerViewProps {
   onChangeSortBy: (key: SortByKey) => void;
   onLoadMore: () => void;
   onRefresh: () => void;
-  isRefreshing: boolean;
   isFetchingNextPage: boolean;
   onPressPhotographer: (photographerId: string) => void;
   isLoading?: boolean;
   isError?: boolean;
-
   navigation?: any;
 }
 
@@ -68,6 +67,7 @@ export default function SearchPhotographerView({
   filterCategories,
   activeCategoryIds,
   filterChips,
+  initialFilterIndex,
   onPressFilter,
   onPressCategoryChip,
   onPressFilterChip,
@@ -81,15 +81,16 @@ export default function SearchPhotographerView({
   onChangeSortBy,
   onLoadMore,
   onRefresh,
-  isRefreshing,
   isFetchingNextPage,
   onPressPhotographer,
   isError,
   navigation,}: SearchPhotographerViewProps) {
   return (
     <>
-      <ScreenContainer headerShown={false}
-      navigation={navigation}>
+      <ScreenContainer
+        headerShown={false}
+        navigation={navigation}
+      >
         <Header>
           <BackButton onPress={onPressBack} />
           <SearchInputWrapper>
@@ -135,7 +136,6 @@ export default function SearchPhotographerView({
                 photographers={photographers}
                 onEndReached={onLoadMore}
                 onRefresh={onRefresh}
-                isRefreshing={isRefreshing}
                 isFetchingNextPage={isFetchingNextPage}
                 onPressItem={onPressPhotographer}
               />
@@ -146,6 +146,7 @@ export default function SearchPhotographerView({
 
       {isFilterModalOpen && (
         <FilterModal
+          initialIndex={initialFilterIndex}
           categories={filterCategories}
           selectedFilters={selectedFilters}
           onClose={onCloseFilterModal}

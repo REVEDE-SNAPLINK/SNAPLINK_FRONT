@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import analytics from '@react-native-firebase/analytics';
 import BookingCalendarView from '@/screens/photographer/BookingCalendar/BookingCalendarView.tsx';
 import { useNavigation } from '@react-navigation/native';
@@ -288,13 +288,13 @@ export default function BookingCalendarContainer() {
     setCurrentYearMonth(ym);
   };
 
-  const handleMonthChange = (yearMonth: string) => {
+  const handleMonthChange = useCallback((yearMonth: string) => {
     setCurrentYearMonth(yearMonth);
 
     const [y, m] = yearMonth.split('-').map(Number);
     const newWeekCount = getWeekCountOfMonth(y, m);
-    setCurrentWeekCount(newWeekCount); // state 업데이트
-  };
+    setCurrentWeekCount(newWeekCount);
+  }, []);
 
   const handleAddSchedule = () => {
     openAddScheduleModal(handleSubmitSchedule, undefined, false, new Date(selectedDate));

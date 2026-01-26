@@ -6,17 +6,17 @@ import ArrowLeftIcon from '@/assets/icons/arrow-left2.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import dayjs from 'dayjs';
 import Icon from '@/components/Icon.tsx';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, memo, useEffect } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import Animated, { useAnimatedStyle, useDerivedValue, SharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useDerivedValue, SharedValue, useSharedValue } from 'react-native-reanimated';
 // MonthPicker는 BookingCalendarView에서 사용
 export { default as MonthPicker } from 'react-native-month-year-picker';
 
 LocaleConfig.locales['ko'] = {
-  monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-  monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-  dayNames: ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'],
-  dayNamesShort: ['일','월','화','수','목','금','토'],
+  monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+  monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+  dayNames: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+  dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
   today: '오늘',
 };
 LocaleConfig.defaultLocale = 'ko';
@@ -284,32 +284,47 @@ export function ScheduleCalendarGrid({
   // 이 월의 주차 수 계산
   const weekCount = useMemo(() => getWeekCountOfMonth(displayYearMonth), [displayYearMonth]);
 
-  // margin을 내부에서 직접 계산 (useDerivedValue로 sheetHeight 변화에 반응)
-  const dayMarginBottom = useDerivedValue(() => {
-    if (!containerHeight || weekCount <= 0) return 0;
-
-    // DEFAULT/FULL 상태에서 maxWeekCount(6주) 높이에 맞추기 위한 기본 margin
+  // margin 값들을 미리 계산 (useMemo로 최적화)
+  const { baseMargin, hiddenMaxMargin } = useMemo(() => {
     const baseMargin = maxWeekCount > weekCount
       ? (maxWeekCount - weekCount) * dayRowHeight / weekCount
       : 0;
 
-    // HIDDEN 상태의 최대 margin (containerHeight 전체를 채우기)
     const calendarHeight = calendarHeaderHeight + weekCount * dayRowHeight;
-    const hiddenMaxMargin = Math.max(0, (containerHeight - calendarHeight) / weekCount);
+    const hiddenMaxMargin = containerHeight > 0
+      ? Math.max(0, (containerHeight - calendarHeight) / weekCount)
+      : 0;
 
+    return { baseMargin, hiddenMaxMargin };
+  }, [containerHeight, weekCount, calendarHeaderHeight, dayRowHeight, maxWeekCount]);
+
+  // SharedValue로 저장 (깜빡임 방지)
+  const baseMarginSV = useSharedValue(baseMargin);
+  const hiddenMaxMarginSV = useSharedValue(hiddenMaxMargin);
+
+  // containerHeight나 weekCount 변경 시 margin 값 업데이트
+  useEffect(() => {
+    baseMarginSV.value = baseMargin;
+    hiddenMaxMarginSV.value = hiddenMaxMargin;
+  }, [baseMargin, hiddenMaxMargin, baseMarginSV, hiddenMaxMarginSV]);
+
+  // margin을 내부에서 직접 계산 (useDerivedValue로 sheetHeight 변화에 반응)
+  const dayMarginBottom = useDerivedValue(() => {
+    'worklet';
     const height = sheetHeight.value;
+
     if (height <= 0) {
       // HIDDEN 상태: 최대 margin으로 containerHeight 채우기
-      return hiddenMaxMargin;
+      return hiddenMaxMarginSV.value;
     } else if (defaultHeight > 0 && height < defaultHeight) {
       // DEFAULT -> HIDDEN 전환 중: baseMargin에서 hiddenMaxMargin으로 보간
       const progress = height / defaultHeight; // 1: DEFAULT, 0: HIDDEN
-      return baseMargin + (hiddenMaxMargin - baseMargin) * (1 - progress);
+      return baseMarginSV.value + (hiddenMaxMarginSV.value - baseMarginSV.value) * (1 - progress);
     } else {
       // DEFAULT 또는 FULL 상태: 6주 높이 맞추기 위한 baseMargin
-      return baseMargin;
+      return baseMarginSV.value;
     }
-  }, [containerHeight, defaultHeight, weekCount, calendarHeaderHeight, dayRowHeight, maxWeekCount]);
+  });
 
   const scheduleMap = useMemo(() => {
     const map = new Map<string, EnhancedScheduleData>();

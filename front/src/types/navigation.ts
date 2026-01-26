@@ -97,6 +97,7 @@ export type MainStackParamList = {
   // etc
   Legal: undefined;
   OpenSourceLicense: undefined;
+  BlockManage: undefined;
 };
 
 // Navigation Props

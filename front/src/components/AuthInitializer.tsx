@@ -28,11 +28,14 @@ export default function AuthInitializer({ children }: { children: React.ReactNod
       } catch (e) {
         console.error('[AuthInitializer] Initialization error:', e);
         // 초기화 실패해도 앱은 계속 진행 (anon 상태로)
+        // bootstrapped를 true로 설정하여 스플래시 화면이 닫히도록 함
+        useAuthStore.setState({ bootstrapped: true, status: 'anon' });
       }
     })();
   }, [bootstrap]);
 
   useEffect(() => {
+    SplashScreen.hide();
     if (!bootstrapped) return;
     console.log('[AuthInitializer] Bootstrapped, hiding splash screen...');
     const t = setTimeout(() => {
@@ -41,6 +44,10 @@ export default function AuthInitializer({ children }: { children: React.ReactNod
     }, 500); // 1000ms -> 500ms로 단축
     return () => clearTimeout(t);
   }, [bootstrapped]);
+
+  if (!bootstrapped) {
+    return null;
+  }
 
   return <>{children}</>;
 }

@@ -66,7 +66,7 @@ export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
   const { userId, userType, isExpertMode } = useAuthStore();
-  const { openReportModal, setReportModalLoading } = useModalStore();
+  const { openReportModal, setReportModalLoading, closeReportModal } = useModalStore();
 
   const { roomId } = route.params;
   const queryClient = useQueryClient();
@@ -669,8 +669,8 @@ export default function ChatDetailsContainer() {
     if (isBlocked) {
       // 차단 해제
       Alert.show({
-        title: '차단 해제',
-        message: '해당 사용자를 차단 해제하시겠습니까?',
+        title: '상대방에 대한 차단을 해제하시겠습니까?',
+        message: '이제 상대방의 게시물을 다시 볼 수 있으며, 서로 채팅을 주고받을 수 있습니다.',
         buttons: [
           { text: '취소', onPress: () => {}, type: 'cancel' },
           { text: '차단 해제', onPress: () => {
@@ -692,8 +692,8 @@ export default function ChatDetailsContainer() {
     } else {
       // 차단
       Alert.show({
-        title: '사용자 차단',
-        message: '해당 사용자를 차단하시겠습니까?',
+        title: `상대방을 차단하시겠습니까?`,
+        message: "차단 시 상대방의 모든 게시물이 숨겨지며, 채팅을 주고받을 수 없습니다.",
         buttons: [
           { text: '취소', onPress: () => {}, type: 'cancel' },
           { text: '차단', onPress: () => {
@@ -739,7 +739,13 @@ export default function ChatDetailsContainer() {
           setReportModalLoading(false);
           Alert.show({
             title: '소중한 의견 감사합니다',
-            message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.'
+            message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.',
+            buttons: [
+              { text: '확인', onPress: () => {
+                  closeReportModal();
+                  setIsModalVisible(false);
+                }}
+            ]
           });
         } catch (error) {
           setReportModalLoading(false);
@@ -755,11 +761,11 @@ export default function ChatDetailsContainer() {
 
   const handleLeaveChatRoom = () => {
     Alert.show({
-      title: '채팅방 나가기',
-      message: '채팅방을 나가시겠습니까?',
+      title: '채팅방을 나가시겠어요?',
+      message: '나가기 버튼을 누르면 이 채팅방이 목록에서 사라지고 대화 내용이 모두 삭제됩니다.',
       buttons: [
         { text: '취소', onPress: () => {}, type: 'cancel' },
-        { text: '차단', onPress: () => {
+        { text: '나가기', onPress: () => {
             leaveMutate(roomId, {
               onSuccess: () => {
                 navigation.goBack();
@@ -1050,14 +1056,8 @@ export default function ChatDetailsContainer() {
     };
   }, [roomId, fileDownloadStates]);
 
-  const handlePressPartnerProfile = () => {
-    navigation.navigate('PhotographerDetails', { photographerId: opponentId });
-  }
-
   return (
     <ChatDetailsView
-      isPhotographerPartner={userType === 'user' || !isExpertMode}
-      onPressPartnerProfile={handlePressPartnerProfile}
       userType={userType}
       partnerNickname={partnerNickname}
       myUserId={userId}

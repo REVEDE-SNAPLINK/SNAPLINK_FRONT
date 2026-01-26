@@ -9,6 +9,7 @@ import { requestPermission } from '@/utils/permissions.ts'
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp, RootNavigationProp } from '@/types/navigation.ts';
 import { checkEmail, checkNickname } from '@/api/user.ts';
+import { loadAppleLoginInfo } from '@/auth/tokenStore.ts';
 
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
 const TOTAL_STEPS = 7;
@@ -30,6 +31,7 @@ export default function UserOnboardingContainer() {
     formState: { errors },
     trigger,
     watch,
+    setValue,
   } = useForm<UserOnboardingFormData>({
     defaultValues: {
       agreedTerms: [],
@@ -41,6 +43,19 @@ export default function UserOnboardingContainer() {
     },
     mode: 'onChange',
   });
+
+  // 애플 로그인 시 저장된 이름과 이메일을 불러와서 미리 입력
+  useEffect(() => {
+    (async () => {
+      const { name, email } = await loadAppleLoginInfo();
+      if (name) {
+        setValue('name', name);
+      }
+      if (email) {
+        setValue('email', email);
+      }
+    })();
+  }, [setValue]);
 
   const watchedName = watch('name');
   const watchedEmail = watch('email');

@@ -1,4 +1,4 @@
-import { RefObject, useState, useRef, useEffect } from 'react';
+import { RefObject, useState, useRef } from 'react';
 import BackButton from '@/components/common/BackButton';
 import styled from '@/utils/scale/CustomStyled.ts';
 import {
@@ -6,8 +6,6 @@ import {
   Platform,
   TextInput,
   ScrollView,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   Animated,
   View,
   FlatList,
@@ -33,6 +31,7 @@ import AddTagIcon from '@/assets/icons/add-tag.svg';
 import Icon from '@/components/Icon.tsx';
 import SearchIcon from '@/assets/icons/search-white.svg';
 import { GetSearchUserResponse } from '@/api/user.ts';
+import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -61,6 +60,9 @@ interface CommunityDetailsViewProps {
   onPressShare: () => void;
   onPressLike: () => void;
   onPressChat: () => void;
+  onPressReportPost: () => void;
+  onPressReportComment: (commentId: number) => void;
+  onPressBlock: () => void;
   onPressMoreComments: () => void;
   onPressWriteComment: () => void
   onCloseCommentModal: () => void;
@@ -80,18 +82,13 @@ interface CommunityDetailsViewProps {
   onAddTaggedUser: () => void;
   onCloseSearchingPhotographerModal: () => void;
   onChangeTaggedPhotographer: (photographerId: string) => void;
+  onPressAuthor: () => void;
 }
 
 // Image Carousel Component
 function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
   const scrollViewRef = useRef<ScrollView>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
-    setCurrentIndex(index);
-  };
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   if (images.length === 0) {
     return (
@@ -103,12 +100,15 @@ function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
 
   return (
     <>
-      <ScrollView
+      <Animated.ScrollView
         ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true }
+        )}
         scrollEventThrottle={16}
         decelerationRate="fast"
         snapToInterval={SCREEN_WIDTH}
@@ -119,12 +119,17 @@ function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
             <PostImage uri={img.urls} />
           </ImageSlide>
         ))}
-      </ScrollView>
+      </Animated.ScrollView>
 
       {images.length > 1 && (
         <DotContainer>
           {images.map((_, index) => (
-            <AnimatedDot key={index} index={index} activeIndex={currentIndex} />
+            <AnimatedDot
+              key={index}
+              index={index}
+              scrollX={scrollX}
+              imageCount={images.length}
+            />
           ))}
         </DotContainer>
       )}
@@ -132,33 +137,43 @@ function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
   );
 }
 
-// Animated Dot Component
-function AnimatedDot({ index, activeIndex }: { index: number; activeIndex: number }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+// Animated Dot Component with scroll-based interpolation
+function AnimatedDot({
+  index,
+  scrollX,
+  imageCount,
+}: {
+  index: number;
+  scrollX: Animated.Value;
+  imageCount: number;
+}) {
+  // Calculate input range for smooth interpolation
+  const inputRange = [
+    (index - 1) * SCREEN_WIDTH,
+    index * SCREEN_WIDTH,
+    (index + 1) * SCREEN_WIDTH,
+  ];
 
-  useEffect(() => {
-    const distance = Math.abs(index - activeIndex);
-    let targetScale = 1;
+  // Scale: 1.5 when active, 1.2 when adjacent, 1 when far
+  const scale = scrollX.interpolate({
+    inputRange,
+    outputRange: [1.2, 1.5, 1.2],
+    extrapolate: 'clamp',
+  });
 
-    if (distance === 0) targetScale = 1.5;
-    else if (distance === 1) targetScale = 1.2;
-    else targetScale = 1;
-
-    Animated.spring(scaleAnim, {
-      toValue: targetScale,
-      useNativeDriver: true,
-      friction: 7,
-      tension: 40,
-    }).start();
-  }, [activeIndex, index, scaleAnim]);
-
-  const isActive = index === activeIndex;
+  // Opacity: 1 when active, 0.5 when not
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.5, 1, 0.5],
+    extrapolate: 'clamp',
+  });
 
   return (
     <AnimatedDotView
       style={{
-        transform: [{ scale: scaleAnim }],
-        backgroundColor: isActive ? '#fff' : '#aaa',
+        transform: [{ scale }],
+        opacity,
+        backgroundColor: '#fff',
       }}
     />
   );
@@ -171,12 +186,14 @@ function CommentItemWithMenu({
   userId,
   onPressReply,
   onPressEditComment,
+  onPressReportComment,
   onPressDeleteComment,
 }: {
   comment: Comment;
   replies: Comment[];
   userId: string;
   onPressReply: (commentId: number, nickname: string) => void;
+  onPressReportComment: (commentId: number) => void;
   onPressEditComment: (commentId: number, content: string) => void;
   onPressDeleteComment: (commentId: number) => void;
 }) {
@@ -210,37 +227,48 @@ function CommentItemWithMenu({
           </Typography>
         </CommentContent>
 
-        {isMyComment && (
-          <MoreButtonWrapper>
-            <IconButton
-              width={16}
-              height={16}
-              Svg={MoreIcon}
-              onPress={() => setShowMoreMenu(!showMoreMenu)}
-            />
-            {showMoreMenu && (
-              <MoreMenu>
+        <MoreButtonWrapper>
+          <IconButton
+            width={16}
+            height={16}
+            Svg={MoreIcon}
+            onPress={() => setShowMoreMenu(!showMoreMenu)}
+          />
+          {showMoreMenu && (
+            <MoreMenu>
+              {isMyComment ? (
+                <>
+                  <MoreMenuItem onPress={() => {
+                    setShowMoreMenu(false);
+                    onPressEditComment(comment.id, comment.content);
+                  }}>
+                    <Typography fontSize={14} letterSpacing="-2.5%">
+                      수정
+                    </Typography>
+                  </MoreMenuItem>
+                  <MoreMenuDivider />
+                  <MoreMenuItem onPress={() => {
+                    setShowMoreMenu(false);
+                    onPressDeleteComment(comment.id);
+                  }}>
+                    <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
+                      삭제
+                    </Typography>
+                  </MoreMenuItem>
+                </>
+              ) : (
                 <MoreMenuItem onPress={() => {
                   setShowMoreMenu(false);
-                  onPressEditComment(comment.id, comment.content);
-                }}>
-                  <Typography fontSize={14} letterSpacing="-2.5%">
-                    수정
-                  </Typography>
-                </MoreMenuItem>
-                <MoreMenuDivider />
-                <MoreMenuItem onPress={() => {
-                  setShowMoreMenu(false);
-                  onPressDeleteComment(comment.id);
+                  onPressReportComment(comment.id);
                 }}>
                   <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
-                    삭제
+                    신고
                   </Typography>
                 </MoreMenuItem>
-              </MoreMenu>
-            )}
-          </MoreButtonWrapper>
-        )}
+              )}
+            </MoreMenu>
+          )}
+        </MoreButtonWrapper>
       </CommentContentWrapper>
 
       <ReplyActionsWrapper>
@@ -248,9 +276,8 @@ function CommentItemWithMenu({
           <ViewRepliesButton onPress={() => setShowReplies(!showReplies)}>
             <Typography
               fontSize={12}
-              style={{ textDecorationLine: 'underline' }}
             >
-              {showReplies ? '답글 숨기기' : `답글 ${visibleReplies.length}개 보기`}
+              {showReplies ? '답글 숨기기' : `⤷ 답글 ${visibleReplies.length}개 보기`}
             </Typography>
           </ViewRepliesButton>
         )}
@@ -276,6 +303,7 @@ function CommentItemWithMenu({
               replies={reply.replies || []}
               userId={userId}
               onPressReply={onPressReply}
+              onPressReportComment={onPressReportComment}
               onPressEditComment={onPressEditComment}
               onPressDeleteComment={onPressDeleteComment}
             />
@@ -311,6 +339,9 @@ export default function CommunityDetailsView({
   onPressShare,
   onPressLike,
   onPressChat,
+  onPressReportPost,
+  onPressReportComment,
+  onPressBlock,
   onPressMoreComments,
   onPressWriteComment,
   onCloseCommentModal,
@@ -329,7 +360,8 @@ export default function CommunityDetailsView({
   onToggleTaggedPhotographerScrap,
   onAddTaggedUser,
   onCloseSearchingPhotographerModal,
-  onChangeTaggedPhotographer
+  onChangeTaggedPhotographer,
+  onPressAuthor
 }: CommunityDetailsViewProps) {
   const insets = useSafeAreaInsets();
   const statusBarHeight = Platform.OS === 'ios' ? insets.top : 0;
@@ -338,7 +370,7 @@ export default function CommunityDetailsView({
     return (
       <Container snapToOffsets={[]} snapToAlignment="start" decelerationRate="fast">
         <ErrorWrapper>
-          <BackButton onPress={onPressBack}/>
+          <BackButton onPress={onPressBack} />
           {isError && (
             <ErrorTextWrapper>
               <Typography fontSize={16} color={theme.colors.disabled}>
@@ -436,20 +468,16 @@ export default function CommunityDetailsView({
                 onPress={onPressShare}
                 color="#fff"
               />
-              {isMyPost && (
-                <>
-                  <PostHeaderRightSpacer />
-                  <IconButton
-                    width={24}
-                    height={24}
-                    Svg={MoreCircleIcon}
-                    onPress={onPressMore}
-                  />
-                </>
-              )}
+              <PostHeaderRightSpacer />
+              <IconButton
+                width={24}
+                height={24}
+                Svg={MoreCircleIcon}
+                onPress={onPressMore}
+              />
             </PostHeaderRightWrapper>
           </PostHeader>
-          <ContentHeader>
+          <ContentHeader {...(post.isisPhotographer ? { onPress: onPressAuthor } : {})}>
             {post.categoryLabel !== '스냅소식' &&
               (post.author.profileImageUrl ? (
                 <WriterProfileImage uri={post.author.profileImageUrl} />
@@ -461,11 +489,13 @@ export default function CommunityDetailsView({
               fontWeight="semiBold"
               letterSpacing="-2.5%"
               marginLeft={8}
+              marginRight={5}
             >
               {post.categoryLabel === '스냅소식'
                 ? '스냅링크 관리자'
                 : post.author.nickname}
             </Typography>
+            <Icon width={12} height={12} Svg={LogoColorSmallIcon} />
           </ContentHeader>
           <ContentContainer>
             <ContentTextWrapper>
@@ -521,7 +551,7 @@ export default function CommunityDetailsView({
                 </Typography>
               </ActionButton>
             </ActionWrapper>
-            <CommentSectionWrapper>
+            <CommentSectionWrapper onPress={onPressMoreComments}>
               <Typography
                 fontSize={14}
                 fontWeight="bold"
@@ -595,8 +625,7 @@ export default function CommunityDetailsView({
         headerAlign="left"
         scrollable
         minHeight={SCREEN_HEIGHT * 0.6}
-        maxHeight={SCREEN_HEIGHT * 0.8}
-        autoGrowToMax={true}
+        maxHeight={SCREEN_HEIGHT * 0.6}
         footerHeight={75}
         keyboardAvoid
         footer={
@@ -609,6 +638,7 @@ export default function CommunityDetailsView({
               onBlur={handleBlur}
               placeholder="댓글을 입력하세요"
               placeholderTextColor="#A4A4A4"
+              textAlignVertical="center"
               multiline
               style={{
                 flex: 1,
@@ -616,6 +646,8 @@ export default function CommunityDetailsView({
                 fontSize: 14,
                 fontFamily: 'Pretendard-Regular',
                 marginRight: 10,
+                paddingTop: Platform.OS === 'ios' ? 10 : 8,
+                paddingBottom: Platform.OS === 'ios' ? 10 : 8,
               }}
             />
             <IconButton
@@ -635,6 +667,7 @@ export default function CommunityDetailsView({
             replies={comment.replies || []}
             userId={userId}
             onPressReply={onPressReply}
+            onPressReportComment={onPressReportComment}
             onPressEditComment={onPressEditComment}
             onPressDeleteComment={onPressDeleteComment}
           />
@@ -650,17 +683,35 @@ export default function CommunityDetailsView({
         scrollable={false}
       >
         <EditModalWrapper>
-          <EditModalButton onPress={onPressEdit}>
-            <Typography fontSize={16} letterSpacing="-2.5%">
-              수정
-            </Typography>
-          </EditModalButton>
-          <EditModalDivider />
-          <EditModalButton onPress={onPressDelete}>
-            <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
-              삭제
-            </Typography>
-          </EditModalButton>
+          {isMyPost ? (
+            <>
+              <EditModalButton onPress={onPressEdit}>
+                <Typography fontSize={16} letterSpacing="-2.5%">
+                  수정
+                </Typography>
+              </EditModalButton>
+              <EditModalDivider />
+              <EditModalButton onPress={onPressDelete}>
+                <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
+                  삭제
+                </Typography>
+              </EditModalButton>
+            </>
+          ) : (
+            <>
+              <EditModalButton onPress={onPressBlock}>
+                <Typography fontSize={16} letterSpacing="-2.5%">
+                  차단하기
+                </Typography>
+              </EditModalButton>
+              <EditModalDivider />
+              <EditModalButton onPress={onPressReportPost}>
+                <Typography fontSize={16} letterSpacing="-2.5%" color="#FF0000">
+                  신고하기
+                </Typography>
+              </EditModalButton>
+            </>
+          )}
           <EditModalDivider />
           <EditModalButton onPress={onCloseEditModal}>
             <Typography fontSize={16} letterSpacing="-2.5%" color="#A4A4A4">
@@ -856,7 +907,7 @@ const AddTagButton = styled.TouchableOpacity`
   bottom: 10px;
 `
 
-const ContentHeader = styled.View`
+const ContentHeader = styled.Pressable`
   flex-direction: row;
   align-items: center;
   margin-bottom: 15px;
@@ -903,7 +954,7 @@ const ActionButton = styled.TouchableOpacity`
   align-items: center;
 `;
 
-const CommentSectionWrapper = styled.View`
+const CommentSectionWrapper = styled.Pressable`
   width: 100%;
 `;
 

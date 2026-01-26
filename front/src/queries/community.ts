@@ -26,6 +26,8 @@ export const useCommunityPostsQuery = (
       // (또는 lastPage.totalPages 기반으로 해도 됨)
     },
     staleTime: 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
 

@@ -19,11 +19,10 @@ interface BookingHistoryViewProps {
   onPressBookingDetail: (bookingId: number) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  onPressCancelBooking?: (bookingId: number) => void;
-  onPressViewPhotos?: (bookingId: number) => void;
-  onPressWriteReview?: (bookingId: number) => void;
-  onPressShowMyReivew?: (bookingId: number) => void;
-
+  onPressCancelBooking: (bookingId: number) => void;
+  onPressViewPhotos: (bookingId: number) => void;
+  onPressWriteReview: (bookingId: number) => void;
+  onPressShowMyReivew: (bookingId: number) => void;
   navigation?: any;
 }
 
@@ -55,22 +54,22 @@ export default function BookingHistoryView({
         type={item.type}
         datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
         onPressCancelBooking={
-          item.status === 'WAITING_FOR_APPROVAL' && onPressCancelBooking
+          item.status === 'WAITING_FOR_APPROVAL'
             ? () => onPressCancelBooking(item.bookingId)
             : undefined
         }
         onPressViewPhotos={
-          (item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK') && onPressViewPhotos
+          (item.status === 'PHOTOS_DELIVERED' || item.status === 'USER_PHOTO_CHECK')
             ? () => onPressViewPhotos(item.bookingId)
             : undefined
         }
         onPressWriteReview={
-          item.status === 'USER_PHOTO_CHECK' && !item.isReview && onPressWriteReview
+          item.status === 'USER_PHOTO_CHECK' && !item.isReview
             ? () => onPressWriteReview(item.bookingId)
             : undefined
         }
         onPressViewMyReivew={
-          item.status === 'USER_PHOTO_CHECK' && item.isReview && onPressShowMyReivew
+          item.status === 'USER_PHOTO_CHECK' && item.isReview
             ? () => onPressShowMyReivew(item.bookingId)
             : undefined
         }

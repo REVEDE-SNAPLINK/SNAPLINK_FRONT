@@ -10,6 +10,7 @@ export const colors = {
 
   primary: '#00A980', /** #00A980 */
   disabled: '#C8C8C8', /** #C8C8C8 */
+  error: '#E53935', /** #E53935: 빨간색 (오류/삭제) */
 
   textPrimary: '#2F2C2B', /** #2F2C2B */
   textSecondary: '#3C3C3C', /** #3C3C3C */

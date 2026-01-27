@@ -1,6 +1,6 @@
 // src/api/bookings.ts
 import { API_BASE_URL } from '@/config/api';
-import { authFetch, authMultipartFetch, toBlobPath } from '@/api/utils';
+import { authFetch, authMultipartFetch, toBlobPath, MultipartPart } from '@/api/utils';
 import { GetPageable } from '@/api/community';
 import { buildQuery } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
@@ -130,7 +130,6 @@ export interface CreateBookingRequest {
 export interface BookingZip {
   id: number;
   url: string;
-  fileCount: number;
 }
 
 /** 예약 사진 아이템 */
@@ -145,18 +144,26 @@ export interface GetBookingPhotosResponse {
   zip: BookingZip | null;
   photos: BookingPhoto[];
   photoConfirmed: boolean;
+  expired: boolean;
 }
 
-/** 예약 사진 일괄 삭제 요청 */
+/** 예약 사진 업데이트 요청 (삭제/추가/ZIP) */
 export interface UpdateBookingPhotosRequest {
-  deletePhotoIds: number[];
-  newPhotos: UploadImageFile[];
+  deletePhotoIds?: number[];
+  deleteZipId?: number;
+  newPhotos?: UploadImageFile[];
+  zipFile?: {
+    uri: string;
+    name: string;
+    type: string; // 'application/zip'
+  };
 }
 
-/** 예약 결과 ZIP 업로드 요청 (multipart/form-data) */
+/** 예약 결과 업로드 요청 (이미지 또는 ZIP) */
 export interface UploadBookingZipRequest {
   bookingId: number;
-  zipFile: {
+  photos?: UploadImageFile[];
+  zipFile?: {
     uri: string;
     name: string;
     type: string; // 'application/zip'
@@ -318,36 +325,57 @@ export const getBookingPhotos = async (
 
 /**
  * POST /api/booking/photos/{bookingId}/update
- * 사진 추가 및 삭제
- * body: { deletePhotoIds, newPhotos }
+ * 사진 추가/삭제 및 ZIP 업로드
+ * body: { deletePhotoIds, deleteZipId, newPhotos, zipFile }
  */
 export const updateBookingPhotos = async (
   bookingId: number,
   body: UpdateBookingPhotosRequest,
 ): Promise<void> => {
-  const photoParts = await Promise.all(
-    body.newPhotos.map(async (photo) => {
-      const path = await toBlobPath(photo.uri);
-      // 실제로 존재하는지 확인(디버깅에 도움)
-      await RNBlobUtil.fs.stat(path);
+  const parts: MultipartPart[] = [];
 
-      return {
-        name: 'newPhotos',
-        filename: photo.name ?? 'photo.jpg',
-        type: photo.type,
-        data: RNBlobUtil.wrap(path),
-      };
-    }),
-  );
+  parts.push({
+    name: 'deletePhotoIds',
+    type: 'application/json',
+    data: JSON.stringify(body.deletePhotoIds || []),
+  });
 
-  const parts = [
-    {
-      name: 'deletePhotoIds',
+  if (body.deleteZipId !== undefined) {
+    parts.push({
+      name: 'deleteZipId',
       type: 'application/json',
-      data: JSON.stringify(body.deletePhotoIds),
-    },
-    ...photoParts,
-  ];
+      data: String(body.deleteZipId),
+    });
+  }
+
+  // 새 이미지 추가
+  if (body.newPhotos && body.newPhotos.length > 0) {
+    const photoParts = await Promise.all(
+      body.newPhotos.map(async (photo) => {
+        const path = await toBlobPath(photo.uri);
+        await RNBlobUtil.fs.stat(path);
+
+        return {
+          name: 'newPhotos',
+          filename: photo.name ?? 'photo.jpg',
+          type: photo.type,
+          data: RNBlobUtil.wrap(path),
+        };
+      }),
+    );
+    parts.push(...photoParts);
+  }
+
+  // ZIP 파일 추가 (원본/보정본.zip)
+  if (body.zipFile) {
+    const zipPath = await toBlobPath(body.zipFile.uri);
+    parts.push({
+      name: 'zipFile',
+      filename: body.zipFile.name,
+      type: body.zipFile.type ?? 'application/zip',
+      data: RNBlobUtil.wrap(zipPath),
+    });
+  }
 
   const response = await authMultipartFetch(
     `${PHOTOS_BASE}/${bookingId}/update`,
@@ -362,28 +390,52 @@ export const updateBookingPhotos = async (
 
 /**
  * POST /api/bookings/photos/{bookingId}
- * 작가가 결과 ZIP 파일을 업로드(multipart/form-data)
- * form-data: zipFile
+ * 작가가 결과물 업로드 (이미지 또는 ZIP)
+ * form-data: photos, zipFile
  */
 export const uploadBookingZip = async (params: UploadBookingZipRequest): Promise<void> => {
-  const path = await toBlobPath(params.zipFile.uri);
-  await RNBlobUtil.fs.stat(path);
+  const parts: MultipartPart[] = [];
+
+  // 이미지 파일들 추가
+  if (params.photos && params.photos.length > 0) {
+    const photoParts = await Promise.all(
+      params.photos.map(async (photo) => {
+        const path = await toBlobPath(photo.uri);
+        await RNBlobUtil.fs.stat(path);
+        return {
+          name: 'photos',
+          filename: photo.name ?? 'photo.jpg',
+          type: photo.type,
+          data: RNBlobUtil.wrap(path),
+        };
+      }),
+    );
+    parts.push(...photoParts);
+  }
+
+  // ZIP 파일 추가
+  if (params.zipFile) {
+    const zipPath = await toBlobPath(params.zipFile.uri);
+    parts.push({
+      name: 'zipFile',
+      filename: params.zipFile.name,
+      type: params.zipFile.type ?? 'application/zip',
+      data: RNBlobUtil.wrap(zipPath),
+    });
+  }
+
+  if (parts.length === 0) {
+    throw new Error('업로드할 파일이 없습니다.');
+  }
 
   const response = await authMultipartFetch(
     `${PHOTOS_BASE}/${params.bookingId}`,
-    [
-      {
-        name: 'zipFile',
-        filename: params.zipFile.name,
-        type: params.zipFile.type ?? 'application/zip',
-        data: RNBlobUtil.wrap(path),
-      },
-    ],
+    parts,
     'POST',
   );
 
   if (response.info().status >= 400) {
-    throw new Error('ZIP 파일을 업로드할 수 없습니다.');
+    throw new Error('파일을 업로드할 수 없습니다.');
   }
 };
 

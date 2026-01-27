@@ -1,8 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useAuthStore } from '@/store/authStore.ts';
 import { KAKAO_NATIVE_APP_KEY } from '@/config/api.ts';
 import { initializeKakaoSDK } from '@react-native-kakao/core';
 import SplashScreen from 'react-native-splash-screen';
+import { loadRefreshToken } from '@/auth/tokenStore.ts';
+import { jwtDecode } from 'jwt-decode';
 
 /**
  * AuthInitializer - 앱 시작 시 인증 상태를 초기화하는 컴포넌트
@@ -43,6 +46,85 @@ export default function AuthInitializer({ children }: { children: React.ReactNod
       console.log('[AuthInitializer] Splash screen hidden');
     }, 500); // 1000ms -> 500ms로 단축
     return () => clearTimeout(t);
+  }, [bootstrapped]);
+
+  // AppState 감지: 백그라운드 → 포그라운드 전환 시 토큰 갱신
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    if (!bootstrapped) return;
+
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      // 백그라운드/비활성 → 활성 상태로 전환될 때
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        console.log('[AuthInitializer] App came to foreground, refreshing token...');
+        const { status, getAccessToken } = useAuthStore.getState();
+
+        // 로그인 상태일 때만 토큰 갱신 시도
+        if (status === 'authed') {
+          try {
+            await getAccessToken();
+            console.log('[AuthInitializer] Token refreshed on foreground');
+          } catch (e) {
+            console.error('[AuthInitializer] Token refresh on foreground failed:', e);
+          }
+        }
+      }
+
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription?.remove();
+    };
+  }, [bootstrapped]);
+
+  // 주기적 refresh token 만료 체크 (포그라운드에서 방치 대응)
+  useEffect(() => {
+    if (!bootstrapped) return;
+
+    const checkRefreshTokenExpiry = async () => {
+      const { status, getAccessToken } = useAuthStore.getState();
+
+      // 로그인 상태가 아니면 스킵
+      if (status !== 'authed') return;
+
+      try {
+        const refreshToken = await loadRefreshToken();
+        if (!refreshToken) return;
+
+        // refresh token 만료 시간 체크
+        const decoded = jwtDecode<{ exp?: number }>(refreshToken);
+        if (!decoded.exp) return;
+
+        const msUntilExpiry = decoded.exp * 1000 - Date.now();
+        const oneHour = 60 * 60 * 1000;
+
+        console.log(`[AuthInitializer] Refresh token expires in ${Math.round(msUntilExpiry / 1000 / 60)} minutes`);
+
+        // 만료 1시간 이내면 미리 갱신
+        if (msUntilExpiry > 0 && msUntilExpiry < oneHour) {
+          console.log('[AuthInitializer] Refresh token expiring soon, proactive refresh...');
+          await getAccessToken();
+          console.log('[AuthInitializer] Proactive token refresh completed');
+        }
+      } catch (e) {
+        console.error('[AuthInitializer] Token expiry check failed:', e);
+      }
+    };
+
+    // 초기 체크
+    checkRefreshTokenExpiry();
+
+    // 30분마다 체크
+    const interval = setInterval(checkRefreshTokenExpiry, 30 * 60 * 1000);
+
+    return () => clearInterval(interval);
   }, [bootstrapped]);
 
   if (!bootstrapped) {

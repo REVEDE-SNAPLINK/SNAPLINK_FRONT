@@ -409,11 +409,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return refreshed.accessToken;
       } catch (e) {
         console.error('[getAccessToken] Token refresh failed:', e);
-        // 특정 에러 상황에서만 토큰 삭제 (세션 만료 등)
+        // 토큰이 만료/무효화된 경우 완전히 로그아웃 처리
         if (e instanceof RefreshTokenError && e.isTokenInvalid) {
-          await clearRefreshToken();
+          console.log('[getAccessToken] Token invalid, logging out...');
+          await Promise.all([
+            clearRefreshToken(),
+            clearUserId(),
+            clearUserType(),
+          ]);
+          set({ status: 'anon', accessToken: null, userId: '' });
+          queryClient.clear();
+
+          // 사용자 친화적인 세션 만료 안내
+          Alert.show({
+            title: '로그인이 필요합니다',
+            message: '오랫동안 사용하지 않아 자동으로 로그아웃 되었습니다.\n계속 이용하시려면 다시 로그인해주세요.',
+            buttons: [
+              {
+                text: '확인',
+                onPress: () => {},
+              },
+            ],
+          });
+        } else {
+          // 네트워크 에러 등 일시적 실패는 토큰만 null로
+          set({ accessToken: null });
         }
-        set({ accessToken: null });
         return null;
       } finally {
         // 4. 완료 후 Lock 해제

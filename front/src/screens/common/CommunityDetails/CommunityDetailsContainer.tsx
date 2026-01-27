@@ -10,7 +10,7 @@ import {
 } from '@/api/community.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
-import { useCommunityPostQuery, useCommunityCommentsQuery } from '@/queries/community.ts';
+import { useCommunityPostQuery, useCommunityCommentsInfiniteQuery } from '@/queries/community.ts';
 import {
   useToggleLikeMutation,
   useCreateCommentMutation,
@@ -89,9 +89,17 @@ export default function CommunityDetailsContainer() {
   // Fetch post details
   const { data: post, isLoading: isLoadingPost, isError: isErrorPost } = useCommunityPostQuery(postId);
 
-  // Fetch comments
-  const { data: commentsData, isLoading: isLoadingComments } = useCommunityCommentsQuery(postId);
-  const comments = commentsData?.content || [];
+  // Fetch comments (infinite query for pagination)
+  const {
+    data: commentsData,
+    isLoading: isLoadingComments,
+    fetchNextPage: fetchNextComments,
+    hasNextPage: hasNextComments,
+    isFetchingNextPage: isFetchingNextComments,
+  } = useCommunityCommentsInfiniteQuery(postId, { size: 20 });
+
+  // Flatten pages into single array
+  const comments = commentsData?.pages.flatMap(page => page.content) || [];
 
   const { data: taggedPhotographer } = usePhotographerProfileQuery(post?.taggedUsers?.[0]?.userId ?? '');
 
@@ -589,6 +597,9 @@ export default function CommunityDetailsContainer() {
       setSearchPhotographerKey={setSearchPhotographerKey}
       onChangeCommentInput={setCommentInput}
       onLoadMoreSearchedPhotographers={handleLoadMoreSearchedPhotographers}
+      onLoadMoreComments={() => hasNextComments && !isFetchingNextComments && fetchNextComments()}
+      hasMoreComments={hasNextComments ?? false}
+      isFetchingMoreComments={isFetchingNextComments}
       onPressBack={handlePressBack}
       onPressShare={handlePressShare}
       onPressLike={handlePressLike}

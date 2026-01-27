@@ -1,4 +1,4 @@
-import { RefObject, useState, useRef } from 'react';
+import { RefObject, useState, useRef, useCallback, createContext, useContext } from 'react';
 import BackButton from '@/components/common/BackButton';
 import styled from '@/utils/scale/CustomStyled.ts';
 import {
@@ -35,6 +35,29 @@ import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Portal Menu Context for z-index fix
+interface MenuState {
+  commentId: number;
+  isMyComment: boolean;
+  position: { x: number; y: number };
+}
+
+interface MenuContextType {
+  showMenu: (commentId: number, isMyComment: boolean, buttonRef: View | null) => void;
+  closeMenu: () => void;
+  activeMenuId: number | null;
+}
+
+const MenuContext = createContext<MenuContextType | null>(null);
+
+const useMenuContext = () => {
+  const context = useContext(MenuContext);
+  if (!context) {
+    throw new Error('useMenuContext must be used within MenuContext.Provider');
+  }
+  return context;
+};
+
 interface CommunityDetailsViewProps {
   post?: CommunityPost;
   comments: Comment[];
@@ -56,6 +79,9 @@ interface CommunityDetailsViewProps {
   setSearchPhotographerKey: (searchPhotographerKey: string) => void;
   onChangeCommentInput: (text: string) => void;
   onLoadMoreSearchedPhotographers: () => void;
+  onLoadMoreComments: () => void;
+  hasMoreComments: boolean;
+  isFetchingMoreComments: boolean;
   onPressBack: () => void;
   onPressShare: () => void;
   onPressLike: () => void;
@@ -128,7 +154,6 @@ function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
               key={index}
               index={index}
               scrollX={scrollX}
-              imageCount={images.length}
             />
           ))}
         </DotContainer>
@@ -141,11 +166,9 @@ function ImageCarousel({ images }: { images: CommunityPostImage[] }) {
 function AnimatedDot({
   index,
   scrollX,
-  imageCount,
 }: {
   index: number;
   scrollX: Animated.Value;
-  imageCount: number;
 }) {
   // Calculate input range for smooth interpolation
   const inputRange = [
@@ -197,17 +220,27 @@ function CommentItemWithMenu({
   onPressEditComment: (commentId: number, content: string) => void;
   onPressDeleteComment: (commentId: number) => void;
 }) {
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const { showMenu, closeMenu, activeMenuId } = useMenuContext();
+  const buttonRef = useRef<View>(null);
   const [showReplies, setShowReplies] = useState(false);
   const isMyComment = comment.userId === userId;
   const isReply = comment.parentId !== null;
+  const isMenuActive = activeMenuId === comment.id;
 
   // Do not render deleted comments
   if (comment.isDeleted) return null;
   const visibleReplies = (replies || []).filter(r => !r.isDeleted);
 
+  const handleToggleMenu = () => {
+    if (isMenuActive) {
+      closeMenu();
+    } else {
+      showMenu(comment.id, isMyComment, buttonRef.current);
+    }
+  };
+
   return (
-    <CommentItem isReply={isReply} showMoreMenu={showMoreMenu}>
+    <CommentItem isReply={isReply}>
       <CommentContentWrapper>
         <CommentAuthorProfileImage
           uri={comment?.profileImageUrl || ''}
@@ -227,48 +260,14 @@ function CommentItemWithMenu({
           </Typography>
         </CommentContent>
 
-        <MoreButtonWrapper>
+        <View ref={buttonRef} collapsable={false} style={{ marginLeft: 10 }}>
           <IconButton
             width={16}
             height={16}
             Svg={MoreIcon}
-            onPress={() => setShowMoreMenu(!showMoreMenu)}
+            onPress={handleToggleMenu}
           />
-          {showMoreMenu && (
-            <MoreMenu>
-              {isMyComment ? (
-                <>
-                  <MoreMenuItem onPress={() => {
-                    setShowMoreMenu(false);
-                    onPressEditComment(comment.id, comment.content);
-                  }}>
-                    <Typography fontSize={14} letterSpacing="-2.5%">
-                      수정
-                    </Typography>
-                  </MoreMenuItem>
-                  <MoreMenuDivider />
-                  <MoreMenuItem onPress={() => {
-                    setShowMoreMenu(false);
-                    onPressDeleteComment(comment.id);
-                  }}>
-                    <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
-                      삭제
-                    </Typography>
-                  </MoreMenuItem>
-                </>
-              ) : (
-                <MoreMenuItem onPress={() => {
-                  setShowMoreMenu(false);
-                  onPressReportComment(comment.id);
-                }}>
-                  <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
-                    신고
-                  </Typography>
-                </MoreMenuItem>
-              )}
-            </MoreMenu>
-          )}
-        </MoreButtonWrapper>
+        </View>
       </CommentContentWrapper>
 
       <ReplyActionsWrapper>
@@ -293,7 +292,7 @@ function CommentItemWithMenu({
         )}
       </ReplyActionsWrapper>
 
-      {/* Show replies if not a reply itself and showReplies is true */}
+      {/* Show all replies if not a reply itself and showReplies is true */}
       {!isReply && showReplies && visibleReplies.length > 0 && (
         <RepliesContainer>
           {visibleReplies.map(reply => (
@@ -335,6 +334,9 @@ export default function CommunityDetailsView({
   setSearchPhotographerKey,
   onChangeCommentInput,
   onLoadMoreSearchedPhotographers,
+  onLoadMoreComments,
+  hasMoreComments,
+  isFetchingMoreComments,
   onPressBack,
   onPressShare,
   onPressLike,
@@ -365,6 +367,51 @@ export default function CommunityDetailsView({
 }: CommunityDetailsViewProps) {
   const insets = useSafeAreaInsets();
   const statusBarHeight = Platform.OS === 'ios' ? insets.top : 0;
+
+  // Portal Menu State - menu is rendered at modal level to avoid z-index issues
+  const [menuState, setMenuState] = useState<MenuState | null>(null);
+  const modalContentRef = useRef<View>(null);
+
+  // Reset menu when comment modal closes
+  const prevCommentModalVisible = useRef(isCommentModalVisible);
+  if (!isCommentModalVisible && prevCommentModalVisible.current !== isCommentModalVisible) {
+    setTimeout(() => setMenuState(null), 0);
+  }
+  prevCommentModalVisible.current = isCommentModalVisible;
+
+  // Show menu with position measurement
+  const showMenu = useCallback((commentId: number, isMyComment: boolean, buttonRef: View | null) => {
+    if (!buttonRef || !modalContentRef.current) {
+      // Fallback position if measurement fails
+      setMenuState({ commentId, isMyComment, position: { x: SCREEN_WIDTH - 100, y: 50 } });
+      return;
+    }
+
+    buttonRef.measureLayout(
+      modalContentRef.current as any,
+      (x, y, width, height) => {
+        setMenuState({
+          commentId,
+          isMyComment,
+          position: { x: x + width - 80, y: y + height + 4 }, // Position below button, aligned right
+        });
+      },
+      () => {
+        // Fallback on measurement error
+        setMenuState({ commentId, isMyComment, position: { x: SCREEN_WIDTH - 100, y: 50 } });
+      }
+    );
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setMenuState(null);
+  }, []);
+
+  const menuContextValue = {
+    showMenu,
+    closeMenu,
+    activeMenuId: menuState?.commentId ?? null,
+  };
 
   if (isError || !post) {
     return (
@@ -407,6 +454,18 @@ export default function CommunityDetailsView({
 
   // 프리뷰 영역(상단 3개)은 top-level만 보여주기
   const filteredComments = topLevelComments;
+
+  // Helper to find comment by ID (including in replies)
+  const findCommentById = (commentList: Comment[], id: number): Comment | null => {
+    for (const comment of commentList) {
+      if (comment.id === id) return comment;
+      if (comment.replies?.length) {
+        const found = findCommentById(comment.replies, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
   // Handle @ mention deletion
   const handleKeyPress = ({ nativeEvent }: any) => {
@@ -628,6 +687,9 @@ export default function CommunityDetailsView({
         maxHeight={SCREEN_HEIGHT * 0.6}
         footerHeight={75}
         keyboardAvoid
+        autoGrowToMax
+        onEndReached={hasMoreComments && !isFetchingMoreComments ? onLoadMoreComments : undefined}
+        onEndReachedThreshold={0.2}
         footer={
           <CommentInputWrapper hasInput={hasInput}>
             <TextInput
@@ -660,19 +722,79 @@ export default function CommunityDetailsView({
           </CommentInputWrapper>
         }
       >
-        {topLevelComments.map(comment => (
-          <CommentItemWithMenu
-            key={comment.id}
-            comment={comment}
-            replies={comment.replies || []}
-            userId={userId}
-            onPressReply={onPressReply}
-            onPressReportComment={onPressReportComment}
-            onPressEditComment={onPressEditComment}
-            onPressDeleteComment={onPressDeleteComment}
-          />
-        ))}
-        <View style={{ height: 120 }} />
+        <MenuContext.Provider value={menuContextValue}>
+          <View ref={modalContentRef} collapsable={false} style={{ flex: 1, position: 'relative' }}>
+            {/* Transparent overlay to close menu when clicking outside */}
+            {menuState !== null && (
+              <MenuOverlay onPress={closeMenu} />
+            )}
+            {topLevelComments.map((comment) => (
+              <CommentItemWithMenu
+                key={comment.id}
+                comment={comment}
+                replies={comment.replies || []}
+                userId={userId}
+                onPressReply={onPressReply}
+                onPressReportComment={onPressReportComment}
+                onPressEditComment={onPressEditComment}
+                onPressDeleteComment={onPressDeleteComment}
+              />
+            ))}
+
+            {/* Loading indicator at bottom */}
+            {isFetchingMoreComments && (
+              <View style={{ padding: 16, alignItems: 'center' }}>
+                <Typography fontSize={14} color="#AAAAAA">
+                  로딩 중...
+                </Typography>
+              </View>
+            )}
+
+            <View style={{ height: 150 }} />
+
+            {/* Portal MoreMenu - rendered at top level for proper z-index */}
+            {menuState !== null && (
+              <PortalMoreMenu
+                style={{
+                  top: menuState.position.y - 20,
+                  left: menuState.position.x,
+                }}
+              >
+                {menuState.isMyComment ? (
+                  <>
+                    <MoreMenuItem onPress={() => {
+                      const comment = findCommentById(comments, menuState.commentId);
+                      closeMenu();
+                      if (comment) onPressEditComment(comment.id, comment.content);
+                    }}>
+                      <Typography fontSize={14} letterSpacing="-2.5%">
+                        수정
+                      </Typography>
+                    </MoreMenuItem>
+                    <MoreMenuDivider />
+                    <MoreMenuItem onPress={() => {
+                      closeMenu();
+                      onPressDeleteComment(menuState.commentId);
+                    }}>
+                      <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
+                        삭제
+                      </Typography>
+                    </MoreMenuItem>
+                  </>
+                ) : (
+                  <MoreMenuItem onPress={() => {
+                    closeMenu();
+                    onPressReportComment(menuState.commentId);
+                  }}>
+                    <Typography fontSize={14} letterSpacing="-2.5%" color="#FF0000">
+                      신고
+                    </Typography>
+                  </MoreMenuItem>
+                )}
+              </PortalMoreMenu>
+            )}
+          </View>
+        </MenuContext.Provider>
       </SlideModal>
 
       {/* Edit Modal */}
@@ -958,11 +1080,19 @@ const CommentSectionWrapper = styled.Pressable`
   width: 100%;
 `;
 
-const CommentItem = styled.View<{ isReply?: boolean; showMoreMenu?: boolean }>`
+const MenuOverlay = styled.Pressable`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+`;
+
+const CommentItem = styled.View<{ isReply?: boolean }>`
   position: relative;
   margin-bottom: 15px;
   ${({ isReply }) => isReply && 'margin-left: 42px;'}
-  ${({ showMoreMenu }) => showMoreMenu && 'z-index: 1000; elevation: 5;'}
 `;
 
 const CommentContentWrapper = styled.View`
@@ -982,24 +1112,19 @@ const CommentContent = styled.View`
   flex: 1;
 `;
 
-const MoreButtonWrapper = styled.View`
-  position: relative;
-  margin-left: 10px;
-`;
-
-const MoreMenu = styled.View`
+// Portal MoreMenu - positioned absolutely at container level
+const PortalMoreMenu = styled.View`
   position: absolute;
-  top: 20px;
-  right: 0;
   background-color: #fff;
   border-radius: 4px;
   border: 1px solid #EAEAEA;
   shadow-color: #000;
   shadow-offset: 0px 2px;
-  shadow-opacity: 0.1;
-  shadow-radius: 4px;
-  z-index: 1000;
+  shadow-opacity: 0.15;
+  shadow-radius: 8px;
+  z-index: 99999;
   min-width: 80px;
+  ${Platform.OS === 'android' ? 'elevation: 20;' : ''}
 `;
 
 const MoreMenuItem = styled.TouchableOpacity`

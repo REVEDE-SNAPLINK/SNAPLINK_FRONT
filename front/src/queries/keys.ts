@@ -20,6 +20,8 @@ export const communityKeys = {
   post: (postId: number) => [...communityKeys.posts(), 'detail', postId] as const,
   comments: (postId: number, params?: GetPageable) =>
     [...communityKeys.post(postId), 'comments', params] as const,
+  commentsInfinite: (postId: number, params: Omit<GetPageable, 'page'>) =>
+    [...communityKeys.post(postId), 'comments', 'infinite', params] as const,
   myPosts: () => [...communityKeys.all, 'posts', 'me'] as const,
   myPostsInfinite: (pageableWithoutPage: Omit<GetPageable, 'page'>) =>
     [...communityKeys.myPosts(), 'infinite', pageableWithoutPage] as const,

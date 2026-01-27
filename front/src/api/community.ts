@@ -284,9 +284,14 @@ export const updatePost = async (params: UpdateCommunityPostParams) => {
 }
 
 export const getComments = async (postId: number, pageable: GetPageable): Promise<GetCommentsResponse> => {
-  const qs = buildQuery(pageable);
+  // Default sort by createdAt ascending (oldest first) for consistent ordering
+  const params = {
+    ...pageable,
+    sort: pageable.sort ?? ['createdAt,asc'],
+  };
+  const qs = buildQuery(params);
 
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments${qs}`, {
+  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments?${qs}`, {
     method: 'GET',
   })
 

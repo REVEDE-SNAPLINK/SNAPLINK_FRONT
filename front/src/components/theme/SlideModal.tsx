@@ -69,6 +69,10 @@ type SlideModalProps = {
   draggableDown?: boolean;
   draggableUp?: boolean;
   closeOnOverlayPress?: boolean;
+
+  // infinite scroll
+  onEndReached?: () => void;
+  onEndReachedThreshold?: number;
 };
 
 type Ctx = { startTranslateY: number; startSheetHeight: number };
@@ -99,6 +103,8 @@ export default function SlideModal({
   draggableDown = true,
   draggableUp = false,
   closeOnOverlayPress = true,
+  onEndReached,
+  onEndReachedThreshold = 0.1,
 }: SlideModalProps) {
   const insets = useSafeAreaInsets();
 
@@ -353,10 +359,19 @@ useEffect(() => {
           style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: PADDING_HORIZONTAL,
             paddingTop: 22,
           }}
+          onScroll={onEndReached ? ({ nativeEvent }) => {
+            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+            const paddingToBottom = contentSize.height * onEndReachedThreshold;
+            if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+              onEndReached();
+            }
+          } : undefined}
+          scrollEventThrottle={onEndReached ? 400 : undefined}
         >
           {MeasuredBodyContent}
         </BodyScroll>

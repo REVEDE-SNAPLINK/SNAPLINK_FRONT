@@ -54,6 +54,23 @@ export const useCommunityCommentsQuery = (
   });
 };
 
+export const useCommunityCommentsInfiniteQuery = (
+  postId: number,
+  params: Omit<GetPageable, 'page'> = { size: 20 },
+) => {
+  return useInfiniteQuery({
+    queryKey: communityKeys.commentsInfinite(postId, params),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => getComments(postId, { ...params, page: pageParam }),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) return undefined;
+      return lastPage.number + 1;
+    },
+    enabled: Boolean(postId),
+    staleTime: 1000 * 30,
+  });
+};
+
 export const useMyPostsInfiniteQuery = (params: Omit<GetPageable, 'page'> = {}) =>
   useInfiniteQuery({
     queryKey: communityKeys.myPostsInfinite(params),

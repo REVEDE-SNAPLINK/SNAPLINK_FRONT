@@ -6,7 +6,11 @@ import SubmitButton from '@/components/theme/SubmitButton.tsx';
 import PhotoGrid from '@/components/PhotoGrid.tsx';
 import LoadingSpinner from '@/components/LoadingSpinner.tsx';
 import { Dimensions } from 'react-native';
-import { useMemo } from 'react';
+import FolderIcon from '@/assets/icons/folder.svg';
+import UploadIcon from '@/assets/icons/upload.svg';
+import TrashIcon from '@/assets/icons/delete.svg';
+import Icon from '@/components/Icon.tsx';
+import { BookingZip } from '@/api/bookings.ts';
 
 interface PhotographerViewPhotosViewProps {
   onPressBack: () => void;
@@ -16,7 +20,12 @@ interface PhotographerViewPhotosViewProps {
   onCheckAllPhotos: () => void;
   onDeletePhotos: () => void;
   onAddImages: () => void;
+  onUploadOriginalZip: () => void;
+  onDeleteOriginalZip: () => void;
   isLoading?: boolean;
+  isDelivered: boolean;
+  zipData: BookingZip | null;
+  selectedCount: number;
   navigation?: any;
 }
 
@@ -31,26 +40,16 @@ export default function PhotographerViewPhotosView({
   onCheckAllPhotos,
   onDeletePhotos,
   onAddImages,
+  onUploadOriginalZip,
+  onDeleteOriginalZip,
   isLoading = false,
+  isDelivered,
+  zipData,
+  selectedCount,
   navigation,
 }: PhotographerViewPhotosViewProps) {
-  const canDeletePhotos = useMemo(() => checkedImages.filter((v) => v).length > 0, [checkedImages]);
-
-  const getButtonText = () => {
-    return imageURIs.length === 0 ? '사진 등록하기' : canDeletePhotos ? '선택 사진 삭제하기' : '사진 전체 선택하기';
-  };
-
-  const handleButtonPress = () => {
-    if (imageURIs.length > 0) {
-      if (canDeletePhotos) {
-        onDeletePhotos();
-      } else {
-        onCheckAllPhotos();
-      }
-    } else {
-      onAddImages();
-    }
-  };
+  const hasPhotos = imageURIs.length > 0;
+  const allChecked = checkedImages.length > 0 && checkedImages.every(v => v);
 
   return (
     <>
@@ -73,33 +72,91 @@ export default function PhotographerViewPhotosView({
           </PageCaption>
         </PageCaptionWrapper>
         <ContentContainer>
+          {/* 원본/보정본.zip 업로드 버튼 */}
+          <ZipUploadRow>
+            <ZipUploadButton onPress={onUploadOriginalZip} disabled={isLoading}>
+              <ZipButtonTextWrapper>
+                <Icon width={20} height={21} Svg={FolderIcon} />
+                <Typography
+                  fontSize={12}
+                  lineHeight="140%"
+                  letterSpacing="-2.5%"
+                  marginLeft={10}
+                >
+                  {zipData ? '원본/보정본.zip (업로드됨)' : '원본/보정본.zip 업로드'}
+                </Typography>
+              </ZipButtonTextWrapper>
+              <Icon width={20} height={21} Svg={UploadIcon} />
+            </ZipUploadButton>
+            {zipData && (
+              <ZipDeleteButton onPress={onDeleteOriginalZip} disabled={isLoading}>
+                <Icon width={18} height={18} Svg={TrashIcon} color={theme.colors.error} />
+              </ZipDeleteButton>
+            )}
+          </ZipUploadRow>
+
           <PhotoGrid
             imageURIs={imageURIs}
             checkedImages={checkedImages}
             setCheckedImage={setCheckedImages}
-            addable={imageURIs.length > 0}
+            addable={hasPhotos || isDelivered}
             onPressAddImage={onAddImages}
             width={SCREEN_WIDTH - SCREEN_PADDING * 2}
           />
         </ContentContainer>
+
         <SubmitButtonWrapper>
-          <SubmitButton
-            text={getButtonText()}
-            onPress={handleButtonPress}
-            disabled={isLoading}
-          />
+          {!isDelivered && !hasPhotos ? (
+            // 최초 업로드 (사진 없음)
+            <SubmitButton
+              text="사진 등록하기"
+              onPress={onAddImages}
+              disabled={isLoading}
+            />
+          ) : (
+            // 업로드 후 or 사진 있음
+            <ButtonRow>
+              <HalfButton
+                onPress={onCheckAllPhotos}
+                disabled={isLoading || !hasPhotos}
+                $variant="secondary"
+              >
+                <Typography
+                  fontSize={14}
+                  fontWeight="bold"
+                  color={!hasPhotos ? 'disabled' : 'textPrimary'}
+                >
+                  {allChecked ? '전체 해제' : '전체 선택'}
+                </Typography>
+              </HalfButton>
+              <HalfButton
+                onPress={onDeletePhotos}
+                disabled={isLoading || selectedCount === 0}
+                $variant="primary"
+                $isDisabled={selectedCount === 0}
+              >
+                <Typography
+                  fontSize={14}
+                  fontWeight="bold"
+                  color={selectedCount === 0 ? 'disabled' : 'white'}
+                >
+                  선택 사진 삭제
+                </Typography>
+              </HalfButton>
+            </ButtonRow>
+          )}
         </SubmitButtonWrapper>
       </ScreenContainer>
       <LoadingSpinner visible={isLoading} />
     </>
-  )
+  );
 }
 
 const PageCaptionWrapper = styled.View`
   width: 100%;
   padding: 0 12px;
   padding-bottom: 19px;
-`
+`;
 
 const PageCaption = styled.View`
   width: 100%;
@@ -108,7 +165,7 @@ const PageCaption = styled.View`
   border-radius: 5px;
   justify-content: center;
   padding-left: 6px;
-`
+`;
 
 const ContentContainer = styled.View`
   flex: 1;
@@ -116,11 +173,73 @@ const ContentContainer = styled.View`
   background-color: ${theme.colors.bgSecondary};
   align-items: center;
   padding-vertical: 15px;
-`
+`;
+
+const ZipUploadRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 13px;
+  padding-horizontal: ${SCREEN_PADDING}px;
+  width: 100%;
+`;
+
+const ZipUploadButton = styled.TouchableOpacity`
+  flex: 1;
+  height: 43px;
+  border-radius: 8px;
+  background-color: ${theme.colors.bgPrimary};
+  border-width: 1px;
+  border-style: solid;
+  border-color: ${theme.colors.disabled};
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px;
+`;
+
+const ZipButtonTextWrapper = styled.View`
+  height: 100%;
+  flex-direction: row;
+  align-items: center;
+`;
+
+const ZipDeleteButton = styled.TouchableOpacity`
+  width: 43px;
+  height: 43px;
+  border-radius: 8px;
+  background-color: ${theme.colors.bgPrimary};
+  border-width: 1px;
+  border-style: solid;
+  border-color: ${theme.colors.error};
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+`;
 
 const SubmitButtonWrapper = styled.View`
   height: 86px;
   width: 100%;
   justify-content: center;
   padding: 18px 25px;
-`
+`;
+
+const ButtonRow = styled.View`
+  flex-direction: row;
+  gap: 10px;
+`;
+
+const HalfButton = styled.TouchableOpacity<{ $variant: 'primary' | 'secondary'; $isDisabled?: boolean }>`
+  flex: 1;
+  height: 50px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ $variant, $isDisabled }) =>
+    $isDisabled
+      ? theme.colors.bgSecondary
+      : $variant === 'primary'
+        ? theme.colors.primary
+        : theme.colors.bgPrimary};
+  border-width: ${({ $variant }) => ($variant === 'secondary' ? '1px' : '0')};
+  border-color: ${theme.colors.disabled};
+`;

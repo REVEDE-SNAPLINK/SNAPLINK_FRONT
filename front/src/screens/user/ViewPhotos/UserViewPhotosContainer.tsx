@@ -4,11 +4,14 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Alert } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useBookingPhotosQuery } from '@/queries/bookings.ts';
+import { BookingPhoto } from '@/api/bookings.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
+import JSZip from 'jszip';
+import RNFS from 'react-native-fs';
 
 export default function UserViewPhotosContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -19,6 +22,7 @@ export default function UserViewPhotosContainer() {
   const { data, isLoading } = useBookingPhotosQuery(bookingId);
 
   const [checkedImages, setCheckedImages] = useState<boolean[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Initialize checkedImages when data loads
   useEffect(() => {
@@ -37,86 +41,172 @@ export default function UserViewPhotosContainer() {
     });
   };
 
+  const handleCheckAllPhotos = () => {
+    const allChecked = checkedImages.every(v => v);
+    setCheckedImages(Array(checkedImages.length).fill(!allChecked));
+  };
+
   // 체크된 사진들의 인덱스
   const selectedIndices = useMemo(() => {
     return checkedImages.map((checked, index) => (checked ? index : -1)).filter((i) => i !== -1);
   }, [checkedImages]);
 
+  const selectedCount = checkedImages.filter(v => v).length;
+
+  /**
+   * 원본/보정본.zip 다운로드 (방식 선택)
+   */
   const handleDownloadZip = async () => {
     const zip = data?.zip;
     if (!zip) {
       Alert.show({
         title: '다운로드 실패',
-        message: 'ZIP 파일을 찾을 수 없습니다.',
+        message: '원본/보정본.zip 파일이 없습니다.',
       });
       return;
     }
 
     Alert.show({
-      title: '다운로드 시작',
-      message: '원본/보정본 모음.zip 다운로드를 시작하시겠습니까?',
+      title: '다운로드 방식 선택',
+      message: '원본/보정본.zip을 어떻게 다운로드 하시겠습니까?',
       buttons: [
-        {
-          text: '취소',
-          onPress: () => {},
-        },
-        {
-          text: '확인',
-          onPress: async () => {
-            analytics().logEvent('photo_zip_download_start', { booking_id: bookingId, user_id: userId });
-
-            try {
-              const { fs } = RNBlobUtil;
-              const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
-              const fileName = `reservation_${bookingId}_photos.zip`;
-              const filePath = `${downloads}/${fileName}`;
-
-              const url = CLOUDFRONT_BASE_URL + zip.url;
-
-              if (Platform.OS === 'ios') {
-                // iOS: 다운로드 후 파일 공유
-                const response = await RNBlobUtil.config({
-                  fileCache: true,
-                  path: filePath,
-                }).fetch('GET', url);
-
-                const res = await RNBlobUtil
-                  .config({ fileCache: true, path: filePath })
-                  .fetch('GET', url);
-
-                console.log('status', res.info().status);
-                console.log('headers', res.info().headers);
-                console.log('path', res.path());
-
-                await RNBlobUtil.ios.openDocument(response.path());
-
-              } else {
-                // Android: 다운로드 매니저 사용
-                await RNBlobUtil.config({
-                  fileCache: true,
-                  addAndroidDownloads: {
-                    useDownloadManager: true,
-                    notification: true,
-                    title: fileName,
-                    description: '사진 ZIP 파일 다운로드',
-                    path: filePath,
-                  },
-                }).fetch('GET', url);
-
-              }
-            } catch (error) {
-              console.error('ZIP download error:', error);
-              Alert.show({
-                title: '다운로드 실패',
-                message: 'ZIP 파일 다운로드 중 오류가 발생했습니다.',
-              });
-            }
-          },
-        },
+        { text: 'ZIP 파일', onPress: () => handleDownloadZipAsIs(zip.url) },
+        { text: '압축 해제', onPress: () => handleDownloadZipExtracted(zip.url) },
+        { text: '취소', type: 'cancel', onPress: () => {} },
       ],
     });
   };
 
+  /**
+   * 원본/보정본.zip을 ZIP 파일 그대로 다운로드
+   */
+  const handleDownloadZipAsIs = async (zipUrl: string) => {
+    analytics().logEvent('photo_zip_download_as_is', { booking_id: bookingId, user_id: userId });
+    setIsProcessing(true);
+
+    try {
+      const { fs } = RNBlobUtil;
+      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+      const fileName = `reservation_${bookingId}_original.zip`;
+      const filePath = `${downloads}/${fileName}`;
+      const url = CLOUDFRONT_BASE_URL + zipUrl;
+
+      if (Platform.OS === 'ios') {
+        const response = await RNBlobUtil.config({
+          fileCache: true,
+          path: filePath,
+        }).fetch('GET', url);
+
+        await RNBlobUtil.ios.openDocument(response.path());
+      } else {
+        await RNBlobUtil.config({
+          fileCache: true,
+          addAndroidDownloads: {
+            useDownloadManager: true,
+            notification: true,
+            title: fileName,
+            description: '원본/보정본 ZIP 파일 다운로드',
+            path: filePath,
+          },
+        }).fetch('GET', url);
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${fileName} 파일이 다운로드 폴더에 저장되었습니다.`,
+        });
+      }
+    } catch (error) {
+      console.error('ZIP download error:', error);
+      Alert.show({
+        title: '다운로드 실패',
+        message: 'ZIP 파일 다운로드 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /**
+   * 원본/보정본.zip을 압축 해제하여 개별 이미지로 다운로드
+   */
+  const handleDownloadZipExtracted = async (zipUrl: string) => {
+    analytics().logEvent('photo_zip_download_extracted', { booking_id: bookingId, user_id: userId });
+    setIsProcessing(true);
+
+    try {
+      const url = CLOUDFRONT_BASE_URL + zipUrl;
+      const { fs } = RNBlobUtil;
+      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+
+      // ZIP 파일 다운로드
+      const response = await RNBlobUtil.config({ fileCache: true }).fetch('GET', url);
+      const zipBase64 = await RNFS.readFile(response.path(), 'base64');
+
+      // ZIP 압축 해제
+      const jszip = new JSZip();
+      const contents = await jszip.loadAsync(zipBase64, { base64: true });
+
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'heic', 'webp'];
+      const extractedFiles: string[] = [];
+
+      for (const filename of Object.keys(contents.files)) {
+        const zipEntry = contents.files[filename];
+        const ext = filename.toLowerCase().split('.').pop() || '';
+
+        const isImage = imageExtensions.includes(ext);
+        const isMetaFile = filename.includes('__MACOSX') || filename.split('/').pop()?.startsWith('._');
+
+        if (!zipEntry.dir && isImage && !isMetaFile) {
+          const imgData = await zipEntry.async('base64');
+          const safeFileName = filename.split('/').pop() || `img_${Date.now()}.${ext}`;
+          const filePath = `${downloads}/original_${bookingId}_${safeFileName}`;
+
+          await RNFS.writeFile(filePath, imgData, 'base64');
+          extractedFiles.push(filePath);
+
+          // Android: 다운로드 매니저에 등록
+          if (Platform.OS === 'android') {
+            await RNBlobUtil.MediaCollection.copyToMediaStore(
+              { name: `original_${bookingId}_${safeFileName}`, parentFolder: '', mimeType: `image/${ext === 'png' ? 'png' : 'jpeg'}` },
+              'Download',
+              filePath
+            ).catch(() => {});
+          }
+        }
+      }
+
+      // 캐시 파일 삭제
+      await RNFS.unlink(response.path()).catch(() => {});
+
+      if (extractedFiles.length === 0) {
+        Alert.show({
+          title: '오류',
+          message: 'ZIP 파일 내에 유효한 이미지가 없습니다.',
+        });
+        return;
+      }
+
+      if (Platform.OS === 'ios' && extractedFiles.length > 0) {
+        await RNBlobUtil.ios.openDocument(extractedFiles[0]);
+      }
+
+      Alert.show({
+        title: '다운로드 완료',
+        message: `${extractedFiles.length}개의 이미지가 저장되었습니다.`,
+      });
+    } catch (error) {
+      console.error('ZIP extract error:', error);
+      Alert.show({
+        title: '다운로드 실패',
+        message: 'ZIP 압축 해제 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /**
+   * 보여지는 이미지 다운로드 (방식 선택)
+   */
   const handleDownloadPhotos = async () => {
     if (!data?.photos || data.photos.length === 0) {
       Alert.show({
@@ -132,78 +222,145 @@ export default function UserViewPhotosContainer() {
         ? data.photos
         : selectedIndices.map((index) => data.photos[index]);
 
-    analytics().logEvent('photo_download_start', { booking_id: bookingId, user_id: userId, count: photosToDownload.length });
-
     Alert.show({
-      title: '다운로드 시작',
-      message: `${photosToDownload.length}개의 사진 다운로드를 시작하시겠습니까?`,
+      title: '다운로드 방식 선택',
+      message: `${photosToDownload.length}개의 사진을 어떻게 다운로드 하시겠습니까?`,
       buttons: [
-        {
-          text: '취소',
-          onPress: () => {},
-        },
-        {
-          text: '확인',
-          onPress: async () => {
-            try {
-              const { fs } = RNBlobUtil;
-              const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
-
-              if (Platform.OS === 'ios') {
-                // iOS: 개별 다운로드 후 공유
-                const downloadPromises = photosToDownload.map(async (photo) => {
-                  const ext = photo.url.split('.').pop() || 'jpg';
-                  const fileName = `reservation_${bookingId}_photo_${photo.sortOrder}.${ext}`;
-                  const filePath = `${downloads}/${fileName}`;
-
-                  const response = await RNBlobUtil.config({
-                    fileCache: true,
-                    path: filePath,
-                  }).fetch('GET', CLOUDFRONT_BASE_URL+photo.url);
-
-                  return response.path();
-                });
-
-                const paths = await Promise.all(downloadPromises);
-
-                // 첫 번째 사진만 공유 다이얼로그 열기 (여러 개는 복잡함)
-                if (paths.length > 0) {
-                  await RNBlobUtil.ios.openDocument(paths[0]);
-                }
-
-              } else {
-                // Android: 다운로드 매니저로 개별 다운로드
-                const downloadPromises = photosToDownload.map(async (photo) => {
-                  const ext = photo.url.split('.').pop() || 'jpg';
-                  const fileName = `reservation_${bookingId}_photo_${photo.sortOrder}.${ext}`;
-                  const filePath = `${downloads}/${fileName}`;
-
-                  return RNBlobUtil.config({
-                    fileCache: true,
-                    addAndroidDownloads: {
-                      useDownloadManager: true,
-                      notification: true,
-                      title: fileName,
-                      description: '사진 다운로드',
-                      path: filePath,
-                    },
-                  }).fetch('GET', CLOUDFRONT_BASE_URL+photo.url);
-                });
-
-                await Promise.all(downloadPromises);
-
-              }
-            } catch (error) {
-              console.error('Photos download error:', error);
-              Alert.show({
-                title: '다운로드 실패',
-                message: '사진 다운로드 중 오류가 발생했습니다.',
-              });
-            }
-          },
-        },
+        { text: 'ZIP으로 압축', onPress: () => handleDownloadPhotosAsZip(photosToDownload) },
+        { text: '개별 이미지', onPress: () => handleDownloadPhotosIndividually(photosToDownload) },
+        { text: '취소', type: 'cancel', onPress: () => {} },
       ],
     });
+  };
+
+  /**
+   * 보여지는 이미지를 ZIP으로 압축하여 다운로드
+   */
+  const handleDownloadPhotosAsZip = async (photos: BookingPhoto[]) => {
+    analytics().logEvent('photo_download_as_zip', { booking_id: bookingId, user_id: userId, count: photos.length });
+    setIsProcessing(true);
+
+    try {
+      const zip = new JSZip();
+
+      // 각 이미지를 다운로드하여 ZIP에 추가
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        const url = CLOUDFRONT_BASE_URL + photo.url;
+        const ext = photo.url.split('.').pop() || 'jpg';
+        const fileName = `photo_${photo.sortOrder}.${ext}`;
+
+        const response = await RNBlobUtil.config({ fileCache: true }).fetch('GET', url);
+        const base64Data = await RNFS.readFile(response.path(), 'base64');
+        zip.file(fileName, base64Data, { base64: true });
+
+        // 캐시 파일 삭제
+        await RNFS.unlink(response.path()).catch(() => {});
+      }
+
+      const zipContent = await zip.generateAsync({
+        type: 'base64',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 },
+      });
+
+      const uniqueId = Date.now();
+      const { fs } = RNBlobUtil;
+      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+      const zipFileName = `reservation_${bookingId}_photos_${uniqueId}.zip`;
+      const zipPath = `${downloads}/${zipFileName}`;
+
+      await RNFS.writeFile(zipPath, zipContent, 'base64');
+
+      if (Platform.OS === 'ios') {
+        await RNBlobUtil.ios.openDocument(zipPath);
+      } else {
+        // Android: 파일이 이미 다운로드 폴더에 있으므로 알림만
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${zipFileName} 파일이 다운로드 폴더에 저장되었습니다.`,
+        });
+      }
+    } catch (error) {
+      console.error('ZIP creation error:', error);
+      Alert.show({
+        title: '다운로드 실패',
+        message: 'ZIP 파일 생성 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /**
+   * 보여지는 이미지를 개별로 다운로드
+   */
+  const handleDownloadPhotosIndividually = async (photos: BookingPhoto[]) => {
+    analytics().logEvent('photo_download_individual', { booking_id: bookingId, user_id: userId, count: photos.length });
+    setIsProcessing(true);
+
+    try {
+      const { fs } = RNBlobUtil;
+      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+
+      if (Platform.OS === 'ios') {
+        // iOS: 개별 다운로드 후 공유
+        const downloadPromises = photos.map(async (photo) => {
+          const ext = photo.url.split('.').pop() || 'jpg';
+          const fileName = `reservation_${bookingId}_photo_${photo.sortOrder}.${ext}`;
+          const filePath = `${downloads}/${fileName}`;
+
+          const response = await RNBlobUtil.config({
+            fileCache: true,
+            path: filePath,
+          }).fetch('GET', CLOUDFRONT_BASE_URL + photo.url);
+
+          return response.path();
+        });
+
+        const paths = await Promise.all(downloadPromises);
+
+        // 첫 번째 사진만 공유 다이얼로그 열기
+        if (paths.length > 0) {
+          await RNBlobUtil.ios.openDocument(paths[0]);
+        }
+
+        if (photos.length > 1) {
+          Alert.show({
+            title: '다운로드 완료',
+            message: `${photos.length}개의 사진이 저장되었습니다. (파일 앱에서 확인 가능)`,
+          });
+        }
+      } else {
+        // Android: 다운로드 매니저로 개별 다운로드
+        const downloadPromises = photos.map(async (photo) => {
+          const ext = photo.url.split('.').pop() || 'jpg';
+          const fileName = `reservation_${bookingId}_photo_${photo.sortOrder}.${ext}`;
+          const filePath = `${downloads}/${fileName}`;
+
+          return RNBlobUtil.config({
+            fileCache: true,
+            addAndroidDownloads: {
+              useDownloadManager: true,
+              notification: true,
+              title: fileName,
+              description: '사진 다운로드',
+              path: filePath,
+            },
+          }).fetch('GET', CLOUDFRONT_BASE_URL + photo.url);
+        });
+
+        await Promise.all(downloadPromises);
+      }
+    } catch (error) {
+      console.error('Photos download error:', error);
+      Alert.show({
+        title: '다운로드 실패',
+        message: '사진 다운로드 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const imageURIs = useMemo(() => {
@@ -211,15 +368,24 @@ export default function UserViewPhotosContainer() {
     return data.photos.map((photo) => photo.url);
   }, [data?.photos]);
 
+  const hasPhotos = imageURIs.length > 0;
+  const allChecked = checkedImages.length > 0 && checkedImages.every(v => v);
+
   return (
     <UserViewPhotosView
       onPressBack={handlePressBack}
       imageURIs={imageURIs}
       checkedImages={checkedImages}
       setCheckedImages={handleCheckedImages}
+      onCheckAllPhotos={handleCheckAllPhotos}
       onDownloadZip={handleDownloadZip}
       onDownloadPhotos={handleDownloadPhotos}
-      isLoading={isLoading}
+      isLoading={isLoading || isProcessing}
+      isExpired={data?.expired ?? false}
+      zipData={data?.zip || null}
+      hasPhotos={hasPhotos}
+      allChecked={allChecked}
+      selectedCount={selectedCount}
       navigation={navigation}
     />
   );

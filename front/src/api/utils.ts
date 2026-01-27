@@ -174,19 +174,51 @@ export const authMultipartFetch = async (
   const { getAccessToken } = useAuthStore.getState();
   const token = await getAccessToken();
 
-  // IMPORTANT: Do NOT set Content-Type for multipart/form-data
-  // RNBlobUtil will automatically set the correct Content-Type with boundary
   const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  // 로깅을 위한 헬퍼 함수 정의
+  const logMultipartResponse = (res: any, reqHeaders: any) => {
+    const status = res.info().status;
+    const resHeaders = res.info().headers;
+    let text = '';
+    let json = null;
+
+    try {
+      // RNBlobUtil은 text() 메서드로 본문을 가져옵니다.
+      text = res.text();
+      json = safeParseJson(text);
+    } catch (e) {
+      console.error('Logging Error:', e);
+    }
+
+    console.log('--------------------------------------');
+    console.log('url (Multipart):', url);
+    console.log('request:', {
+      method,
+      headers: reqHeaders,
+      partsCount: parts.length,
+      // 데이터가 너무 클 수 있으므로 이름만 요약해서 출력
+      partsSummary: parts.map(p => ({ name: p.name, type: p.type, isFile: !!p.filename })),
+    });
+    console.log('response:', {
+      ok: status >= 200 && status < 300,
+      status: status,
+      headers: resHeaders,
+      text: text.slice(0, 4000),
+      json,
+    });
+    console.log('--------------------------------------');
+
+    return { status, text };
+  };
 
   try {
     let response = await RNBlobUtil.fetch(method, url, headers, parts);
+    let { status, text } = logMultipartResponse(response, headers);
 
     // 401이면 토큰 갱신 후 1회 재시도
-    if (response.info().status === 401) {
+    if (status === 401) {
       const { accessToken: currentToken } = useAuthStore.getState();
       if (currentToken) useAuthStore.setState({ accessToken: null });
 
@@ -198,22 +230,20 @@ export const authMultipartFetch = async (
       };
 
       response = await RNBlobUtil.fetch(method, url, retryHeaders, parts);
+      // 재시도 결과도 로깅
+      const retryResult = logMultipartResponse(response, retryHeaders);
+      status = retryResult.status;
+      text = retryResult.text;
     }
 
-    console.log('--------------------------------------');
-    console.log('url:', url);
-    console.log('request:', parts);
-    console.log('response:', response);
-    console.log('--------------------------------------');
-
     // ✅ Crashlytics API 에러 로깅
-    const status = response.info().status;
     if (status < 200 || status >= 300) {
       const errorData = {
         url,
         status,
         method,
         contentType: 'multipart/form-data',
+        responseText: text.slice(0, 500), // 추가된 부분
       };
 
       crashlytics().recordError(
@@ -260,7 +290,6 @@ export async function toBlobPath(uri: string): Promise<string> {
 
   // file://
   if (uri.startsWith('file://')) {
-    // 공백/한글 대비
     return decodeURIComponent(uri.replace('file://', ''));
   }
 

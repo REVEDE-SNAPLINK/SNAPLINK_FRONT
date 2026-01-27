@@ -5,6 +5,29 @@ import { ChatRoomItem } from '@/api/chat';
 import { formatTimeAgo } from '@/utils/format';
 import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
 
+// 마지막 메시지 타입에 따른 표시 텍스트 변환
+const formatLastMessage = (message: string | undefined): string => {
+  if (!message) return '없음';
+
+  // CloudFront 경로로 시작하는 경우 파일/이미지로 판단
+  if (message.startsWith('/')) {
+    const lowerMessage = message.toLowerCase();
+    // 이미지 확장자 체크
+    if (lowerMessage.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)(\?|$)/i)) {
+      return '사진';
+    }
+    // 그 외 파일
+    return '파일';
+  }
+
+  // JSON 배열 형태의 이미지 URL들 (다중 이미지)
+  if (message.startsWith('[') && message.includes('/')) {
+    return '사진';
+  }
+
+  return message;
+};
+
 interface ChatViewProps {
   chatRooms: ChatRoomItem[];
   onPressChatRoom: (roomId: number, opponentNickname: string, opponentProfileImageURI: string) => void;
@@ -60,7 +83,7 @@ export default function ChatView({
                   ellipsizeMode="tail"
                   marginTop={5}
                 >
-                  {chatRoom.lastMessage || '없음'}
+                  {formatLastMessage(chatRoom.lastMessage)}
                 </Typography>
               </ChatContentWrapper>
               {chatRoom.unreadCount > 0 && <UnreadTextCounter>

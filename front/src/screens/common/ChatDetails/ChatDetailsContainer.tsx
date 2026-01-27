@@ -398,6 +398,8 @@ export default function ChatDetailsContainer() {
       console.log('[ChatDetails] Disconnecting WebSocket...');
       stompClientRef.current?.disconnect();
       stompClientRef.current = null;
+      // 채팅방 나갈 때 목록 갱신하여 unreadCount 반영
+      queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
     };
   }, [roomId, queryClient, userId, userType]);
 

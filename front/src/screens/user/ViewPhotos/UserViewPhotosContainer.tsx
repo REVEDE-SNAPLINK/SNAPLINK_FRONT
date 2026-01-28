@@ -12,6 +12,7 @@ import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
 import JSZip from 'jszip';
 import RNFS from 'react-native-fs';
+import { showErrorAlert } from '@/utils/error';
 
 export default function UserViewPhotosContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -116,9 +117,10 @@ export default function UserViewPhotosContainer() {
       }
     } catch (error) {
       console.error('ZIP download error:', error);
-      Alert.show({
+      showErrorAlert({
         title: '다운로드 실패',
-        message: 'ZIP 파일 다운로드 중 오류가 발생했습니다.',
+        action: 'ZIP 파일 다운로드',
+        error,
       });
     } finally {
       setIsProcessing(false);
@@ -195,9 +197,10 @@ export default function UserViewPhotosContainer() {
       });
     } catch (error) {
       console.error('ZIP extract error:', error);
-      Alert.show({
+      showErrorAlert({
         title: '다운로드 실패',
-        message: 'ZIP 압축 해제 중 오류가 발생했습니다.',
+        action: 'ZIP 압축 해제',
+        error,
       });
     } finally {
       setIsProcessing(false);
@@ -283,9 +286,10 @@ export default function UserViewPhotosContainer() {
       }
     } catch (error) {
       console.error('ZIP creation error:', error);
-      Alert.show({
+      showErrorAlert({
         title: '다운로드 실패',
-        message: 'ZIP 파일 생성 중 오류가 발생했습니다.',
+        action: 'ZIP 파일 생성',
+        error,
       });
     } finally {
       setIsProcessing(false);
@@ -354,9 +358,10 @@ export default function UserViewPhotosContainer() {
       }
     } catch (error) {
       console.error('Photos download error:', error);
-      Alert.show({
+      showErrorAlert({
         title: '다운로드 실패',
-        message: '사진 다운로드 중 오류가 발생했습니다.',
+        action: '사진 다운로드',
+        error,
       });
     } finally {
       setIsProcessing(false);

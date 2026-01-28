@@ -21,6 +21,7 @@ import { Alert } from '@/components/theme';
 import { Share } from 'react-native';
 import { useUpdatePhotographerProfileMutation } from '@/mutations/photographers';
 import { REASON, reportUser } from '@/api/reports.ts';
+import { showErrorAlert } from '@/utils/error';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
@@ -284,9 +285,10 @@ export default function PhotographerDetailsContainer() {
           });
         } catch (error) {
           setReportModalLoading(false);
-          Alert.show({
+          showErrorAlert({
             title: '신고 실패',
-            message: '신고 처리 중 오류가 발생했습니다.'
+            action: '신고 처리',
+            error,
           });
         }
       },
@@ -315,11 +317,11 @@ export default function PhotographerDetailsContainer() {
                 buttons: [{ text: '확인', onPress: () => {} }],
               });
             },
-            onError: () => {
-              Alert.show({
+            onError: (error) => {
+              showErrorAlert({
                 title: '수정 실패',
-                message: '프로필 수정에 실패했습니다. 다시 시도해주세요.',
-                buttons: [{ text: '확인', onPress: () => {} }],
+                action: '프로필 수정',
+                error,
               });
             },
           }
@@ -349,11 +351,11 @@ export default function PhotographerDetailsContainer() {
                 buttons: [{ text: '확인', onPress: () => {} }],
               });
             },
-            onError: () => {
-              Alert.show({
+            onError: (error) => {
+              showErrorAlert({
                 title: '수정 실패',
-                message: '컨셉/태그 수정에 실패했습니다. 다시 시도해주세요.',
-                buttons: [{ text: '확인', onPress: () => {} }],
+                action: '컨셉/태그 수정',
+                error,
               });
             },
           }
@@ -382,11 +384,11 @@ export default function PhotographerDetailsContainer() {
                 buttons: [{ text: '확인', onPress: () => {} }],
               });
             },
-            onError: () => {
-              Alert.show({
+            onError: (error) => {
+              showErrorAlert({
                 title: '수정 실패',
-                message: '지역 수정에 실패했습니다. 다시 시도해주세요.',
-                buttons: [{ text: '확인', onPress: () => {} }],
+                action: '지역 수정',
+                error,
               });
             },
           }

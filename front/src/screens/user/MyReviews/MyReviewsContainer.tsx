@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
 import { Alert } from '@/components/theme';
+import { showErrorAlert } from '@/utils/error';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { GetMyReviewsResponse, MyReviewItem } from '@/api/reviews.ts';
@@ -57,10 +58,11 @@ export default function MyReviewsContainer() {
                   message: '리뷰가 삭제되었습니다.',
                 });
               },
-              onError: () => {
-                Alert.show({
+              onError: (error) => {
+                showErrorAlert({
                   title: '삭제 실패',
-                  message: '리뷰 삭제에 실패했습니다.',
+                  action: '리뷰 삭제',
+                  error,
                 });
               },
             });

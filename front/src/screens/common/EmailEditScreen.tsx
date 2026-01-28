@@ -10,6 +10,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { usePatchMyEmailMutation } from '@/mutations/user.ts';
 import { checkEmail } from '@/api/user.ts';
+import { isNetworkError } from '@/utils/error';
 
 type EmailEditFormData = {
   email: string;
@@ -56,8 +57,9 @@ export default function EmailEditScreen() {
       title: '이메일 변경',
       message: '해당 이메일로 변경하시겠습니까?',
       buttons: [
-        { text: '취소', type: 'cancel', onPress: () => {} },
-        { text: '변경', onPress: async () => {
+        { text: '취소', type: 'cancel', onPress: () => { } },
+        {
+          text: '변경', onPress: async () => {
             const trimmedEmail = data.email.trim();
 
             // 이메일 중복 체크
@@ -69,7 +71,10 @@ export default function EmailEditScreen() {
               }
             } catch (error) {
               console.error('Failed to check email:', error);
-              setEmailError('이메일 확인 중 오류가 발생했습니다.');
+              const errorMsg = isNetworkError(error)
+                ? '네트워크 연결을 확인해주세요.'
+                : '이메일 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+              setEmailError(errorMsg);
               return;
             }
 
@@ -78,7 +83,10 @@ export default function EmailEditScreen() {
               navigation.goBack();
             } catch (error) {
               console.error('Failed to update email:', error);
-              setEmailError('이메일 저장에 실패했습니다. 다시 시도해주세요.');
+              const errorMsg = isNetworkError(error)
+                ? '네트워크 연결을 확인해주세요.'
+                : '이메일 저장에 실패했습니다. 잠시 후 다시 시도해주세요.';
+              setEmailError(errorMsg);
             }
           }
         },

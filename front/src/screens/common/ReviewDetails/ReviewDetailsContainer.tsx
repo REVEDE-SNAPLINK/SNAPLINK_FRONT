@@ -4,6 +4,7 @@ import ReviewDetailsView from '@/screens/common/ReviewDetails/ReviewDetailsView.
 import { useDeleteReviewMutation } from '@/mutations/reviews.ts';
 import { Alert } from '@/components/theme';
 import { MyReviewItem } from '@/api/reviews.ts';
+import { showErrorAlert } from '@/utils/error';
 
 type ReviewDetailsRouteProp = RouteProp<MainStackParamList, 'ReviewDetails'>;
 
@@ -49,9 +50,10 @@ export default function ReviewDetailsContainer() {
                 });
               },
               onError: (error: Error) => {
-                Alert.show({
+                showErrorAlert({
                   title: '리뷰 삭제 실패',
-                  message: error.message,
+                  action: '리뷰 삭제',
+                  error,
                 });
               },
             });

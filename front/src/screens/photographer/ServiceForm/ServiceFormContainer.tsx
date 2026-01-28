@@ -16,6 +16,7 @@ import {
   useDeleteShootingOptionMutation,
 } from '@/mutations/shootings.ts';
 import type { EditingType, EditingDeadline, SelectionAuthority } from '@/api/shootings.ts';
+import { showErrorAlert } from '@/utils/error';
 
 const TOTAL_STEPS = 3;
 
@@ -428,10 +429,10 @@ export default function ServiceFormContainer() {
         });
       } catch (error) {
         console.error('Submit error:', error);
-        Alert.show({
-          title: '오류',
-          message: isEditMode ? '촬영 서비스 수정에 실패했습니다.' : '촬영 서비스 등록에 실패했습니다.',
-          buttons: [{ text: '확인', onPress: () => {} }],
+        showErrorAlert({
+          title: isEditMode ? '수정 실패' : '등록 실패',
+          action: isEditMode ? '촬영 서비스 수정' : '촬영 서비스 등록',
+          error,
         });
       }
     },

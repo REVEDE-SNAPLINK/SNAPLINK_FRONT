@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { Alert, Typography } from '@/components/theme';
 import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
 import { useActivePhotographerMutation, useInactivePhotographerMutation } from '@/mutations/photographers.ts';
+import { showErrorAlert } from '@/utils/error';
 
 export default function AccountManageScreen() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -99,10 +100,11 @@ export default function AccountManageScreen() {
                     message: '계정이 공개 처리되었습니다.',
                   });
                 },
-                onError: () => {
-                  Alert.show({
+                onError: (error) => {
+                  showErrorAlert({
                     title: '공개 전환 실패',
-                    message: '계정 공개 처리에 실패했습니다.',
+                    action: '계정 공개 처리',
+                    error,
                   });
                 },
               });

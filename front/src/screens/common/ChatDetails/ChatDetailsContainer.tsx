@@ -23,6 +23,7 @@ import crashlytics from '@react-native-firebase/crashlytics';
 import { useLeaveChatRoomMutation } from "@/mutations/chat.ts";
 import { useBlockChatUserMutation, useUnblockChatUserMutation } from "@/mutations/block.ts";
 import { REASON, reportUser } from '@/api/reports.ts';
+import { showErrorAlert } from '@/utils/error';
 
 type ChatDetailsRouteProp = RouteProp<MainStackParamList, 'ChatDetails'>;
 
@@ -751,9 +752,10 @@ export default function ChatDetailsContainer() {
           });
         } catch (error) {
           setReportModalLoading(false);
-          Alert.show({
+          showErrorAlert({
             title: '신고 실패',
-            message: '신고 처리 중 오류가 발생했습니다.'
+            action: '신고 처리',
+            error,
           });
         }
       },

@@ -10,6 +10,7 @@ import {
 } from '@/mutations/community.ts';
 import { useCommunityPostsQuery } from '@/queries/community.ts';
 import { Alert } from '@/components/theme';
+import { showErrorAlert } from '@/utils/error';
 
 export default function CommunityContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -120,10 +121,10 @@ export default function CommunityContainer() {
       },
       onError: (error: Error) => {
         console.error('Failed to create post:', error);
-        Alert.show({
-          title: '오류',
-          message: '게시글 등록에 실패했습니다.',
-          buttons: [{ text: '확인', onPress: () => {} }],
+        showErrorAlert({
+          title: '등록 실패',
+          action: '게시글 등록',
+          error,
         });
       },
     });

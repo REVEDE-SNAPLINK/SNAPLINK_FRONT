@@ -10,7 +10,7 @@ import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
 import { formatReservationDateTime } from '@/utils/format.ts';
-import { Alert } from '@/components/theme';
+import { showErrorAlert } from '@/utils/error';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -65,11 +65,11 @@ export default function UserBookingDetailsContainer() {
             roomId
           });
         },
-        onError: () => {
-          Alert.show({
+        onError: (error) => {
+          showErrorAlert({
             title: '채팅방 열기 실패',
-            message: '채팅방을 열 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            action: '채팅방 열기',
+            error,
           });
         },
       },

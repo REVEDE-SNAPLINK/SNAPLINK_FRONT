@@ -10,6 +10,7 @@ import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
 import { usePortfolioPostQuery } from '@/queries/photographers';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore';
+import { showErrorAlert } from '@/utils/error';
 
 type PortfolioFormRouteProp = RouteProp<MainStackParamList, 'PortfolioForm'>;
 
@@ -145,10 +146,11 @@ export default function PortfolioFormContainer() {
               ],
             });
           },
-          onError: () => {
-            Alert.show({
+          onError: (error) => {
+            showErrorAlert({
               title: '수정 실패',
-              message: '포트폴리오 수정에 실패했습니다.',
+              action: '포트폴리오 수정',
+              error,
             });
           },
         }
@@ -181,10 +183,11 @@ export default function PortfolioFormContainer() {
             ],
           });
         },
-        onError: () => {
-          Alert.show({
+        onError: (error) => {
+          showErrorAlert({
             title: '등록 실패',
-            message: '포트폴리오 등록에 실패했습니다.',
+            action: '포트폴리오 등록',
+            error,
           });
         },
       }

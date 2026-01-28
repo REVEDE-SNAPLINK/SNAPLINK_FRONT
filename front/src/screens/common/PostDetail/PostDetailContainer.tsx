@@ -6,6 +6,7 @@ import { usePortfolioPostQuery } from '@/queries/photographers';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useDeletePortfolioMutation } from '@/mutations/photographers';
 import { Alert } from '@/components/theme';
+import { showErrorAlert } from '@/utils/error';
 
 import analytics from '@react-native-firebase/analytics';
 import { Share } from 'react-native';
@@ -90,11 +91,11 @@ export default function PostDetailContainer() {
                   ],
                 });
               },
-              onError: () => {
-                Alert.show({
+              onError: (error) => {
+                showErrorAlert({
                   title: '삭제 실패',
-                  message: '포트폴리오 삭제에 실패했습니다. 다시 시도해주세요.',
-                  buttons: [{ text: '확인', onPress: () => {} }],
+                  action: '포트폴리오 삭제',
+                  error,
                 });
               },
             });

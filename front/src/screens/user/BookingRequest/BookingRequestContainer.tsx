@@ -7,6 +7,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { Alert } from '@/components/theme';
 import { useCreateBookingMutation } from '@/mutations/bookings.ts';
 import { useEffect, useRef } from 'react';
+import { showErrorAlert } from '@/utils/error';
 
 type BookingRequestRouteProp = RouteProp<MainStackParamList, 'BookingRequest'>;
 
@@ -94,17 +95,20 @@ export default function BookingRequestContainer() {
           title: '📸 스냅 사진 예약이 완료되었습니다.',
           message: '작가님과의 스냅사진 촬영 예약이 완료되었습니다. 자세한 예약 내역은 마이페이지 내 촬영내역에서도 확인할 수 있어요!',
           buttons: [
-            { text: '확인', onPress: () => {
-              navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
-              } },
+            {
+              text: '확인', onPress: () => {
+                navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
+              }
+            },
           ]
         });
       },
       onError: (error: Error) => {
-        Alert.show({
+        showErrorAlert({
           title: '예약 실패',
-          message: error.message,
-        })
+          action: '예약',
+          error,
+        });
       },
     });
   };

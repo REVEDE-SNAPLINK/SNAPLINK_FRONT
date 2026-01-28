@@ -7,6 +7,7 @@ import { UploadImageFile } from '@/api/photographers.ts';
 import { useCreateReservationReviewMutation, useUpdateReviewMutation } from '@/mutations/reviews.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
+import { showErrorAlert } from '@/utils/error';
 
 // Form validation constants
 const MAX_IMAGES = 3;
@@ -101,9 +102,10 @@ export default function WriteReviewContainer() {
             navigation.goBack();
           },
           onError: (error) => {
-            Alert.show({
+            showErrorAlert({
               title: '수정 실패',
-              message: '리뷰 수정에 실패했습니다.',
+              action: '리뷰 수정',
+              error,
             });
             console.error('Failed to update review:', error);
           },
@@ -133,9 +135,10 @@ export default function WriteReviewContainer() {
             navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
           },
           onError: (error) => {
-            Alert.show({
+            showErrorAlert({
               title: '작성 실패',
-              message: '리뷰 작성에 실패했습니다.',
+              action: '리뷰 작성',
+              error,
             });
             console.error('Failed to create review:', error);
           },

@@ -8,6 +8,7 @@ import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutatio
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { useAuthStore } from '@/store/authStore.ts';
+import { showErrorAlert } from '@/utils/error';
 
 const PAGE_SIZE = 10;
 
@@ -84,11 +85,11 @@ export default function BookingManageContainer() {
                     buttons: [{ text: '확인', onPress: () => refetch() }],
                   });
                 },
-                onError: () => {
-                  Alert.show({
+                onError: (error) => {
+                  showErrorAlert({
                     title: '예약 수락 실패',
-                    message: '예약을 수락할 수 없습니다. 다시 시도해주세요.',
-                    buttons: [{ text: '확인', onPress: () => {} }],
+                    action: '예약 수락',
+                    error,
                   });
                 },
               }
@@ -136,11 +137,11 @@ export default function BookingManageContainer() {
                     buttons: [{ text: '확인', onPress: () => refetch() }],
                   });
                 },
-                onError: () => {
-                  Alert.show({
+                onError: (error) => {
+                  showErrorAlert({
                     title: '촬영 완료 실패',
-                    message: '촬영 완료 처리할 수 없습니다. 다시 시도해주세요.',
-                    buttons: [{ text: '확인', onPress: () => {} }],
+                    action: '촬영 완료 처리',
+                    error,
                   });
                 },
               }

@@ -9,6 +9,7 @@ import { useUpdateWeeklyScheduleMutation } from '@/mutations/schedules.ts';
 import { DayOfWeek, PhotographerScheduleItem } from '@/api/photographers.ts';
 import { GetWeeklyScheduleRespnose } from '@/api/schedules.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
+import { showErrorAlert } from '@/utils/error';
 
 const DAY_OF_WEEK_MAP: Record<DayOfWeek, string> = {
   MONDAY: '월요일',
@@ -138,11 +139,11 @@ export default function ScheduleFormContainer() {
             ],
           });
         },
-        onError: () => {
-          Alert.show({
+        onError: (error) => {
+          showErrorAlert({
             title: '저장 실패',
-            message: '촬영 가능 일정 저장에 실패했습니다.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            action: '촬영 가능 일정 저장',
+            error,
           });
         },
       });

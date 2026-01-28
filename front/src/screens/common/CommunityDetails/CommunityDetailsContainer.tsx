@@ -26,6 +26,7 @@ import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts'
 import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
 import { COMMUNITY_REASON, reportCommunityUser } from '@/api/reports.ts';
 import { useBlockUserMutation } from '@/mutations/block.ts';
+import { showErrorAlert } from '@/utils/error';
 
 type CommunityDetailsRouteProp = RouteProp<MainStackParamList, 'CommunityDetails'>;
 
@@ -307,10 +308,10 @@ export default function CommunityDetailsContainer() {
         },
         onError: (error: Error) => {
           console.error('Failed to update post:', error);
-          Alert.show({
-            title: '오류',
-            message: '게시글 수정에 실패했습니다.',
-            buttons: [{ text: '확인', onPress: () => { } }],
+          showErrorAlert({
+            title: '수정 실패',
+            action: '게시글 수정',
+            error,
           });
         },
       }
@@ -486,9 +487,10 @@ export default function CommunityDetailsContainer() {
             });
           } catch (error) {
             setReportModalLoading(false);
-            Alert.show({
+            showErrorAlert({
               title: '신고 실패',
-              message: '신고 처리 중 오류가 발생했습니다.'
+              action: '신고 처리',
+              error,
             });
           }
         }
@@ -525,9 +527,10 @@ export default function CommunityDetailsContainer() {
             });
           } catch (error) {
             setReportModalLoading(false);
-            Alert.show({
+            showErrorAlert({
               title: '신고 실패',
-              message: '신고 처리 중 오류가 발생했습니다.'
+              action: '신고 처리',
+              error,
             });
           }
         }
@@ -555,10 +558,11 @@ export default function CommunityDetailsContainer() {
                   buttons: [{ text: '확인', onPress: () => navigation.goBack() }],
                 });
               },
-              onError: () => {
-                Alert.show({
+              onError: (error) => {
+                showErrorAlert({
                   title: '차단 실패',
-                  message: '차단 처리 중 오류가 발생했습니다.',
+                  action: '차단 처리',
+                  error,
                 });
               },
             });

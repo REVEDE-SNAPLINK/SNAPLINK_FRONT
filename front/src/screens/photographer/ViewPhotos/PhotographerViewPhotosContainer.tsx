@@ -14,6 +14,7 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import JSZip from 'jszip';
 import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
+import { showErrorAlert } from '@/utils/error';
 
 export default function PhotographerViewPhotosContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -164,7 +165,11 @@ export default function PhotographerViewPhotosContainer() {
     } catch (err) {
       setIsProcessing(false);
       console.error('JSZip Error:', err);
-      Alert.show({ title: '오류', message: '압축 중 문제가 발생했습니다.' });
+      showErrorAlert({
+        title: '업로드 실패',
+        action: '사진 압축',
+        error: err,
+      });
     }
   };
 
@@ -194,7 +199,11 @@ export default function PhotographerViewPhotosContainer() {
 
               Alert.show({ title: '삭제 완료', message: '원본/보정본.zip이 삭제되었습니다.' });
             } catch (error) {
-              Alert.show({ title: '삭제 실패', message: '삭제 중 오류가 발생했습니다.' });
+              showErrorAlert({
+                title: '삭제 실패',
+                action: '원본/보정본.zip 삭제',
+                error,
+              });
             } finally {
               setIsProcessing(false);
             }
@@ -289,7 +298,11 @@ export default function PhotographerViewPhotosContainer() {
     } catch (err) {
       setIsProcessing(false);
       console.error(err);
-      Alert.show({ title: '오류', message: '압축 해제 중 문제가 발생했습니다.' });
+      showErrorAlert({
+        title: '업로드 실패',
+        action: '사진 압축 해제',
+        error: err,
+      });
     }
   };
 
@@ -334,7 +347,11 @@ export default function PhotographerViewPhotosContainer() {
       });
     } catch (err) {
       setIsProcessing(false);
-      Alert.show({ title: '오류', message: '이미지 선택에 실패했습니다.' });
+      showErrorAlert({
+        title: '업로드 실패',
+        action: '이미지 선택',
+        error: err,
+      });
     }
   };
 
@@ -369,7 +386,11 @@ export default function PhotographerViewPhotosContainer() {
 
               Alert.show({ title: '삭제 완료', message: '선택한 사진이 삭제되었습니다.' });
             } catch (error) {
-              Alert.show({ title: '삭제 실패', message: '사진 삭제에 실패했습니다.' });
+              showErrorAlert({
+                title: '삭제 실패',
+                action: '사진 삭제',
+                error,
+              });
             } finally {
               setIsProcessing(false);
             }

@@ -10,6 +10,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { usePatchMyNicknameMutation } from '@/mutations/user.ts';
 import { checkNickname } from '@/api/user.ts';
+import { isNetworkError } from '@/utils/error';
 
 type NicknameEditFormData = {
   nickname: string;
@@ -57,8 +58,9 @@ export default function NicknameEditScreen() {
       title: '닉네임 변경',
       message: '해당 닉네임으로 변경하시겠습니까?',
       buttons: [
-        { text: '취소', type: 'cancel', onPress: () => {} },
-        { text: '변경', onPress: async () => {
+        { text: '취소', type: 'cancel', onPress: () => { } },
+        {
+          text: '변경', onPress: async () => {
             const value = data.nickname.trim();
 
             if (!value) {
@@ -75,7 +77,10 @@ export default function NicknameEditScreen() {
               }
             } catch (error) {
               console.error('Failed to check nickname:', error);
-              setNicknameError('닉네임 확인 중 오류가 발생했습니다.');
+              const errorMsg = isNetworkError(error)
+                ? '네트워크 연결을 확인해주세요.'
+                : '닉네임 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+              setNicknameError(errorMsg);
               return;
             }
 
@@ -83,10 +88,13 @@ export default function NicknameEditScreen() {
               await patchMyNicknameMutation.mutateAsync(value);
               navigation.goBack();
             } catch (e: any) {
-              const message = e?.message ?? '닉네임을 저장할 수 없어요. 잠시 후 다시 시도해주세요.';
-              setNicknameError(message);
+              const errorMsg = isNetworkError(e)
+                ? '네트워크 연결을 확인해주세요.'
+                : '닉네임 저장에 실패했습니다. 잠시 후 다시 시도해주세요.';
+              setNicknameError(errorMsg);
             }
-          } },
+          }
+        },
       ]
     })
   };

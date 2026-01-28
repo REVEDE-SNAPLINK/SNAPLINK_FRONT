@@ -66,6 +66,7 @@ export default function BookingManageView({
         photographerName={photographerProfile.name || '작가'}
         type={item.type}
         datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
+        isUserBooking={false}
         onPressViewPhotos={
           item.status === 'COMPLETED'
             ? () => onPressViewPhotos(item.bookingId)

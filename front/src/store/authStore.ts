@@ -63,9 +63,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   status: 'idle',
   bootstrapped: false,
   userId: '',
-  userType: 'photographer',
+  userType: 'user',  // 기본값은 'user' (로그인 후 실제 값으로 업데이트됨)
   accessToken: null,
-  isExpertMode: true, // photographer는 기본 전문가 모드
+  isExpertMode: false, // 기본 false, photographer 로그인 시 true로 설정됨
   isFirst: false,
 
   setUserType: (userType: UserType) => set({ userType }),
@@ -108,11 +108,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           loadUserType(),
         ]);
 
+        const resolvedUserType = savedUserType || 'user';
         set({
           accessToken: token,
           status: 'authed',
           userId: savedUserId || '',
-          userType: savedUserType || 'user',
+          userType: resolvedUserType,
+          isExpertMode: resolvedUserType === 'photographer', // photographer는 기본 전문가 모드
           bootstrapped: true,
         });
         console.log('[AuthStore] Bootstrap completed successfully');
@@ -130,19 +132,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await clearUserType();
         set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
       } else {
+        // 네트워크 에러 등 일시적 에러: 저장된 정보로 복구 시도
         const [savedUserId, savedUserType] = await Promise.all([
           loadUserId(),
           loadUserType(),
         ]);
 
         if (savedUserId) {
+          const resolvedUserType = savedUserType || 'user';
           set({
             status: 'authed',
             accessToken: null,
             userId: savedUserId,
-            userType: savedUserType || 'user',
+            userType: resolvedUserType,
+            isExpertMode: resolvedUserType === 'photographer', // photographer는 기본 전문가 모드
             bootstrapped: true,
           });
+          console.log('[AuthStore] Bootstrap recovered with saved user info (offline mode)');
         } else {
           set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
         }
@@ -238,6 +244,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           accessToken: response.tokens.accessToken,
           userId: response.userId,
           userType,
+          isExpertMode: userType === 'photographer', // photographer는 기본 전문가 모드
         });
 
         // FCM 등록은 백그라운드에서 처리 (UI blocking 방지)
@@ -329,6 +336,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           accessToken: response.tokens.accessToken,
           userId: response.userId,
           userType,
+          isExpertMode: userType === 'photographer', // photographer는 기본 전문가 모드
         });
 
         // FCM 등록은 백그라운드에서 처리 (UI blocking 방지)

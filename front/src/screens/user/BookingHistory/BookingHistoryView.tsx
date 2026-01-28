@@ -53,6 +53,7 @@ export default function BookingHistoryView({
         photographerName={item.photographerName || '작가'}
         type={item.type}
         datetime={formatReservationDateTime(item.shootingDate, item.startTime, item.endTime)}
+        isUserBooking={true}
         onPressCancelBooking={
           item.status === 'WAITING_FOR_APPROVAL'
             ? () => onPressCancelBooking(item.bookingId)

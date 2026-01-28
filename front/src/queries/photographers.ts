@@ -174,8 +174,9 @@ export const usePhotographerStatusQuery = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: photographersQueryKeys.statusMe(),
     queryFn: () => getStatusMe(),
-    ...options,
-    enabled: options?.enabled,
+    // enabled가 명시적으로 false가 아니면 활성화 (기본값 true)
+    // 호출하는 곳에서 userType === 'photographer' 조건을 전달해야 함
+    enabled: options?.enabled !== false,
     refetchOnWindowFocus: true,
   });
 

@@ -22,6 +22,13 @@ interface HistoryCardProps {
   photographerNickName: string;
   type: string;
   datetime: string;
+  /**
+   * 이 예약이 "내가 예약한 것"인지 "내가 받은 것"인지 명시
+   * - true: 내가 예약한 것 (사용자 입장) - BookingHistory에서 사용
+   * - false: 내가 받은 것 (작가 입장) - BookingManage에서 사용
+   * - undefined: 기존 로직 사용 (userType/isExpertMode 기반)
+   */
+  isUserBooking?: boolean;
 }
 
 export default function HistoryCard({
@@ -41,11 +48,15 @@ export default function HistoryCard({
   photographerNickName,
   type,
   datetime,
+  isUserBooking,
 }: HistoryCardProps) {
 
   const { userType, isExpertMode } = useAuthStore();
 
-  const isUserMode = userType === 'user' || !isExpertMode;
+  // isUserBooking이 명시되면 그 값을 사용, 아니면 기존 로직 (userType/isExpertMode 기반)
+  const isUserMode = isUserBooking !== undefined
+    ? isUserBooking
+    : (userType === 'user' || !isExpertMode);
 
   const headerTitle = (() => {
     switch (status) {

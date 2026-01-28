@@ -16,7 +16,10 @@ export default function AccountManageScreen() {
 
   const { signOut, withdraw, userType } = useAuthStore();
 
-  const { data: photographerStatus } = usePhotographerStatusQuery();
+  // 작가일 때만 상태 조회 API 호출
+  const { data: photographerStatus } = usePhotographerStatusQuery({
+    enabled: userType === 'photographer',
+  });
   const activeMutation = useActivePhotographerMutation();
   const inactiveMutation = useInactivePhotographerMutation();
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { signInApi, refreshApi, signUpApi, SignUpFormData, logoutApi, withdrawApi, RefreshTokenError } from '@/api/auth';
+import { signInApi, refreshApi, signUpApi, SignUpFormData, logoutApi, withdrawApi, RefreshTokenError, testSignInApi, testSignUpApi } from '@/api/auth';
 import {
   saveRefreshToken,
   loadRefreshToken,
@@ -52,6 +52,8 @@ type AuthState = {
   signInWithKakao: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithApple: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE' | 'APPLE', token: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signInWithTestAccount: (testId: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signUpWithTestAccount: (formData: SignUpFormData) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (formData: SignUpFormData) => Promise<void>;
   withdraw: () => Promise<void>;
@@ -264,6 +266,119 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (e) {
       set({ status: 'anon', accessToken: null });
       console.error(e);
+      throw e;
+    }
+  },
+
+  // 테스트 계정 로그인
+  async signInWithTestAccount(testId: string): Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'> {
+    set({ status: 'loading' });
+    try {
+      const response = await testSignInApi(testId);
+
+      if (response.status === 'LOGIN_SUCCESS') {
+        const userType = response.role === 'USER' ? 'user' : 'photographer';
+
+        await analytics().logEvent('login', {
+          method: 'test_account',
+        });
+
+        analytics().setUserId(response.userId);
+        analytics().setUserProperties({
+          user_type: userType,
+        });
+
+        crashlytics().setUserId(response.userId);
+        crashlytics().setAttributes({
+          userType: userType,
+          loginMethod: 'test_account',
+        });
+
+        crashlytics().log(`✅ Test user logged in: ${response.userId} (${userType})`);
+
+        await Promise.all([
+          saveRefreshToken(response.tokens.refreshToken),
+          saveUserId(response.userId),
+          saveUserType(userType),
+        ]);
+
+        set({
+          status: 'authed',
+          accessToken: response.tokens.accessToken,
+          userId: response.userId,
+          userType,
+          isExpertMode: userType === 'photographer',
+        });
+
+        safeRegisterFcmDevice();
+      } else {
+        await saveUserId(response.userId);
+
+        set({
+          status: 'needs_signup',
+          userId: response.userId,
+          accessToken: null,
+        });
+      }
+
+      return response.status;
+    } catch (e) {
+      set({ status: 'anon', accessToken: null });
+      console.error('signInWithTestAccount error:', e);
+      throw e;
+    }
+  },
+
+  // 테스트 계정 회원가입
+  async signUpWithTestAccount(formData: SignUpFormData) {
+    set({ status: 'loading' });
+    try {
+      const response = await testSignUpApi(formData);
+
+      if (response.status === 'LOGIN_SUCCESS') {
+        const userType = response.role === 'USER' ? 'user' : 'photographer';
+        const signupDate = new Date().toISOString().split('T')[0];
+
+        await analytics().logEvent('sign_up', {
+          user_id: response.userId,
+          user_type: userType,
+          signup_date: signupDate,
+          method: 'test_account',
+        });
+
+        analytics().setUserId(response.userId);
+        analytics().setUserProperties({
+          user_type: userType,
+          signup_date: signupDate,
+        });
+
+        crashlytics().setUserId(response.userId);
+        crashlytics().setAttributes({
+          userType: userType,
+          signupDate: signupDate,
+        });
+
+        crashlytics().log(`✅ Test user signed up: ${response.userId} (${userType})`);
+
+        await Promise.all([
+          saveRefreshToken(response.tokens.refreshToken),
+          saveUserId(response.userId),
+          saveUserType(userType),
+        ]);
+
+        set({
+          status: 'authed',
+          accessToken: response.tokens.accessToken,
+          userId: response.userId,
+          userType,
+          isExpertMode: userType === 'photographer',
+        });
+
+        safeRegisterFcmDevice();
+      }
+    } catch (e) {
+      set({ status: 'anon', accessToken: null });
+      console.error('signUpWithTestAccount error:', e);
       throw e;
     }
   },

@@ -14,10 +14,13 @@ import { loadAppleLoginInfo } from '@/auth/tokenStore.ts';
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
 const TOTAL_STEPS = 7;
 
+// 테스트 계정 ID 패턴
+const isTestAccount = (id: string) => id.includes('test-account');
+
 export default function UserOnboardingContainer() {
   const rootNavigation = useNavigation<RootNavigationProp>();
   const navigation = useNavigation<MainNavigationProp>();
-  const { userId, userType, signUp, setIsFirst, setUserType, signOut } = useAuthStore();
+  const { userId, userType, signUp, signUpWithTestAccount, setIsFirst, setUserType, signOut } = useAuthStore();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [agreedTerms, setAgreedTerms] = useState<string[]>([]);
@@ -232,12 +235,15 @@ export default function UserOnboardingContainer() {
         id: userId
       };
 
-      signUp(signUpData).then(() => {
+      // 테스트 계정이면 테스트 회원가입 API 사용
+      const signUpFn = isTestAccount(userId) ? signUpWithTestAccount : signUp;
+
+      signUpFn(signUpData).then(() => {
         setIsFirst(true);
         rootNavigation.reset({ index: 0, routes: [{ name: "Main" }] });
       });
     },
-    [signUp, userId, userType, rootNavigation, setIsFirst],
+    [signUp, signUpWithTestAccount, userId, userType, rootNavigation, setIsFirst],
   );
 
   const submitButtonText = currentStep === TOTAL_STEPS - 1 ? '완료' : '다음';

@@ -2,6 +2,7 @@ import { API_BASE_URL } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
 const AUTH_BASE = `${API_BASE_URL}/api/auth`;
+const TEST_AUTH_BASE = `${API_BASE_URL}/api/test/auth`;
 
 type LoginSuccessResponse = {
   status: 'LOGIN_SUCCESS';
@@ -141,4 +142,63 @@ export async function withdrawApi(): Promise<void> {
   })
 
   if (!response.ok) throw new Error('회원 탈퇴를 완료할 수 없습니다.');
+}
+
+// ============================================================
+// 테스트 계정 API (개발/테스트 환경 전용)
+// ============================================================
+
+// 테스트 계정 로그인
+export async function testSignInApi(id: string): Promise<SignInResponse> {
+  const response = await fetch(`${TEST_AUTH_BASE}/signin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: "KAKAO", id }),
+  });
+
+  console.log(response);
+
+  if (!response.ok) throw new Error('테스트 계정 로그인에 실패했습니다.');
+
+  const data = await response.json();
+
+  if (data.status === 'LOGIN_SUCCESS') {
+    return {
+      status: data.status,
+      userId: data.userId,
+      role: data.role,
+      tokens: {
+        accessToken: data.tokens.accessToken,
+        refreshToken: data.tokens.refreshToken,
+      }
+    }
+  }
+
+  return {
+    status: data.status,
+    userId: data.userId,
+  }
+}
+
+// 테스트 계정 회원가입
+export async function testSignUpApi(formData: SignUpFormData): Promise<LoginSuccessResponse> {
+  const response = await fetch(`${TEST_AUTH_BASE}/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData)
+  });
+
+  if (!response.ok) throw new Error('테스트 계정 회원가입에 실패했습니다.');
+
+  const data = await response.json();
+
+  return {
+    status: 'LOGIN_SUCCESS',
+    userId: data.userId,
+    role: data.role,
+    tokens: {
+      accessToken: data.tokens.accessToken,
+      refreshToken: data.tokens.refreshToken,
+    },
+  }
 }

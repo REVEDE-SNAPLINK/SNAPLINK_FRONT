@@ -12,13 +12,17 @@ import { Platform } from 'react-native';
 
 type LoginViewProps = {
   onKakaoLogin: () => void;
+  onTest1Login: () => void;
+  onTest2Login: () => void;
   onAppleLogin: () => void;
   // onNaverLogin: () => void;
   // onGoogleLogin: () => void;
 }
 
 export default function LoginView({
-  onKakaoLogin,
+  // onKakaoLogin,
+  onTest1Login,
+  onTest2Login,
   onAppleLogin,
   // onNaverLogin,
   // onGoogleLogin,
@@ -39,12 +43,26 @@ export default function LoginView({
       </LogoContainer>
 
       <SocialLoginContainer>
+        {/* 테스트 계정 버튼 */}
         <SocialLoginButton
           backgroundColor="#FEE500"
           Icon={Kakao}
-          text="카카오"
-          onPress={onKakaoLogin}
+          text={`테스트 계정 1`}
+          onPress={onTest1Login}
         />
+        <SocialLoginButton
+          backgroundColor="#FEE500"
+          Icon={Kakao}
+          text={`테스트 계정 2`}
+          onPress={onTest2Login}
+        />
+        {/* 실제 로그인 버튼 (주석 처리) */}
+        {/*<SocialLoginButton*/}
+        {/*  backgroundColor="#FEE500"*/}
+        {/*  Icon={Kakao}*/}
+        {/*  text="카카오"*/}
+        {/*  onPress={onKakaoLogin}*/}
+        {/*/>*/}
         {Platform.OS === 'ios' &&
           <SocialLoginButton
             backgroundColor="#000"

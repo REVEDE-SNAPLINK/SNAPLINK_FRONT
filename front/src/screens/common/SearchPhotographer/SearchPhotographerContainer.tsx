@@ -261,7 +261,7 @@ export default function SearchPhotographerContainer() {
       photographer_id: photographerId,
       source: 'SearchPhotographer',
     });
-    navigation.navigate('PhotographerDetails', { photographerId });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'search' });
   };
 
   /**

@@ -410,7 +410,7 @@ export default function CommunityDetailsContainer() {
 
   const handlePressTaggedPhotographer = () => {
     if (post?.taggedUsers && post?.taggedUsers.length > 0 && taggedPhotographer) {
-      navigation.navigate('PhotographerDetails', { photographerId: post.taggedUsers[0].userId });
+      navigation.navigate('PhotographerDetails', { photographerId: post.taggedUsers[0].userId, source: 'community_tagged' });
     }
   }
 
@@ -574,7 +574,7 @@ export default function CommunityDetailsContainer() {
 
   const handlePressAuthor = () => {
     if (!post) return;
-    navigation.navigate('PhotographerDetails', { photographerId: post.author.userId });
+    navigation.navigate('PhotographerDetails', { photographerId: post.author.userId, source: 'community_author' });
   }
 
   const isMyPost = post?.author.userId === userId;

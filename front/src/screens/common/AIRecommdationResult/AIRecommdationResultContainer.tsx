@@ -241,7 +241,7 @@ export default function AIRecommdationResultContainer() {
       photographer_id: photographerId,
       source: 'AIRecommdationResult',
     });
-    navigation.navigate('PhotographerDetails', { photographerId });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'ai_recommendation' });
   };
 
   const handlePressCategoryChip = (categoryId: string, index: number) => {

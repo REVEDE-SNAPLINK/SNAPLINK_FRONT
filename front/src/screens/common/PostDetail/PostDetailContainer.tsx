@@ -43,7 +43,7 @@ export default function PostDetailContainer() {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.reset({ index: 1, routes: [{ name: 'Home' }, { name: 'PhotographerDetails', params: { photographerId: post?.photographerId ?? '' } }] });
+      navigation.reset({ index: 1, routes: [{ name: 'Home' }, { name: 'PhotographerDetails', params: { photographerId: post?.photographerId ?? '', source: 'post_detail' } }] });
     }
   }, [navigation, post]);
 

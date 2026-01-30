@@ -86,7 +86,7 @@ export default function HomeContainer() {
       photographer_id: photographerId,
       source: 'Home_AllPhotographer',
     });
-    navigation.navigate('PhotographerDetails', { photographerId });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'home_all' });
   };
 
   const handlePressPopularPhotographerItem = (photographerId: string) => {
@@ -96,7 +96,7 @@ export default function HomeContainer() {
       photographer_id: photographerId,
       source: 'Home_PopularPhotographer',
     });
-    navigation.navigate('PhotographerDetails', { photographerId });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'home_popular' });
   };
 
   return (

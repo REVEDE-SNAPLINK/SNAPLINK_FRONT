@@ -28,7 +28,7 @@ type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerD
 export default function PhotographerDetailsContainer() {
   const route = useRoute<PhotographerDetailsRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
-  const { photographerId } = route.params;
+  const { photographerId, source } = route.params;
   const queryClient = useQueryClient();
   const { userId, userType, isExpertMode } = useAuthStore();
   const { openReportModal, setReportModalLoading } = useModalStore();
@@ -151,7 +151,8 @@ export default function PhotographerDetailsContainer() {
           user_type: userType,
           photographer_id: photographerId,
           room_id: response,
-          source: 'PhotographerDetails',
+          source: 'photographer_profile',
+          entry_source: source || 'direct', // 프로필에 어디서 진입했는지
         });
         // Invalidate chat rooms to refresh the list
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
@@ -170,10 +171,11 @@ export default function PhotographerDetailsContainer() {
       user_id: userId,
       user_type: userType,
       photographer_id: photographerId,
-      source: 'PhotographerDetails',
+      source: 'photographer_profile',
+      entry_source: source || 'direct', // 프로필에 어디서 진입했는지
     });
     navigation.navigate('Booking', { photographerId });
-  }, [navigation, photographerId, userId, userType]);
+  }, [navigation, photographerId, userId, userType, source]);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

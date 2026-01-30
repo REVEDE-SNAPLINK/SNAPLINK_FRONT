@@ -35,7 +35,7 @@ export default function BookmarksContainer() {
 
   const handlePressPhotographer = (photographerId: string) => {
     analytics().logEvent('photographer_view', { photographer_id: photographerId, user_id: userId });
-    navigation.navigate('PhotographerDetails', { photographerId });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'bookmarks' });
   };
 
   const handleLoadMore = () => {

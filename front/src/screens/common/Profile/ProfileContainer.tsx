@@ -262,7 +262,7 @@ export default function ProfileContainer () {
     if (isPending) {
       navigation.navigate('PortfolioOnboarding');
     } else {
-      navigation.navigate('PhotographerDetails', { photographerId: userId })
+      navigation.navigate('PhotographerDetails', { photographerId: userId, source: 'my_profile' })
     }
   }
 

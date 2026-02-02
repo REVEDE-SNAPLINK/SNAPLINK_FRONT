@@ -6,13 +6,32 @@ import { Platform } from 'react-native';
 // 테스트 계정 ID (플랫폼별 구분)
 const TEST_ACCOUNT_IDS = {
   ios: {
-    test1: 'ios-test-account-1',
-    test2: 'ios-test-account-2',
+    test1: 'ios-test-account-111',
+    test2: 'ios-test-account-22',
   },
   android: {
     test1: 'android-test-account-1',
     test2: 'android-test-account-2',
   },
+};
+
+/**
+ * 사용자가 로그인을 취소한 경우인지 확인
+ * - Kakao: 메시지에 'cancel' 포함 또는 특정 에러 코드
+ * - Apple: code === 1001 (ERR_CANCELED) 또는 'ERR_CANCELED' 문자열
+ */
+const isLoginCanceled = (error: any): boolean => {
+  if (!error) return false;
+
+  // Apple: appleAuth.Error.CANCELED = 1001
+  if (error.code === 1001 || error.code === '1001') return true;
+
+  // 일반적인 취소 코드
+  if (error.code === 'ERR_CANCELED') return true;
+
+  // 메시지에 cancel/cancelled 포함 (Kakao 등)
+  const message = error.message?.toLowerCase() || '';
+  return message.includes('cancel');
 };
 
 export default function LoginContainer() {
@@ -22,7 +41,7 @@ export default function LoginContainer() {
     try {
       await signInWithKakao();
     } catch (e: any) {
-      if (e.code === 'ERR_CANCELED') return; // User cancelled
+      if (isLoginCanceled(e)) return;
       showSimpleErrorAlert('로그인 실패', e);
     }
   };
@@ -53,7 +72,7 @@ export default function LoginContainer() {
     try {
       await signInWithApple();
     } catch (e: any) {
-      if (e.code === 'ERR_CANCELED') return;
+      if (isLoginCanceled(e)) return;
       showSimpleErrorAlert('로그인 실패', e);
     }
   }

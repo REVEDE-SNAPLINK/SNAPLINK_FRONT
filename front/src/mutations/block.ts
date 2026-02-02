@@ -41,6 +41,7 @@ export const useBlockChatUserMutation = () => {
 
       await qc.invalidateQueries({ queryKey: blockKeys.list() });
       await qc.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
+      await qc.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
     },
   });
 };
@@ -57,6 +58,7 @@ export const useUnblockChatUserMutation = () => {
 
       await qc.invalidateQueries({ queryKey: blockKeys.list() });
       await qc.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
+      await qc.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
     },
   });
 };

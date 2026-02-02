@@ -66,7 +66,7 @@ const verifyDownloaded = async (localPath?: string) => {
 export default function ChatDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ChatDetailsRouteProp>();
-  const { userId, userType, isExpertMode } = useAuthStore();
+  const { userId, userType } = useAuthStore();
   const { openReportModal, setReportModalLoading, closeReportModal } = useModalStore();
 
   const { roomId } = route.params;
@@ -97,18 +97,15 @@ export default function ChatDetailsContainer() {
   // Fetch chat room detail (nickname, profile image, blocked status)
   const { data: chatRoomDetail } = useChatRoomDetailQuery(roomId);
 
-  // Sync blocked status with QueryClient
+  // Sync blocked status with QueryClient (초기 로드 시에만 API → 로컬 동기화)
+  // 차단 해제는 mutation에서만 처리 (API 응답이 로컬 차단 상태를 덮어쓰지 않도록)
   useEffect(() => {
-    if (chatRoomDetail && roomId) {
+    if (chatRoomDetail && roomId && chatRoomDetail.blocked) {
       const blockedRooms = queryClient.getQueryData<Set<number>>(chatQueryKeys.blockedRooms()) || new Set();
 
-      if (chatRoomDetail.blocked && !blockedRooms.has(roomId)) {
-        // Add to blocked list if blocked
+      if (!blockedRooms.has(roomId)) {
+        // API에서 차단 상태일 때만 로컬에 추가 (차단 해제는 mutation에서 처리)
         blockedRooms.add(roomId);
-        queryClient.setQueryData(chatQueryKeys.blockedRooms(), new Set(blockedRooms));
-      } else if (!chatRoomDetail.blocked && blockedRooms.has(roomId)) {
-        // Remove from blocked list if unblocked
-        blockedRooms.delete(roomId);
         queryClient.setQueryData(chatQueryKeys.blockedRooms(), new Set(blockedRooms));
       }
     }
@@ -120,7 +117,7 @@ export default function ChatDetailsContainer() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useChatMessagesInfiniteQuery(roomId, { size: 50 });
+  } = useChatMessagesInfiniteQuery(roomId, { size: 50 }, !chatRoomDetail?.blocked);
 
   const { mutate: blockMutate } = useBlockChatUserMutation();
   const { mutate: unblockMutate } = useUnblockChatUserMutation();
@@ -282,8 +279,14 @@ export default function ChatDetailsContainer() {
     };
   }, [messageReadStates, roomId]);
 
-  // Initialize STOMP WebSocket connection
+  // Initialize STOMP WebSocket connection (차단된 경우 연결하지 않음)
   useEffect(() => {
+    // 차단된 채팅방이면 WebSocket 연결하지 않음
+    if (chatRoomDetail?.blocked) {
+      console.log('[ChatDetails] Room is blocked, skipping WebSocket connection');
+      return;
+    }
+
     const stompClient = new ChatStompClient();
     stompClientRef.current = stompClient;
 
@@ -402,7 +405,7 @@ export default function ChatDetailsContainer() {
       // 채팅방 나갈 때 목록 갱신하여 unreadCount 반영
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
     };
-  }, [roomId, queryClient, userId, userType]);
+  }, [roomId, queryClient, userId, userType, chatRoomDetail?.blocked]);
 
   const handlePressBack = () => {
     navigation.goBack();
@@ -679,7 +682,6 @@ export default function ChatDetailsContainer() {
           { text: '차단 해제', onPress: () => {
             unblockMutate({ targetId: opponentId, roomId }, {
               onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
                 Alert.show({
                   title: '차단 해제 완료',
                   message: '해당 사용자가 차단 해제되었습니다.',
@@ -702,7 +704,6 @@ export default function ChatDetailsContainer() {
           { text: '차단', onPress: () => {
             blockMutate({ targetId: opponentId, roomId }, {
               onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: chatQueryKeys.roomDetail(roomId) });
                 Alert.show({
                   title: '차단 완료',
                   message: '해당 사용자가 차단되었습니다.',

@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">snaplink</string>
+  <string name="app_name">snaplink</string>
+  <string moduleConfig="true" name="CodePushServerUrl">https://api.revopush.org</string>
+  <string moduleConfig="true" name="CodePushDeploymentKey">QN75OU4FgYz6H2LL8f-Fm4HsBQ9I41oeY35L7x</string>
 </resources>

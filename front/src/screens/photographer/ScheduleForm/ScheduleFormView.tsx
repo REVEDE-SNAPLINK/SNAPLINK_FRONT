@@ -3,9 +3,9 @@ import { Control, Controller, useWatch } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled.ts';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import { SubmitButton, Typography } from '@/components/theme';
-import { Platform, ScrollView } from 'react-native';
 import Checkbox from '@/components/theme/Checkbox';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface DaySchedule {
   startTime: Date | null;
@@ -70,13 +70,15 @@ export default function ScheduleFormView({
       iconSize={20}
 
       navigation={navigation}>
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          ref={scrollViewRef}
+      <Container>
+        <KeyboardAwareScrollView
+          innerRef={(ref) => { scrollViewRef.current = ref; }}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
-          scrollEventThrottle={16}
-          style={{ flex: 1, width: '100%', paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
         >
           <FormContainer>
             <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -211,7 +213,7 @@ export default function ScheduleFormView({
 
             <ScrollViewSpacer />
           </FormContainer>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         {/* Footer 고정 */}
         <Footer>
@@ -223,12 +225,12 @@ export default function ScheduleFormView({
             marginBottom={10}
           />
         </Footer>
-      </KeyboardFormView>
+      </Container>
     </ScreenContainer>
   );
 }
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
 `;

@@ -23,4 +23,7 @@ export const useBookingReviewMeQuery = (bookingId?: number) =>
       : [],
     queryFn: () => getBookingReviewMe(bookingId!),
     enabled: typeof bookingId === 'number',
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5분간 fresh 상태 유지
+    gcTime: 1000 * 60 * 10, // 10분간 캐시 유지
   });

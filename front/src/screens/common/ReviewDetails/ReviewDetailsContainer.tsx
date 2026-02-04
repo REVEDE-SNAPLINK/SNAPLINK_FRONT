@@ -5,6 +5,8 @@ import { useDeleteReviewMutation } from '@/mutations/reviews.ts';
 import { Alert } from '@/components/theme';
 import { MyReviewItem } from '@/api/reviews.ts';
 import { showErrorAlert } from '@/utils/error';
+import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
+import Loading from '@/components/Loading.tsx';
 
 type ReviewDetailsRouteProp = RouteProp<MainStackParamList, 'ReviewDetails'>;
 
@@ -12,9 +14,24 @@ export default function ReviewDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<ReviewDetailsRouteProp>();
 
-  const { review } = route.params;
+  const { review: reviewFromParams, bookingId } = route.params;
 
-  const isMyReview = 'photos' in review;
+  // bookingId가 있으면 쿼리로 데이터를 가져옴 (수정 후 자동 업데이트를 위해)
+  const { data: bookingReview, isLoading } = useBookingReviewMeQuery(bookingId);
+
+  // bookingId가 있고 쿼리로 가져온 데이터가 있으면 사용, 아니면 params에서 전달된 데이터 사용
+  const review = bookingId && bookingReview ? bookingReview : reviewFromParams;
+
+  // 리뷰 데이터가 없으면 로딩 또는 에러 처리
+  if (!review) {
+    if (isLoading) {
+      return <Loading size="large" variant="fullscreen" />;
+    }
+    navigation.goBack();
+    return null;
+  }
+
+  const isMyReview = 'photos' in review || (bookingId !== undefined);
   const photographerId = isMyReview ? undefined : 'photographerId' in review ? String(review.photographerId) : undefined;
 
   const deleteReviewMutation = useDeleteReviewMutation(photographerId);
@@ -23,7 +40,22 @@ export default function ReviewDetailsContainer() {
 
   const handlePressEdit = () => {
     if (isMyReview) {
-      navigation.navigate('WriteReview', { review: review as MyReviewItem });
+      // 쿼리로 가져온 리뷰 (GetBookingReviewMeResponse)인 경우 MyReviewItem 형태로 변환
+      if ('photoKeys' in review && bookingId) {
+        const convertedReview: MyReviewItem = {
+          reviewId: review.reviewId,
+          photographerNickname: 'writerNickname' in review ? review.writerNickname : '',
+          photographerProfileImage: 'writerProfileKey' in review ? review.writerProfileKey : '',
+          rating: review.rating,
+          content: review.content,
+          shootingTag: review.shootingTag,
+          photos: review.photoKeys.map((url, index) => ({ photoId: -(index + 1), url })), // 임시 photoId 사용
+          createdAt: review.createdAt,
+        };
+        navigation.navigate('WriteReview', { review: convertedReview, bookingId });
+      } else {
+        navigation.navigate('WriteReview', { review: review as MyReviewItem });
+      }
     }
   };
 

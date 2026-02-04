@@ -34,9 +34,7 @@ interface AddScheduleModalState {
 interface ScheduleDetailModalState {
   visible: boolean;
   schedule?: PersonalSchedule;
-  onEdit?: (schedule: PersonalSchedule) => void;
-  onDelete?: (scheduleId: string) => void;
-  onDuplicate?: (schedule: PersonalSchedule) => void;
+  scheduleId?: number; // API에서 데이터를 가져올 ID
 }
 
 export interface ReportModalParams {
@@ -73,12 +71,7 @@ interface ModalStore {
   closeAddScheduleModal: () => void;
 
   scheduleDetailModal: ScheduleDetailModalState;
-  openScheduleDetailModal: (
-    schedule: PersonalSchedule,
-    onEdit: (schedule: PersonalSchedule) => void,
-    onDelete: (scheduleId: string) => void,
-    onDuplicate: (schedule: PersonalSchedule) => void,
-  ) => void;
+  openScheduleDetailModal: (scheduleId?: number, schedule?: PersonalSchedule) => void;
   closeScheduleDetailModal: () => void;
 
   reportModal: ReportModalState;
@@ -157,18 +150,14 @@ export const useModalStore = create<ModalStore>((set) => ({
   scheduleDetailModal: {
     visible: false,
     schedule: undefined,
-    onEdit: undefined,
-    onDelete: undefined,
-    onDuplicate: undefined,
+    scheduleId: undefined,
   },
-  openScheduleDetailModal: (schedule, onEdit, onDelete, onDuplicate) =>
+  openScheduleDetailModal: (scheduleId, schedule) =>
     set({
       scheduleDetailModal: {
         visible: true,
         schedule,
-        onEdit,
-        onDelete,
-        onDuplicate,
+        scheduleId,
       },
     }),
   closeScheduleDetailModal: () =>
@@ -176,9 +165,7 @@ export const useModalStore = create<ModalStore>((set) => ({
       scheduleDetailModal: {
         visible: false,
         schedule: undefined,
-        onEdit: undefined,
-        onDelete: undefined,
-        onDuplicate: undefined,
+        scheduleId: undefined,
       },
     }),
 

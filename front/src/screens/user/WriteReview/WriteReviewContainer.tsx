@@ -28,8 +28,8 @@ export default function WriteReviewContainer() {
   const [rating, setRating] = useState(review?.rating || 0);
   const [images, setImages] = useState<UploadImageFile[]>(
     review?.photos?.map((photo, index) => ({
-      uri: photo.url,
-      name: `review_image_${index}.${photo.url.split(',')[0]}`,
+      uri: photo.url, // 서버 URL (file://로 시작하지 않음)
+      name: `review_image_${index}.${photo.url.split('.').pop() || 'jpg'}`,
       type: 'image/jpeg'
     })) || []
   );
@@ -44,7 +44,7 @@ export default function WriteReviewContainer() {
 
   // Mutations
   const createMutation = useCreateReservationReviewMutation();
-  const updateMutation = useUpdateReviewMutation();
+  const updateMutation = useUpdateReviewMutation(undefined, bookingId);
 
   const handlePressBack = () => {
     // If user has made changes, show alert
@@ -74,14 +74,16 @@ export default function WriteReviewContainer() {
   };
 
   const handleSubmit = () => {
-    // Separate new images from existing URLs
+    // 새 이미지만 필터링 (file://로 시작하는 로컬 파일만)
     const newImages = images.filter(
-      (img): img is UploadImageFile => typeof img === 'object' && 'uri' in img
+      (img) => img.uri.startsWith('file://') || img.uri.startsWith('content://')
     );
 
     if (isEditMode && review) {
       analytics().logEvent('review_edit_complete', { review_id: review?.reviewId, user_id: userId });
       // Update existing review
+      // 음수 photoId는 GetBookingReviewMeResponse에서 변환된 임시 ID이므로 제외
+      const validDeletePhotoIds = deletePhotoIds.filter((id) => id > 0);
       updateMutation.mutate(
         {
           reviewId: review.reviewId,
@@ -89,7 +91,7 @@ export default function WriteReviewContainer() {
             rating,
             shootingTag: shootingType,
             content,
-            deletePhotoIds,
+            deletePhotoIds: validDeletePhotoIds,
           },
           newImages,
         },
@@ -111,9 +113,7 @@ export default function WriteReviewContainer() {
           },
         }
       );
-    }
-
-    if (bookingId) {
+    } else if (bookingId) {
       analytics().logEvent('review_create_complete', { booking_id: bookingId, user_id: userId });
       // Create new review
       createMutation.mutate(
@@ -151,9 +151,10 @@ export default function WriteReviewContainer() {
     (index: number) => {
       const imageToRemove = images[index];
 
-      // If it's an existing photo (string URL), track its photoId for deletion
-      if (typeof imageToRemove === 'string' && review?.photos) {
-        const photoToDelete = review.photos.find((photo) => photo.url === imageToRemove);
+      // 기존 서버 이미지인 경우 (file://로 시작하지 않는 경우) photoId 추적
+      const isExistingPhoto = !imageToRemove.uri.startsWith('file://') && !imageToRemove.uri.startsWith('content://');
+      if (isExistingPhoto && review?.photos) {
+        const photoToDelete = review.photos.find((photo) => photo.url === imageToRemove.uri);
         if (photoToDelete) {
           setDeletePhotoIds((prev) => [...prev, photoToDelete.photoId]);
         }

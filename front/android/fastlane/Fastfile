@@ -83,4 +83,16 @@ platform :android do
       skip_upload_screenshots: true
     )
   end
+
+  desc "Deploy update via Revopush"
+  lane :codepush do |options|
+    # Default to 'Staging' if no deployment name is provided
+    deployment_name = options[:deployment] || "Staging"
+    
+    # Run revopush release-react command
+    # Assuming the current directory is 'front' where package.json resides relative to fastlane execution
+    # Fastlane is run from android/ or ios/ usually, but the command needs to run where package.json is (../)
+    
+    sh("cd .. && npx revopush release-react -a android -d #{deployment_name}")
+  end
 end

@@ -1,4 +1,4 @@
-name: iOS Beta Deployment
+name: iOS Deployment
 
 on:
   push:
@@ -15,10 +15,23 @@ on:
         default: 'Bug fixes and improvements'
 
 jobs:
-  build-and-deploy:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      native: ${{ steps.filter.outputs.native }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            native:
+              - 'front/ios/**'
+
+  deploy:
+    needs: check-changes
     runs-on: macos-14
     timeout-minutes: 60
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,11 +54,14 @@ jobs:
           bundler-cache: true
           working-directory: ./front
 
+      # Native Deployment Steps
       - name: Install CocoaPods dependencies
+        if: needs.check-changes.outputs.native == 'true'
         working-directory: ./front/ios
         run: pod install
 
       - name: Configure Keychain
+        if: needs.check-changes.outputs.native == 'true'
         env:
           CERTIFICATES_P12: ${{ secrets.IOS_CERTIFICATES_P12 }}
           CERTIFICATES_P12_PASSWORD: ${{ secrets.IOS_CERTIFICATES_P12_PASSWORD }}
@@ -68,7 +84,8 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
 
-      - name: Build and upload to TestFlight
+      - name: Build and upload to TestFlight (Native)
+        if: needs.check-changes.outputs.native == 'true'
         working-directory: ./front
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -81,8 +98,17 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: bundle exec fastlane ios beta
 
+      # Revopush Deployment (CodePush)
+      - name: Deploy via Revopush (JS Only)
+        if: needs.check-changes.outputs.native != 'true'
+        working-directory: ./front
+        env:
+          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
+        run: |
+          bundle exec fastlane ios codepush deployment:Staging
+
       - name: Upload build artifacts
-        if: always()
+        if: always() && needs.check-changes.outputs.native == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ios-build-artifacts
@@ -92,7 +118,7 @@ jobs:
           retention-days: 30
 
       - name: Clean up keychain
-        if: always()
+        if: always() && needs.check-changes.outputs.native == 'true'
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           security delete-keychain $KEYCHAIN_PATH || true

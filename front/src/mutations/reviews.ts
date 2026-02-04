@@ -44,9 +44,11 @@ export const useCreateReservationReviewMutation = (photographerId?: string) => {
       // 리뷰 작성 후 바뀌는 것들:
       // - 고객 예약 리스트/예약 상세(상태가 REVIEWED로 변할 수 있음)
       // - 작가 리뷰 목록/요약(새 리뷰가 추가됨)
+      // - 해당 예약의 리뷰 조회 (bookingReviewMe)
       await Promise.all([
         qc.invalidateQueries({ queryKey: bookingsQueryKeys.lists() }),
         qc.invalidateQueries({ queryKey: bookingsQueryKeys.booking(vars.bookingId) }),
+        qc.invalidateQueries({ queryKey: reviewsQueryKeys.bookingReviewMe(vars.bookingId) }),
         ...(photographerId
           ? [
             qc.invalidateQueries({ queryKey: photographersQueryKeys.reviews(photographerId) }),
@@ -58,7 +60,7 @@ export const useCreateReservationReviewMutation = (photographerId?: string) => {
   });
 };
 /** 리뷰 수정(고객 전용) */
-export const useUpdateReviewMutation = (photographerId?: string) => {
+export const useUpdateReviewMutation = (photographerId?: string, bookingId?: number) => {
   const qc = useQueryClient();
 
   return useMutation({
@@ -67,10 +69,15 @@ export const useUpdateReviewMutation = (photographerId?: string) => {
       // 리뷰 수정 후 갱신:
       // - 내 리뷰 목록
       // - 해당 리뷰 detail
+      // - 해당 예약의 리뷰 조회 (bookingReviewMe)
       // - 작가 리뷰 목록/요약
       await Promise.all([
         qc.invalidateQueries({ queryKey: reviewsQueryKeys.myReviews() }),
         qc.invalidateQueries({ queryKey: reviewsQueryKeys.review(vars.reviewId) }),
+        // bookingReviewMe 쿼리 무효화 (리뷰 상세 화면 갱신용)
+        ...(bookingId
+          ? [qc.invalidateQueries({ queryKey: reviewsQueryKeys.bookingReviewMe(bookingId) })]
+          : [qc.invalidateQueries({ queryKey: [...reviewsQueryKeys.all, 'booking'] })]),
         ...(photographerId
           ? [
             qc.invalidateQueries({ queryKey: photographersQueryKeys.reviews(photographerId) }),
@@ -91,9 +98,13 @@ export const useDeleteReviewMutation = (photographerId?: string) => {
     onSuccess: async () => {
       // 리뷰 삭제 후 갱신:
       // - 내 리뷰 목록
+      // - 고객 예약 리스트 (isReview 상태 변경)
+      // - bookingReviewMe 쿼리 무효화
       // - 작가 리뷰 목록/요약
       await Promise.all([
         qc.invalidateQueries({ queryKey: reviewsQueryKeys.myReviews() }),
+        qc.invalidateQueries({ queryKey: bookingsQueryKeys.userList() }),
+        qc.invalidateQueries({ queryKey: [...reviewsQueryKeys.all, 'booking'] }),
         ...(photographerId
           ? [
             qc.invalidateQueries({ queryKey: photographersQueryKeys.reviews(photographerId) }),

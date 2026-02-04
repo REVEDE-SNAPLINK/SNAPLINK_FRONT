@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Platform } from 'react-native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { Alert, SubmitButton } from '@/components/theme';
@@ -11,6 +10,7 @@ import { useMeQuery } from '@/queries/user.ts';
 import { usePatchMyEmailMutation } from '@/mutations/user.ts';
 import { checkEmail } from '@/api/user.ts';
 import { isNetworkError } from '@/utils/error';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type EmailEditFormData = {
   email: string;
@@ -102,10 +102,15 @@ export default function EmailEditScreen() {
       headerTitle="이메일"
       onPressBack={handlePressBack}
     >
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer>
+      <Container>
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           <Content>
-
             <Controller
               control={control}
               name="email"
@@ -129,7 +134,7 @@ export default function EmailEditScreen() {
               )}
             />
           </Content>
-        </ScrollContainer>
+        </KeyboardAwareScrollView>
 
         <Footer>
           <SubmitButton
@@ -140,20 +145,14 @@ export default function EmailEditScreen() {
             bottom={33}
           />
         </Footer>
-      </KeyboardFormView>
+      </Container>
     </ScreenContainer>
   );
 }
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
-`;
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 82px;
 `;
 
 const Content = styled.View`

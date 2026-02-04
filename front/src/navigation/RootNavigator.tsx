@@ -41,22 +41,6 @@ export default function RootNavigator() {
     addScheduleModal.onSubmit?.(schedule);
   };
 
-  const handleCloseScheduleDetailModal = () => {
-    closeScheduleDetailModal();
-  };
-
-  const handleEditSchedule = (schedule: PersonalSchedule) => {
-    scheduleDetailModal.onEdit?.(schedule);
-  };
-
-  const handleDeleteSchedule = (scheduleId: string) => {
-    scheduleDetailModal.onDelete?.(scheduleId);
-  };
-
-  const handleDuplicateSchedule = (schedule: PersonalSchedule) => {
-    scheduleDetailModal.onDuplicate?.(schedule);
-  };
-
   const handleCloseReportModal = () => {
     closeReportModal();
   };
@@ -97,11 +81,9 @@ export default function RootNavigator() {
 
       <ScheduleDetailModal
         visible={scheduleDetailModal.visible}
-        onClose={handleCloseScheduleDetailModal}
+        onClose={closeScheduleDetailModal}
         schedule={scheduleDetailModal.schedule || null}
-        onEdit={handleEditSchedule}
-        onDelete={handleDeleteSchedule}
-        onDuplicate={handleDuplicateSchedule}
+        scheduleId={scheduleDetailModal.scheduleId}
       />
 
       <ReportModal

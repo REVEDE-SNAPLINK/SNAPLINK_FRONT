@@ -181,6 +181,35 @@ useEffect(() => {
     hideSub.remove();
   };
 }, [keyboardAvoid, insets.bottom, keyboardOffset]);
+
+// ====== Keyboard Avoiding for Android ======
+useEffect(() => {
+  if (!keyboardAvoid || Platform.OS !== 'android') return;
+
+  const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+    const keyboardHeight = e.endCoordinates.height;
+
+    keyboardOffset.value = withTiming(
+      Math.max(0, keyboardHeight),
+      {
+        duration: 150,
+        easing: Easing.out(Easing.cubic),
+      }
+    );
+  });
+
+  const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+    keyboardOffset.value = withTiming(0, {
+      duration: 150,
+      easing: Easing.out(Easing.cubic),
+    });
+  });
+
+  return () => {
+    showSub.remove();
+    hideSub.remove();
+  };
+}, [keyboardAvoid, keyboardOffset]);
   useEffect(() => {
     if (!visible || !autoGrowToMax) return;
 
@@ -224,11 +253,12 @@ useEffect(() => {
       };
     }
 
-    // Android: 기존 동작 유지
+    // Android: translateY로 열기/닫기, keyboardOffset으로 키보드 회피
+    // 키보드가 열리면 sheet를 위로 올림 (음수 translateY)
     return {
       transform: [
         {
-          translateY: Math.max(0, translateY.value - keyboardOffset.value),
+          translateY: translateY.value - keyboardOffset.value,
         },
       ],
     };

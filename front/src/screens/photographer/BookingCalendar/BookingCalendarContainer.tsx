@@ -7,7 +7,6 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore, PersonalSchedule as UIPersonalSchedule } from '@/store/modalStore.ts';
 import { usePhotographerMonthSchedulesQuery, usePhotographerDayDetailQuery } from '@/queries/schedules.ts';
-import { useDeletePersonalScheduleMutation } from '@/mutations/schedules.ts';
 import { getPhotographerDayDetail } from '@/api/schedules';
 
 // 이번 달이 몇 주인지 계산
@@ -26,11 +25,7 @@ export default function BookingCalendarContainer() {
     openAddScheduleModal,
     closeAddScheduleModal,
     openScheduleDetailModal,
-    closeScheduleDetailModal,
   } = useModalStore();
-
-  // Mutations
-  const deletePersonalSchedule = useDeletePersonalScheduleMutation();
 
   // Current date and selected date state
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -179,28 +174,8 @@ export default function BookingCalendarContainer() {
   };
 
   const handlePressPersonalSchedule = (id: number) => {
-    const schedule = dayDetailData?.personalSchedules.find((s) => s.id === id);
-    if (schedule) {
-      // Convert API PersonalSchedule to UI PersonalSchedule
-      // Check if it's all day (00:00:00 ~ 23:59:59)
-      const isAllDay = schedule.startTime === '00:00:00' && schedule.endTime === '23:59:59';
-
-      const uiSchedule: UIPersonalSchedule = {
-        id: String(schedule.id),
-        title: schedule.title,
-        startDate: new Date(`${selectedDate}T${schedule.startTime}`),
-        endDate: new Date(`${selectedDate}T${schedule.endTime}`),
-        isAllDay,
-        description: schedule.description,
-        scheduleType: 'personal',
-      };
-      openScheduleDetailModal(
-        uiSchedule,
-        handleEditSchedule,
-        handleDeleteSchedule,
-        handleDuplicateSchedule
-      );
-    }
+    // scheduleId만 전달하고, 실제 데이터는 모달에서 usePersonalScheduleQuery로 가져옴
+    openScheduleDetailModal(id);
   };
 
   const handlePressHoliday = async () => {
@@ -273,12 +248,7 @@ export default function BookingCalendarContainer() {
       holidayId: dayDetailData.holidayId,
     };
 
-    openScheduleDetailModal(
-      holidaySchedule,
-      handleEditSchedule,
-      handleDeleteSchedule,
-      handleDuplicateSchedule
-    );
+    openScheduleDetailModal(undefined, holidaySchedule);
   };
 
   const handleSelectDate = (date: string) => {
@@ -310,54 +280,6 @@ export default function BookingCalendarContainer() {
       end_date: schedule.endDate.toISOString().split('T')[0],
       title: schedule.title,
     });
-  };
-
-  const handleEditSchedule = (schedule: UIPersonalSchedule) => {
-    closeScheduleDetailModal();
-    // 수정 모드로 AddScheduleModal 열기
-    openAddScheduleModal(async (updatedSchedule) => {
-      // AddScheduleModal already handles mutation, just log analytics
-      closeAddScheduleModal();
-      analytics().logEvent('personal_schedule_updated', {
-        user_id: userId ?? '',
-        user_type: 'photographer',
-        schedule_id: schedule.id,
-        start_date: updatedSchedule.startDate.toISOString().split('T')[0],
-        end_date: updatedSchedule.endDate.toISOString().split('T')[0],
-        title: updatedSchedule.title,
-      });
-    }, schedule, false); // isDuplicate = false (수정 모드)
-  };
-
-  const handleDeleteSchedule = async (scheduleId: string) => {
-    try {
-      await deletePersonalSchedule.mutateAsync(Number(scheduleId));
-      closeScheduleDetailModal();
-      analytics().logEvent('personal_schedule_deleted', {
-        user_id: userId ?? '',
-        user_type: 'photographer',
-        schedule_id: scheduleId,
-      });
-    } catch (error) {
-      console.error('Failed to delete personal schedule:', error);
-    }
-  };
-
-  const handleDuplicateSchedule = (schedule: UIPersonalSchedule) => {
-    closeScheduleDetailModal();
-    // 복사 모드로 AddScheduleModal 열기
-    openAddScheduleModal(async (duplicatedSchedule) => {
-      // AddScheduleModal already handles mutation, just log analytics
-      closeAddScheduleModal();
-      analytics().logEvent('personal_schedule_duplicated', {
-        user_id: userId ?? '',
-        user_type: 'photographer',
-        original_schedule_id: schedule.id,
-        start_date: duplicatedSchedule.startDate.toISOString().split('T')[0],
-        end_date: duplicatedSchedule.endDate.toISOString().split('T')[0],
-        title: duplicatedSchedule.title,
-      });
-    }, schedule, true); // isDuplicate = true
   };
 
   // // Calculate D-day from today to selected date

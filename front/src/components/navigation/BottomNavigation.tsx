@@ -66,7 +66,6 @@ const Container = styled.View`
   background: #fff;
   flex-direction: row;
   align-items: center;
-  box-shadow: 0px -2px 2px rgba(0, 0, 0, 0.08);
 `;
 
 const TabButton = styled.TouchableOpacity`

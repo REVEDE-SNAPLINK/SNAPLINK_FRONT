@@ -10,12 +10,13 @@ import analytics from '@react-native-firebase/analytics';
 import { useEffect } from 'react';
 import NotificationHandler from '@/components/NotificationHandler';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import codePush from '@revopush/react-native-code-push';
 
 async function logAppOpen() {
   await analytics().logEvent('app_open');
 }
 
-export default function App() {
+function App() {
   useEffect(() => {
     logAppOpen();
   }, []);
@@ -38,3 +39,5 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+export default codePush(App);

@@ -14,8 +14,8 @@ import FormInput from '@/components/form/FormInput.tsx';
 import DateInput from '@/components/form/DateInput.tsx';
 import RadioGroup, { RadioOption } from '@/components/RadioGroup.tsx';
 import TermsAgreement, { TermItem } from '@/components/TermsAgreement.tsx';
-import { Platform } from 'react-native';
 import Icon from '@/components/Icon.tsx';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import TypeUserImg from '@/assets/imgs/type-user.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import TypePhotographerImg from '@/assets/imgs/type-photographer.svg';
@@ -125,27 +125,31 @@ export default function UserOnboardingView({
       onPressBack={onPressBack}
       navigation={navigation}
     >
-      <KeyboardFormView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollContainer>
+      <Container>
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           <AnimatedFormContainer style={animatedStyle}>
             {renderStep()}
           </AnimatedFormContainer>
-        </ScrollContainer>
-      </KeyboardFormView>
-      {currentStep > 0 &&
-        <Footer>
-          <SubmitButton
-            onPress={onPressSubmit}
-            width={327}
-            disabled={isSubmitDisabled}
-            text={submitButtonText}
-            position="absolute"
-            bottom={33}
-          />
-        </Footer>
-      }
+        </KeyboardAwareScrollView>
+        {currentStep > 0 &&
+          <Footer>
+            <SubmitButton
+              onPress={onPressSubmit}
+              width={327}
+              disabled={isSubmitDisabled}
+              text={submitButtonText}
+              position="absolute"
+              bottom={33}
+            />
+          </Footer>
+        }
+      </Container>
     </ScreenContainer>
   );
 }
@@ -468,16 +472,10 @@ const UserOnboardingStep7 = ({ control, errors }: UserOnboardingStep7Props) => {
 };
 UserOnboardingStep7.displayName = 'UserOnboardingStep7';
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
-`
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 82px;
-`
+`;
 
 const AnimatedFormContainer = styled(Animated.View)`
   flex: 1;

@@ -137,7 +137,7 @@ export const updateReview = async (params: UpdateReviewParams): Promise<void> =>
       name: 'newImages',
       filename: img.name,
       type: img.type,
-      data: RNBlobUtil.wrap(img.uri),
+      data: RNBlobUtil.wrap(img.uri.replace('file://', '')),
     })),
   ];
 

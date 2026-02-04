@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { SubmitButton, Typography, TextInput, Alert } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useRejectBookingMutation } from '@/mutations/bookings.ts';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type BookingRejectRouteProp = RouteProp<MainStackParamList, 'BookingReject'>;
 
@@ -42,7 +42,13 @@ export default function BookingRejectScreen() {
 
             try {
               await rejectBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
-              navigation.goBack();
+              Alert.show({
+                title: '거절 완료',
+                message: '거절이 완료되었습니다.',
+                buttons: [
+                  { text: '확인', onPress: handlePressBack },
+                ]
+              });
             } catch (e: any) {
               const message = e?.message ?? '예약을 거부할 수 없어요. 잠시 후 다시 시도해주세요.';
               setError(message);
@@ -61,8 +67,14 @@ export default function BookingRejectScreen() {
       headerTitle="예약 거절"
       onPressBack={handlePressBack}
     >
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer>
+      <Container>
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           <Content>
             <Typography
               fontSize={16}
@@ -90,7 +102,7 @@ export default function BookingRejectScreen() {
               </ErrorText>
             )}
           </Content>
-        </ScrollContainer>
+        </KeyboardAwareScrollView>
 
         <Footer>
           <SubmitButton
@@ -101,20 +113,14 @@ export default function BookingRejectScreen() {
             bottom={33}
           />
         </Footer>
-      </KeyboardFormView>
+      </Container>
     </ScreenContainer>
   );
 }
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
-`;
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 82px;
 `;
 
 const Content = styled.View`

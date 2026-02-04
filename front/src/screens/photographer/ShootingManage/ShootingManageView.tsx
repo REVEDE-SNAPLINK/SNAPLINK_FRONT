@@ -33,7 +33,6 @@ interface ShootingManageViewProps {
   shootings: ShootingWithOptions[];
   hasDefault: boolean;
   weeklySchedule: GetWeeklyScheduleRespnose[];
-
   navigation?: any;
 }
 
@@ -169,20 +168,22 @@ export default function ShootingManageView({
       >
         <EditModalWrapper>
           {!isDefaultSelectedProduct &&
-            <EditModalButton
-              onPress={() => {
-                if (productId !== null) {
-                  onChangeDefault(productId);
-                  setModalVisible(false);
-                }
-              }}
-            >
-              <Typography fontSize={16} letterSpacing="-2.5%">
-                기본상품으로 변경
-              </Typography>
-            </EditModalButton>
+            <>
+              <EditModalButton
+                onPress={() => {
+                  if (productId !== null) {
+                    onChangeDefault(productId);
+                    setModalVisible(false);
+                  }
+                }}
+              >
+                <Typography fontSize={16} letterSpacing="-2.5%">
+                  기본상품으로 변경
+                </Typography>
+              </EditModalButton>
+              <EditModalDivider />
+            </>
           }
-          <EditModalDivider />
           <EditModalButton
             onPress={() => {
               if (productId !== null) {

@@ -5,3 +5,6 @@
 # WebStorm
 #
 /.idea
+
+certificates
+certificates/*

@@ -873,6 +873,7 @@ const BottomActionContainer = styled.View`
   bottom: 0;
   left: 0;
   flex-direction: row;
+  align-items: center;
   background-color: #fff;
   width: 100%;
   padding-horizontal: 17px;

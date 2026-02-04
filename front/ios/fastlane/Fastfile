@@ -72,4 +72,14 @@ platform :ios do
       submit_for_review: false
     )
   end
+
+  desc "Deploy update via Revopush"
+  lane :codepush do |options|
+    # Default to 'Staging' if no deployment name is provided
+    deployment_name = options[:deployment] || "Staging"
+    
+    # Run revopush release-react command
+    # Fastlane is run from ios/ usually, command needs to run where package.json is (../)
+    sh("cd .. && npx revopush release-react -a ios -d #{deployment_name}")
+  end
 end

@@ -106,7 +106,7 @@ export default function PhotographerViewPhotosView({
         </ContentContainer>
 
         <SubmitButtonWrapper>
-          {!isDelivered && !hasPhotos ? (
+          {!isDelivered ? (
             // 최초 업로드 (사진 없음)
             <SubmitButton
               text="사진 등록하기"

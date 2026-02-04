@@ -216,7 +216,7 @@ export default function PortfolioOnboardingView({
           ref={scrollRef}
           enableOnAndroid
           keyboardShouldPersistTaps="handled"
-          extraScrollHeight={20}
+          extraScrollHeight={120}
           contentContainerStyle={{
             alignItems: 'stretch',
           }}

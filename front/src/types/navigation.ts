@@ -55,7 +55,7 @@ export type MainStackParamList = {
 
   // Review
   Reviews: { photographerId: string };
-  ReviewDetails: { review: PhotographerReviewItem | MyReviewItem };
+  ReviewDetails: { review?: PhotographerReviewItem | MyReviewItem; bookingId?: number };
   ReviewPhotos: { photographerId: string };
   WriteReview: { bookingId?: number; review?: MyReviewItem };
   ViewPhotos: { bookingId: number };

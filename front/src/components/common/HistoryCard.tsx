@@ -277,6 +277,7 @@ const ViewDetailButton = styled.View`
   border: 1px solid ${theme.colors.disabled};
   justify-content: center;
   align-items: center;
+  max-height: 25px;
 `
 
 const Header = ({ title }: {title: string}) => (

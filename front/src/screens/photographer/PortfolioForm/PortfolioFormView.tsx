@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { Control, Controller } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled';
 import ScreenContainer from '@/components/common/ScreenContainer';
@@ -7,6 +6,7 @@ import ImageUploadInput from '@/components/form/ImageUploadInput';
 import { TextInput } from '@/components/theme';
 import Checkbox from '@/components/theme/Checkbox';
 import { UploadImageFile } from '@/api/photographers';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface PortfolioFormData {
   portfolioDescription: string;
@@ -45,11 +45,14 @@ export default function PortfolioFormView({
       iconSize={20}
     
       navigation={navigation}>
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer
+      <Container>
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
-          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingBottom: 120 }}
         >
           <FormContainer>
             <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -108,7 +111,7 @@ export default function PortfolioFormView({
             )}
             <ScrollViewSpacer />
           </FormContainer>
-        </ScrollContainer>
+        </KeyboardAwareScrollView>
         <Footer>
           <SubmitButton
             onPress={onPressSubmit}
@@ -118,20 +121,14 @@ export default function PortfolioFormView({
             marginBottom={10}
           />
         </Footer>
-      </KeyboardFormView>
+      </Container>
     </ScreenContainer>
   );
 }
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
-`;
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 120px;
 `;
 
 const FormContainer = styled.View`

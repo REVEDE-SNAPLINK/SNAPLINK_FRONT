@@ -93,3 +93,7 @@ ios/xcodebuild.log
 # Environment Variables
 .env
 .env.*
+# Expo
+.expo
+dist/
+web-build/

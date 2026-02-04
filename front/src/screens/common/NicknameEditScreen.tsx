@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Platform } from 'react-native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { Alert, SubmitButton } from '@/components/theme';
@@ -11,6 +10,7 @@ import { useMeQuery } from '@/queries/user.ts';
 import { usePatchMyNicknameMutation } from '@/mutations/user.ts';
 import { checkNickname } from '@/api/user.ts';
 import { isNetworkError } from '@/utils/error';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type NicknameEditFormData = {
   nickname: string;
@@ -107,8 +107,14 @@ export default function NicknameEditScreen() {
       headerTitle="닉네임"
       onPressBack={handlePressBack}
     >
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer>
+      <Container>
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           <Content>
             <Controller
               control={control}
@@ -128,7 +134,7 @@ export default function NicknameEditScreen() {
               )}
             />
           </Content>
-        </ScrollContainer>
+        </KeyboardAwareScrollView>
 
         <Footer>
           <SubmitButton
@@ -139,20 +145,14 @@ export default function NicknameEditScreen() {
             bottom={33}
           />
         </Footer>
-      </KeyboardFormView>
+      </Container>
     </ScreenContainer>
   );
 }
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
-`;
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 82px;
 `;
 
 const Content = styled.View`

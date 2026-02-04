@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import ScreenContainer from '@/components/common/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { SubmitButton, Typography, TextInput, Alert } from '@/components/theme';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useCancelBookingMutation } from '@/mutations/bookings.ts';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type BookingCancelRouteProp = RouteProp<MainStackParamList, 'BookingCancel'>;
 
@@ -29,7 +29,7 @@ export default function BookingCancelScreen() {
   const handlePressSubmit = () => {
     Alert.show({
       title: '예약을 취소하시겠습니까?',
-      message: '고의적인 취소는 제제의 사유가 될 수 있습니다.\n반드시 예약자와 협의 후 취소하세요.',
+      message: '고객과의 사전 협의 없는 일방적인 예약 취소는 이용 제한 등의 페널티로 이어질 수 있습니다. 반드시 고객과 원만한 협의 후 취소를 진행해 주세요.',
       buttons: [
         { text: '뒤로', type: 'cancel', onPress: () => {} },
         { text: '예약 취소' , onPress: async () => {
@@ -42,7 +42,13 @@ export default function BookingCancelScreen() {
 
             try {
               await cancelBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
-              navigation.goBack();
+              Alert.show({
+                title: '취소 완료',
+                message: '취소가 완료되었습니다.',
+                buttons: [
+                  { text: '확인', onPress: handlePressBack },
+                ]
+              });
             } catch (e: any) {
               const message = e?.message ?? '예약을 취소할 수 없어요. 잠시 후 다시 시도해주세요.';
               setError(message);
@@ -60,8 +66,14 @@ export default function BookingCancelScreen() {
       headerTitle="예약 취소"
       onPressBack={handlePressBack}
     >
-      <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer>
+      <Container>
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           <Content>
             <Typography
               fontSize={16}
@@ -89,7 +101,7 @@ export default function BookingCancelScreen() {
               </ErrorText>
             )}
           </Content>
-        </ScrollContainer>
+        </KeyboardAwareScrollView>
 
         <Footer>
           <SubmitButton
@@ -100,20 +112,14 @@ export default function BookingCancelScreen() {
             bottom={33}
           />
         </Footer>
-      </KeyboardFormView>
+      </Container>
     </ScreenContainer>
   );
 }
 
-const KeyboardFormView = styled.KeyboardAvoidingView`
+const Container = styled.View`
   flex: 1;
   width: 100%;
-`;
-
-const ScrollContainer = styled.ScrollView`
-  flex: 1;
-  width: 100%;
-  padding-bottom: 82px;
 `;
 
 const Content = styled.View`

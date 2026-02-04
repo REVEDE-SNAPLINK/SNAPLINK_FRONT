@@ -9,17 +9,13 @@ import Animated, {
 import styled from '@/utils/scale/CustomStyled.ts';
 import { SubmitButton, Typography } from '@/components/theme';
 import ScreenContainer from '@/components/common/ScreenContainer';
-import { Platform, ScrollView } from 'react-native';
+import { Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import Checkbox from '@/components/theme/Checkbox.tsx';
 import OptionItem, { Option, TimeOptionItem } from '@/components/OptionItem.tsx';
 import { theme } from '@/theme';
-
-export interface DaySchedule {
-  startTime: Date | null;
-  endTime: Date | null;
-}
 
 export interface ServiceFormData {
   shootingProductName: string;
@@ -96,15 +92,18 @@ export default function ServiceFormView({
       navigation={navigation}
     >
       <KeyboardFormView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
+        <KeyboardAwareScrollView
           ref={scrollViewRef}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={120}
           showsVerticalScrollIndicator={false}
-          style={{ flex: 1, width: '100%', paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
           <AnimatedFormContainer style={animatedStyle}>
             {renderStep()}
           </AnimatedFormContainer>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardFormView>
       <Footer>
         <SubmitButton
@@ -419,7 +418,7 @@ const ServiceFormStep2 = ({
               <AddOptionButton
                 onPress={() => {
                   const newOptions = [...optionList];
-                  if (newOptions.length === 0) {
+                  if (newOptions.length === 0 && !isEditMode) {
                     newOptions.push({ name: '', description: '', price: '', time: '' });
                   }
                   newOptions.push({ name: '', description: '', price: '', time: '' });
@@ -439,7 +438,7 @@ const ServiceFormStep2 = ({
                 <AddOptionButton
                   onPress={() => {
                     const newOptions = [...optionList];
-                    if (newOptions.length === 0) {
+                    if (newOptions.length === 0 && !isEditMode) {
                       newOptions.push({ name: '', description: '', price: '', time: '' });
                     }
                     newOptions.push({ name: '시간 추가', description: '', price: '', time: '', isTimeOption: true });
@@ -584,14 +583,13 @@ const ServiceFormStep3 = ({
         </Typography>
         를 자세히 알려주세요.
       </Typography>
-      <ScrollView>
-        <Typography
-          fontSize={16}
-          letterSpacing="-2.5%"
-          marginBottom={10}
-        >
-          보정 작업 제공
-        </Typography>
+      <Typography
+        fontSize={16}
+        letterSpacing="-2.5%"
+        marginBottom={10}
+      >
+        보정 작업 제공
+      </Typography>
         <Controller
           control={control}
           name="retouchingType"
@@ -672,7 +670,6 @@ const ServiceFormStep3 = ({
           </>
         )}
         <ScrollViewSpacer />
-      </ScrollView>
     </>
   );
 };

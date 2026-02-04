@@ -43,6 +43,10 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CodePushDeploymentKey</key>
+	<string>QN75OU4FgYz6H2LL8f-Fm4HsBQ9I41oeY35L7x</string>
+	<key>CodePushServerUrl</key>
+	<string>https://api.revopush.org</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>

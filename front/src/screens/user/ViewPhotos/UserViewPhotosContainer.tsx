@@ -8,6 +8,7 @@ import { BookingPhoto } from '@/api/bookings.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
 import JSZip from 'jszip';
@@ -137,7 +138,7 @@ export default function UserViewPhotosContainer() {
     try {
       const url = CLOUDFRONT_BASE_URL + zipUrl;
       const { fs } = RNBlobUtil;
-      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+      const tempDir = fs.dirs.CacheDir;
 
       // ZIP 파일 다운로드
       const response = await RNBlobUtil.config({ fileCache: true }).fetch('GET', url);
@@ -148,7 +149,7 @@ export default function UserViewPhotosContainer() {
       const contents = await jszip.loadAsync(zipBase64, { base64: true });
 
       const imageExtensions = ['jpg', 'jpeg', 'png', 'heic', 'webp'];
-      const extractedFiles: string[] = [];
+      let savedCount = 0;
 
       for (const filename of Object.keys(contents.files)) {
         const zipEntry = contents.files[filename];
@@ -160,26 +161,29 @@ export default function UserViewPhotosContainer() {
         if (!zipEntry.dir && isImage && !isMetaFile) {
           const imgData = await zipEntry.async('base64');
           const safeFileName = filename.split('/').pop() || `img_${Date.now()}.${ext}`;
-          const filePath = `${downloads}/original_${bookingId}_${safeFileName}`;
+          const tempPath = `${tempDir}/original_${bookingId}_${safeFileName}`;
 
-          await RNFS.writeFile(filePath, imgData, 'base64');
-          extractedFiles.push(filePath);
+          await RNFS.writeFile(tempPath, imgData, 'base64');
 
-          // Android: 다운로드 매니저에 등록
-          if (Platform.OS === 'android') {
-            await RNBlobUtil.MediaCollection.copyToMediaStore(
-              { name: `original_${bookingId}_${safeFileName}`, parentFolder: '', mimeType: `image/${ext === 'png' ? 'png' : 'jpeg'}` },
-              'Download',
-              filePath
-            ).catch(() => {});
+          if (Platform.OS === 'ios') {
+            // iOS: Photos 앱에 저장
+            const fileUri = tempPath.startsWith('file://') ? tempPath : `file://${tempPath}`;
+            await CameraRoll.save(fileUri, { type: 'photo' });
+            // 임시 파일 삭제
+            await RNFS.unlink(tempPath).catch(() => {});
+          } else {
+            // Android: 갤러리에서 인식되도록
+            await RNBlobUtil.fs.scanFile([{ path: tempPath }]);
           }
+
+          savedCount++;
         }
       }
 
       // 캐시 파일 삭제
       await RNFS.unlink(response.path()).catch(() => {});
 
-      if (extractedFiles.length === 0) {
+      if (savedCount === 0) {
         Alert.show({
           title: '오류',
           message: 'ZIP 파일 내에 유효한 이미지가 없습니다.',
@@ -187,13 +191,9 @@ export default function UserViewPhotosContainer() {
         return;
       }
 
-      if (Platform.OS === 'ios' && extractedFiles.length > 0) {
-        await RNBlobUtil.ios.openDocument(extractedFiles[0]);
-      }
-
       Alert.show({
         title: '다운로드 완료',
-        message: `${extractedFiles.length}개의 이미지가 저장되었습니다.`,
+        message: `${savedCount}개의 이미지가 사진 앨범에 저장되었습니다.`,
       });
     } catch (error) {
       console.error('ZIP extract error:', error);
@@ -305,38 +305,35 @@ export default function UserViewPhotosContainer() {
 
     try {
       const { fs } = RNBlobUtil;
-      const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+      const tempDir = fs.dirs.CacheDir;
 
       if (Platform.OS === 'ios') {
-        // iOS: 개별 다운로드 후 공유
-        const downloadPromises = photos.map(async (photo) => {
+        // iOS: Photos 앱에 저장
+        for (const photo of photos) {
           const ext = photo.url.split('.').pop() || 'jpg';
           const fileName = `reservation_${bookingId}_photo_${photo.sortOrder}.${ext}`;
-          const filePath = `${downloads}/${fileName}`;
+          const tempPath = `${tempDir}/${fileName}`;
 
           const response = await RNBlobUtil.config({
             fileCache: true,
-            path: filePath,
+            path: tempPath,
           }).fetch('GET', CLOUDFRONT_BASE_URL + photo.url);
 
-          return response.path();
+          const savedPath = response.path();
+          const fileUri = savedPath.startsWith('file://') ? savedPath : `file://${savedPath}`;
+          await CameraRoll.save(fileUri, { type: 'photo' });
+
+          // 임시 파일 삭제
+          await RNFS.unlink(savedPath).catch(() => {});
+        }
+
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${photos.length}개의 이미지가 사진 앨범에 저장되었습니다.`,
         });
-
-        const paths = await Promise.all(downloadPromises);
-
-        // 첫 번째 사진만 공유 다이얼로그 열기
-        if (paths.length > 0) {
-          await RNBlobUtil.ios.openDocument(paths[0]);
-        }
-
-        if (photos.length > 1) {
-          Alert.show({
-            title: '다운로드 완료',
-            message: `${photos.length}개의 사진이 저장되었습니다. (파일 앱에서 확인 가능)`,
-          });
-        }
       } else {
         // Android: 다운로드 매니저로 개별 다운로드
+        const downloads = fs.dirs.DownloadDir;
         const downloadPromises = photos.map(async (photo) => {
           const ext = photo.url.split('.').pop() || 'jpg';
           const fileName = `reservation_${bookingId}_photo_${photo.sortOrder}.${ext}`;
@@ -355,6 +352,11 @@ export default function UserViewPhotosContainer() {
         });
 
         await Promise.all(downloadPromises);
+
+        Alert.show({
+          title: '다운로드 완료',
+          message: `${photos.length}개의 이미지가 다운로드 폴더에 저장되었습니다.`,
+        });
       }
     } catch (error) {
       console.error('Photos download error:', error);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Animated, BackHandler, Dimensions, Platform } from 'react-native';
+import analytics from '@react-native-firebase/analytics';
 import styled from '@/utils/scale/CustomStyled';
 import IconButton from '@/components/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
@@ -9,7 +10,7 @@ import TimeCircleIcon from '@/assets/icons/time-circle.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
 import { Typography, Alert } from '@/components/theme';
 import SlideModal from '@/components/theme/SlideModal';
-import { PersonalSchedule } from '@/store/modalStore';
+import { PersonalSchedule, useModalStore } from '@/store/modalStore';
 import { usePersonalScheduleQuery } from '@/queries/schedules';
 import { useDeletePersonalScheduleMutation } from '@/mutations/schedules';
 import { useDeleteHolidayMutation } from '@/mutations/holidays';
@@ -24,9 +25,6 @@ interface ScheduleDetailModalProps {
   visible: boolean;
   onClose: () => void;
   schedule: PersonalSchedule | null;
-  onEdit: (schedule: PersonalSchedule) => void;
-  onDelete: (scheduleId: string) => void;
-  onDuplicate: (schedule: PersonalSchedule) => void;
   scheduleId?: number; // API로부터 불러올 스케줄 ID
 }
 
@@ -34,17 +32,17 @@ export default function ScheduleDetailModal({
   visible,
   onClose,
   schedule,
-  onEdit,
-  onDelete,
-  onDuplicate,
   scheduleId,
 }: ScheduleDetailModalProps) {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
+  // Store hooks
+  const { openAddScheduleModal, closeAddScheduleModal } = useModalStore();
+  const userId = useAuthStore((state) => state.userId);
+
   // API hooks
   const { data: apiScheduleData } = usePersonalScheduleQuery(scheduleId, visible && !!scheduleId);
-  const userId = useAuthStore((state) => state.userId);
   const deleteMutation = useDeletePersonalScheduleMutation();
   const deleteHolidayMutation = useDeleteHolidayMutation();
 
@@ -68,6 +66,7 @@ export default function ScheduleDetailModal({
         endDate: endDateTime,
         isAllDay,
         description: description,
+        scheduleType: 'personal' as const, // API는 항상 개인 일정
       };
     }
     return schedule;
@@ -106,17 +105,30 @@ export default function ScheduleDetailModal({
     return `${period} ${displayHours}:${String(minutes).padStart(2, '0')}`;
   };
 
+  const handleSubmitSchedule = async (updatedSchedule: Omit<PersonalSchedule, 'id'>) => {
+    closeAddScheduleModal();
+    analytics().logEvent('personal_schedule_updated', {
+      user_id: userId ?? '',
+      user_type: 'photographer',
+      start_date: updatedSchedule.startDate.toISOString().split('T')[0],
+      end_date: updatedSchedule.endDate.toISOString().split('T')[0],
+      title: updatedSchedule.title,
+    });
+  };
+
   const handlePressEdit = () => {
     setIsEditModalVisible(false);
     if (displaySchedule) {
-      onEdit(displaySchedule);
+      onClose();
+      openAddScheduleModal(handleSubmitSchedule, displaySchedule, false);
     }
   };
 
   const handlePressDuplicate = () => {
     setIsEditModalVisible(false);
     if (displaySchedule) {
-      onDuplicate(displaySchedule);
+      onClose();
+      openAddScheduleModal(handleSubmitSchedule, displaySchedule, true);
     }
   };
 
@@ -136,7 +148,7 @@ export default function ScheduleDetailModal({
               if (isHoliday && userId) {
                 // 휴가 전체 기간 삭제
                 try {
-                  const formatDate = (date: Date) => {
+                  const formatDateStr = (date: Date) => {
                     const year = date.getFullYear();
                     const month = String(date.getMonth() + 1).padStart(2, '0');
                     const day = String(date.getDate()).padStart(2, '0');
@@ -151,7 +163,7 @@ export default function ScheduleDetailModal({
                     endDate.setHours(0, 0, 0, 0);
 
                     while (current <= endDate) {
-                      dates.push(formatDate(current));
+                      dates.push(formatDateStr(current));
                       current.setDate(current.getDate() + 1);
                     }
                     return dates;
@@ -175,7 +187,10 @@ export default function ScheduleDetailModal({
                     }
                   }
 
-                  onDelete(displaySchedule.id);
+                  analytics().logEvent('holiday_deleted', {
+                    user_id: userId,
+                    user_type: 'photographer',
+                  });
                   onClose();
                 } catch (error) {
                   Alert.show({
@@ -188,7 +203,11 @@ export default function ScheduleDetailModal({
                 // API를 통한 개인 일정 삭제 (휴가가 아닐 때만)
                 deleteMutation.mutate(scheduleId, {
                   onSuccess: () => {
-                    onDelete(displaySchedule.id);
+                    analytics().logEvent('personal_schedule_deleted', {
+                      user_id: userId ?? '',
+                      user_type: 'photographer',
+                      schedule_id: scheduleId,
+                    });
                     onClose();
                   },
                   onError: () => {
@@ -200,8 +219,6 @@ export default function ScheduleDetailModal({
                   },
                 });
               } else {
-                // 로컬 삭제
-                onDelete(displaySchedule.id);
                 onClose();
               }
             },

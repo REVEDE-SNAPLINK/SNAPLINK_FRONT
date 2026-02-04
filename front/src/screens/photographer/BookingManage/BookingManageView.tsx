@@ -52,7 +52,9 @@ export default function BookingManageView({
 
     const endDateTime = new Date(`${item.shootingDate}T${item.endTime}`);
     const startDateTime = new Date(`${item.shootingDate}T${item.startTime}`);
-    const canCancelBooking = item.status === 'APPROVED' && (new Date() < startDateTime);
+    // 촬영 시작 1시간 전까지만 취소 가능
+    const oneHourBeforeStart = new Date(startDateTime.getTime() - 60 * 60 * 1000);
+    const canCancelBooking = item.status === 'APPROVED' && (new Date() < oneHourBeforeStart);
     const canCompleteBooking = item.status === 'APPROVED' && (new Date() > endDateTime);
 
     return (

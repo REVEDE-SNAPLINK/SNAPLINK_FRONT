@@ -5,6 +5,7 @@ import ReactAppDependencyProvider
 import KakaoSDKAuth
 import Firebase
 import UserNotifications
+import CodePush
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -99,7 +100,8 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
 #if DEBUG
     RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
 #else
-    Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    // Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    CodePush.bundleURL()
 #endif
   }
 }

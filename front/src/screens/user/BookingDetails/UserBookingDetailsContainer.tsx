@@ -11,6 +11,7 @@ import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
 import { formatReservationDateTime } from '@/utils/format.ts';
 import { showErrorAlert } from '@/utils/error';
+import { Alert } from '@/components/theme';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -22,15 +23,38 @@ export default function UserBookingDetailsContainer() {
   const { userId, userType } = useAuthStore()
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
-  const { data: bookingReview } = useBookingReviewMeQuery(shouldFetchReview ? bookingId : undefined);
+
+  // isreview가 true면 미리 리뷰 데이터 확인
+  const shouldPreFetchReview = bookingDetails?.isreview === true;
+  const {
+    data: bookingReview,
+    isError: isReviewError,
+    isFetched: isReviewFetched,
+  } = useBookingReviewMeQuery(shouldPreFetchReview || shouldFetchReview ? bookingId : undefined);
+
   const { mutate: chatMutate } = useCreateOrGetChatRoomMutation();
+
+  // 리뷰가 실제로 존재하는지 확인 (삭제된 경우 false)
+  const reviewActuallyExists = shouldPreFetchReview && isReviewFetched && !isReviewError && !!bookingReview;
 
   useEffect(() => {
     if (bookingReview && shouldFetchReview) {
-      navigation.navigate('ReviewDetails', { review: bookingReview });
+      navigation.navigate('ReviewDetails', { bookingId });
       setShouldFetchReview(false);
     }
-  }, [bookingReview, shouldFetchReview, navigation]);
+  }, [bookingReview, shouldFetchReview, navigation, bookingId]);
+
+  // 리뷰가 삭제된 경우 리뷰 작성 화면으로 이동
+  useEffect(() => {
+    if (isReviewError && shouldFetchReview) {
+      Alert.show({
+        title: '리뷰가 삭제되었습니다',
+        message: '새로운 리뷰를 작성해주세요.',
+      });
+      navigation.navigate('WriteReview', { bookingId });
+      setShouldFetchReview(false);
+    }
+  }, [isReviewError, shouldFetchReview, bookingId, navigation]);
 
   useEffect(() => {
     analytics().logEvent('screen_view', {
@@ -51,7 +75,12 @@ export default function UserBookingDetailsContainer() {
 
   const handlePressShowMyReview = () => {
     analytics().logEvent('review_view', { booking_id: bookingId, user_id: userId });
-    setShouldFetchReview(true);
+    // 이미 pre-fetch된 데이터가 있으면 바로 네비게이션
+    if (bookingReview) {
+      navigation.navigate('ReviewDetails', { bookingId });
+    } else {
+      setShouldFetchReview(true);
+    }
   };
 
   const handleOpenChatRoom = () => {
@@ -93,8 +122,9 @@ export default function UserBookingDetailsContainer() {
   }
 
   const canViewPhotos = bookingDetails.status === 'PHOTOS_DELIVERED' || bookingDetails.status === 'USER_PHOTO_CHECK';
-  const canWriteReview = !bookingDetails.isreview && bookingDetails.status === 'USER_PHOTO_CHECK';
-  const canShowMyReview = bookingDetails.isreview;
+  // 리뷰가 실제로 존재하는지 확인 (서버에서 isreview=true여도 삭제된 경우 리뷰 작성 버튼 표시)
+  const canWriteReview = bookingDetails.status === 'USER_PHOTO_CHECK' && !reviewActuallyExists;
+  const canShowMyReview = reviewActuallyExists;
 
   return (
     <UserBookingDetailsView

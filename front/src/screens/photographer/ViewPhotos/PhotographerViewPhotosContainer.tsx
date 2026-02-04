@@ -89,6 +89,7 @@ export default function PhotographerViewPhotosContainer() {
         await updatePhotos({ zipFile });
       } else {
         await uploadZip({ bookingId, zipFile });
+        setIsDelivered(true);
       }
 
       analytics().logEvent('photographer_original_zip_uploaded', {
@@ -104,6 +105,11 @@ export default function PhotographerViewPhotosContainer() {
     } catch (err) {
       setIsProcessing(false);
       console.error('Upload Error:', err);
+      showErrorAlert({
+        title: '업로드 실패',
+        action: 'zip 파일 업로드',
+        error: err,
+      });
     }
   };
 
@@ -148,6 +154,7 @@ export default function PhotographerViewPhotosContainer() {
         await updatePhotos({ zipFile });
       } else {
         await uploadZip({ bookingId, zipFile });
+        setIsDelivered(true);
       }
 
       await RNFS.unlink(finalZipPath).catch(() => {});
@@ -167,7 +174,7 @@ export default function PhotographerViewPhotosContainer() {
       console.error('JSZip Error:', err);
       showErrorAlert({
         title: '업로드 실패',
-        action: '사진 압축',
+        action: '사진 업로드',
         error: err,
       });
     }
@@ -278,6 +285,7 @@ export default function PhotographerViewPhotosContainer() {
         await updatePhotos({ newPhotos });
       } else {
         await uploadZip({ bookingId, photos: newPhotos });
+        setIsDelivered(true);
       }
 
       for (const photo of newPhotos) {
@@ -300,7 +308,7 @@ export default function PhotographerViewPhotosContainer() {
       console.error(err);
       showErrorAlert({
         title: '업로드 실패',
-        action: '사진 압축 해제',
+        action: 'zip 파일 업로드',
         error: err,
       });
     }
@@ -333,6 +341,7 @@ export default function PhotographerViewPhotosContainer() {
         await updatePhotos({ newPhotos });
       } else {
         await uploadZip({ bookingId, photos: newPhotos });
+        setIsDelivered(true);
       }
 
       analytics().logEvent('photographer_booking_photos_added', {
@@ -349,7 +358,7 @@ export default function PhotographerViewPhotosContainer() {
       setIsProcessing(false);
       showErrorAlert({
         title: '업로드 실패',
-        action: '이미지 선택',
+        action: '사진 업로드',
         error: err,
       });
     }

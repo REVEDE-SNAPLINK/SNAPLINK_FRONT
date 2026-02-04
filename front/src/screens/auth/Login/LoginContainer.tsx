@@ -14,7 +14,7 @@ const TEST_ACCOUNT_IDS = {
     test2: 'android-test-account-2',
   },
 };
-
+// 2cfc64221039787cfdbc4755cba1ead237eaf3b1
 /**
  * 사용자가 로그인을 취소한 경우인지 확인
  * - Kakao: 메시지에 'cancel' 포함 또는 특정 에러 코드

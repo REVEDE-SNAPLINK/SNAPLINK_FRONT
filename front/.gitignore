@@ -64,6 +64,7 @@ google-play-key.json
 GoogleService-Info.plist
 android/keystore.properties
 android/app/release.keystore
+android/app/upload_certificate.pem
 
 # Bundle artifact
 *.jsbundle

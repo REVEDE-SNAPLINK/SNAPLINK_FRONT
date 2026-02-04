@@ -95,14 +95,23 @@ jobs:
         run: chmod +x ./gradlew
 
       # Native Deployment
-      - name: Build and upload to Google Play Internal Testing (Native)
-        if: needs.check-changes.outputs.native == 'true'
+      - name: Build and upload to Google Play Production (Main Branch)
+        if: needs.check-changes.outputs.native == 'true' && github.ref == 'refs/heads/main'
         working-directory: ./front
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json
           ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: bundle exec fastlane android beta
+        run: cd android && bundle exec --gemfile=../Gemfile fastlane deploy
+
+      - name: Build and upload to Google Play Internal Testing (Develop Branch)
+        if: needs.check-changes.outputs.native == 'true' && github.ref == 'refs/heads/develop'
+        working-directory: ./front
+        env:
+          GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json
+          ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: cd android && bundle exec --gemfile=../Gemfile fastlane beta
 
       # Revopush Deployment (CodePush)
       - name: Deploy via Revopush (JS Only)

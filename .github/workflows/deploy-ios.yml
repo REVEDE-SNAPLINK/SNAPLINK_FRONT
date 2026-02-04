@@ -96,7 +96,7 @@ jobs:
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
           CHANGELOG: ${{ github.event.inputs.changelog || 'Bug fixes and improvements' }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: bundle exec fastlane ios beta
+        run: cd ios && bundle exec --gemfile=../Gemfile fastlane beta
 
       # Revopush Deployment (CodePush)
       - name: Deploy via Revopush (JS Only)

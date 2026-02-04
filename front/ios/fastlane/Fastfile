@@ -13,6 +13,8 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
+require 'json'
+
 default_platform(:ios)
 
 platform :ios do
@@ -22,6 +24,16 @@ platform :ios do
     increment_build_number(
       xcodeproj: "ios/snaplink.xcodeproj",
       build_number: latest_testflight_build_number + 1
+    )
+
+    # Sync version number from package.json
+    json_path = File.join(File.dirname(__FILE__), "../../package.json")
+    package = JSON.parse(File.read(json_path))
+    package_version = package["version"]
+    
+    increment_version_number(
+      xcodeproj: "ios/snaplink.xcodeproj",
+      version_number: package_version
     )
 
     # Build the app

@@ -59,7 +59,7 @@ platform :android do
     # Assuming the current directory is 'front' where package.json resides relative to fastlane execution
     # Fastlane is run from android/ or ios/ usually, but the command needs to run where package.json is (../)
     
-    sh("cd .. && npx revopush release-react -a android -d #{deployment_name}")
+    sh("cd .. && npx @revopush/code-push-cli release-react snaplink android -d #{deployment_name}")
   end
 
   # Helper to read version from package.json

@@ -92,6 +92,6 @@ platform :ios do
     
     # Run revopush release-react command
     # Fastlane is run from ios/ usually, command needs to run where package.json is (../)
-    sh("cd .. && npx revopush release-react -a ios -d #{deployment_name}")
+    sh("cd .. && npx @revopush/code-push-cli release-react snaplink ios -d #{deployment_name}")
   end
 end

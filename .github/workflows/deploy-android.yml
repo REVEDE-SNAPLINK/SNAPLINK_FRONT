@@ -120,7 +120,7 @@ jobs:
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
-          bundle exec fastlane android codepush deployment:Staging
+          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging
 
       - name: Upload build artifacts
         if: always() && needs.check-changes.outputs.native == 'true'

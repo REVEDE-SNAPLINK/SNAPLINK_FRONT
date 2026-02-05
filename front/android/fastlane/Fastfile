@@ -29,7 +29,7 @@ platform :android do
     timestamp_code = Time.now.to_i
     
     # Update versionCode in build.gradle directly using Ruby
-    gradle_path = "app/build.gradle"
+    gradle_path = File.join(File.dirname(__FILE__), "../app/build.gradle")
     gradle_content = File.read(gradle_path)
     new_gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
     File.write(gradle_path, new_gradle_content)
@@ -83,7 +83,7 @@ platform :android do
     timestamp_code = Time.now.to_i
     
     # Update versionCode in build.gradle directly using Ruby
-    gradle_path = "app/build.gradle"
+    gradle_path = File.join(File.dirname(__FILE__), "../app/build.gradle")
     gradle_content = File.read(gradle_path)
     new_gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
     File.write(gradle_path, new_gradle_content)

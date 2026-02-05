@@ -36,6 +36,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

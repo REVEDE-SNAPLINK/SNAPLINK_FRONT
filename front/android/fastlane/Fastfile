@@ -28,10 +28,11 @@ platform :android do
     # Use timestamp for version code to ensure uniqueness without committing changes
     timestamp_code = Time.now.to_i
     
-    android_set_version_code(
-      version_code: timestamp_code,
-      gradle_file: "app/build.gradle"
-    )
+    # Update versionCode in build.gradle directly using Ruby
+    gradle_path = "app/build.gradle"
+    gradle_content = File.read(gradle_path)
+    new_gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
+    File.write(gradle_path, new_gradle_content)
 
     # Build the app
     gradle(
@@ -80,10 +81,12 @@ platform :android do
 
     # Set version code from timestamp
     timestamp_code = Time.now.to_i
-    android_set_version_code(
-      version_code: timestamp_code,
-      gradle_file: "app/build.gradle"
-    )
+    
+    # Update versionCode in build.gradle directly using Ruby
+    gradle_path = "app/build.gradle"
+    gradle_content = File.read(gradle_path)
+    new_gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
+    File.write(gradle_path, new_gradle_content)
 
     # Build the app
     gradle(

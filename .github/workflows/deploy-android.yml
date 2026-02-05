@@ -36,6 +36,8 @@ jobs:
     needs: check-changes
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      TARGET_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -105,10 +107,7 @@ jobs:
 
       # Native Deployment
       - name: Build and upload to Google Play Production (Main Branch)
-        if: |
-          needs.check-changes.outputs.native == 'true' &&
-          ((github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'main') ||
-           (github.event_name == 'workflow_dispatch' && github.ref_name == 'main'))
+        if: env.TARGET_BRANCH == 'main'
         working-directory: ./front
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json
@@ -117,10 +116,7 @@ jobs:
         run: cd android && bundle exec --gemfile=../Gemfile fastlane deploy
 
       - name: Build and upload to Google Play Internal Testing (Develop Branch)
-        if: |
-          needs.check-changes.outputs.native == 'true' &&
-          ((github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'develop') ||
-           (github.event_name == 'workflow_dispatch' && github.ref_name == 'develop'))
+        if: env.TARGET_BRANCH == 'develop'
         working-directory: ./front
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json

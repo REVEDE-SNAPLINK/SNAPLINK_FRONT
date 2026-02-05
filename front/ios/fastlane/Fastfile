@@ -44,6 +44,10 @@ platform :ios do
       version_number: package_version
     )
 
+    # Get provisioning profile name from environment or use default
+    profile_name = ENV["IOS_PROVISIONING_PROFILE_NAME"] || "match AppStore com.revede.snaplink"
+    app_identifier = ENV["IOS_APP_IDENTIFIER"] || "com.revede.snaplink"
+
     # Build the app
     build_app(
       workspace: "snaplink.xcworkspace",
@@ -51,12 +55,13 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       output_directory: "../build/ios",
+      skip_profile_detection: true,
       export_options: {
         provisioningProfiles: {
-          "com.revede.snaplink" => "match AppStore com.revede.snaplink"
+          app_identifier => profile_name
         }
       },
-      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.revede.snaplink'"
+      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='#{profile_name}'"
     )
 
     # Upload to TestFlight

@@ -30,7 +30,7 @@ platform :ios do
 
     # Increment build number (use timestamp or CI build number in GitHub Actions)
     increment_build_number(
-      xcodeproj: "ios/snaplink.xcodeproj",
+      xcodeproj: "snaplink.xcodeproj",
       build_number: latest_testflight_build_number(api_key: api_key) + 1
     )
 
@@ -40,15 +40,16 @@ platform :ios do
     package_version = package["version"]
     
     increment_version_number(
-      xcodeproj: "ios/snaplink.xcodeproj",
+      xcodeproj: "snaplink.xcodeproj",
       version_number: package_version
     )
 
     # Build the app
     build_app(
-      workspace: "ios/snaplink.xcworkspace",
+      workspace: "snaplink.xcworkspace",
       scheme: "snaplink",
       export_method: "app-store",
+      output_directory: "../build/ios",
       export_options: {
         provisioningProfiles: {
           "com.revede.snaplink" => "match AppStore com.revede.snaplink"
@@ -76,14 +77,15 @@ platform :ios do
   lane :release do
     # Increment build number
     increment_build_number(
-      xcodeproj: "ios/snaplink.xcodeproj"
+      xcodeproj: "snaplink.xcodeproj"
     )
 
     # Build the app
     build_app(
-      workspace: "ios/snaplink.xcworkspace",
+      workspace: "snaplink.xcworkspace",
       scheme: "snaplink",
-      export_method: "app-store"
+      export_method: "app-store",
+      output_directory: "../build/ios"
     )
 
     # Upload to App Store

@@ -36,7 +36,7 @@ Github Repository > Settings > Secrets and variables > Actions에 다음 비밀 
 - `APPLE_ID`: Apple ID 이메일
 - `APPLE_TEAM_ID`: Team ID
 - `APP_STORE_CONNECT_TEAM_ID`: App Store Connect Team ID
-- `IOS_APP_IDENTIFIER`: Bundle ID (예: `com.gunlee.snaplink`)
+- `IOS_APP_IDENTIFIER`: Bundle ID (예: `com.revede.snaplink`)
 - `IOS_PROVISIONING_PROFILE_NAME`: 프로비저닝 프로파일 이름
 - `FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD`: 앱별 암호 (2FA 우회용)
 

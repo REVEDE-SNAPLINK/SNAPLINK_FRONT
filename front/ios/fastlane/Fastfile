@@ -51,7 +51,7 @@ platform :ios do
       export_method: "app-store",
       export_options: {
         provisioningProfiles: {
-          "com.gunlee.snaplink" => "match AppStore com.gunlee.snaplink"
+          "com.revede.snaplink" => "match AppStore com.revede.snaplink"
         }
       }
     )
@@ -68,7 +68,7 @@ platform :ios do
     match(
       type: "appstore",
       readonly: true,
-      app_identifier: "com.gunlee.snaplink"
+      app_identifier: "com.revede.snaplink"
     )
   end
 

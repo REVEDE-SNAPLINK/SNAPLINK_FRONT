@@ -1,4 +1,4 @@
-app_identifier("com.gunlee.snaplink") # The bundle identifier of your app
+app_identifier("com.revede.snaplink") # The bundle identifier of your app
 apple_id(ENV["APPLE_ID"]) # Your Apple Developer Portal email address
 
 itc_team_id(ENV["APP_STORE_CONNECT_TEAM_ID"]) # App Store Connect Team ID

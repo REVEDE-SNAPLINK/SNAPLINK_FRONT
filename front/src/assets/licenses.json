@@ -1430,6 +1430,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@humanwhocodes/object-schema",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@humanwhocodes/object-schema/LICENSE"
   },
+  "@inquirer/external-editor@1.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/SBoudrias/Inquirer.js",
+    "publisher": "Simon Boudrias",
+    "email": "admin@simonboudrias.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@inquirer/external-editor",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@inquirer/external-editor/LICENSE"
+  },
   "@invertase/react-native-apple-authentication@2.5.1": {
     "licenses": "Apache-2.0",
     "repository": "https://github.com/invertase/react-native-apple-authentication",
@@ -1641,6 +1649,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@nicolo-ribaudo/eslint-scope-5-internals",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@nicolo-ribaudo/eslint-scope-5-internals/LICENSE"
   },
+  "@noble/hashes@1.8.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/paulmillr/noble-hashes",
+    "publisher": "Paul Miller",
+    "url": "https://paulmillr.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@noble/hashes",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@noble/hashes/LICENSE"
+  },
   "@nodelib/fs.scandir@2.1.5": {
     "licenses": "MIT",
     "repository": "https://github.com/nodelib/nodelib/tree/master/packages/fs/fs.scandir",
@@ -1667,6 +1683,13 @@
     "url": "http://invertase.io",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@notifee/react-native",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@notifee/react-native/LICENSE"
+  },
+  "@paralleldrive/cuid2@2.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ericelliott/cuid2",
+    "publisher": "Eric Elliott",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@paralleldrive/cuid2",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@paralleldrive/cuid2/LICENSE"
   },
   "@protobufjs/aspromise@1.1.2": {
     "licenses": "BSD-3-Clause",
@@ -2023,6 +2046,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-navigation/routers",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-navigation/routers/LICENSE"
   },
+  "@revopush/react-native-code-push@1.5.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/revopush/react-native-code-push",
+    "publisher": "Revopush",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@revopush/react-native-code-push",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@revopush/react-native-code-push/LICENSE.md"
+  },
   "@sideway/address@4.1.5": {
     "licenses": "BSD-3-Clause",
     "repository": "https://github.com/sideway/address",
@@ -2215,6 +2245,12 @@
     "url": "https://github.com/thymikee",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@testing-library/react-native",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@testing-library/react-native/LICENSE"
+  },
+  "@tootallnate/quickjs-emscripten@0.23.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/justjake/quickjs-emscripten",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@tootallnate/quickjs-emscripten",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@tootallnate/quickjs-emscripten/LICENSE"
   },
   "@trysound/sax@0.2.0": {
     "licenses": "ISC",
@@ -2449,6 +2485,12 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@vscode/sudo-prompt",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@vscode/sudo-prompt/LICENSE"
   },
+  "@xmldom/xmldom@0.8.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/xmldom/xmldom",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@xmldom/xmldom",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@xmldom/xmldom/LICENSE"
+  },
   "abbrev@1.1.1": {
     "licenses": "ISC",
     "repository": "https://github.com/isaacs/abbrev-js",
@@ -2578,6 +2620,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/anymatch",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/anymatch/LICENSE"
   },
+  "appcenter-file-upload-client@0.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Microsoft/appcenter-file-upload-client",
+    "publisher": "Microsoft",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/LICENSE"
+  },
   "appdirsjs@1.2.7": {
     "licenses": "MIT",
     "repository": "https://github.com/codingjerk/appdirsjs",
@@ -2680,6 +2729,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/asap",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/asap/LICENSE.md"
   },
+  "ast-types@0.13.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/benjamn/ast-types",
+    "publisher": "Ben Newman",
+    "email": "bn@cs.stanford.edu",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/ast-types",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/ast-types/LICENSE"
+  },
   "astral-regex@1.0.0": {
     "licenses": "MIT",
     "repository": "https://github.com/kevva/astral-regex",
@@ -2703,6 +2760,14 @@
     "publisher": "Samuel Reed",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/async-limiter",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/async-limiter/LICENSE"
+  },
+  "asynckit@0.4.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/alexindigo/asynckit",
+    "publisher": "Alex Indigo",
+    "email": "iam@alexindigo.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/asynckit",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/asynckit/LICENSE"
   },
   "available-typed-arrays@1.0.7": {
     "licenses": "MIT",
@@ -2815,6 +2880,22 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/baseline-browser-mapping",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/baseline-browser-mapping/LICENSE.txt"
   },
+  "basic-ftp@5.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/patrickjuchli/basic-ftp",
+    "publisher": "Patrick Juchli",
+    "email": "patrickjuchli@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/basic-ftp",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/basic-ftp/LICENSE.txt"
+  },
+  "big-integer@1.6.52": {
+    "licenses": "Unlicense",
+    "repository": "https://github.com/peterolson/BigInteger.js",
+    "publisher": "Peter Olson",
+    "email": "peter.e.c.olson+npm@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/big-integer",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/big-integer/LICENSE"
+  },
   "bl@4.1.0": {
     "licenses": "MIT",
     "repository": "https://github.com/rvagg/bl",
@@ -2834,6 +2915,21 @@
     "email": "me@feedic.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/boolbase",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/boolbase/README.md"
+  },
+  "bplist-creator@0.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nearinfinity/node-bplist-creator",
+    "publisher": "Joe Ferner",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/bplist-creator",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/bplist-creator/LICENSE"
+  },
+  "bplist-parser@0.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nearinfinity/node-bplist-parser",
+    "publisher": "Joe Ferner",
+    "email": "joe.ferner@nearinfinity.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/bplist-parser",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/bplist-parser/README.md"
   },
   "brace-expansion@1.1.12": {
     "licenses": "MIT",
@@ -2877,6 +2973,14 @@
     "url": "http://wezfurlong.org",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/bser",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/bser/README.md"
+  },
+  "buffer-crc32@0.2.13": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianloveswords/buffer-crc32",
+    "publisher": "Brian J. Brennan",
+    "email": "brianloveswords@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/buffer-crc32",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/buffer-crc32/LICENSE"
   },
   "buffer-from@1.1.2": {
     "licenses": "MIT",
@@ -2991,6 +3095,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/char-regex",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/char-regex/LICENSE"
   },
+  "chardet@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/runk/node-chardet",
+    "publisher": "Dmitry Shirokov",
+    "email": "deadrunk@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/chardet",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/chardet/LICENSE"
+  },
   "chrome-launcher@0.15.2": {
     "licenses": "Apache-2.0",
     "repository": "https://github.com/GoogleChrome/chrome-launcher",
@@ -3048,6 +3160,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/cli-spinners",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/cli-spinners/license"
   },
+  "cli-width@3.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/knownasilya/cli-width",
+    "publisher": "Ilya Radchenko",
+    "email": "knownasilya@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/cli-width",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/cli-width/LICENSE"
+  },
   "cliui@6.0.0": {
     "licenses": "ISC",
     "repository": "https://github.com/yargs/cliui",
@@ -3078,6 +3198,13 @@
     "repository": "https://github.com/tj/co",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/co",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/co/LICENSE"
+  },
+  "code-push@4.2.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Microsoft/code-push",
+    "publisher": "Microsoft Corporation",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/code-push",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/code-push/README.md"
   },
   "collect-v8-coverage@1.0.3": {
     "licenses": "MIT",
@@ -3138,6 +3265,15 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/colorette",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/colorette/LICENSE.md"
   },
+  "combined-stream@1.0.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/felixge/node-combined-stream",
+    "publisher": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/combined-stream",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/combined-stream/License"
+  },
   "command-exists@1.2.9": {
     "licenses": "MIT",
     "repository": "https://github.com/mathisonian/command-exists",
@@ -3176,6 +3312,12 @@
     "email": "tj@vision-media.ca",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/commander",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/commander/LICENSE"
+  },
+  "component-emitter@1.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/component-emitter",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/component-emitter",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/component-emitter/LICENSE"
   },
   "compressible@2.0.18": {
     "licenses": "MIT",
@@ -3223,6 +3365,13 @@
     "url": "http://thlorenz.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/convert-source-map",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/convert-source-map/LICENSE"
+  },
+  "cookiejar@2.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bmeck/node-cookiejar",
+    "publisher": "bradleymeck",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/cookiejar",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/cookiejar/LICENSE"
   },
   "core-js-compat@3.47.0": {
     "licenses": "MIT",
@@ -3355,6 +3504,15 @@
     "email": "fredrik.nicol@gmail.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/csstype",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/csstype/LICENSE"
+  },
+  "data-uri-to-buffer@6.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/data-uri-to-buffer",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/data-uri-to-buffer/LICENSE"
   },
   "data-view-buffer@1.0.2": {
     "licenses": "MIT",
@@ -3494,6 +3652,24 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/define-properties",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/define-properties/LICENSE"
   },
+  "degenerator@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/degenerator",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/degenerator/README.md"
+  },
+  "delayed-stream@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/felixge/node-delayed-stream",
+    "publisher": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/delayed-stream",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/delayed-stream/License"
+  },
   "depd@2.0.0": {
     "licenses": "MIT",
     "repository": "https://github.com/dougwilson/nodejs-depd",
@@ -3519,6 +3695,13 @@
     "url": "sindresorhus.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/detect-newline",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/detect-newline/license"
+  },
+  "detect-node@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/iliakan/detect-node",
+    "publisher": "Ilya Kantor",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/detect-node",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/detect-node/LICENSE"
   },
   "dezalgo@1.0.4": {
     "licenses": "ISC",
@@ -3778,8 +3961,8 @@
     "publisher": "Sindre Sorhus",
     "email": "sindresorhus@gmail.com",
     "url": "sindresorhus.com",
-    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/eslint-plugin-eslint-comments/node_modules/escape-string-regexp",
-    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/eslint-plugin-eslint-comments/node_modules/escape-string-regexp/license"
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/figures/node_modules/escape-string-regexp",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/figures/node_modules/escape-string-regexp/license"
   },
   "escape-string-regexp@2.0.0": {
     "licenses": "MIT",
@@ -3798,6 +3981,12 @@
     "url": "https://sindresorhus.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/escape-string-regexp",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/escape-string-regexp/license"
+  },
+  "escodegen@2.1.0": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/estools/escodegen",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/escodegen",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/escodegen/LICENSE.BSD"
   },
   "eslint-config-prettier@8.10.2": {
     "licenses": "MIT",
@@ -4025,6 +4214,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/fast-levenshtein",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/fast-levenshtein/LICENSE.md"
   },
+  "fast-safe-stringify@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/davidmarkclements/fast-safe-stringify",
+    "publisher": "David Mark Clements",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/fast-safe-stringify",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/fast-safe-stringify/LICENSE"
+  },
   "fast-xml-parser@4.5.3": {
     "licenses": "MIT",
     "repository": "https://github.com/NaturalIntelligence/fast-xml-parser",
@@ -4058,6 +4254,15 @@
     "url": "http://wezfurlong.org",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/fb-watchman",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/fb-watchman/README.md"
+  },
+  "figures@3.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/figures",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/figures",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/figures/license"
   },
   "file-entry-cache@6.0.1": {
     "licenses": "MIT",
@@ -4174,6 +4379,36 @@
     "email": "raynos2@gmail.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/for-each",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/for-each/LICENSE"
+  },
+  "form-data@2.5.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/form-data/form-data",
+    "publisher": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/node_modules/form-data",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/node_modules/form-data/License"
+  },
+  "form-data@4.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/form-data/form-data",
+    "publisher": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/form-data",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/form-data/License"
+  },
+  "formidable@1.2.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/node-formidable/formidable",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/node_modules/formidable",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/node_modules/formidable/LICENSE"
+  },
+  "formidable@2.1.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/node-formidable/formidable",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/formidable",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/formidable/LICENSE"
   },
   "fresh@0.5.2": {
     "licenses": "MIT",
@@ -4293,6 +4528,15 @@
     "email": "ljharb@gmail.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/get-symbol-description",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/get-symbol-description/LICENSE"
+  },
+  "get-uri@6.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/get-uri",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/get-uri/LICENSE"
   },
   "glob-parent@5.1.2": {
     "licenses": "ISC",
@@ -4521,6 +4765,15 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/http-parser-js",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/http-parser-js/LICENSE.md"
   },
+  "http-proxy-agent@7.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/http-proxy-agent",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/http-proxy-agent/LICENSE"
+  },
   "https-proxy-agent@7.0.6": {
     "licenses": "MIT",
     "repository": "https://github.com/TooTallNate/proxy-agents",
@@ -4546,6 +4799,14 @@
     "email": "ashtuchkin@gmail.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/iconv-lite",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/iconv-lite/LICENSE"
+  },
+  "iconv-lite@0.7.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/iconv-lite",
+    "publisher": "Alexander Shtuchkin",
+    "email": "ashtuchkin@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@inquirer/external-editor/node_modules/iconv-lite",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@inquirer/external-editor/node_modules/iconv-lite/LICENSE"
   },
   "idb@7.1.1": {
     "licenses": "ISC",
@@ -4636,6 +4897,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/inherits",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/inherits/LICENSE"
   },
+  "inquirer@8.2.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/SBoudrias/Inquirer.js",
+    "publisher": "Simon Boudrias",
+    "email": "admin@simonboudrias.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/inquirer",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/inquirer/LICENSE"
+  },
   "internal-slot@1.1.0": {
     "licenses": "MIT",
     "repository": "https://github.com/ljharb/internal-slot",
@@ -4651,6 +4920,15 @@
     "email": "zertosh@gmail.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/invariant",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/invariant/LICENSE"
+  },
+  "ip-address@10.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/beaugunderson/ip-address",
+    "publisher": "Beau Gunderson",
+    "email": "beau@beaugunderson.com",
+    "url": "https://beaugunderson.com/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/ip-address",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/ip-address/LICENSE"
   },
   "is-array-buffer@3.0.5": {
     "licenses": "MIT",
@@ -5544,6 +5822,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/lru-cache",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/lru-cache/LICENSE"
   },
+  "lru-cache@7.18.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-lru-cache",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/proxy-agent/node_modules/lru-cache",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/proxy-agent/node_modules/lru-cache/LICENSE"
+  },
   "make-dir@4.0.0": {
     "licenses": "MIT",
     "repository": "https://github.com/sindresorhus/make-dir",
@@ -5635,6 +5921,12 @@
     "repository": "https://github.com/teambition/merge2",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/merge2",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/merge2/LICENSE"
+  },
+  "methods@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/methods",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/methods",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/methods/LICENSE"
   },
   "metro-babel-transformer@0.83.3": {
     "licenses": "MIT",
@@ -5873,6 +6165,15 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/ms",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/ms/license.md"
   },
+  "mute-stream@0.0.8": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/mute-stream",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/mute-stream",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/mute-stream/LICENSE"
+  },
   "nanoid@3.3.11": {
     "licenses": "MIT",
     "repository": "https://github.com/ai/nanoid",
@@ -5900,6 +6201,14 @@
     "repository": "https://github.com/jshttp/negotiator",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/negotiator",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/negotiator/LICENSE"
+  },
+  "netmask@2.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rs/node-netmask",
+    "publisher": "Olivier Poitrey",
+    "email": "rs@rhapsodyk.net",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/netmask",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/netmask/README.md"
   },
   "no-case@3.0.4": {
     "licenses": "MIT",
@@ -6236,6 +6545,24 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/p-try",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/p-try/license"
   },
+  "pac-proxy-agent@7.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/pac-proxy-agent",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/pac-proxy-agent/LICENSE"
+  },
+  "pac-resolver@7.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/pac-resolver",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/pac-resolver/LICENSE"
+  },
   "pako@1.0.11": {
     "licenses": "(MIT AND Zlib)",
     "repository": "https://github.com/nodeca/pako",
@@ -6386,6 +6713,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/pkg-up",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/pkg-up/license"
   },
+  "plist@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/node-plist",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/plist",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/plist/LICENSE"
+  },
   "possible-typed-array-names@1.1.0": {
     "licenses": "MIT",
     "repository": "https://github.com/ljharb/possible-typed-array-names",
@@ -6477,6 +6812,24 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/protobufjs",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/protobufjs/LICENSE"
   },
+  "proxy-agent@6.5.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/proxy-agent",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/proxy-agent/LICENSE"
+  },
+  "proxy-from-env@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Rob--W/proxy-from-env",
+    "publisher": "Rob Wu",
+    "email": "rob@robwu.nl",
+    "url": "https://robwu.nl/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/proxy-from-env",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/proxy-from-env/LICENSE"
+  },
   "punycode@2.3.1": {
     "licenses": "MIT",
     "repository": "https://github.com/mathiasbynens/punycode.js",
@@ -6516,6 +6869,13 @@
     "url": "https://sindresorhus.com",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/query-string",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/query-string/license"
+  },
+  "querystringify@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unshiftio/querystringify",
+    "publisher": "Arnout Kazemier",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/querystringify",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/querystringify/LICENSE"
   },
   "queue-microtask@1.2.3": {
     "licenses": "MIT",
@@ -6876,6 +7236,15 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/readdir-scoped-modules",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/readdir-scoped-modules/LICENSE"
   },
+  "recursive-fs@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/simov/recursive-fs",
+    "publisher": "Simeon Velichkov",
+    "email": "simeonvelichkov@gmail.com",
+    "url": "https://simov.github.io",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/recursive-fs",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/recursive-fs/LICENSE"
+  },
   "recyclerlistview@4.2.3": {
     "licenses": "Apache-2.0",
     "repository": "https://github.com/Flipkart/recyclerlistview",
@@ -6974,6 +7343,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/require-main-filename",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/require-main-filename/LICENSE.txt"
   },
+  "requires-port@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unshiftio/requires-port",
+    "publisher": "Arnout Kazemier",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/requires-port",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/requires-port/LICENSE"
+  },
   "reselect@4.1.8": {
     "licenses": "MIT",
     "repository": "https://github.com/reduxjs/reselect",
@@ -7067,6 +7443,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/rimraf",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/rimraf/LICENSE"
   },
+  "run-async@2.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/SBoudrias/run-async",
+    "publisher": "Simon Boudrias",
+    "email": "admin@simonboudrias.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/run-async",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/run-async/LICENSE"
+  },
   "run-parallel@1.2.0": {
     "licenses": "MIT",
     "repository": "https://github.com/feross/run-parallel",
@@ -7075,6 +7459,14 @@
     "url": "https://feross.org",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/run-parallel",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/run-parallel/LICENSE"
+  },
+  "rxjs@7.8.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/reactivex/rxjs",
+    "publisher": "Ben Lesh",
+    "email": "ben@benlesh.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/rxjs",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/rxjs/LICENSE.txt"
   },
   "safe-array-concat@1.1.3": {
     "licenses": "MIT",
@@ -7151,8 +7543,8 @@
     "licenses": "ISC",
     "repository": "https://github.com/npm/node-semver",
     "publisher": "GitHub Inc.",
-    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native/community-cli-plugin/node_modules/semver",
-    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/@react-native/community-cli-plugin/node_modules/semver/LICENSE"
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/superagent/node_modules/semver",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/superagent/node_modules/semver/LICENSE"
   },
   "send@0.19.2": {
     "licenses": "MIT",
@@ -7308,6 +7700,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/signal-exit",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/signal-exit/LICENSE.txt"
   },
+  "simple-plist@1.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/wollardj/simple-plist",
+    "publisher": "Joe Wollard",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/simple-plist",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/simple-plist/LICENSE"
+  },
   "simple-swizzle@0.2.4": {
     "licenses": "MIT",
     "repository": "https://github.com/qix-/node-simple-swizzle",
@@ -7349,6 +7748,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/slide",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/slide/LICENSE"
   },
+  "smart-buffer@4.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/JoshGlazebrook/smart-buffer",
+    "publisher": "Josh Glazebrook",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/smart-buffer",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/smart-buffer/LICENSE"
+  },
   "snake-case@3.0.4": {
     "licenses": "MIT",
     "repository": "https://github.com/blakeembrey/change-case",
@@ -7358,10 +7764,26 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/snake-case",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/snake-case/LICENSE"
   },
-  "snaplink@0.0.1": {
+  "snaplink@1.0.0": {
     "licenses": "UNLICENSED",
     "private": true,
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front"
+  },
+  "socks-proxy-agent@8.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/socks-proxy-agent",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/socks-proxy-agent/LICENSE"
+  },
+  "socks@2.8.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/JoshGlazebrook/socks",
+    "publisher": "Josh Glazebrook",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/socks",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/socks/LICENSE"
   },
   "source-map-js@1.2.1": {
     "licenses": "BSD-3-Clause",
@@ -7551,6 +7973,14 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/stop-iteration-iterator",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/stop-iteration-iterator/LICENSE"
   },
+  "stream-buffers@2.2.0": {
+    "licenses": "Unlicense",
+    "repository": "https://github.com/samcday/node-stream-buffer",
+    "publisher": "Sam Day",
+    "email": "me@samcday.com.au",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/stream-buffers",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/stream-buffers/README.md"
+  },
   "strict-uri-encode@2.0.0": {
     "licenses": "MIT",
     "repository": "https://github.com/kevva/strict-uri-encode",
@@ -7716,6 +8146,22 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/stylis",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/stylis/LICENSE"
   },
+  "superagent@5.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/superagent",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/node_modules/superagent",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/appcenter-file-upload-client/node_modules/superagent/LICENSE"
+  },
+  "superagent@8.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ladjs/superagent",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/superagent",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/superagent/LICENSE"
+  },
   "superstruct@2.0.2": {
     "licenses": "MIT",
     "repository": "https://github.com/ianstormtaylor/superstruct",
@@ -7813,6 +8259,15 @@
     "publisher": "ForbesLindesay",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/throat",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/throat/LICENSE"
+  },
+  "through@2.3.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dominictarr/through",
+    "publisher": "Dominic Tarr",
+    "email": "dominic.tarr@gmail.com",
+    "url": "dominictarr.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/through",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/through/LICENSE.APACHE2"
   },
   "tmpl@1.0.5": {
     "licenses": "BSD-3-Clause",
@@ -8050,6 +8505,13 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/uri-js",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/uri-js/LICENSE"
   },
+  "url-parse@1.5.10": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unshiftio/url-parse",
+    "publisher": "Arnout Kazemier",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/url-parse",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/url-parse/LICENSE"
+  },
   "use-latest-callback@0.2.6": {
     "licenses": "MIT",
     "repository": "https://github.com/satya164/use-latest-callback",
@@ -8095,6 +8557,12 @@
     "url": "http://www.jaredhanson.net/",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/utils-merge",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/utils-merge/LICENSE"
+  },
+  "uuid@7.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/uuidjs/uuid",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/uuid",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/uuid/LICENSE.md"
   },
   "v8-to-istanbul@9.3.0": {
     "licenses": "ISC",
@@ -8247,8 +8715,8 @@
     "publisher": "Sindre Sorhus",
     "email": "sindresorhus@gmail.com",
     "url": "sindresorhus.com",
-    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/logkitty/node_modules/wrap-ansi",
-    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/logkitty/node_modules/wrap-ansi/license"
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/inquirer/node_modules/wrap-ansi",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/inquirer/node_modules/wrap-ansi/license"
   },
   "wrap-ansi@7.0.0": {
     "licenses": "MIT",
@@ -8293,12 +8761,28 @@
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/metro/node_modules/ws",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/metro/node_modules/ws/LICENSE"
   },
+  "xcode@3.0.1": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/apache/cordova-node-xcode",
+    "publisher": "Apache Software Foundation",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xcode",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xcode/LICENSE",
+    "noticeFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xcode/NOTICE"
+  },
   "xdate@0.8.3": {
     "licenses": "(MIT OR GPL-2.0)",
     "repository": "https://github.com/arshaw/xdate",
     "publisher": "Adam Shaw",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xdate",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xdate/README.md"
+  },
+  "xmlbuilder@15.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/oozcitak/xmlbuilder-js",
+    "publisher": "Ozgur Ozcitak",
+    "email": "oozcitak@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xmlbuilder",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/xmlbuilder/LICENSE"
   },
   "y18n@4.0.3": {
     "licenses": "ISC",
@@ -8360,6 +8844,14 @@
     "repository": "https://github.com/yargs/yargs",
     "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/yargs",
     "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/yargs/LICENSE"
+  },
+  "yazl@2.5.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/thejoshwolfe/yazl",
+    "publisher": "Josh Wolfe",
+    "email": "thejoshwolfe@gmail.com",
+    "path": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/yazl",
+    "licenseFile": "/Users/gunlee/Development/Side-Project/SNAPLINK_FRONT/front/node_modules/yazl/LICENSE"
   },
   "yocto-queue@0.1.0": {
     "licenses": "MIT",

@@ -10,7 +10,7 @@ on:
 jobs:
   android:
     name: SnapLink Android Build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: front

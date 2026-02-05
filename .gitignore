@@ -8,3 +8,7 @@
 
 certificates
 certificates/*
+
+# VSCode
+.vscode
+.vscode/*

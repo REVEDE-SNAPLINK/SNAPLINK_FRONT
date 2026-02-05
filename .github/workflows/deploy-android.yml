@@ -1,16 +1,25 @@
 name: Android Deployment
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI (Build Check)"]
+    types:
+      - completed
     branches:
       - main
       - develop
-    paths:
-      - 'front/**'
   workflow_dispatch:
 
 jobs:
+  # CI 실패 시 배포 중단
+  check-ci-success:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    steps:
+      - run: echo "CI passed, proceeding with deployment"
+
   check-changes:
+    needs: check-ci-success
     runs-on: ubuntu-latest
     outputs:
       native: ${{ steps.filter.outputs.native }}

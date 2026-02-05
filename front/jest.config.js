@@ -1,6 +1,6 @@
 module.exports = {
   preset: 'react-native',
-  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
+
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
   testPathIgnorePatterns: [
     '/node_modules/',

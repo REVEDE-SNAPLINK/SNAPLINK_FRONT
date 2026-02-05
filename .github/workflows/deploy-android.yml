@@ -106,8 +106,9 @@ jobs:
       # Native Deployment
       - name: Build and upload to Google Play Production (Main Branch)
         if: |
-          needs.check-changes.outputs.native == 'true' && 
-          (github.event.workflow_run.head_branch == 'main' || github.ref_name == 'main')
+          needs.check-changes.outputs.native == 'true' &&
+          ((github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'main') ||
+           (github.event_name == 'workflow_dispatch' && github.ref_name == 'main'))
         working-directory: ./front
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json
@@ -117,8 +118,9 @@ jobs:
 
       - name: Build and upload to Google Play Internal Testing (Develop Branch)
         if: |
-          needs.check-changes.outputs.native == 'true' && 
-          (github.event.workflow_run.head_branch == 'develop' || github.ref_name == 'develop')
+          needs.check-changes.outputs.native == 'true' &&
+          ((github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'develop') ||
+           (github.event_name == 'workflow_dispatch' && github.ref_name == 'develop'))
         working-directory: ./front
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json

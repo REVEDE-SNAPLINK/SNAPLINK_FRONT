@@ -20,10 +20,18 @@ default_platform(:ios)
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
+    # App Store Connect API Key 인증 설정
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_P8_CONTENT"],
+      is_key_content_base64: true
+    )
+
     # Increment build number (use timestamp or CI build number in GitHub Actions)
     increment_build_number(
       xcodeproj: "ios/snaplink.xcodeproj",
-      build_number: latest_testflight_build_number + 1
+      build_number: latest_testflight_build_number(api_key: api_key) + 1
     )
 
     # Sync version number from package.json
@@ -50,6 +58,7 @@ platform :ios do
 
     # Upload to TestFlight
     upload_to_testflight(
+      api_key: api_key,
       skip_waiting_for_build_processing: true
     )
   end

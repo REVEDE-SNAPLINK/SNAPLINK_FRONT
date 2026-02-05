@@ -66,6 +66,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.1.app
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

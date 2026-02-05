@@ -7,7 +7,6 @@ import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { theme } from '@/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ✅ 고정 FAQ 타입
 type FAQItem = {

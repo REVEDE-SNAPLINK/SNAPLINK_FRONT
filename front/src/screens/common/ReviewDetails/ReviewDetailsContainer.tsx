@@ -22,6 +22,11 @@ export default function ReviewDetailsContainer() {
   // bookingId가 있고 쿼리로 가져온 데이터가 있으면 사용, 아니면 params에서 전달된 데이터 사용
   const review = bookingId && bookingReview ? bookingReview : reviewFromParams;
 
+  const isMyReview = review ? ('photos' in review || (bookingId !== undefined)) : false;
+  const photographerId = review && !isMyReview && 'photographerId' in review ? String((review as any).photographerId) : undefined;
+
+  const deleteReviewMutation = useDeleteReviewMutation(photographerId);
+
   // 리뷰 데이터가 없으면 로딩 또는 에러 처리
   if (!review) {
     if (isLoading) {
@@ -30,11 +35,6 @@ export default function ReviewDetailsContainer() {
     navigation.goBack();
     return null;
   }
-
-  const isMyReview = 'photos' in review || (bookingId !== undefined);
-  const photographerId = isMyReview ? undefined : 'photographerId' in review ? String(review.photographerId) : undefined;
-
-  const deleteReviewMutation = useDeleteReviewMutation(photographerId);
 
   const handlePressBack = () => navigation.goBack();
 
@@ -66,7 +66,7 @@ export default function ReviewDetailsContainer() {
       title: '리뷰 삭제',
       message: '정말로 이 리뷰를 삭제하시겠습니까?',
       buttons: [
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
         {
           text: '삭제',
           type: 'destructive',

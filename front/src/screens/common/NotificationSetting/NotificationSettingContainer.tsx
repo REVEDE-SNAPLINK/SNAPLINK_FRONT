@@ -4,13 +4,13 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import NotificationSettingView from '@/screens/common/NotificationSetting/NotificationSettingView.tsx';
 import { Alert } from '@/components/theme';
 import { checkPermission, requestPermission } from '@/utils/permissions';
-import {useNotificationSettingsQuery} from "@/queries/user.ts";
-import {usePatchNotificationSettingMutation} from "@/mutations/user.ts";
+import { useNotificationSettingsQuery } from "@/queries/user.ts";
+import { usePatchNotificationSettingMutation } from "@/mutations/user.ts";
 
 export default function NotificationSettingContainer() {
   const navigation = useNavigation<MainNavigationProp>();
 
-  const { data: notificationSetting, isSuccess } = useNotificationSettingsQuery();
+  const { data: notificationSetting } = useNotificationSettingsQuery();
   const notificationSettingMutation = usePatchNotificationSettingMutation();
 
   // 각 알림 설정 상태
@@ -82,7 +82,7 @@ export default function NotificationSettingContainer() {
           {
             text: '취소',
             type: 'cancel',
-            onPress: () => {},
+            onPress: () => { },
           },
           {
             text: '알림 끄기',
@@ -136,7 +136,7 @@ export default function NotificationSettingContainer() {
           Alert.show({
             title: '알림 설정 실패',
             message: '알림 설정을 변경할 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }
@@ -155,12 +155,12 @@ export default function NotificationSettingContainer() {
             {
               text: '취소',
               type: 'cancel',
-              onPress: () => {},
+              onPress: () => { },
             },
             {
               text: '설정 열기',
               onPress: () => {
-                requestPermission('notification', () => {}, () => {});
+                requestPermission('notification', () => { }, () => { });
               },
             },
           ],
@@ -186,7 +186,7 @@ export default function NotificationSettingContainer() {
           Alert.show({
             title: '알림 설정 실패',
             message: '알림 설정을 변경할 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }
@@ -205,12 +205,12 @@ export default function NotificationSettingContainer() {
             {
               text: '취소',
               type: 'cancel',
-              onPress: () => {},
+              onPress: () => { },
             },
             {
               text: '설정 열기',
               onPress: () => {
-                requestPermission('notification', () => {}, () => {});
+                requestPermission('notification', () => { }, () => { });
               },
             },
           ],
@@ -236,7 +236,7 @@ export default function NotificationSettingContainer() {
           Alert.show({
             title: '알림 설정 실패',
             message: '알림 설정을 변경할 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }
@@ -255,12 +255,12 @@ export default function NotificationSettingContainer() {
             {
               text: '취소',
               type: 'cancel',
-              onPress: () => {},
+              onPress: () => { },
             },
             {
               text: '설정 열기',
               onPress: () => {
-                requestPermission('notification', () => {}, () => {});
+                requestPermission('notification', () => { }, () => { });
               },
             },
           ],
@@ -286,7 +286,7 @@ export default function NotificationSettingContainer() {
           Alert.show({
             title: '알림 설정 실패',
             message: '알림 설정을 변경할 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }
@@ -305,12 +305,12 @@ export default function NotificationSettingContainer() {
             {
               text: '취소',
               type: 'cancel',
-              onPress: () => {},
+              onPress: () => { },
             },
             {
               text: '설정 열기',
               onPress: () => {
-                requestPermission('notification', () => {}, () => {});
+                requestPermission('notification', () => { }, () => { });
               },
             },
           ],
@@ -336,7 +336,7 @@ export default function NotificationSettingContainer() {
           Alert.show({
             title: '알림 설정 실패',
             message: '알림 설정을 변경할 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }
@@ -355,12 +355,12 @@ export default function NotificationSettingContainer() {
             {
               text: '취소',
               type: 'cancel',
-              onPress: () => {},
+              onPress: () => { },
             },
             {
               text: '설정 열기',
               onPress: () => {
-                requestPermission('notification', () => {}, () => {});
+                requestPermission('notification', () => { }, () => { });
               },
             },
           ],
@@ -386,7 +386,7 @@ export default function NotificationSettingContainer() {
           Alert.show({
             title: '알림 설정 실패',
             message: '알림 설정을 변경할 수 없습니다. 다시 시도해주세요.',
-            buttons: [{ text: '확인', onPress: () => {} }],
+            buttons: [{ text: '확인', onPress: () => { } }],
           });
         },
       }

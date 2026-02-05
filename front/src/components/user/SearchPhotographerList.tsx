@@ -3,7 +3,7 @@ import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import { FlatList, TouchableOpacity, RefreshControl, ScrollView, Pressable } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, Pressable } from 'react-native';
 import Loading from '@/components/Loading.tsx';
 import AIIcon from '@/assets/icons/ai-button-small.svg';
 import StarIcon from '@/assets/icons/star-review.svg';

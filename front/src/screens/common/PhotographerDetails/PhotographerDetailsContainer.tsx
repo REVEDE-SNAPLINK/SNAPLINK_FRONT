@@ -163,7 +163,7 @@ export default function PhotographerDetailsContainer() {
         });
       }
     });
-  }, [chatMutation, photographerId, navigation, queryClient, userId, userType]);
+  }, [chatMutation, photographerId, navigation, queryClient, userId, userType, source]);
 
   const handlePressReservation = useCallback(() => {
     // Log booking_intent event when reservation button is pressed
@@ -316,7 +316,7 @@ export default function PhotographerDetailsContainer() {
               Alert.show({
                 title: '수정 완료',
                 message: '프로필이 성공적으로 수정되었습니다.',
-                buttons: [{ text: '확인', onPress: () => {} }],
+                buttons: [{ text: '확인', onPress: () => { } }],
               });
             },
             onError: (error) => {
@@ -350,7 +350,7 @@ export default function PhotographerDetailsContainer() {
               Alert.show({
                 title: '수정 완료',
                 message: '컨셉/태그가 성공적으로 수정되었습니다.',
-                buttons: [{ text: '확인', onPress: () => {} }],
+                buttons: [{ text: '확인', onPress: () => { } }],
               });
             },
             onError: (error) => {
@@ -383,7 +383,7 @@ export default function PhotographerDetailsContainer() {
               Alert.show({
                 title: '수정 완료',
                 message: '지역이 성공적으로 수정되었습니다.',
-                buttons: [{ text: '확인', onPress: () => {} }],
+                buttons: [{ text: '확인', onPress: () => { } }],
               });
             },
             onError: (error) => {

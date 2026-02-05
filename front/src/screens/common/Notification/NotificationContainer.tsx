@@ -33,7 +33,7 @@ export default function NotificationContainer() {
     unreadNotifications.forEach(n => {
       markAsReadMutation.mutate({ notificationId: n.id });
     });
-  }, [notifications]);
+  }, [notifications, markAsReadMutation]);
 
   const handlePressBack = () => navigation.goBack();
 

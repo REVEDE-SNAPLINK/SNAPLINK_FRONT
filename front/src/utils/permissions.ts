@@ -1,4 +1,4 @@
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import {
   PERMISSIONS,
   request,
@@ -10,7 +10,7 @@ import {
   checkNotifications,
   NotificationOption,
 } from 'react-native-permissions';
-import {Alert} from '@/components/theme/Alert';
+import { Alert } from '@/components/theme/Alert';
 import {
   PermissionType,
   PERMISSION_MESSAGES,
@@ -90,7 +90,7 @@ export async function checkPermission(
 ): Promise<PermissionStatus> {
   // 알림 권한은 별도 처리
   if (type === 'notification') {
-    const {status} = await checkNotifications();
+    const { status } = await checkNotifications();
     switch (status) {
       case RESULTS.GRANTED:
         return 'granted';
@@ -279,34 +279,34 @@ export function showSettingsAlert(
       : `이 기능을 사용하려면 ${permissionName} 권한이 필요합니다.\n\n설정 > ${APP_NAME} > ${permissionName}에서 권한을 허용해주세요.`,
     buttons: isAndroid
       ? [
-          {
-            text: '취소',
-            onPress: () => {
-              console.log(`[Permission] Settings alert - Cancel pressed`);
-              onDenied?.();
-            },
-            type: 'cancel',
+        {
+          text: '취소',
+          onPress: () => {
+            console.log(`[Permission] Settings alert - Cancel pressed`);
+            onDenied?.();
           },
-          {
-            text: '설정 열기',
-            onPress: () => {
-              console.log(`[Permission] Settings alert - Open settings pressed`);
-              openSettings().catch(() => {
-                console.warn('설정 앱을 열 수 없습니다.');
-              });
-              onDenied?.();
-            },
+          type: 'cancel',
+        },
+        {
+          text: '설정 열기',
+          onPress: () => {
+            console.log(`[Permission] Settings alert - Open settings pressed`);
+            openSettings().catch(() => {
+              console.warn('설정 앱을 열 수 없습니다.');
+            });
+            onDenied?.();
           },
-        ]
+        },
+      ]
       : [
-          {
-            text: '확인',
-            onPress: () => {
-              console.log(`[Permission] Settings alert - OK pressed`);
-              onDenied?.();
-            },
+        {
+          text: '확인',
+          onPress: () => {
+            console.log(`[Permission] Settings alert - OK pressed`);
+            onDenied?.();
           },
-        ],
+        },
+      ],
   });
 }
 

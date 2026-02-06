@@ -22,14 +22,14 @@ concurrency:
 jobs:
   # CI 실패 시 배포 중단
   check-ci-success:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     steps:
       - run: echo "CI passed, proceeding with deployment"
 
   check-changes:
     needs: check-ci-success
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       native: ${{ steps.filter.outputs.native }}
     steps:
@@ -43,14 +43,14 @@ jobs:
 
   deploy:
     needs: check-changes
-    runs-on: self-hosted
+    runs-on: macos-14
     timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app
+        run: sudo xcode-select -switch /Applications/Xcode_16.1.app
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

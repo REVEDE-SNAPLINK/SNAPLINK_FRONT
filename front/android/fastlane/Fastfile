@@ -72,21 +72,18 @@ platform :android do
   desc "Deploy a new version to the Google Play Store"
   lane :deploy do
     package_version = get_package_version
-    
-    # Set version name from package.json
-    android_set_version_name(
-      version_name: package_version,
-      gradle_file: "app/build.gradle"
-    )
-
-    # Set version code from timestamp
     timestamp_code = Time.now.to_i
-    
-    # Update versionCode in build.gradle directly using Ruby
+
+    # Update versionName and versionCode in build.gradle directly using Ruby
     gradle_path = File.join(File.dirname(__FILE__), "../app/build.gradle")
     gradle_content = File.read(gradle_path)
-    new_gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
-    File.write(gradle_path, new_gradle_content)
+
+    # Update versionName from package.json
+    gradle_content = gradle_content.gsub(/versionName "[^"]*"/, "versionName \"#{package_version}\"")
+    # Update versionCode from timestamp
+    gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
+
+    File.write(gradle_path, gradle_content)
 
     # Build the app
     gradle(

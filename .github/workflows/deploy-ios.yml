@@ -15,6 +15,10 @@ on:
         required: false
         default: 'Bug fixes and improvements'
 
+concurrency:
+  group: deploy-ios-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   # CI 실패 시 배포 중단
   check-ci-success:

@@ -12,9 +12,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 변경 감지
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      ios: ${{ steps.filter.outputs.ios }}
+      src: ${{ steps.filter.outputs.src }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            android:
+              - 'front/android/**'
+            ios:
+              - 'front/ios/**'
+            src:
+              - 'front/src/**'
+              - 'front/package.json'
+              - 'front/package-lock.json'
+
   # 코드 품질 검증 (Lint & Test)
   quality:
     name: Code Quality Check
+    needs: changes
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.android == 'true' || needs.changes.outputs.ios == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,7 +66,8 @@ jobs:
   # Android 빌드 검증
   android:
     name: Android Build Check
-    needs: quality
+    needs: [changes, quality]
+    if: always() && (needs.quality.result == 'success' || needs.quality.result == 'skipped') && (needs.changes.outputs.android == 'true' || needs.changes.outputs.src == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -79,7 +105,8 @@ jobs:
   # iOS 빌드 검증
   ios:
     name: iOS Build Check
-    needs: quality
+    needs: [changes, quality]
+    if: always() && (needs.quality.result == 'success' || needs.quality.result == 'skipped') && (needs.changes.outputs.ios == 'true' || needs.changes.outputs.src == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: macos-14
     defaults:
       run:

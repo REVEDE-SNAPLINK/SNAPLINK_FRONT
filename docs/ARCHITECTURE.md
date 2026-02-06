@@ -8,9 +8,9 @@ front/src/
 │   └── AppText.tsx     # 테마 기반 텍스트 컴포넌트
 ├── constants/          # 상수 정의
 │   └── theme.ts        # 테마 시스템 (colors, typography, spacing, scale)
-├── context/            # React Context API
-│   ├── ThemeContext.tsx  # 테마 전역 상태
-│   └── AuthContext.tsx   # 인증 전역 상태
+├── store/              # Zustand 상태 관리
+│   ├── authStore.ts    # 인증 및 사용자 정보 상태
+│   └── modalStore.ts   # 모달 전역 상태
 ├── navigation/         # 네비게이션 설정
 │   ├── index.tsx           # NavigationContainer + Deep Linking 설정
 │   ├── RootNavigator.tsx   # 루트 네비게이터 (인증 상태 기반 분기)
@@ -136,28 +136,36 @@ const linking = {
 
 ## 📦 상태 관리
 
-### Context API 사용
+### Zustand 사용
 
-#### AuthContext
+#### authStore (`useAuthStore`)
+인증 상태, 토큰 관리 및 사용자 정보를 관리합니다.
+
 ```tsx
-const { user, token, signIn, signOut } = useAuth();
+import { useAuthStore } from '@/store/authStore';
 
-// 로그인
-await signIn(token, user, needsTypeSelection);
+const { userId, userType, accessToken, signInWithKakao, signOut } = useAuthStore();
+
+// 로그인 (Kakao 예시)
+const status = await signInWithKakao(); // 'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'
 
 // 로그아웃
 await signOut();
 ```
 
-#### ThemeContext
+#### modalStore (`useModalStore`)
+전역 모달(신고, 알림 등)의 상태를 관리합니다.
+
 ```tsx
-const { theme, isDarkMode, toggleTheme } = useTheme();
+import { useModalStore } from '@/store/modalStore';
+
+const { openReportModal, closeReportModal } = useModalStore();
 ```
 
-### AsyncStorage
-- 인증 토큰: `@auth_token`
-- 사용자 정보: `@user_data`
-- 온보딩 완료: `@onboarding_seen`
+### AsyncStorage (Persistent Storage)
+- 리프레시 토큰: `@refresh_token`
+- 사용자 고유 ID: `@user_id`
+- 사용자 타입: `@user_type`
 
 ## 🎯 반응형 디자인
 

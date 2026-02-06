@@ -17,10 +17,9 @@
 | [COMPONENTS.md](./COMPONENTS.md) | 공통 컴포넌트 사용 가이드 (AppText 등) |
 | [SCALING.md](./SCALING.md) | 반응형 스케일링 시스템 |
 
-## CI/CD
+## CI/CD 및 분석
 
 | 문서 | 설명 |
 |------|------|
-| [CD_QUICK_START.md](./CD_QUICK_START.md) | CD 빠른 시작 가이드 (5분 설정) |
-| [CD_SETUP.md](./CD_SETUP.md) | CI/CD 상세 설정 가이드 |
-| [GITHUB_SECRETS_GUIDE.md](./GITHUB_SECRETS_GUIDE.md) | GitHub Secrets 설정 방법 |
+| [CICD.md](./CICD.md) | CI/CD 파이프라인 (Fastlane, Revopush) |
+| [ANALYTICS_ANALYSIS.md](./ANALYTICS_ANALYSIS.md) | Firebase Analytics 수집 상세 및 어드민 대시보드 기초 자료 |

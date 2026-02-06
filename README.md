@@ -14,12 +14,13 @@ SNAPLINK_FRONT/
 
 ## 📚 개발 문서
 
-프론트엔드 개발자를 위한 상세 가이드:
+프로젝트의 상세 가이드는 `docs/` 폴더에서 확인할 수 있습니다:
 
-- **[SETUP.md](front/docs/SETUP.md)** - 개발 환경 설정
-- **[ARCHITECTURE.md](front/docs/ARCHITECTURE.md)** - 프로젝트 구조 및 아키텍처
-- **[CONVENTIONS.md](front/docs/CONVENTIONS.md)** - 코딩 컨벤션
-- **[COMPONENTS.md](front/docs/COMPONENTS.md)** - 컴포넌트 사용 가이드
+- **[SETUP.md](docs/SETUP.md)** - 개발 환경 설정
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - 프로젝트 구조 및 아키텍처
+- **[CONVENTIONS.md](docs/CONVENTIONS.md)** - 코딩 컨벤션
+- **[COMPONENTS.md](docs/COMPONENTS.md)** - 컴포넌트 사용 가이드
+- **[ANALYTICS_ANALYSIS.md](docs/ANALYTICS_ANALYSIS.md)** - 데이터 분석 및 수집 현황
 
 ## 🚀 빠른 시작
 

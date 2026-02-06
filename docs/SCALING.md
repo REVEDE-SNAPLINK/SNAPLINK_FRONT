@@ -65,7 +65,7 @@ const Container = styled.View`
 ### 기본 사용
 
 ```tsx
-import { styled } from '@/utils/ScaledStyled';
+import { styled } from '@/utils/scale/CustomStyled';
 
 const Header = styled.View`
   padding: 20px;
@@ -87,7 +87,7 @@ const Button = styled.TouchableOpacity`
 ### 컴포넌트 래핑
 
 ```tsx
-import { styled } from '@/utils/ScaledStyled';
+import { styled } from '@/utils/scale/CustomStyled';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SafeContainer = styled(SafeAreaView)`
@@ -113,7 +113,7 @@ const Card = styled.View<{ $highlighted: boolean }>`
 자동 스케일링 외에 수동으로 제어가 필요한 경우:
 
 ```tsx
-import { styled, s } from '@/utils/ScaledStyled';
+import { styled, s } from '@/utils/scale/CustomStyled';
 
 const Icon = styled.Image`
   width: ${s.icon(24)}px;      // icon 타입으로 스케일링 (80%)
@@ -161,8 +161,8 @@ const Fixed = styled.View`
 ## 파일 구조
 
 ```
-src/utils/
+src/utils/scale/
 ├── scale.ts              # 스케일 계산 로직
-├── ScaledStyled.ts       # 자동 스케일링 styled 래퍼
+├── CustomStyled.ts       # 자동 스케일링 styled 래퍼
 └── SCALING.md           # 이 문서
 ```

@@ -142,10 +142,10 @@ marginVertical?: number                             // 상하 마진 (Figma px �
 ```tsx
 // LoginContainer.tsx
 export default function LoginContainer({ navigation }: any) {
-  const { signIn } = useAuth();
+  const { signInWithKakao } = useAuthStore();
 
   const handleLogin = async () => {
-    // 로직 처리
+    await signInWithKakao();
   };
 
   return <LoginView onLogin={handleLogin} />;
@@ -191,7 +191,7 @@ export default function MyComponent({ title, onPress, isActive = false }: MyComp
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import styled from 'styled-components/native';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/authStore';
 import { theme } from '@/constants/theme';
 import LoginView from './LoginView';
 import type { User } from '@/types/auth';

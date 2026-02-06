@@ -1,541 +1,128 @@
-# Firebase Analytics & Crashlytics 현황 분석 보고서
+# SNAPLINK Analytics Master Specification
 
-## 📊 현재 구현 상태
-
-### 1. Firebase 패키지 설치 현황
-- ✅ `@react-native-firebase/analytics` v23.7.0
-- ✅ `@react-native-firebase/app` v23.7.0
-- ✅ `@react-native-firebase/crashlytics` v23.7.0
-- ✅ `@react-native-firebase/messaging` v23.7.0
-
-### 2. Analytics 초기화 및 설정
-
-#### App.tsx
-```typescript
-// ✅ 앱 시작 시 app_open 이벤트 로깅
-useEffect(() => {
-  await analytics().logEvent('app_open');
-}, []);
-```
-
-#### Navigation (index.tsx)
-```typescript
-// ✅ 세션 추적 (AppState 기반)
-- session_start: 앱이 active 상태로 전환될 때
-- session_end: 앱이 background로 전환될 때 (duration_seconds 포함)
-
-// ✅ 화면 추적
-- screen_view: 모든 화면 전환 시 자동 로깅
-  - screen_name, platform, user_id, user_type, session_start_timestamp
-
-// ⚠️ Crashlytics 사용 제한적
-- crashlytics().log('App opened') 한 번만 사용
-```
-
-### 3. 현재 추적 중인 이벤트 (총 53개)
-
-#### 사용자 인증 및 가입
-- ✅ `login` - 로그인 시
-- ✅ `sign_up` - 회원가입 시
-- ❌ **MISSING**: 회원가입 단계별 이탈률 (회원가입 퍼널)
-- ❌ **MISSING**: 소셜 로그인 유형 구분 (카카오/기타)
-
-#### 작가 프로필 조회
-- ✅ `photographer_profile_view` - 작가 프로필 페이지 진입
-- ✅ `photographer_view` - 작가 정보 조회
-- ✅ `search_photographer` - 작가 검색
-- ✅ `profile_portfolio_clicked` - 프로필 내 포트폴리오 클릭 (photographer_id, portfolio_id, user_id, user_type, source)
-- ✅ `profile_review_tab_clicked` - 리뷰 탭 클릭 (photographer_id, user_id, user_type)
-- ✅ `profile_scroll_depth` - 스크롤 깊이 추적 (photographer_id, depth_percentage: 25/50/75/100, user_id, user_type)
-
-#### AI 추천
-- ✅ `ai_recommendation_start` - AI 추천 시작
-- ✅ `ai_recommendation_input` - AI 추천 입력
-- ✅ `ai_recommendation_result_view` - AI 추천 결과 조회
-- ❌ **MISSING**: AI 추천 결과에서 작가 프로필 클릭률
-- ❌ **MISSING**: AI 추천을 통한 예약 전환율
-
-#### 예약 프로세스 (Inquiry Funnel)
-- ✅ `booking_intent` - 예약 의도 (예약하기 버튼 클릭)
-- ✅ `booking_request_submitted` - 예약 요청 제출
-- ✅ `booking_confirmed` - 예약 확정
-- ✅ `booking_detail_view` - 예약 상세 조회
-- ✅ `booking_form_abandoned` - 예약 폼 이탈 추적
-  - step: 'product_selection' (날짜/시간/상품 선택 단계)
-  - step: 'request_details' (요청 상세 입력 단계)
-  - time_spent_seconds, had_date, had_time, had_product, had_region 포함
-
-#### 채팅 (Chat-based Inquiry)
-- ✅ `chat_initiated` - 채팅 시작
-- ✅ `activation_chat_entered` - 활성화 채팅방 진입
-- ✅ `chat_message_sent` - 메시지 전송 (user_id, room_id, is_first_message, message_length, message_count)
-- ✅ `photographer_response` - 작가 응답 (photographer_id, room_id, is_first_response, response_time_seconds)
-- ✅ `photographer_first_response_time` - 작가 첫 응답 시간 (response_time_seconds, response_time_minutes)
-
-#### 작가 예약 관리
-- ✅ `photographer_booking_approved` - 작가가 예약 승인
-- ✅ `photographer_booking_rejected` - 작가가 예약 거절
-- ✅ `photographer_booking_completed` - 촬영 완료
-- ✅ `photographer_booking_detail_view` - 작가 예약 상세 조회
-- ❌ **MISSING**: 작가 응답률 계산 (24시간 내 응답 여부)
-- ❌ **MISSING**: 평균 응답 시간
-
-#### 사진 업로드 및 다운로드
-- ✅ `photographer_booking_photos_uploaded` - 사진 업로드
-- ✅ `photographer_booking_photos_added` - 사진 추가
-- ✅ `photographer_booking_photos_deleted` - 사진 삭제
-- ✅ `photographer_booking_photos_view` - 사진 조회
-- ✅ `photo_download_start` - 사진 다운로드 시작
-- ✅ `photo_zip_download_start` - ZIP 다운로드 시작
-
-#### 리뷰
-- ✅ `review_start` - 리뷰 작성 시작
-- ✅ `review_create_complete` - 리뷰 작성 완료
-- ✅ `review_edit_start` - 리뷰 수정 시작
-- ✅ `review_edit_complete` - 리뷰 수정 완료
-- ✅ `review_view` - 리뷰 조회
-- ❌ **MISSING**: 리뷰 작성 완료율 (시작 대비)
-
-#### 커뮤니티
-- ✅ `community_post_view` - 커뮤니티 게시글 조회
-- ✅ `community_post_like` - 좋아요
-- ✅ `community_post_share` - 공유
-- ✅ `community_post_edit` - 게시글 수정
-- ✅ `community_post_delete` - 게시글 삭제
-- ✅ `community_comment_create` - 댓글 작성
-- ✅ `community_comment_edit` - 댓글 수정
-- ✅ `community_comment_delete` - 댓글 삭제
-
-#### 포트폴리오
-- ✅ `portfolio_post_view` - 포트폴리오 조회
-- ✅ `portfolio_post_created` - 포트폴리오 생성
-- ✅ `portfolio_post_updated` - 포트폴리오 수정
-- ✅ `portfolio_post_deleted` - 포트폴리오 삭제
-
-#### 북마크
-- ✅ `bookmark_toggle` - 북마크 토글
-
-#### 작가 일정 관리
-- ✅ `personal_schedule_created` - 개인 일정 생성
-- ✅ `personal_schedule_updated` - 개인 일정 수정
-- ✅ `personal_schedule_deleted` - 개인 일정 삭제
-- ✅ `personal_schedule_duplicated` - 개인 일정 복제
-- ✅ `shooting_service_action` - 촬영 서비스 액션
+본 문서는 SNAPLINK 프로젝트의 모든 수집 데이터를 상세히 기술한 마스터 명세서입니다.
 
 ---
 
-## 🚨 주요 누락 KPI 지표
+## � 1. Global Context & User Properties
 
-### 1. DAU/WAU/MAU (Daily/Weekly/Monthly Active Users)
-- **현재 상태**: ❌ 자동 추적 가능하지만 명시적 이벤트 없음
-- **권장사항**: Firebase Analytics의 자동 추적 활용 (별도 이벤트 불필요)
-- **확인 방법**: Firebase Console > Analytics > Events > "first_open", "user_engagement"
+모든 이벤트에 공통적으로 포함되거나, 사용자별로 고정된 속성입니다.
 
-### 2. Session Metrics
-- **현재 상태**: ✅ `session_start`, `session_end` 추적 중
-- **추가 필요**:
-  - Average session duration (Firebase 자동 계산)
-  - Sessions per user (Firebase 자동 계산)
+### 1.1 User Properties (Firebase Analytics)
+사용자의 세그먼트를 분류하는 핵심 기준입니다.
+- `user_id` (String): 시스템 내 고유 식별자
+- `user_type` (String): `user` (일반 고객) | `photographer` (작가)
+- `signup_date` (String): ISO Date (`YYYY-MM-DD`)
+- `is_photographer_verified` (Boolean): 작가 승인 여부
 
-### 3. Retention (D1/D7/D30)
-- **현재 상태**: ❌ 명시적 추적 없음
-- **권장사항**: Firebase Analytics 자동 계산 활용
-- **확인 방법**: Firebase Console > Analytics > Retention
+### 1.2 User Attributes (Crashlytics)
+에러 발생 시 추적을 위한 맥락 정보입니다.
+- `userId` (String)
+- `userType` (String)
+- `loginMethod` (String): `kakao` | `apple` | `test_account`
+- `signupDate` (String)
 
-### 4. Creator Profile View Funnel (작가 프로필 조회 퍼널)
-현재: `photographer_profile_view` ✅
-누락:
-- ❌ 프로필 내 포트폴리오 클릭
-- ❌ 프로필 내 리뷰 탭 클릭
-- ❌ 프로필 내 스크롤 깊이
-- ❌ 프로필 조회 → 채팅 시작 전환율
-- ❌ 프로필 조회 → 예약 시작 전환율
-
-### 5. Inquiry Funnel (채팅 기반 문의 퍼널)
-현재: `chat_initiated` ✅, `booking_intent` ✅, `booking_request_submitted` ✅, `booking_confirmed` ✅
-누락:
-- ❌ 채팅 메시지 전송 (첫 메시지, 이후 메시지)
-- ❌ 작가 응답 (첫 응답, 응답 시간)
-- ❌ 채팅 → 예약 전환 (채팅에서 "예약하기" 클릭)
-- ❌ 각 단계 이탈률
-
-### 6. Community Interaction Tracking
-현재: 게시글/댓글 액션 추적 ✅
-누락:
-- ❌ 피드 스크롤 깊이
-- ❌ 카테고리별 조회 시간
-- ❌ 외부 공유 성공률
-
-### 7. Creator Metrics (작가 지표)
-현재: 예약 승인/거절 ✅
-누락:
-- ❌ **응답률**: 24시간 내 첫 응답률 계산
-- ❌ **평균 응답 시간**: 채팅 메시지 수신 → 작가 응답 시간
-- ❌ **예약 승인률**: 승인 / (승인 + 거절)
-- ❌ **리뷰 평균 평점 변화 추적**
-
-### 8. Error & Crash Tracking
-- **현재 상태**: ✅ Crashlytics 완전 통합 완료
-- **구현 완료**:
-  - ✅ API 에러 자동 로깅 (utils.ts의 authFetch, authMultipartFetch)
-    - 4xx/5xx 에러 자동 recordError
-    - Network 에러 자동 로깅
-    - URL, status, method, responseText 포함
-  - ✅ 사용자 컨텍스트 설정 (authStore.ts)
-    - setUserId on login/signup
-    - setAttributes (userType, loginMethod, signupDate)
-  - ✅ ErrorBoundary 구현 (src/components/ErrorBoundary.tsx)
-    - React 컴포넌트 에러 자동 캐치
-    - Component stack trace 포함
-    - 사용자에게 에러 UI 표시 및 복구 옵션
-  - ✅ Breadcrumb 로깅
-    - 채팅 메시지 전송/수신
-    - 프로필 포트폴리오 클릭
-    - 리뷰 탭 클릭
+### 1.3 Global System Events
+앱의 전반적인 활성도와 체류 시간을 측정합니다.
+- `app_open`: `{ user_id: String, user_type: String, platform: String }` (앱 첫 실행)
+- `session_start`: (파라미터 없음, 세션 발생 시점 기록)
+- `session_end`: `{ duration_seconds: Number }` (실제 앱 체류 시간)
+- `screen_view`: `{ screen_name: String, platform: String, user_id: String, user_type: String }` (화면 전환 로그)
 
 ---
 
-## 🔧 개선 권장사항
+## 📈 2. Domain-Specific Event Specification
 
-### 1. Crashlytics 활용 강화 (HIGH PRIORITY)
+이 항목들은 AI가 차트와 지표(Metric)를 생성할 때 참조할 실제 이벤트 데이터 구조입니다.
 
-#### API 에러 로깅
-```typescript
-// src/api/utils.ts 또는 공통 fetch wrapper
-export const authFetch = async (url: string, options?: RequestInit) => {
-  try {
-    const response = await fetch(url, options);
+### 2.1 상호작용 및 검색 (Discovery & Interaction)
 
-    if (!response.ok) {
-      // Log non-fatal error to Crashlytics
-      crashlytics().recordError(new Error(`API Error: ${response.status} ${url}`), {
-        url,
-        status: response.status,
-        method: options?.method || 'GET',
-      });
-    }
+| 이벤트명 | 파라미터 구조 (Key: Type) | 비즈니스 의미 |
+| :--- | :--- | :--- |
+| `search_photographer` | `{ search_key: String, user_id: String, user_type: String, source: "SearchPhotographer" }` | 검색어 트렌드 및 검색량 분석 |
+| `photographer_profile_view` | `{ photographer_id: String, user_id: String, user_type: String, source: String }` | 작가별 인기도 및 프로필 도달률 |
+| `profile_portfolio_clicked` | `{ photographer_id: String, portfolio_id: Number, user_id: String, user_type: String, source: "profile_page" }` | 포트폴리오 CTR(클릭률) 분석 |
+| `profile_review_tab_clicked` | `{ photographer_id: String, user_id: String, user_type: String }` | 리뷰 섹션 관심도 측정 |
+| `profile_scroll_depth` | `{ photographer_id: String, depth_percentage: Number(25/50/75/100), user_id: String, user_type: String }` | 콘텐츠 가독성 및 이탈 지점 파악 |
 
-    return response;
-  } catch (error) {
-    // Log network errors
-    crashlytics().recordError(error as Error, {
-      url,
-      type: 'NetworkError',
-    });
-    throw error;
-  }
-};
-```
+### 2.2 AI 추천 엔진 (AI Recommendation)
 
-#### User Context 설정
-```typescript
-// src/store/authStore.ts (로그인 시)
-crashlytics().setUserId(userId);
-crashlytics().setAttributes({
-  userType: userType,
-  email: email,
-});
-```
+| 이벤트명 | 파라미터 구조 | 비즈니스 의미 |
+| :--- | :--- | :--- |
+| `ai_recommendation_start` | `{ user_id: String, user_type: String, screen: "AIRecommdationForm" }` | AI 기능 유입률 |
+| `ai_recommendation_result_view` | `{ user_id: String, user_type: String, prompt: String, result_count: Number, screen: "AIRecommdationResult" }` | 추천 엔진의 공급량 및 질 분석 |
+| `photographer_profile_view` | `source: "AIRecommdationResult"` 인 경우만 필터링 | AI 추천 상품의 클릭 전환율(CVR) |
 
-#### Breadcrumb 추적
-```typescript
-// 주요 액션 시
-crashlytics().log('User opened photographer profile');
-crashlytics().log('User started booking process');
-crashlytics().log('User sent chat message');
-```
+### 2.3 예약 퍼널 (Booking Funnel - Client Side)
 
-### 2. 누락된 이벤트 추가 (HIGH PRIORITY)
+AI는 이 데이터를 기반으로 **단계별 전환/이탈 대시보드**를 생성해야 합니다.
 
-#### 채팅 메시지 전송
-```typescript
-// ChatDetailsContainer.tsx
-const handleSendMessage = () => {
-  analytics().logEvent('chat_message_sent', {
-    user_id: userId,
-    room_id: roomId,
-    is_first_message: messageCount === 0,
-    message_length: message.length,
-  });
+| 이벤트명 | 파라미터 구조 | 비즈니스 의미 |
+| :--- | :--- | :--- |
+| `booking_intent` | `{ user_id: String, user_type: String, photographer_id: String, source: String, entry_source: String }` | 예약 프로세스 진입 (퍼널 1단계) |
+| `booking_form_abandoned` | `{ step: "product_selection"\|"request_details", time_spent_seconds: Number, had_date: Bool, had_time: Bool, had_product: Bool, had_region: Bool, ... }` | **이탈 분석 핵심 데이터**. 특정 필드 입력 중 포기 여부 확인 가능 |
+| `booking_request_submitted` | `{ product_id: Number, shooting_date: String, start_time: String, options: JSON_String, region: String, ... }` | 예약 성공 시도 (퍼널 2단계) |
+| `booking_confirmed` | (Submitted와 동일 구조) | 실제 거래 성사 (퍼널 최종단계) |
 
-  // 기존 메시지 전송 로직
-};
-```
+### 2.4 채팅 및 응답성 (Chat & Responsiveness)
 
-#### 작가 응답 시간 추적
-```typescript
-// 채팅 메시지 수신 시 (WebSocket handler)
-const onMessageReceived = (message) => {
-  if (message.senderType === 'PHOTOGRAPHER') {
-    const responseTime = Date.now() - lastUserMessageTime;
+| 이벤트명 | 파라미터 구조 | 비즈니스 의미 |
+| :--- | :--- | :--- |
+| `chat_initiated` | `{ photographer_id: String, room_id: Number, source: String, entry_source: String }` | 신규 문의 시작율 |
+| `chat_message_sent` | `{ is_first_message: Bool, message_length: Number, message_count: Number, ... }` | 대화 활성도 및 문의 깊이 분석 |
+| `photographer_response` | `{ response_time_seconds: Number, is_first_response: Bool, ... }` | **작가 응답 시간 분석**. 응답 지연 작가 파악용 |
+| `photographer_first_response_time` | `{ response_time_seconds: Number, response_time_minutes: Number }` | 고객 대기 시간 통계 |
 
-    analytics().logEvent('photographer_response', {
-      photographer_id: photographerId,
-      response_time_seconds: responseTime / 1000,
-      is_first_response: isFirstResponse,
-    });
-  }
-};
-```
+### 2.5 작가 관리 및 서비스 품질 (Creator Management)
 
-#### 프로필 퍼널 추적
-```typescript
-// PhotographerDetailsContainer.tsx
-const handlePressPortfolioItem = (portfolioId) => {
-  analytics().logEvent('profile_portfolio_clicked', {
-    photographer_id: photographerId,
-    portfolio_id: portfolioId,
-    source: 'profile_page',
-  });
-};
+| 이벤트명 | 파라미터 구조 | 비즈니스 의미 |
+| :--- | :--- | :--- |
+| `shooting_service_action` | `{ action_type: "create"\|"edit"\|"delete"\|"edit_schedule", product_id?: Number }` | 작가의 상품 관리 활성도 |
+| `personal_schedule_created` | `{ start_date: String, end_date: String, title: String }` | 작가의 일정 관리(휴무/개인일정) 빈도 |
+| `photographer_original_zip_uploaded`| `{ bookingId: Number, file_name: String }` | 최종 결과물 전달 속도(Lead Time) 측정 |
+| `photographer_booking_approved` | `{ bookingId: Number }` | 예약 승인율 지표 |
 
-const handlePressReviewTab = () => {
-  analytics().logEvent('profile_review_tab_clicked', {
-    photographer_id: photographerId,
-  });
-};
+### 2.6 커뮤니티 (Community)
 
-// 스크롤 깊이 추적
-const handleScroll = (event) => {
-  const scrollPercentage = calculateScrollPercentage(event);
-  if (scrollPercentage > 50 && !scrollTracked50) {
-    analytics().logEvent('profile_scroll_depth', {
-      photographer_id: photographerId,
-      depth: 50,
-    });
-    setScrollTracked50(true);
-  }
-};
-```
-
-#### 예약 퍼널 이탈 추적
-```typescript
-// BookingContainer.tsx
-useEffect(() => {
-  analytics().logEvent('booking_form_opened', {
-    photographer_id: photographerId,
-    product_id: productId,
-  });
-
-  return () => {
-    // 예약 완료 없이 나가는 경우
-    if (!bookingCompleted) {
-      analytics().logEvent('booking_form_abandoned', {
-        photographer_id: photographerId,
-        product_id: productId,
-        step: currentStep,
-      });
-    }
-  };
-}, []);
-```
-
-### 3. User Properties 설정
-
-```typescript
-// 로그인 시 사용자 속성 설정
-analytics().setUserProperties({
-  user_type: userType, // 'user' | 'photographer'
-  signup_date: signupDate,
-  is_photographer_verified: isVerified,
-  total_bookings: totalBookings,
-});
-```
-
-### 4. 커스텀 퍼널 정의
-
-Firebase Console에서 다음 퍼널들을 정의:
-
-#### 예약 퍼널
-1. `photographer_profile_view`
-2. `booking_intent`
-3. `booking_request_submitted`
-4. `booking_confirmed`
-
-#### 채팅 기반 문의 퍼널
-1. `photographer_profile_view`
-2. `chat_initiated`
-3. `chat_message_sent`
-4. `photographer_response`
-5. `booking_intent` (from chat)
-6. `booking_confirmed`
-
-#### 리뷰 작성 퍼널
-1. `photographer_booking_completed`
-2. `review_start`
-3. `review_create_complete`
+| 이벤트명 | 파라미터 구조 | 비즈니스 의미 |
+| :--- | :--- | :--- |
+| `community_post_view` | `{ post_id: Number, author_id: String, category: String }` | 카테고리별 콘텐츠 인기 순위 |
+| `community_post_like` | `{ liked: Bool }` | 사용자 반응률 |
+| `community_comment_create` | `{ is_reply: Bool, parent_comment_id?: Number }` | 커뮤니티 결속력 및 활발함 정도 |
 
 ---
 
-## 📱 Firebase Console 확인 가이드
+## 🆘 3. Error & Reliability (Crashlytics)
 
-### 1. DAU/WAU/MAU 확인
-1. Firebase Console 접속
-2. Analytics > Dashboard
-3. "Active users" 카드 확인
-4. 시간 범위 조정: 1일(DAU), 7일(WAU), 30일(MAU)
+대시보드에서 **시스템 성능** 섹션을 구성할 때 사용합니다.
 
-### 2. Retention 확인
-1. Analytics > Retention
-2. "All users" cohort 선택
-3. Day 1, Day 7, Day 30 retention 확인
-
-### 3. 이벤트 분석
-1. Analytics > Events
-2. 이벤트별 발생 횟수, 사용자 수 확인
-3. 특정 이벤트 클릭 → 세부 파라미터 분석
-
-### 4. 퍼널 분석
-1. Analytics > Funnels
-2. "Create funnel" 클릭
-3. 이벤트 시퀀스 정의 (예: profile_view → booking_intent → booking_confirmed)
-4. 각 단계별 전환율 및 이탈률 확인
-
-### 5. User Properties 분석
-1. Analytics > Latest Release > User properties
-2. user_type, signup_date 등 커스텀 속성 확인
-3. 속성별 세그먼트 분석
-
-### 6. Crashlytics 확인
-1. Crashlytics > Dashboard
-2. Crash-free users 비율 확인
-3. 크래시 목록 → 발생 빈도, 영향 사용자 수 확인
-4. 특정 크래시 선택 → 스택 트레이스, 로그 확인
-
-### 7. 실시간 모니터링
-1. Analytics > DebugView (개발 중)
-2. Analytics > Realtime (프로덕션)
-3. 현재 활성 사용자 및 이벤트 실시간 확인
+### 3.1 Network / API Error
+- `crashlytics().recordError()` 호출 시 다음 Custom Keys 포함:
+  - `url` (String): 호출 주소
+  - `method` (String): GET, POST, DELETE 등
+  - `status` (Number): HTTP Status Code (401, 404, 500 등)
+  - `responseText` (String): 실패 원인에 대한 서버 메시지
 
 ---
 
-## 🎯 우선순위별 액션 아이템
+## 🤖 4. AI Dashboard Prompt Logic (추천 지표)
 
-### ✅ COMPLETED (2026-01-09 구현 완료)
-1. ✅ **Crashlytics 에러 로깅 강화**
-   - ✅ API 에러 자동 로깅 (authFetch, authMultipartFetch)
-   - ✅ User context 설정 (userId, userType, loginMethod, signupDate)
-   - ✅ Breadcrumb 추적 (채팅, 프로필 액션)
-   - ✅ ErrorBoundary 구현 및 App.tsx 적용
+AI에게 대시보드 생성을 요청할 때 다음 지표(Metrics)를 계산하도록 프롬프트 하세요.
 
-2. ✅ **채팅 이벤트 추가**
-   - ✅ `chat_message_sent` (is_first_message, message_count, message_length)
-   - ✅ `photographer_response` (response_time_seconds, is_first_response)
-   - ✅ `photographer_first_response_time` (분/초 단위)
-
-3. ✅ **프로필 퍼널 추적**
-   - ✅ `profile_portfolio_clicked` (포트폴리오 클릭)
-   - ✅ `profile_review_tab_clicked` (리뷰 탭 클릭)
-   - ✅ `profile_scroll_depth` (25%, 50%, 75%, 100% 추적)
-
-4. ✅ **예약 퍼널 이탈 추적**
-   - ✅ `booking_form_abandoned` (product_selection 단계)
-   - ✅ `booking_form_abandoned` (request_details 단계)
-   - ✅ time_spent_seconds, 각 필드 입력 여부 추적
-
-5. ✅ **User Properties & Analytics 설정**
-   - ✅ setUserProperties (user_type, signup_date)
-   - ✅ Crashlytics attributes (userType, loginMethod, signupDate)
-
-### 🟢 LOW PRIORITY (필요 시)
-1. ✅ 커뮤니티 인게이지먼트 심화
-   - 스크롤 깊이
-   - 카테고리별 체류 시간
-
-2. ✅ A/B 테스팅 준비
-   - Firebase Remote Config 연동
-   - 실험 그룹 분리
+1.  **Retention Rate**: `first_open` 유저 중 N일 뒤 `session_start` 발생 비율 (Firebase 기본)
+2.  **Conversion Funnel (예약)**:
+    - 1단계: `photographer_profile_view`
+    - 2단계: `booking_intent`
+    - 3단계: `booking_request_submitted`
+    - 4단계: `booking_confirmed` (최종 전환율)
+3.  **Chat CVR (문의 전환율)**: `chat_initiated` 발생 유저 중 `booking_confirmed` 발생 비율
+4.  **Avg. Response Time**: `photographer_response.response_time_seconds` 합계 / 응답 수
+5.  **Churn Analysis**: `booking_form_abandoned` 이벤트의 `step`별 카운팅을 통한 UI 장애물 파악
+6.  **Hot Search Keys**: `search_photographer.search_key`의 빈도 분석
 
 ---
 
-## 📊 Mixpanel 도입 검토
-
-현재 Firebase Analytics만으로도 대부분의 KPI 추적 가능하지만, 다음 경우 Mixpanel 추가 고려:
-
-### Mixpanel이 더 나은 경우
-1. **사용자 여정 분석**: 복잡한 멀티 터치 퍼널 분석
-2. **코호트 분석**: 세밀한 사용자 세그먼트 분석
-3. **리텐션 분석**: 더 직관적인 리텐션 대시보드
-4. **실시간 알림**: 특정 이벤트 발생 시 슬랙/이메일 알림
-
-### 현재 Firebase만으로 충분한 이유
-- 기본 KPI (DAU/MAU, Retention) 추적 가능
-- 퍼널 분석 지원
-- Crashlytics 통합
-- 무료 티어로도 충분한 이벤트 볼륨
-- 추가 SDK 통합 불필요
-
-**권장**: 현재는 Firebase Analytics 활용도를 높이고, 추후 필요 시 Mixpanel 도입
-
----
-
-## 📝 체크리스트
-
-### 현재 구현 완료
-- [x] Firebase Analytics 설치 및 초기화
-- [x] 기본 세션 추적 (session_start, session_end)
-- [x] 화면 추적 (screen_view)
-- [x] 주요 사용자 액션 추적 (47개 이벤트)
-- [x] 예약 퍼널 기본 추적
-
-### 2026-01-09 구현 완료
-- [x] **Crashlytics 에러 로깅 강화** (utils.ts)
-  - [x] API 에러 자동 로깅 (4xx/5xx, network errors)
-  - [x] User context 설정 (authStore.ts)
-  - [x] ErrorBoundary 구현 및 적용 (App.tsx)
-- [x] **채팅 이벤트 추가** (ChatDetailsContainer.tsx)
-  - [x] chat_message_sent (메시지 전송)
-  - [x] photographer_response (작가 응답)
-  - [x] photographer_first_response_time (첫 응답 시간)
-- [x] **프로필 퍼널 상세 추적** (PhotographerDetailsContainer.tsx)
-  - [x] profile_portfolio_clicked (포트폴리오 클릭)
-  - [x] profile_review_tab_clicked (리뷰 탭 클릭)
-  - [x] profile_scroll_depth (스크롤 깊이 25/50/75/100%)
-- [x] **예약 퍼널 이탈 추적** (BookingContainer.tsx, BookingRequestContainer.tsx)
-  - [x] booking_form_abandoned (product_selection 단계)
-  - [x] booking_form_abandoned (request_details 단계)
-  - [x] time_spent_seconds 및 필드 입력 상태 추적
-- [x] **User Properties 설정** (authStore.ts)
-  - [x] Analytics user properties (user_type, signup_date)
-  - [x] Crashlytics attributes (userType, loginMethod, signupDate)
-
-### 추가 개선 가능 항목
-- [ ] 커뮤니티 스크롤 깊이 추적
-- [ ] 작가 승인률 계산 로직
-- [ ] A/B 테스팅을 위한 Firebase Remote Config 연동
-
----
-
----
-
-## 🎉 최종 구현 상태 (2026-01-09)
-
-### 구현 완료 항목
-1. **API 에러 모니터링**: authFetch, authMultipartFetch에서 모든 4xx/5xx 및 네트워크 에러 자동 로깅
-2. **사용자 컨텍스트**: 로그인/회원가입 시 userId, userType, loginMethod, signupDate 자동 설정
-3. **채팅 추적**: 메시지 전송, 작가 응답 시간 (첫 응답 포함) 완전 추적
-4. **프로필 퍼널**: 포트폴리오 클릭, 리뷰 탭 클릭, 스크롤 깊이 (4단계) 추적
-5. **예약 이탈 분석**: 2단계 퍼널 (상품 선택 / 요청 상세) 각각 이탈 시간 및 진행 상태 추적
-6. **ErrorBoundary**: React 컴포넌트 에러 자동 캐치 및 Crashlytics 리포팅
-
-### 추적 가능한 주요 KPI
-- ✅ DAU/MAU (Firebase 자동 계산)
-- ✅ Retention (D1/D7/D30) (Firebase 자동 계산)
-- ✅ Session duration (Firebase 자동 계산)
-- ✅ 예약 퍼널 전환율 및 이탈률
-- ✅ 채팅 응답 시간 (작가 응답률 계산 가능)
-- ✅ 프로필 인게이지먼트 (포트폴리오 클릭률, 리뷰 조회율, 스크롤 깊이)
-- ✅ API 에러율 및 크래시 발생률
-
-### Firebase Console 주요 확인 지표
-1. **Analytics > Dashboard**: DAU, 활성 사용자, 상위 이벤트
-2. **Analytics > Events**: 53개 이벤트 발생 현황
-3. **Analytics > Funnels**: 예약 퍼널, 채팅 퍼널 전환율
-4. **Crashlytics > Dashboard**: Crash-free users, 에러 발생 빈도
-5. **Analytics > User properties**: user_type별 세그먼트 분석
-
----
-
-생성 일시: 2026-01-09
-최종 업데이트: 2026-01-09 (구현 완료 후)
-작성자: Claude Code
+> **Document Metadata**
+> - Generated for: Admin Dashboard AI Generation Prompt
+> - Documentation Level: Level 3 (Full Parameter Mapping)
+> - Update: 2026-02-06

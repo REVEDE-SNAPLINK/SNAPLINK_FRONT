@@ -6,9 +6,8 @@
 
 ```
 SNAPLINK_FRONT/
-├── front/          # React Native 앱
-│   ├── src/        # 소스 코드
-│   └── docs/       # 개발 문서
+├── front/          # React Native 앱 소스
+├── docs/           # 개발 및 배포 가이드 문서
 └── README.md       # 프로젝트 전체 가이드
 ```
 

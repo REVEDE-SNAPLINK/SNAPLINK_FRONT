@@ -16,7 +16,7 @@ type PostDetailRouteProp = RouteProp<MainStackParamList, 'PostDetail'>;
 export default function PostDetailContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<PostDetailRouteProp>();
-  const { postId, profileImageURI } = route.params;
+  const { postId, profileImageURI, source } = route.params;
   const { userId, userType } = useAuthStore();
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -36,16 +36,17 @@ export default function PostDetailContainer() {
       user_type: userType || 'guest',
       post_id: postId,
       photographer_id: post.photographerId,
+      source: source || 'unknown', // 유입 경로 로깅
     });
-  }, [post, postId, userId, userType]);
+  }, [post, postId, userId, userType, source]);
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.reset({ index: 1, routes: [{ name: 'Home' }, { name: 'PhotographerDetails', params: { photographerId: post?.photographerId ?? '', source: 'post_detail' } }] });
+      navigation.reset({ index: 1, routes: [{ name: 'Home' }, { name: 'PhotographerDetails', params: { photographerId: post?.photographerId ?? '', source: source ? `post_detail_via_${source}` : 'post_detail' } }] });
     }
-  }, [navigation, post]);
+  }, [navigation, post, source]);
 
   const handlePressMore = () => {
     setIsMoreModalVisible(true);
@@ -67,7 +68,7 @@ export default function PostDetailContainer() {
       title: '포트폴리오 삭제',
       message: '정말로 이 포트폴리오를 삭제하시겠습니까?',
       buttons: [
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
         {
           text: '삭제',
           type: 'destructive',
@@ -110,7 +111,7 @@ export default function PostDetailContainer() {
     params.append('profileImageURI', profileImageURI);
     if (post) {
       Share.share({
-        message: `${post.content.substring(0, 10)+"..."}\nhttps://link.snaplink.run/tab/home/portfolio/${postId}?${params}`,
+        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/home/portfolio/${postId}?${params}`,
       });
     }
   }

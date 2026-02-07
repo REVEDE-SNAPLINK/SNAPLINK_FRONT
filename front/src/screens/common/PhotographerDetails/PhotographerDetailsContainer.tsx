@@ -151,8 +151,8 @@ export default function PhotographerDetailsContainer() {
           user_type: userType,
           photographer_id: photographerId,
           room_id: response,
-          source: 'photographer_profile',
-          entry_source: source || 'direct', // 프로필에 어디서 진입했는지
+          source: source || 'direct', // 프로필 내에서의 행위
+          entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
         });
         // Invalidate chat rooms to refresh the list
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
@@ -171,8 +171,8 @@ export default function PhotographerDetailsContainer() {
       user_id: userId,
       user_type: userType,
       photographer_id: photographerId,
-      source: 'photographer_profile',
-      entry_source: source || 'direct', // 프로필에 어디서 진입했는지
+      source: source || 'direct',
+      entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
     });
     navigation.navigate('Booking', { photographerId });
   }, [navigation, photographerId, userId, userType, source]);

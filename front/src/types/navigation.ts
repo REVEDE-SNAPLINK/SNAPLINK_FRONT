@@ -33,10 +33,10 @@ export type MainStackParamList = {
   PhotographerDetails: { photographerId: string; source?: string };
   AIRecommdationForm: undefined;
   AIRecommdationResult: { prompt: string; resultCount?: number };
-  PostDetail: { postId: number; profileImageURI: string; photographerId?: string };
+  PostDetail: { postId: number; profileImageURI: string; photographerId?: string; source?: string };
 
   // Community
-  CommunityDetails: { postId: number };
+  CommunityDetails: { postId: number; source?: string };
   MyPosts: undefined;
 
   // Chat

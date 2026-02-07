@@ -84,9 +84,9 @@ export default function HomeContainer() {
       user_id: userId,
       user_type: userType,
       photographer_id: photographerId,
-      source: 'Home_AllPhotographer',
+      source: 'home_feed_latest',
     });
-    navigation.navigate('PhotographerDetails', { photographerId, source: 'home_all' });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'home_feed_latest' });
   };
 
   const handlePressPopularPhotographerItem = (photographerId: string) => {
@@ -94,9 +94,9 @@ export default function HomeContainer() {
       user_id: userId,
       user_type: userType,
       photographer_id: photographerId,
-      source: 'Home_PopularPhotographer',
+      source: 'home_feed_popular',
     });
-    navigation.navigate('PhotographerDetails', { photographerId, source: 'home_popular' });
+    navigation.navigate('PhotographerDetails', { photographerId, source: 'home_feed_popular' });
   };
 
   return (

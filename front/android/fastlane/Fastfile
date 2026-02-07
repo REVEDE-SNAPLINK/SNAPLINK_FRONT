@@ -52,14 +52,18 @@ platform :android do
 
   desc "Deploy update via Revopush"
   lane :codepush do |options|
-    # Default to 'Staging' if no deployment name is provided
     deployment_name = options[:deployment] || "Staging"
+    target_version = options[:target_version] ? "-t #{options[:target_version]}" : ""
     
-    # Run revopush release-react command
-    # Assuming the current directory is 'front' where package.json resides relative to fastlane execution
-    # Fastlane is run from android/ or ios/ usually, but the command needs to run where package.json is (../)
+    sh("cd .. && npx @revopush/code-push-cli release-react snaplink android -d #{deployment_name} #{target_version} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
+  end
+
+  desc "Promote Revopush update from one deployment to another"
+  lane :codepush_promote do |options|
+    from = options[:from] || "Staging"
+    to = options[:to] || "Production"
     
-    sh("cd .. && npx @revopush/code-push-cli release-react snaplink android -d #{deployment_name} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
+    sh("cd .. && npx @revopush/code-push-cli promote snaplink android #{from} #{to} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
   end
 
   # Helper to read version from package.json

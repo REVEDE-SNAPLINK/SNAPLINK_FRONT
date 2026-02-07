@@ -9,6 +9,24 @@ on:
       - main
       - develop
   workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: 'Deployment type'
+        required: true
+        default: 'ota'
+        type: choice
+        options:
+          - ota
+          - promote
+          - native
+      target_version:
+        description: 'Target binary version for OTA (e.g. 1.0.0)'
+        required: false
+        default: ''
+      changelog:
+        description: 'Changelog for this release'
+        required: false
+        default: 'Bug fixes and improvements'
 
 concurrency:
   group: deploy-android-${{ github.event.workflow_run.head_branch || github.ref_name }}
@@ -120,14 +138,30 @@ jobs:
             echo "⚠️  No deployment rule for branch: $REAL_BRANCH"
           fi
 
-      # Revopush Deployment (CodePush)
-      - name: Deploy via Revopush (JS Only)
-        if: needs.check-changes.outputs.native != 'true'
+      # Revopush Deployment (OTA Staging)
+      - name: Deploy via Revopush (Staging)
+        if: |
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_type == 'ota') ||
+          (github.event_name == 'workflow_run' && needs.check-changes.outputs.native != 'true')
+        working-directory: ./front
+        env:
+          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
+          TARGET_VERSION: ${{ github.event.inputs.target_version }}
+        run: |
+          TARGET_ARG=""
+          if [ ! -z "$TARGET_VERSION" ]; then
+            TARGET_ARG="target_version:$TARGET_VERSION"
+          fi
+          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging $TARGET_ARG
+
+      # Revopush Promote (Staging -> Production)
+      - name: Promote Revopush to Production
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_type == 'promote'
         working-directory: ./front
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
-          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging
+          cd android && bundle exec --gemfile=../Gemfile fastlane codepush_promote from:Staging to:Production
 
       - name: Upload build artifacts
         if: always() && needs.check-changes.outputs.native == 'true'

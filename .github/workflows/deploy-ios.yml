@@ -10,6 +10,19 @@ on:
       - develop
   workflow_dispatch:
     inputs:
+      deploy_type:
+        description: 'Deployment type'
+        required: true
+        default: 'ota'
+        type: choice
+        options:
+          - ota
+          - promote
+          - native
+      target_version:
+        description: 'Target binary version for OTA (e.g. 1.0.0)'
+        required: false
+        default: ''
       changelog:
         description: 'Changelog for this release'
         required: false
@@ -144,14 +157,34 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: cd ios && bundle exec --gemfile=../Gemfile fastlane beta
 
-      # Revopush Deployment (CodePush)
-      - name: Deploy via Revopush (JS Only)
-        if: needs.check-changes.outputs.native != 'true'
+      # Revopush Deployment (OTA Staging)
+      - name: Deploy via Revopush (Staging)
+        if: |
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_type == 'ota') ||
+          (github.event_name == 'workflow_run' && needs.check-changes.outputs.native != 'true')
+        working-directory: ./front
+        env:
+          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
+          TARGET_VERSION: ${{ github.event.inputs.target_version }}
+        run: |
+          # If target_version is provided, pass it to fastlane or use default logic
+          TARGET_ARG=""
+          if [ ! -z "$TARGET_VERSION" ]; then
+            TARGET_ARG="target_version:$TARGET_VERSION"
+          fi
+          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging $TARGET_ARG
+
+      # Revopush Promote (Staging -> Production)
+      - name: Promote Revopush to Production
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_type == 'promote'
         working-directory: ./front
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
-          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging
+          # Revopush promote command implementation via fastlane or direct CLI
+          # Assuming fastlane has a promote lane or we use CLI
+          # npx revopush promote snaplink/ios Staging Production
+          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush_promote from:Staging to:Production
 
       - name: Upload build artifacts
         if: always() && needs.check-changes.outputs.native == 'true'

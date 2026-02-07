@@ -21,6 +21,7 @@ SNAPLINK_FRONT/
 - **[CONVENTIONS.md](docs/CONVENTIONS.md)** - 코딩 컨벤션
 - **[COMPONENTS.md](docs/COMPONENTS.md)** - 컴포넌트 사용 가이드
 - **[ANALYTICS_ANALYSIS.md](docs/ANALYTICS_ANALYSIS.md)** - 데이터 분석 및 수집 현황
+- **[RELEASING.md](docs/RELEASING.md)** - 서비스 배포 가이드라인
 
 ## 🚀 빠른 시작
 

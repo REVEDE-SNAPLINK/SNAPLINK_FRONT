@@ -20,9 +20,9 @@ type LoginViewProps = {
 }
 
 export default function LoginView({
-  // onKakaoLogin,
-  onTest1Login,
-  onTest2Login,
+  onKakaoLogin,
+  // onTest1Login,
+  // onTest2Login,
   onAppleLogin,
   // onNaverLogin,
   // onGoogleLogin,
@@ -44,7 +44,7 @@ export default function LoginView({
 
       <SocialLoginContainer>
         {/* 테스트 계정 버튼 */}
-        <SocialLoginButton
+        {/* <SocialLoginButton
           backgroundColor="#FEE500"
           Icon={Kakao}
           text={`테스트 계정 1`}
@@ -55,14 +55,14 @@ export default function LoginView({
           Icon={Kakao}
           text={`테스트 계정 2`}
           onPress={onTest2Login}
-        />
+        /> */}
         {/* 실제 로그인 버튼 (주석 처리) */}
-        {/* <SocialLoginButton
+        <SocialLoginButton
           backgroundColor="#FEE500"
           Icon={Kakao}
           text="카카오"
           onPress={onKakaoLogin}
-        /> */}
+        />
         {Platform.OS === 'ios' &&
           <SocialLoginButton
             backgroundColor="#000"

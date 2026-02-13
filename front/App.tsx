@@ -21,7 +21,7 @@ const consumerKey = 'txtK2qa_9fyHd0VTur39';
 const consumerSecret = 'dievjxb5FQ';
 const appName = '스냅링크';
 
-const serviceUrlScheme = 'navertest';
+const serviceUrlScheme = 'snaplink';
 
 function initNaverLogin() {
   NaverLogin.initialize({

@@ -6,6 +6,7 @@ import KakaoSDKAuth
 import Firebase
 import UserNotifications
 import CodePush
+import NaverThirdPartyLogin
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -38,6 +39,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
       in: window,
       launchOptions: launchOptions
     )
+
+    // naver
+    if url.scheme == "snaplink" {
+      return NaverThirdPartyLoginConnection.getSharedInstance().application(app, open: url, options: options)
+    }
 
     RNSplashScreen.show()
 

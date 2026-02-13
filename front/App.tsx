@@ -11,14 +11,33 @@ import { useEffect } from 'react';
 import NotificationHandler from '@/components/NotificationHandler';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import codePush from '@revopush/react-native-code-push';
+import NaverLogin from '@react-native-seoul/naver-login';
 
 async function logAppOpen() {
   await analytics().logEvent('app_open');
 }
 
+const consumerKey = 'txtK2qa_9fyHd0VTur39';
+const consumerSecret = 'dievjxb5FQ';
+const appName = '스냅링크';
+
+const serviceUrlScheme = 'navertest';
+
+function initNaverLogin() {
+  NaverLogin.initialize({
+    appName,
+    consumerKey,
+    consumerSecret,
+    serviceUrlSchemeIOS: serviceUrlScheme,
+    disableNaverAppAuthIOS: true,
+  });
+}
+
+
 function App() {
   useEffect(() => {
     logAppOpen();
+    initNaverLogin();
   }, []);
 
   return (

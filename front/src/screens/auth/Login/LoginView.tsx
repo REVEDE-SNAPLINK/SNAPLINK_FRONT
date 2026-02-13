@@ -10,6 +10,8 @@ import { Platform } from 'react-native';
 // import Naver from '@/assets/icons/naver.svg';
 // import Google from '@/assets/icons/google.svg';
 
+const IS_REVIEW_MODE = false;
+
 type LoginViewProps = {
   onKakaoLogin: () => void;
   onTest1Login: () => void;
@@ -21,8 +23,8 @@ type LoginViewProps = {
 
 export default function LoginView({
   onKakaoLogin,
-  // onTest1Login,
-  // onTest2Login,
+  onTest1Login,
+  onTest2Login,
   onAppleLogin,
   // onNaverLogin,
   // onGoogleLogin,
@@ -44,19 +46,22 @@ export default function LoginView({
 
       <SocialLoginContainer>
         {/* 테스트 계정 버튼 */}
-        {/* <SocialLoginButton
-          backgroundColor="#FEE500"
-          Icon={Kakao}
-          text={`테스트 계정 1`}
-          onPress={onTest1Login}
-        />
-        <SocialLoginButton
-          backgroundColor="#FEE500"
-          Icon={Kakao}
-          text={`테스트 계정 2`}
-          onPress={onTest2Login}
-        /> */}
-        {/* 실제 로그인 버튼 (주석 처리) */}
+        {IS_REVIEW_MODE && (
+          <>
+            <SocialLoginButton
+              backgroundColor="#FEE500"
+              Icon={Kakao}
+              text={`테스트 계정 1`}
+              onPress={onTest1Login}
+            />
+            <SocialLoginButton
+              backgroundColor="#FEE500"
+              Icon={Kakao}
+              text={`테스트 계정 2`}
+              onPress={onTest2Login}
+            />
+          </>
+        )}
         <SocialLoginButton
           backgroundColor="#FEE500"
           Icon={Kakao}

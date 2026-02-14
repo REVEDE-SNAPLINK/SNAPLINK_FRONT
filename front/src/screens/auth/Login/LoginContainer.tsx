@@ -35,7 +35,7 @@ const isLoginCanceled = (error: any): boolean => {
 };
 
 export default function LoginContainer() {
-  const { signInWithKakao, signInWithApple, signInWithTestAccount } = useAuthStore();
+  const { signInWithKakao, signInWithApple, signInWithNaver, signInWithTestAccount } = useAuthStore();
 
   const handleKakaoLogin = async () => {
     try {
@@ -77,12 +77,22 @@ export default function LoginContainer() {
     }
   }
 
+  const handleNaverLogin = async () => {
+    try {
+      await signInWithNaver();
+    } catch (e: any) {
+      if (isLoginCanceled(e)) return;
+      showSimpleErrorAlert('로그인 실패', e);
+    }
+  }
+
   return (
     <LoginView
       onKakaoLogin={handleKakaoLogin}
       onTest1Login={handleTest1Login}
       onTest2Login={handleTest2Login}
       onAppleLogin={handleAppleLogin}
+      onNaverLogin={handleNaverLogin}
     />
   );
 }

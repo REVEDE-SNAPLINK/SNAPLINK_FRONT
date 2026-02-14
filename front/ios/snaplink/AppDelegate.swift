@@ -40,11 +40,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
       launchOptions: launchOptions
     )
 
-    // naver
-    if url.scheme == "snaplink" {
-      return NaverThirdPartyLoginConnection.getSharedInstance().application(app, open: url, options: options)
-    }
-
     RNSplashScreen.show()
 
     return true
@@ -76,6 +71,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
   ) {
     // iOS 14+ 에서 배너, 사운드, 배지 모두 표시
     completionHandler([.banner, .sound, .badge])
+  }
+
+  func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    // naver
+    if url.scheme == "snaplinkSV1KQ3L7CK" {
+      return NaverThirdPartyLoginConnection.getSharedInstance().application(app, open: url, options: options)
+    }
+
+    // kakao
+    if AuthApi.isKakaoTalkLoginUrl(url) {
+      return AuthController.handleOpenUrl(url: url)
+    }
+
+    return false
   }
 
   // 알림 탭 시

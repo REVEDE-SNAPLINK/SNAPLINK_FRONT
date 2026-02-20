@@ -38,13 +38,12 @@ export default function AuthInitializer({ children }: { children: React.ReactNod
   }, [bootstrap]);
 
   useEffect(() => {
-    SplashScreen.hide();
     if (!bootstrapped) return;
     console.log('[AuthInitializer] Bootstrapped, hiding splash screen...');
     const t = setTimeout(() => {
       SplashScreen.hide();
       console.log('[AuthInitializer] Splash screen hidden');
-    }, 500); // 1000ms -> 500ms로 단축
+    }, 300);
     return () => clearTimeout(t);
   }, [bootstrapped]);
 

@@ -24,7 +24,7 @@ export type SignInResponse =
   | SignupRequiredResponse;
 
 // 로그인
-export async function signInApi (provider: string, token: string): Promise<SignInResponse> {
+export async function signInApi(provider: string, token: string): Promise<SignInResponse> {
   // console.log({
   //   provider,
   //   token,
@@ -36,7 +36,7 @@ export async function signInApi (provider: string, token: string): Promise<SignI
     body: JSON.stringify({ provider, token: token }),
   });
 
-  if (!response.ok) throw new Error('로그인할 수 없습니다.');
+  if (!response.ok) throw new Error(`로그인할 수 없습니다. ${response.status} ${response.statusText}`);
 
   const data = await response.json();
 
@@ -102,7 +102,7 @@ export interface SignUpFormData {
 }
 
 // 회원가입
-export async function signUpApi (formData: SignUpFormData): Promise<LoginSuccessResponse> {
+export async function signUpApi(formData: SignUpFormData): Promise<LoginSuccessResponse> {
   console.log(formData);
 
   const response = await fetch(`${AUTH_BASE}/signup`, {

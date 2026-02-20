@@ -145,7 +145,7 @@ export const uploadChatFile = async (
 
 export const leaveChatRoom = async (
   roomId: number,
-)=> {
+) => {
   const response = await authFetch(`${CHAT_BASE}/rooms/${roomId}`, {
     method: 'DELETE',
   })

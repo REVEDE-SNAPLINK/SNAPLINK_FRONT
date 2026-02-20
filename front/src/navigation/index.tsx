@@ -35,6 +35,7 @@ const linking = {
           ViewPhotos: 'tab/profile/booking/:bookingId/photos',
           WriteReview: 'tab/profile/booking/:bookingId/writeReview',
           NoticeDetails: 'tab/profile/notice/:noticeId',
+          AIRecommdationForm: 'tab/home/ai-recommendation',
         },
       },
     },
@@ -66,6 +67,7 @@ export const navigateByDeepLink = (url: string) => {
   routePath = routePath.replace(/^\/+/, '');
 
   console.log('📍 Route path:', routePath);
+
 
   // Parse the path
   const pathMatch = routePath.match(/^tab\/(\w+)(?:\/(.+))?(?:\?(.+))?$/);
@@ -133,6 +135,9 @@ export const navigateByDeepLink = (url: string) => {
       // tab/home/review/:id
       screenName = 'ReviewDetails';
       screenParams = { reviewId: Number(parts[1]) };
+    } else if (firstSegment === 'ai-recommendation') {
+      // tab/home/ai-recommendation
+      screenName = 'AIRecommdationForm';
     }
   } else if (tab === 'community') {
     // tab/community/post/:id

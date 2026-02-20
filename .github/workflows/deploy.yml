@@ -108,15 +108,24 @@ jobs:
       - name: Check Revopush cumulative count
         id: revopush_count
         if: github.event.inputs.deploy_type == 'auto' || github.event.inputs.deploy_type == '' || github.event_name == 'push'
+        continue-on-error: true
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
           # Revopush 배포 히스토리 조회 (iOS 기준)
-          HISTORY=$(npx @revopush/code-push-cli deployment history snaplink/ios Production --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null || echo "")
+          # REVOPUSH_ACCESS_KEY가 없으면 스킵
+          if [ -z "$REVOPUSH_ACCESS_KEY" ]; then
+            echo "⚠️ REVOPUSH_ACCESS_KEY not set, skipping count check"
+            echo "count=0" >> $GITHUB_OUTPUT
+            echo "exceeded=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink/ios Production --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
           
           # 배포 횟수 카운트 (테이블 헤더와 구분선 제외)
           if [ -n "$HISTORY" ]; then
-            COUNT=$(echo "$HISTORY" | grep -c "^|" | tail -1 || echo "0")
+            COUNT=$(echo "$HISTORY" | grep -c "^|" || true)
             # 헤더 행 2줄 제외
             COUNT=$((COUNT > 2 ? COUNT - 2 : 0))
           else
@@ -152,7 +161,7 @@ jobs:
           MANUAL_TYPE="${{ github.event.inputs.deploy_type }}"
           HAS_NATIVE_IOS="${{ steps.changes.outputs.has_native_ios }}"
           HAS_NATIVE_ANDROID="${{ steps.changes.outputs.has_native_android }}"
-          REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded }}"
+          REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded || 'false' }}"
 
           # 수동 트리거에서 타입이 지정된 경우
           if [ "$MANUAL_TYPE" == "native" ] || [ "$MANUAL_TYPE" == "ota" ] || [ "$MANUAL_TYPE" == "promote" ]; then

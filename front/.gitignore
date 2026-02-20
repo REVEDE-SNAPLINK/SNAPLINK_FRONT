@@ -90,6 +90,7 @@ android/app/upload_certificate.pem
 # Build logs
 build.log
 ios/xcodebuild.log
+ios/buildsettings.txt
 
 # Environment Variables
 .env

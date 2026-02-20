@@ -10,34 +10,12 @@ import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Qu
 
 const dummyBannerItems: BannerItem[] = [
   {
-    id: '1',
     image: require('@/assets/imgs/banner-sample.png'),
-    title: '사진 전문가 AI가 찾아드릴게요',
-    description: '누구에게 맡길 지 고민된다면,',
+    linkUri: 'snaplink://tab/home/ai-recommendation',
   },
   {
-    id: '2',
-    image: require('@/assets/imgs/banner-sample.png'),
-    title: '프로필 촬영',
-    description: '프로페셔널한 프로필 사진',
-  },
-  {
-    id: '3',
-    image: require('@/assets/imgs/banner-sample.png'),
-    title: '가족 사진',
-    description: '소중한 가족과 함께',
-  },
-  {
-    id: '4',
-    image: require('@/assets/imgs/banner-sample.png'),
-    title: '가족 사진',
-    description: '소중한 가족과 함께',
-  },
-  {
-    id: '5',
-    image: require('@/assets/imgs/banner-sample.png'),
-    title: '가족 사진',
-    description: '소중한 가족과 함께',
+    image: require('@/assets/imgs/banner-sample2.png'),
+    linkUri: 'https://www.snaplink.run/event-inquiry',
   },
 ];
 

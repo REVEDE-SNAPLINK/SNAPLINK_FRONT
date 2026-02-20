@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -10,6 +10,8 @@ import {
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/theme/Typography.tsx';
 import LinearGradient from 'react-native-linear-gradient';
+import { openUrl } from '@/utils/link.ts';
+import { navigateByDeepLink } from '@/navigation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -21,10 +23,8 @@ const SIDE_SPACING = 20;
 const AUTO_PLAY_INTERVAL = 3000;
 
 export type BannerItem = {
-  id: string;
   image: ImageSourcePropType;
-  title?: string;
-  description?: string;
+  linkUri?: string;
 };
 
 type BannerProps = {
@@ -132,27 +132,24 @@ export default function Banner({
   // Dot 인덱스 계산
   const actualDotIndex = items.length <= 1 ? 0 : (currentIndex - 1 + items.length) % items.length;
 
+  const handleBannerPress = useCallback((linkUri?: string) => {
+    if (!linkUri) return;
+
+    // snaplink:// 딥링크는 앱 내 네비게이션으로 처리
+    if (linkUri.startsWith('snaplink://') || linkUri.startsWith('https://link.snaplink.run')) {
+      navigateByDeepLink(linkUri);
+    } else {
+      // 외부 URL은 InAppBrowser로 열기
+      openUrl(linkUri);
+    }
+  }, []);
+
   const renderItem = ({ item, index }: { item: BannerItem; index: number }) => (
-    <BannerSlide key={`${item.id}-${index}`}>
+    <BannerSlide
+      key={`${index}`}
+      {...(item.linkUri ? { onPress: () => handleBannerPress(item.linkUri) } : {})}
+    >
       <BannerImage source={item.image} />
-      <BannerOverlay
-        colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, .24)', 'rgba(0, 0, 0, .7)']}
-        locations={[0, 0.29, 0.63]}
-      />
-      {(item.title || item.description) && (
-        <TextOverlay>
-          {item.description && (
-            <Typography fontSize={12} fontWeight="regular" letterSpacing={-0.4} color="#fff">
-              {item.description}
-            </Typography>
-          )}
-          {item.title && (
-            <Typography fontSize={17} fontWeight="bold" letterSpacing={-0.4} color="#fff">
-              {item.title}
-            </Typography>
-          )}
-        </TextOverlay>
-      )}
     </BannerSlide>
   );
 
@@ -231,7 +228,7 @@ const BannerContainer = styled.View`
   position: relative;
 `;
 
-const BannerSlide = styled.View`
+const BannerSlide = styled.Pressable`
   width: ${ITEM_WIDTH}px;
   height: ${ITEM_WIDTH}px;
   position: relative;

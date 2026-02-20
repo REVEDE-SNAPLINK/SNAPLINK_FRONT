@@ -18,6 +18,7 @@ interface PortfolioFormViewProps {
   photoURIs: UploadImageFile[];
   onRemoveImage: (index: number) => void;
   onAddImages: (images: UploadImageFile[]) => void;
+  onReorderImages: (images: UploadImageFile[]) => void;
   onPressBack: () => void;
   onPressSubmit: () => void;
   isSubmitDisabled: boolean;
@@ -31,11 +32,12 @@ export default function PortfolioFormView({
   photoURIs,
   onRemoveImage,
   onAddImages,
+  onReorderImages,
   onPressBack,
   onPressSubmit,
   isSubmitDisabled,
   isEditMode = false,
-  navigation,}: PortfolioFormViewProps) {
+  navigation, }: PortfolioFormViewProps) {
   return (
     <ScreenContainer
       headerShown
@@ -43,7 +45,7 @@ export default function PortfolioFormView({
       onPressBack={onPressBack}
       paddingHorizontal={40}
       iconSize={20}
-    
+
       navigation={navigation}>
       <Container>
         <KeyboardAwareScrollView
@@ -65,6 +67,7 @@ export default function PortfolioFormView({
               images={photoURIs}
               onRemoveImage={onRemoveImage}
               onAddImages={onAddImages}
+              onReorder={onReorderImages}
             />
             <Typography
               fontSize={16}

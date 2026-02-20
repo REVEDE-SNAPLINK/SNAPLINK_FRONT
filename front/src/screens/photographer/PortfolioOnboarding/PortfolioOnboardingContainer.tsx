@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import PortfolioOnboardingView, {
   PortfolioOnboardingFormData,
 } from '@/screens/photographer/PortfolioOnboarding/PortfolioOnboardingView.tsx';
@@ -177,7 +177,7 @@ export default function PortfolioOnboardingContainer() {
           // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
           return watchedShootingProductOptions.every(option => {
             const hasAnyValue = option.name.trim() !== '' ||
-                                option.price.trim() !== '';
+              option.price.trim() !== '';
 
             if (!hasAnyValue) {
               // 모든 필드가 비어있으면 유효 (입력하지 않음)
@@ -265,7 +265,7 @@ export default function PortfolioOnboardingContainer() {
         // 각 옵션에서 하나라도 값이 입력되면, time을 제외한 모든 필드가 필수
         return watchedShootingProductOptions.every(option => {
           const hasAnyValue = option.name.trim() !== '' ||
-                              option.price.trim() !== '';
+            option.price.trim() !== '';
 
           if (!hasAnyValue) {
             // 모든 필드가 비어있으면 유효 (입력하지 않음)
@@ -344,14 +344,16 @@ export default function PortfolioOnboardingContainer() {
         title: '포트폴리오 작성을 그만둘까요?',
         message: '변경된 내용은 저장되지 않아요.',
         buttons: [
-          { text: "취소", type: 'cancel', onPress: () => {} },
-          { text: "확인", onPress: () => {
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            } else {
-              navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+          { text: "취소", type: 'cancel', onPress: () => { } },
+          {
+            text: "확인", onPress: () => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+              }
             }
-          }},
+          },
         ]
       })
     } else {
@@ -364,14 +366,16 @@ export default function PortfolioOnboardingContainer() {
       title: '포트폴리오 작성을 그만둘까요?',
       message: '변경된 내용은 저장되지 않아요.',
       buttons: [
-        { text: "취소", type: 'cancel', onPress: () => {} },
-        { text: "확인", onPress: () => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          } else {
-            navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+        { text: "취소", type: 'cancel', onPress: () => { } },
+        {
+          text: "확인", onPress: () => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+            }
           }
-        }},
+        },
       ]
     })
   }
@@ -670,7 +674,7 @@ export default function PortfolioOnboardingContainer() {
           });
           return;
         }
-        if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
+        if (response.assets && response.assets[0] && response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           try {
             const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
               compressionMethod: 'auto',
@@ -719,7 +723,7 @@ export default function PortfolioOnboardingContainer() {
           });
           return;
         }
-        if (response.assets && response.assets[0] &&  response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
+        if (response.assets && response.assets[0] && response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           try {
             const compressedUri = await ImageCompressor.compress(response.assets[0].uri, {
               compressionMethod: 'auto',
@@ -778,6 +782,10 @@ export default function PortfolioOnboardingContainer() {
   const handleAddImages = useCallback(async (newImages: UploadImageFile[]) => {
     setPhotoURIs([...photoURIs, ...newImages]);
   }, [photoURIs]);
+
+  const handleReorderImages = useCallback((reorderedImages: UploadImageFile[]) => {
+    setPhotoURIs(reorderedImages);
+  }, []);
 
   const handleToggleRegion = useCallback((id: number) => {
     setValue(
@@ -840,6 +848,7 @@ export default function PortfolioOnboardingContainer() {
       photoURIs={photoURIs}
       onRemoveImage={handleRemoveImage}
       onAddImages={handleAddImages}
+      onReorderImages={handleReorderImages}
       regions={regions ?? []}
       tags={tags ?? []}
       concepts={concepts ?? []}

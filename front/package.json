@@ -1,6 +1,6 @@
 {
   "name": "snaplink",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -39,6 +39,7 @@
     "react-native-compressor": "^1.13.0",
     "react-native-config": "^1.6.1",
     "react-native-date-picker": "^5.0.13",
+    "react-native-draggable-flatlist": "^4.0.3",
     "react-native-fast-image": "^8.6.3",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.29.1",

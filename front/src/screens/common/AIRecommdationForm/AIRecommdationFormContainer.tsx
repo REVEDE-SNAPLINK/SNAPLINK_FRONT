@@ -57,7 +57,7 @@ export default function AIRecommdationFormContainer() {
           });
           return;
         }
-        if (response.assets && response.assets[0] && response.assets[0].uri && response.assets[0].fileName && response.assets[0].type ) {
+        if (response.assets && response.assets[0] && response.assets[0].uri && response.assets[0].fileName && response.assets[0].type) {
           setImage({
             uri: response.assets[0].uri!,
             name: generateImageFilename(response.assets[0].type, 'image'),

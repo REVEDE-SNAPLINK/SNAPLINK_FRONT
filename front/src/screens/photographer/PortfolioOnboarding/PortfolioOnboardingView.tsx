@@ -71,6 +71,7 @@ interface PortfolioOnboardingViewProps {
   photoURIs: UploadImageFile[];
   onRemoveImage: (index: number) => void;
   onAddImages: (images: UploadImageFile[]) => void;
+  onReorderImages: (images: UploadImageFile[]) => void;
   regions: GetRegionsResponse[];
   tags: Tag[];
   concepts: GetConceptsResponse[];
@@ -96,6 +97,7 @@ export default function PortfolioOnboardingView({
   photoURIs,
   onRemoveImage,
   onAddImages,
+  onReorderImages,
   regions,
   tags,
   concepts,
@@ -152,11 +154,12 @@ export default function PortfolioOnboardingView({
         );
       case 1:
         return (
-        <PortfolioOnboardingStep2
+          <PortfolioOnboardingStep2
             control={control}
             photoURIs={photoURIs}
             onRemoveImage={onRemoveImage}
             onAddImages={onAddImages}
+            onReorderImages={onReorderImages}
           />
         );
       case 2:
@@ -312,6 +315,7 @@ interface PortfolioOnboardingStep2Props {
   photoURIs: UploadImageFile[];
   onRemoveImage: (index: number) => void;
   onAddImages: (images: any[]) => void;
+  onReorderImages: (images: UploadImageFile[]) => void;
 }
 
 const PortfolioOnboardingStep2 = ({
@@ -319,6 +323,7 @@ const PortfolioOnboardingStep2 = ({
   photoURIs,
   onRemoveImage,
   onAddImages,
+  onReorderImages,
 }: PortfolioOnboardingStep2Props) => {
   // @ts-ignore
   const { handleAutoScrollOnFocus } = PortfolioOnboardingView as any;
@@ -342,6 +347,7 @@ const PortfolioOnboardingStep2 = ({
         images={photoURIs}
         onRemoveImage={onRemoveImage}
         onAddImages={onAddImages}
+        onReorder={onReorderImages}
       />
       <Typography
         fontSize={CAPTION_FONT_SIZE}
@@ -655,8 +661,8 @@ const PortfolioOnboardingStep6 = ({
                   options={['1시간', '2시간', '3시간', '4시간', '5시간', '6시간 이상']}
                   value={
                     currentHour === null ? undefined :
-                    currentHour >= 6 ? '6시간 이상' :
-                    `${currentHour}시간`
+                      currentHour >= 6 ? '6시간 이상' :
+                        `${currentHour}시간`
                   }
                   onChange={(hourStr) => {
                     const isLongDuration = hourStr === '6시간 이상';

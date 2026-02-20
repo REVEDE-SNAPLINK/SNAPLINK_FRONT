@@ -83,6 +83,10 @@ export default function PortfolioFormContainer() {
     setPhotoURIs([...photoURIs, ...newImages]);
   }, [photoURIs]);
 
+  const handleReorderImages = useCallback((reorderedImages: UploadImageFile[]) => {
+    setPhotoURIs(reorderedImages as ExtendedUploadImageFile[]);
+  }, []);
+
   const handleSubmitForm = handleSubmit(async (data) => {
     if (photoURIs.length === 0) {
       Alert.show({
@@ -110,10 +114,10 @@ export default function PortfolioFormContainer() {
       const currentPhotoIds = existingPhotos.map(photo => photo.photoId!);
       const deletePhotoIds = originalPhotoIds.filter(id => !currentPhotoIds.includes(id));
 
-      // 3. Build photoOrders for existing photos (based on current order)
-      const photoOrders = existingPhotos.map((photo, index) => ({
+      // 3. Build photoOrders for existing photos (based on current order in full array)
+      const photoOrders = existingPhotos.map((photo) => ({
         photoId: photo.photoId!,
-        sortOrder: index,
+        sortOrder: photoURIs.indexOf(photo),
       }));
 
       // 4. Build UpdatePortfolioPostRequest
@@ -200,6 +204,7 @@ export default function PortfolioFormContainer() {
       photoURIs={photoURIs}
       onRemoveImage={handleRemoveImage}
       onAddImages={handleAddImages}
+      onReorderImages={handleReorderImages}
       onPressBack={handlePressBack}
       onPressSubmit={handleSubmitForm}
       isSubmitDisabled={!isValid || isPending}

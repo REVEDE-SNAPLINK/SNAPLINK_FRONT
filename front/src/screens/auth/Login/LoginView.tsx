@@ -10,7 +10,7 @@ import { Platform } from 'react-native';
 // import Naver from '@/assets/icons/naver.svg';
 // import Google from '@/assets/icons/google.svg';
 
-const IS_REVIEW_MODE = false;
+const IS_REVIEW_MODE = true;
 
 type LoginViewProps = {
   onKakaoLogin: () => void;

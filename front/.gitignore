@@ -91,6 +91,7 @@ android/app/upload_certificate.pem
 build.log
 ios/xcodebuild.log
 ios/buildsettings.txt
+*.backup
 
 # Environment Variables
 .env

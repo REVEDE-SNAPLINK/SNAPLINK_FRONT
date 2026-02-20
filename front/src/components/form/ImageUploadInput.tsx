@@ -2,19 +2,28 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import Icon from '@/components/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross.svg';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { requestPermission } from '@/utils/permissions.ts';
 import { ImageLibraryOptions, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
 import { Alert, Typography } from '@/components/theme';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
 import ServerImage from '@/components/ServerImage.tsx';
-import { FlatList } from 'react-native';
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+} from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+type ListItem =
+  | { type: 'upload-button' }
+  | { type: 'image'; image: UploadImageFile; index: number };
 
 interface ImageUploadInputProps {
-  images: UploadImageFile[]; // string for existing photo URLs
+  images: UploadImageFile[];
   onRemoveImage: (index: number) => void;
   onAddImages: (newImages: UploadImageFile[]) => void;
+  onReorder?: (images: UploadImageFile[]) => void;
   maxLength?: number;
   width?: number;
 }
@@ -23,9 +32,11 @@ export default function ImageUploadInput({
   images,
   onRemoveImage,
   onAddImages,
+  onReorder,
   maxLength = 0,
   width,
 }: ImageUploadInputProps) {
+  const [listKey, setListKey] = useState(0);
   const handlePressUpload = useCallback(() => {
     if (maxLength > 0 && images.length >= maxLength) {
       Alert.show({
@@ -59,7 +70,6 @@ export default function ImageUploadInput({
           return;
         }
         if (response.assets && response.assets.length > 0) {
-
           const newImages = response.assets
             .filter(
               (asset): asset is UploadImageFile =>
@@ -77,58 +87,89 @@ export default function ImageUploadInput({
     );
   }, [maxLength, images.length, onAddImages]);
 
-  const renderItem = ({ item, index }: { item: UploadImageFile; index: number }) => {
-    console.log(index, item);
+  const showUploadButton = maxLength === 0 || images.length < maxLength;
 
-    return (
-      <ImageWrapper>
-        <Image uri={item.uri} />
-        <DeleteButton onPress={() => onRemoveImage(index)}>
-          <DeleteIconWrapper>
-            <Icon width={12} height={12} Svg={CrossWhiteIcon} />
-          </DeleteIconWrapper>
-        </DeleteButton>
-      </ImageWrapper>
-    );
-  };
+  const data: ListItem[] = [
+    ...(showUploadButton ? [{ type: 'upload-button' as const }] : []),
+    ...images.map((image, index) => ({
+      type: 'image' as const,
+      image,
+      index,
+    })),
+  ];
 
-  const renderUploadButton = () => {
-    if (maxLength > 0 && images.length >= maxLength) return null;
+  const handleDragEnd = useCallback(
+    ({ data: newData }: { data: ListItem[] }) => {
+      if (!onReorder) return;
 
-    return (
-      <UploadButton onPress={handlePressUpload}>
-        <Icon width={20} height={20} Svg={CrossIcon} />
-        {maxLength > 0 && (
-          <Typography fontSize={12} color="#C8C8C8" marginTop={14}>
-            {images.length} / {maxLength}
-          </Typography>
-        )}
-      </UploadButton>
-    );
-  };
+      // 업로드 버튼이 맨 앞이 아닌 경우 강제 리마운트하여 위치 복원
+      const uploadIdx = newData.findIndex((item) => item.type === 'upload-button');
+      if (uploadIdx > 0) {
+        setListKey((prev) => prev + 1);
+      }
 
-  const data = ['upload-button',...images];
+      const reorderedImages = newData
+        .filter((item): item is Extract<ListItem, { type: 'image' }> => item.type === 'image')
+        .map((item) => item.image);
+      onReorder(reorderedImages);
+    },
+    [onReorder],
+  );
+
+  const renderItem = useCallback(
+    ({ item, drag, isActive }: RenderItemParams<ListItem>) => {
+      if (item.type === 'upload-button') {
+        // 업로드 버튼: drag를 호출하지 않아 드래그 불가
+        return (
+          <UploadButton onPress={handlePressUpload}>
+            <Icon width={20} height={20} Svg={CrossIcon} />
+            {maxLength > 0 && (
+              <Typography fontSize={12} color="#C8C8C8" marginTop={14}>
+                {images.length} / {maxLength}
+              </Typography>
+            )}
+          </UploadButton>
+        );
+      }
+
+      return (
+        <ScaleDecorator>
+          <ImageWrapper
+            onLongPress={onReorder ? drag : undefined}
+            disabled={isActive}
+            style={isActive ? { opacity: 0.85 } : undefined}
+          >
+            <Image uri={item.image.uri} />
+            <DeleteButton onPress={() => onRemoveImage(item.index)}>
+              <DeleteIconWrapper>
+                <Icon width={12} height={12} Svg={CrossWhiteIcon} />
+              </DeleteIconWrapper>
+            </DeleteButton>
+          </ImageWrapper>
+        </ScaleDecorator>
+      );
+    },
+    [handlePressUpload, maxLength, images.length, onRemoveImage, onReorder],
+  );
 
   return (
     <Container width={width}>
-      <FlatList
-        data={data}
-        renderItem={({ item, index }) => {
-          if (typeof item === 'string' && item === 'upload-button') return renderUploadButton();
-
-          const realIndex = index - 1;
-          return renderItem({ item: item as UploadImageFile, index: realIndex });
-        }}
-        keyExtractor={(item, index) => {
-          if (item === 'upload-button') return 'upload-button';
-
-          const uri = typeof item === 'string' ? item : item.uri;
-          return `image-${uri}-${index}`;
-        }}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10 }}
-      />
+      <GestureHandlerRootView>
+        <DraggableFlatList
+          key={`draggable-list-${listKey}`}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item, idx) => {
+            if (item.type === 'upload-button') return 'upload-button';
+            return `image-${item.image.uri}-${idx}`;
+          }}
+          onDragEnd={handleDragEnd}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10 }}
+          activationDistance={5}
+        />
+      </GestureHandlerRootView>
     </Container>
   );
 }
@@ -137,7 +178,7 @@ const Container = styled.View<{ width?: number }>`
   width: ${({ width }) => (width !== undefined ? `${width}px` : '100%')};
 `;
 
-const ImageWrapper = styled.View`
+const ImageWrapper = styled.TouchableOpacity`
   width: 100px;
   height: 100px;
   position: relative;

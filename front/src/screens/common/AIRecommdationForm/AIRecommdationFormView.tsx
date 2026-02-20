@@ -3,7 +3,6 @@ import { SubmitButton, TextInput, Typography } from '@/components/theme';
 // import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
 import {
-  // Dimensions,
   Platform
 } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
@@ -22,7 +21,6 @@ interface AIRecommdationFormViewProps {
   navigation?: any;
 }
 
-// const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCREEN_PADDING = 33;
 
 export default function AIRecommdationFormView({
@@ -67,7 +65,7 @@ export default function AIRecommdationFormView({
           {/*  onAddImages={onAddImages}*/}
           {/*  maxLength={1}*/}
           {/*  width={337}*/}
-          {/*/>*/}
+          {/*/> */}
           <ImageUploadWrapper>
             {image === null ? (
               <ImageUploadInput onPress={onUploadImage}>
@@ -75,7 +73,7 @@ export default function AIRecommdationFormView({
               </ImageUploadInput>
             ) : (
               <UploadImageWrapper>
-                <UploadImage source={{ uri: image.uri }} />
+                <UploadImage source={{ uri: image.uri }} resizeMode="contain" />
                 <DeleteButton onPress={onRemoveImage}>
                   <DeleteIconWrapper>
                     <Icon width={12} height={12} Svg={CrossWhiteIcon} />
@@ -160,12 +158,10 @@ const ImageUploadInput = styled.TouchableOpacity`
 `
 
 const UploadImageWrapper = styled.View`
-  width: ${IMAGE_SIZE}px;
+  width: 100%;
   height: ${IMAGE_SIZE}px;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 5px;
 `
 
 const UploadImage = styled.Image`

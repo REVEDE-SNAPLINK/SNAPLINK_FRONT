@@ -177,7 +177,11 @@ export default function CommunityView({
               </LoadingIndicator>
             ) : null
           }
-          removeClippedSubviews={false}
+          removeClippedSubviews={true}
+          windowSize={5}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          updateCellsBatchingPeriod={50}
         />
       ) : (
         // 다른 카테고리는 기존 2열 그리드 방식
@@ -195,17 +199,13 @@ export default function CommunityView({
             return (
               <PostItem onPress={() => onPressPost(item.id)}>
                 {item.images?.length > 0 ? (
-                  <PostImage uri={item.images[0].urls} />
+                  <PostImage uri={item.images[0].urls} requestWidth={ITEM_WIDTH * 2} />
                 ) : (
                   <PostImage />
                 )}
                 <PostContent>
                   <PostHeader>
-                    {item.author.profileImageUrl ? (
-                      <PostWriterProfileImage uri={item.author.profileImageUrl} />
-                    ) : (
-                      <PostWriterProfileImage />
-                    )}
+                    <PostWriterProfileImage uri={item.author.profileImageUrl} requestWidth={40} />
                     <Typography
                       fontSize={12}
                       fontWeight="semiBold"
@@ -275,7 +275,11 @@ export default function CommunityView({
               </LoadingIndicator>
             ) : null
           }
-          removeClippedSubviews={false}
+          removeClippedSubviews={true}
+          windowSize={5}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          updateCellsBatchingPeriod={50}
         />
       )}
       {selectedCategory !== 'NEWS' && !isError &&
@@ -403,7 +407,7 @@ const PostHeader = styled.View`
   margin-bottom: 7px;
 `;
 
-const PostWriterProfileImage = styled(ServerImage)`
+const PostWriterProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 20px;
   height: 20px;
   border-radius: 20px;
@@ -522,7 +526,7 @@ const NewsItem = ({
           </Typography>
         </NewsItemInfoWrapper>
         <NewsItemImageWrapper>
-          <NewsItemImage uri={imageUri} />
+          <NewsItemImage uri={imageUri} requestWidth={140} />
         </NewsItemImageWrapper>
       </NewsItemContentWrapper>
       <NewsItemBottomWrapper>

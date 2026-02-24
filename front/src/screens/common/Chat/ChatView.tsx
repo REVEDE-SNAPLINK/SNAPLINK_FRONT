@@ -36,7 +36,7 @@ interface ChatViewProps {
 export default function ChatView({
   chatRooms,
   onPressChatRoom,
-}:  ChatViewProps) {
+}: ChatViewProps) {
   const hasChatRooms = chatRooms.length > 0;
 
   return (
@@ -136,7 +136,7 @@ const ChatProfileImageWrapper = styled.View`
   border-style: solid;
   border-color: #C8C8C8;
 `
-const ChatProfileImage = styled(ServerImage)`
+const ChatProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `

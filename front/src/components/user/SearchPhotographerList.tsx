@@ -9,8 +9,8 @@ import AIIcon from '@/assets/icons/ai-button-small.svg';
 import StarIcon from '@/assets/icons/star-review.svg';
 import ServerImage from '@/components/ServerImage.tsx';
 import { formatNumber } from '@/utils/format.ts';
-import { useState } from 'react';
-
+import { memo, useState, useCallback, useEffect } from 'react';
+import { InteractionManager } from 'react-native';
 interface SearchPhotographerListProps {
   photographers: PhotographerSearchItem[];
   onEndReached: () => void;
@@ -31,6 +31,15 @@ export default function SearchPhotographerList({
   isAIRecommendation = false,
 }: SearchPhotographerListProps) {
   const [localRefreshing, setLocalRefreshing] = useState(false);
+  const [isInteractionsComplete, setIsInteractionsComplete] = useState(false);
+
+  useEffect(() => {
+    // 네비게이션 애니메이션(탭 전환 등)이 끝난 후 FlatList 목록을 띄워 버벅임 해소
+    const interactionTask = InteractionManager.runAfterInteractions(() => {
+      setIsInteractionsComplete(true);
+    });
+    return () => interactionTask.cancel();
+  }, []);
 
   const handleRefresh = async () => {
     setLocalRefreshing(true);
@@ -44,12 +53,13 @@ export default function SearchPhotographerList({
   return (
     <FlatList
       testID="photographer-list"
-      data={photographers}
+      data={isInteractionsComplete ? photographers : []}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <SearchPhotographerItem
+      renderItem={({ item, index }) => (
+        <MemoizedSearchPhotographerItem
           photographer={item}
-          onPress={() => onPressItem(item.id)}
+          index={index}
+          onPress={onPressItem}
           aiRecommendationScore={aiRecommendationScore}
           isAIRecommendation={isAIRecommendation}
         />
@@ -73,13 +83,21 @@ export default function SearchPhotographerList({
 
 interface SearchPhotographerItemProps {
   photographer: PhotographerSearchItem;
-  onPress: () => void;
+  index: number;
+  onPress: (id: string) => void;
   aiRecommendationScore?: number;
   isAIRecommendation?: boolean;
 }
 
-export const SearchPhotographerItem = ({ photographer, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
+import FastImage from 'react-native-fast-image';
+
+export const SearchPhotographerItem = ({ photographer, index, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
   const genderLabel = photographer.gender === 'MALE' ? '남성작가' : '여성작가';
+
+  // onPress 함수 재생성을 막아 React.memo가 깨지지 않게 콜백 래핑
+  const handlePress = useCallback(() => {
+    onPress(photographer.id);
+  }, [onPress, photographer.id]);
 
   const baseHour = ~~(photographer.baseTime / 60);
   const baseMinute = photographer.baseTime % 60;
@@ -95,19 +113,27 @@ export const SearchPhotographerItem = ({ photographer, onPress, aiRecommendation
         </ResultCaption>
       )}
       {photographer.portfolioImages.length > 0 &&
-        <ScrollView
+        <FlatList
           horizontal
+          data={photographer.portfolioImages}
+          keyExtractor={(item, index) => `${photographer.id}-${index}`}
           showsHorizontalScrollIndicator={false}
           style={{ marginBottom: 5 }}
-        >
-          {photographer.portfolioImages.map((item, index) => (
-            <PhotofolioImageWrapper key={`${photographer.id}-${index}`}>
-              <PhotofolioImage uri={item} />
+          renderItem={({ item, index: photoIndex }) => (
+            <PhotofolioImageWrapper>
+              <PhotofolioImage
+                uri={item}
+                requestWidth={202}
+                priority={index < 2 && photoIndex === 0 ? FastImage.priority.high : (index > 4 ? FastImage.priority.low : FastImage.priority.normal)}
+              />
             </PhotofolioImageWrapper>
-          ))}
-        </ScrollView>
+          )}
+          windowSize={5}
+          initialNumToRender={3}
+          removeClippedSubviews={true}
+        />
       }
-      <Pressable onPress={onPress}>
+      <Pressable onPress={handlePress}>
         <PhotographerInfoWrapper>
           <Typography
             fontSize={12}
@@ -153,6 +179,16 @@ export const SearchPhotographerItem = ({ photographer, onPress, aiRecommendation
     </SearchPhotographerItemContainer>
   );
 };
+
+// React.memo를 사용해 부모가 리렌더되더라도 아이템 데이터가 같으면 아이템은 재렌더 안함
+export const MemoizedSearchPhotographerItem = memo(SearchPhotographerItem, (prevProps, nextProps) => {
+  return (
+    prevProps.photographer.id === nextProps.photographer.id &&
+    prevProps.index === nextProps.index &&
+    prevProps.aiRecommendationScore === nextProps.aiRecommendationScore &&
+    prevProps.isAIRecommendation === nextProps.isAIRecommendation
+  );
+});
 
 const SearchPhotographerItemContainer = styled.View`
   width: 100%;

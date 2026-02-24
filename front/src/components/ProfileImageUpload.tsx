@@ -36,7 +36,7 @@ const ProfileImageWrapper = styled.View<{ size: number }>`
   background-color: ${theme.colors.disabled};
 `;
 
-const ProfileImage = styled(ServerImage)`
+const ProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
   resize-mode: cover;

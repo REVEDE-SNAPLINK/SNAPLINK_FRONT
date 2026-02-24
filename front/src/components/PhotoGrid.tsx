@@ -70,7 +70,7 @@ export default function PhotoGrid({
             {useNativeImage ? (
               <Photo source={{ uri }} />
             ) : (
-              <ServerPhoto uri={uri} />
+              <ServerPhoto uri={uri} requestWidth={PHOTO_SIZE * 2} /> // 레티나 디스플레이 고려 2배수
             )}
           </ImageWrapper>
         );

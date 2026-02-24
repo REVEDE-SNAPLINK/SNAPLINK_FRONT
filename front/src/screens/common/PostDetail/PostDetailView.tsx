@@ -46,11 +46,11 @@ export default function PostDetailView({
   onSharePost,
   onEditPost,
   onDeletePost,
-  navigation,}: PostDetailViewProps) {
+  navigation, }: PostDetailViewProps) {
   if (isLoading) {
     return (
       <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}
-      navigation={navigation}>
+        navigation={navigation}>
         <LoadingSpinner visible={isLoading} />
       </ScreenContainer>
     );
@@ -60,9 +60,9 @@ export default function PostDetailView({
     return (
       <ScreenContainer headerShown headerTitle="포트폴리오" onPressBack={onPressBack}
         navigation={navigation}>
-          <Typography fontSize={16} color="#999">
-            포트폴리오를 불러올 수 없습니다.
-          </Typography>
+        <Typography fontSize={16} color="#999">
+          포트폴리오를 불러올 수 없습니다.
+        </Typography>
       </ScreenContainer>
     );
   }
@@ -73,8 +73,8 @@ export default function PostDetailView({
         headerShown={true}
         headerTitle="게시물"
         onPressBack={onPressBack}
-      
-      navigation={navigation}>
+
+        navigation={navigation}>
         <Container>
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Post Header */}
@@ -226,7 +226,7 @@ const ProfileImageWrapper = styled.View`
   background-color: #F4F4F4;
 `
 
-const ProfileImage = styled(ServerImage)`
+const ProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `;

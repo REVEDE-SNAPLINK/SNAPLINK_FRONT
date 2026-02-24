@@ -48,7 +48,7 @@ export default function ReviewsView({
   isFetchingNextPage,
   isRefreshing,
   isLoading,
-  navigation,}: ReviewsViewProps) {
+  navigation, }: ReviewsViewProps) {
   const renderStars = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -88,7 +88,7 @@ export default function ReviewsView({
                 onPress={onPressAllPhotos}
                 style={{ marginRight: index < 3 ? REVIEW_GRID_MARGIN : 0 }}
               >
-                <ReviewPreviewImage uri={key} />
+                <ReviewPreviewImage uri={key} requestWidth={REVIEW_PREVIEW_IMAGE_SIZE * 2} />
                 {reviewSummary.topPhotoKeys.length - 1 === index &&
                   <ShowAllPreviewButton onPress={onPressAllPhotos}>
                     <Typography
@@ -115,7 +115,8 @@ export default function ReviewsView({
       <ReviewItemHeader>
         <ReivewWriterProfileImageWrapper>
           <ReviewWriterProfileImage
-            {...(review.writerProfileKey ? { uri: review.writerProfileKey } :  {})}
+            {...(review.writerProfileKey ? { uri: review.writerProfileKey } : {})}
+            requestWidth={90}
           />
         </ReivewWriterProfileImageWrapper>
         <ReviewWriterInfoWrapper>
@@ -138,7 +139,7 @@ export default function ReviewsView({
       {review.photoKeys.length > 0 && (
         <ReviewImageWrapper horizontal showsHorizontalScrollIndicator={false}>
           {review.photoKeys.slice(0, 3).map((key, index) => (
-            <ReviewImage key={index} uri={key} />
+            <ReviewImage key={index} uri={key} requestWidth={200} />
           ))}
         </ReviewImageWrapper>
       )}
@@ -151,7 +152,7 @@ export default function ReviewsView({
   if (isLoading) {
     return (
       <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle={`리뷰 ${totalCount}`}
-      navigation={navigation}>
+        navigation={navigation}>
         <Loading />
       </ScreenContainer>
     );
@@ -174,6 +175,11 @@ export default function ReviewsView({
           ) : null
         }
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        windowSize={5}
+        initialNumToRender={6}
+        maxToRenderPerBatch={4}
+        updateCellsBatchingPeriod={50}
       />
     </ScreenContainer>
   );
@@ -241,7 +247,7 @@ const ReivewWriterProfileImageWrapper = styled.View`
   background-color: #e0e0e0;
 `
 
-const ReviewWriterProfileImage = styled(ServerImage)`
+const ReviewWriterProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `;

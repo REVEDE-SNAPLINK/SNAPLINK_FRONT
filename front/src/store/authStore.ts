@@ -550,7 +550,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             buttons: [
               {
                 text: '확인',
-                onPress: () => {},
+                onPress: () => { },
               },
             ],
           });
@@ -631,7 +631,7 @@ const safeRegisterFcmDevice = async () => {
           {
             text: '나중에',
             type: 'cancel',
-            onPress: () => {},
+            onPress: () => { },
           },
           {
             text: '설정 열기',

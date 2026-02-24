@@ -81,7 +81,7 @@ const ProfileImageWrapper = styled.View`
   background-color: #aaa;
 `;
 
-const ProfileImage = styled(ServerImage)`
+const ProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `;

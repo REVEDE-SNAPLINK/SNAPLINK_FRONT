@@ -9,7 +9,7 @@ import React from 'react';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { ScrollView } from 'react-native';
 import ServerImage from '@/components/ServerImage.tsx';
-import {MyReviewItem} from "@/api/reviews.ts";
+import { MyReviewItem } from "@/api/reviews.ts";
 
 interface MyReviewsViewProps {
   reviews: MyReviewItem[];
@@ -138,7 +138,7 @@ const ReviewWriterWrapper = styled.View`
   flex: 1;
 `;
 
-const ReviewWriterProfileImage = styled(ServerImage)`
+const ReviewWriterProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 45px;
   height: 45px;
   border-radius: 45px;

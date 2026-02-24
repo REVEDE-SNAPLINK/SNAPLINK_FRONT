@@ -471,7 +471,7 @@ export default function CommunityPostModal({
                     isServerImage={false}
                   />
                 ))}
-                <ImagePreviewScrollSpacer/>
+                <ImagePreviewScrollSpacer />
               </ImagePreviewScrollContainer>
             )}
             <ToolWrapper paddingBottom={inset.bottom + 10}>
@@ -791,7 +791,7 @@ const TaggedPhotographerProfileImageWrapper = styled.View`
   background-color: #aaa;
 `;
 
-const TaggedPhotographerProfileImage = styled(ServerImage)`
+const TaggedPhotographerProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `;

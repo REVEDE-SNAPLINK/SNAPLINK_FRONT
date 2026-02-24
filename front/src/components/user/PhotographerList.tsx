@@ -18,7 +18,7 @@ interface Props {
 
 const ITEM_MARGIN = 10;
 
-export default function PhotographerList ({
+export default function PhotographerList({
   items,
   marginTop,
   title,
@@ -81,7 +81,7 @@ const PhotographerListTitleWrapper = styled.TouchableOpacity`
   align-items: center;
 `
 
-const PhotographerListTitle = ({ title, onPress }: { title: string, onPress?:() => void }) => {
+const PhotographerListTitle = ({ title, onPress }: { title: string, onPress?: () => void }) => {
 
   const Title = useMemo(() => (
     <Typography
@@ -154,10 +154,10 @@ const PhotographerItem = ({
     <PhotographerItemWrapper width={width} onPress={() => onPress(item.id)} isLastItem={isLast}>
       <SampleSnapImageWrapper size={width}>
         {item.portfolioImages.length > 0 !== undefined ? (
-          <SampleSnapImage uri={item.portfolioImages[0]} />
+          <SampleSnapImage uri={item.portfolioImages[0]} requestWidth={width * 2} />
         ) : (
           <SampleSnapImage />
-          )
+        )
         }
       </SampleSnapImageWrapper>
       <Typography

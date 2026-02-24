@@ -287,7 +287,7 @@ export default function ChatDetailsView({
             keyExtractor={(item, index) =>
               String(
                 (item as any).messageId ??
-                  `${item.senderId}-${item.sentAt}-${index}`,
+                `${item.senderId}-${item.sentAt}-${index}`,
               )
             }
             renderItem={renderMessage}
@@ -685,7 +685,7 @@ const PartnerProfileImageWrapper = styled.Pressable`
   overflow: hidden;
 `
 
-const PartnerProfileImage = styled(ServerImage)`
+const PartnerProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `;

@@ -218,6 +218,8 @@ export default function PortfolioOnboardingView({
         <KeyboardAwareScrollView
           ref={scrollRef}
           enableOnAndroid
+          enableAutomaticScroll={false}
+          enableResetScrollToCoords={false}
           keyboardShouldPersistTaps="handled"
           extraScrollHeight={120}
           contentContainerStyle={{

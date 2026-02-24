@@ -537,12 +537,9 @@ export default function CommunityDetailsView({
             </PostHeaderRightWrapper>
           </PostHeader>
           <ContentHeader {...(post.isisPhotographer ? { onPress: onPressAuthor } : {})}>
-            {post.categoryLabel !== '스냅소식' &&
-              (post.author.profileImageUrl ? (
-                <WriterProfileImage uri={post.author.profileImageUrl} />
-              ) : (
-                <WriterProfileImage />
-              ))}
+            {post.categoryLabel !== '스냅소식' && (
+              <WriterProfileImage uri={post.author.profileImageUrl} requestWidth={80} />
+            )}
             <Typography
               fontSize={14}
               fontWeight="semiBold"
@@ -625,6 +622,7 @@ export default function CommunityDetailsView({
                   <CommentContentWrapper>
                     <CommentAuthorProfileImage
                       uri={comment.profileImageUrl || ''}
+                      requestWidth={64}
                     />
                     <CommentContent>
                       <Typography
@@ -873,7 +871,7 @@ export default function CommunityDetailsView({
             <TaggedPhotographerButton onPress={() => onChangeTaggedPhotographer(item.userId)}>
               <TaggedPhotographerInfo>
                 <TaggedPhotographerProfileImageWrapper>
-                  <TaggedPhotographerProfileImage uri={item.profileImageUrl} />
+                  <TaggedPhotographerProfileImage uri={item.profileImageUrl} requestWidth={100} />
                 </TaggedPhotographerProfileImageWrapper>
                 <Typography
                   fontSize={14}
@@ -911,7 +909,7 @@ export default function CommunityDetailsView({
           <TaggedPhotographerButton onPress={onPressTaggedPhotographer}>
             <TaggedPhotographerInfo>
               <TaggedPhotographerProfileImageWrapper>
-                <TaggedPhotographerProfileImage uri={taggedPhotographer.profileImageUrl} />
+                <TaggedPhotographerProfileImage uri={taggedPhotographer.profileImageUrl} requestWidth={100} />
               </TaggedPhotographerProfileImageWrapper>
               <Typography
                 fontSize={14}
@@ -1054,7 +1052,7 @@ const TagButton = styled.Pressable`
   margin-right: 5px;
 `
 
-const WriterProfileImage = styled(ServerImage)`
+const WriterProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 40px;
   height: 40px;
   border-radius: 40px;
@@ -1100,7 +1098,7 @@ const CommentContentWrapper = styled.View`
   position: relative;
 `
 
-const CommentAuthorProfileImage = styled(ServerImage)`
+const CommentAuthorProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 32px;
   height: 32px;
   border-radius: 32px;
@@ -1219,7 +1217,7 @@ const TaggedPhotographerProfileImageWrapper = styled.View`
   background-color: #aaa;
 `
 
-const TaggedPhotographerProfileImage = styled(ServerImage)`
+const TaggedPhotographerProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `

@@ -33,7 +33,7 @@ export default function ReviewDetailsView({
   isEditable,
   onPressEdit,
   onPressDelete,
-  navigation,}: ReviewDetailsViewProps) {
+  navigation, }: ReviewDetailsViewProps) {
   if (!review) {
     return <ScreenContainer onPressBack={onPressBack} headerShown={true} headerTitle="리뷰"
       navigation={navigation}>{null}</ScreenContainer>;
@@ -136,7 +136,7 @@ const ReviewWriterProfileImageWrapper = styled.View`
   background-color: #e0e0e0;
 `
 
-const ReviewWriterProfileImage = styled(ServerImage)`
+const ReviewWriterProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `

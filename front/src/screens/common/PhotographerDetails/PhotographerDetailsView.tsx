@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FlatList,
   Dimensions,
+  InteractionManager,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/common/ScreenContainer';
@@ -143,10 +144,19 @@ export default function PhotographerDetailsView({
   navigation,
 }: PhotographerDetailsViewProps) {
   const insets = useSafeAreaInsets();
+  const [isInteractionsComplete, setIsInteractionsComplete] = useState(false);
+
+  useEffect(() => {
+    // 화면 전환(Navigation Transition) 부하 최소화: 애니메이션 종료 후 렌더링 시작
+    const interactionTask = InteractionManager.runAfterInteractions(() => {
+      setIsInteractionsComplete(true);
+    });
+    return () => interactionTask.cancel();
+  }, []);
 
   const renderPortfolioItem = ({ item }: { item: PhotographerPortfolioThumb }) => (
     <PortfolioImageWrapper onPress={() => onPressPortfolioImage(item.id)}>
-      <PortfolioImage uri={item.thumbnailUrl} />
+      <PortfolioImage uri={item.thumbnailUrl} requestWidth={IMAGE_SIZE * 2} />
     </PortfolioImageWrapper>
   );
 
@@ -163,9 +173,7 @@ export default function PhotographerDetailsView({
       <>
         <DefaultInfoWrapper>
           <ProfileImageWrapper>
-            {photographer.profileImageUrl && (
-              <ProfileImage uri={photographer.profileImageUrl} />
-            )}
+            <ProfileImage uri={photographer.profileImageUrl} requestWidth={176} />
           </ProfileImageWrapper>
           <ProfileInfoWrapper>
             <NameWrapper>
@@ -267,16 +275,6 @@ export default function PhotographerDetailsView({
                   <Icon width={20} height={20} Svg={TickSquareIcon} />
                 </PhotographerPortfolioRow>
               )}
-              {shootingOptions.length > 0 && (
-                <PhotographerPortfolioRow>
-                  <Typography
-                    fontSize={12}
-                  >
-                    {shootingOptions.join(', ')}
-                  </Typography>
-                  <Icon width={20} height={20} Svg={TickSquareIcon} />
-                </PhotographerPortfolioRow>
-              )}
               {shootingData.editingType !== 'NONE' && (
                 <PhotographerPortfolioRow>
                   <Typography
@@ -347,7 +345,7 @@ export default function PhotographerDetailsView({
                   key={index}
                   style={[index % 4 !== 3 && { 'marginRight': REVIEW_GRID_MARGIN }]}
                 >
-                  <ReviewPreviewImage uri={imageUrl} />
+                  <ReviewPreviewImage uri={imageUrl} requestWidth={REVIEW_PREVIEW_IMAGE_SIZE * 2} />
                   {isLastItem && (
                     <ShowAllPreviewButton onPress={onPressShowAllReviewPhotos}>
                       <Typography
@@ -369,7 +367,7 @@ export default function PhotographerDetailsView({
         {reviews.map((review) => (
           <ReviewWrapper key={review.id}>
             <ReviewImageWrapper>
-              <ReviewImage uri={review.imageUrl} />
+              <ReviewImage uri={review.imageUrl} requestWidth={200} />
             </ReviewImageWrapper>
             <ReviewContent>
               <ReviewContentText
@@ -441,241 +439,250 @@ export default function PhotographerDetailsView({
       >
 
         <ContentContainer>
-        {activeTab === 'portfolio' ? (
-          <>
-            <FlatList
-              key="portfolio-list"
-              data={portfolioImages}
-              renderItem={renderPortfolioItem}
-              keyExtractor={(item) => item.id.toString()}
-              numColumns={GRID_COLUMNS}
-              ListHeaderComponent={renderHeader}
-              ListFooterComponent={renderFooter}
-              onEndReached={onEndReached}
-              onEndReachedThreshold={0.5}
-              onScroll={onScroll}
-              showsVerticalScrollIndicator={false}
-              columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: HORIZONTAL_PADDING }}
-              contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
-            />
-          </>
-        ) : (
-          <>
-            <FlatList
-              key="reviews-list"
-              data={[]}
-              renderItem={() => null}
-              ListHeaderComponent={renderHeader}
-              ListEmptyComponent={renderReviewsContent}
-              onScroll={onScroll}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 93 + insets.bottom }}
-            />
-          </>
-        )}
-      </ContentContainer>
+          {activeTab === 'portfolio' ? (
+            <>
+              <FlatList
+                key="portfolio-list"
+                data={isInteractionsComplete ? portfolioImages : []}
+                renderItem={renderPortfolioItem}
+                keyExtractor={(item) => item.id.toString()}
+                numColumns={GRID_COLUMNS}
+                ListHeaderComponent={renderHeader}
+                ListFooterComponent={renderFooter}
+                onEndReached={onEndReached}
+                onEndReachedThreshold={0.5}
+                onScroll={onScroll}
+                showsVerticalScrollIndicator={false}
+                columnWrapperStyle={{ gap: GRID_MARGIN, paddingHorizontal: HORIZONTAL_PADDING }}
+                contentContainerStyle={{ gap: GRID_MARGIN, paddingBottom: 93 + insets.bottom }}
+                removeClippedSubviews={true}
+                windowSize={5}
+                initialNumToRender={12}
+                maxToRenderPerBatch={6}
+                updateCellsBatchingPeriod={50}
+              />
+            </>
+          ) : (
+            <>
+              <FlatList
+                key="reviews-list"
+                data={[]}
+                renderItem={() => null}
+                ListHeaderComponent={renderHeader}
+                ListEmptyComponent={renderReviewsContent}
+                onScroll={onScroll}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 93 + insets.bottom }}
+                removeClippedSubviews={true}
+                windowSize={5}
+                initialNumToRender={5}
+                maxToRenderPerBatch={4}
+              />
+            </>
+          )}
+        </ContentContainer>
 
-      {/* Bottom Action Buttons */}
-      <BottomActionContainer>
-        {activeTab === 'portfolio' ? (
-          <>
-            {
-              isPhotographer ?
-                isMyProfile &&
+        {/* Bottom Action Buttons */}
+        <BottomActionContainer>
+          {activeTab === 'portfolio' ? (
+            <>
+              {
+                isPhotographer ?
+                  isMyProfile &&
                   (
                     <FloatingButton onPress={onPressAddPortfolio}>
-                    <Icon width={20} height={20} Svg={CrossIcon} />
+                      <Icon width={20} height={20} Svg={CrossIcon} />
                     </FloatingButton>
                   )
-                : !isMyProfile && (
-                <>
-                  <ActionButton
-                    onPress={onPressFavorite}
-                    backgroundColor={isScrapped ? theme.colors.primary : '#C8C8C8'}
-                  >
-                    <Icon width={24} height={24} Svg={BookmarkIcon} />
-                  </ActionButton>
-                  <ActionButton onPress={onPressInquiry}>
-                    <Icon width={24} height={24} Svg={ChatIcon} />
-                  </ActionButton>
-                  <SubmitButton text="예약하기" onPress={onPressReservation} />
-                </>
-              )
-            }
+                  : !isMyProfile && (
+                    <>
+                      <ActionButton
+                        onPress={onPressFavorite}
+                        backgroundColor={isScrapped ? theme.colors.primary : '#C8C8C8'}
+                      >
+                        <Icon width={24} height={24} Svg={BookmarkIcon} />
+                      </ActionButton>
+                      <ActionButton onPress={onPressInquiry}>
+                        <Icon width={24} height={24} Svg={ChatIcon} />
+                      </ActionButton>
+                      <SubmitButton text="예약하기" onPress={onPressReservation} />
+                    </>
+                  )
+              }
+            </>
+          ) : (
+            <ShowReviewButton onPress={onPressShowAllReviews}>
+              <Typography
+                fontSize={14}
+                fontWeight="bold"
+                letterSpacing="-2.5%"
+                color={theme.colors.primary}
+              >
+                후기 전체 보기
+              </Typography>
+            </ShowReviewButton>
+          )}
+        </BottomActionContainer>
+      </ScreenContainer>
+
+      <SlideModal
+        visible={isMoreModalVisible}
+        onClose={onCloseMoreModal}
+        title="더보기"
+        minHeight={276}
+        headerAlign="center"
+        scrollable={false}
+      >
+        <ModalButton onPress={() => {
+          onCloseMoreModal();
+          onPressProfileInfo();
+        }}>
+          <Icon width={18} height={18} Svg={DocumentIcon} />
+          <Typography
+            fontSize={14}
+            lineHeight="140%"
+            letterSpacing="-2.5%"
+            marginLeft={8}
+          >
+            프로필 정보
+          </Typography>
+        </ModalButton>
+        {isMyProfile ? (
+          <>
+            <ModalButton onPress={() => {
+              onCloseMoreModal();
+              onPressEditProfile();
+            }}>
+              <Icon width={18} height={18} Svg={EditIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                프로필 수정
+              </Typography>
+            </ModalButton>
+            <ModalButton onPress={() => {
+              onCloseMoreModal();
+              onPressEditConceptTag();
+            }}>
+              <Icon width={18} height={18} Svg={EditIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                촬영 컨셉 및 키워드 수정
+              </Typography>
+            </ModalButton>
+            <ModalButton onPress={() => {
+              onCloseMoreModal();
+              onPressEditRegion();
+            }}>
+              <Icon width={18} height={18} Svg={LocationIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                촬영 지역 수정
+              </Typography>
+            </ModalButton>
           </>
         ) : (
-          <ShowReviewButton onPress={onPressShowAllReviews}>
-            <Typography
-              fontSize={14}
-              fontWeight="bold"
-              letterSpacing="-2.5%"
-              color={theme.colors.primary}
-            >
-              후기 전체 보기
-            </Typography>
-          </ShowReviewButton>
+          <>
+            <ModalButton onPress={() => {
+              onCloseMoreModal();
+              onPressReportStart();
+            }}>
+              <Icon width={18} height={18} Svg={DangerCircleIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                신고하기
+              </Typography>
+            </ModalButton>
+          </>
         )}
-      </BottomActionContainer>
-    </ScreenContainer>
-
-    <SlideModal
-      visible={isMoreModalVisible}
-      onClose={onCloseMoreModal}
-      title="더보기"
-      minHeight={276}
-      headerAlign="center"
-      scrollable={false}
-    >
-      <ModalButton onPress={() => {
-        onCloseMoreModal();
-        onPressProfileInfo();
-      }}>
-        <Icon width={18} height={18} Svg={DocumentIcon} />
-        <Typography
-          fontSize={14}
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          marginLeft={8}
-        >
-          프로필 정보
-        </Typography>
-      </ModalButton>
-      {isMyProfile ? (
-        <>
-          <ModalButton onPress={() => {
-            onCloseMoreModal();
-            onPressEditProfile();
-          }}>
-            <Icon width={18} height={18} Svg={EditIcon} />
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginLeft={8}
-            >
-              프로필 수정
-            </Typography>
-          </ModalButton>
-          <ModalButton onPress={() => {
-            onCloseMoreModal();
-            onPressEditConceptTag();
-          }}>
-            <Icon width={18} height={18} Svg={EditIcon} />
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginLeft={8}
-            >
-              촬영 컨셉 및 키워드 수정
-            </Typography>
-          </ModalButton>
-          <ModalButton onPress={() => {
-            onCloseMoreModal();
-            onPressEditRegion();
-          }}>
-            <Icon width={18} height={18} Svg={LocationIcon} />
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginLeft={8}
-            >
-              촬영 지역 수정
-            </Typography>
-          </ModalButton>
-        </>
-      ) : (
-        <>
-          <ModalButton onPress={() => {
-            onCloseMoreModal();
-            onPressReportStart();
-          }}>
-            <Icon width={18} height={18} Svg={DangerCircleIcon} />
-            <Typography
-              fontSize={14}
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              marginLeft={8}
-            >
-              신고하기
-            </Typography>
-          </ModalButton>
-        </>
-      )}
-    </SlideModal>
+      </SlideModal>
 
 
-    <SlideModal
-      visible={isProfileInfoModalVisible}
-      onClose={onCloseProfileInfoModal}
-      minHeight={300}
-      showHeader={false}
-      scrollable={false}
-    >
-      <ProfileInfoSection>
-        <Typography
-          fontSize={16}
-          fontWeight="semiBold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          marginBottom={10}
-        >
-          촬영 지역
-        </Typography>
-        <ProfileInfoContent>
+      <SlideModal
+        visible={isProfileInfoModalVisible}
+        onClose={onCloseProfileInfoModal}
+        minHeight={300}
+        showHeader={false}
+        scrollable={false}
+      >
+        <ProfileInfoSection>
           <Typography
-            fontSize={14}
+            fontSize={16}
+            fontWeight="semiBold"
             lineHeight="140%"
             letterSpacing="-2.5%"
+            marginBottom={10}
           >
-            {profileInfoData.regions.join(', ')}
+            촬영 지역
           </Typography>
-        </ProfileInfoContent>
-      </ProfileInfoSection>
-      <ProfileInfoSection>
-        <Typography
-          fontSize={16}
-          fontWeight="semiBold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          marginBottom={10}
-        >
-          촬영 키워드
-        </Typography>
-        <ProfileInfoContent>
+          <ProfileInfoContent>
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+            >
+              {profileInfoData.regions.join(', ')}
+            </Typography>
+          </ProfileInfoContent>
+        </ProfileInfoSection>
+        <ProfileInfoSection>
           <Typography
-            fontSize={14}
+            fontSize={16}
+            fontWeight="semiBold"
             lineHeight="140%"
             letterSpacing="-2.5%"
+            marginBottom={10}
           >
-            {profileInfoData.tags.join(', ')}
+            촬영 키워드
           </Typography>
-        </ProfileInfoContent>
-      </ProfileInfoSection>
-      <ProfileInfoSection>
-        <Typography
-          fontSize={16}
-          fontWeight="semiBold"
-          lineHeight="140%"
-          letterSpacing="-2.5%"
-          marginBottom={10}
-        >
-          촬영 컨셉
-        </Typography>
-        <ProfileInfoContent>
+          <ProfileInfoContent>
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+            >
+              {profileInfoData.tags.join(', ')}
+            </Typography>
+          </ProfileInfoContent>
+        </ProfileInfoSection>
+        <ProfileInfoSection>
           <Typography
-            fontSize={14}
+            fontSize={16}
+            fontWeight="semiBold"
             lineHeight="140%"
             letterSpacing="-2.5%"
+            marginBottom={10}
           >
-            {profileInfoData.concepts.join(', ')}
+            촬영 컨셉
           </Typography>
-        </ProfileInfoContent>
-      </ProfileInfoSection>
-    </SlideModal>
+          <ProfileInfoContent>
+            <Typography
+              fontSize={14}
+              lineHeight="140%"
+              letterSpacing="-2.5%"
+            >
+              {profileInfoData.concepts.join(', ')}
+            </Typography>
+          </ProfileInfoContent>
+        </ProfileInfoSection>
+      </SlideModal>
 
-  </>
+    </>
   );
 }
 
@@ -699,7 +706,7 @@ const ProfileImageWrapper = styled.View`
   background-color: #F4F4F4;
 `;
 
-const ProfileImage = styled(ServerImage)`
+const ProfileImage = styled(ServerImage).attrs({ type: 'profile' })`
   width: 100%;
   height: 100%;
 `;

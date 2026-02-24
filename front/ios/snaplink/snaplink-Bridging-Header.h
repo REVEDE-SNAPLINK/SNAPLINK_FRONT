@@ -6,6 +6,7 @@
 //
 
 #import <React/RCTBridgeModule.h>
+#import <Expo/Expo.h>
 #import <React/RCTBridge.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTRootView.h>

@@ -32,3 +32,4 @@ allprojects {
         maven { url "$rootDir/../node_modules/@notifee/react-native/android/libs" }
     }
 }
+apply plugin: "expo-root-project"

@@ -12,6 +12,7 @@ export interface GetMeResponse {
   name: string;
   email: string;
   profileImageURI: string;
+  role: "USER" | "PHOTOGRAPHER"
 }
 
 /** PATCH /api/user/me body */

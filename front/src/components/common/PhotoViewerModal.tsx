@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { Modal, FlatList, Dimensions } from 'react-native';
+import { Modal, Dimensions } from 'react-native';
+import { LegendList } from '@legendapp/list';
 import styled from '@/utils/scale/CustomStyled';
 import ServerImage from '@/components/ServerImage';
 import Icon from '@/components/Icon';
@@ -27,7 +28,7 @@ export default function PhotoViewerModal({
   onLoadMore,
   isLoading = false,
 }: PhotoViewerModalProps) {
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<any>(null);
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function PhotoViewerModal({
           <Icon width={24} height={24} Svg={CrossIcon} />
         </CloseButton>
 
-        <FlatList
+        <LegendList
           ref={flatListRef}
           data={photos}
           keyExtractor={(item, index) => `${item}-${index}`}
@@ -103,17 +104,9 @@ export default function PhotoViewerModal({
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          getItemLayout={(data, index) => ({
-            length: SCREEN_WIDTH,
-            offset: SCREEN_WIDTH * index,
-            index,
-          })}
-          onScrollToIndexFailed={(info) => {
-            const wait = new Promise((resolve) => setTimeout(resolve, 500));
-            wait.then(() => {
-              flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
-            });
-          }}
+          estimatedItemSize={SCREEN_WIDTH}
+          recycleItems={true}
+          drawDistance={SCREEN_WIDTH * 2}
         />
 
         {currentIndex > 0 && (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Platform, Animated, Dimensions, FlatList, View, BackHandler } from 'react-native';
+import { Platform, Animated, Dimensions, View, BackHandler } from 'react-native';
+import { LegendList } from '@legendapp/list';
 import styled from '@/utils/scale/CustomStyled.ts';
 import IconButton from '@/components/IconButton.tsx';
 import CancelIcon from '@/assets/icons/cancel.svg';
@@ -515,7 +516,7 @@ export default function CommunityPostModal({
             <Typography fontSize={18}>취소</Typography>
           </CancelSearchButton>
         </SearchHeaderWrapper>
-        <FlatList
+        <LegendList
           data={searchedPhotographers}
           keyExtractor={(item) => item.userId}
           renderItem={({ item }) => (
@@ -541,6 +542,9 @@ export default function CommunityPostModal({
               </View>
             ) : null
           }
+          estimatedItemSize={80}
+          recycleItems={true}
+          drawDistance={160}
         />
       </SlideModal>
     </>

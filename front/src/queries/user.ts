@@ -2,11 +2,27 @@ import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { userQueryKeys } from '@/queries/keys';
 import { getMe, getNotificationSettings, searchUsersFromNickname } from '@/api/user';
 import { GetPageable } from '@/api/photographers';
+import { useAuthStore } from '@/store/authStore';
+import { saveUserType } from '@/auth/tokenStore';
 
 export const useMeQuery = () =>
   useQuery({
     queryKey: userQueryKeys.me(),
-    queryFn: getMe,
+    queryFn: async () => {
+      const data = await getMe();
+      if (data.role) {
+        const fetchedUserType = data.role === 'PHOTOGRAPHER' ? 'photographer' : 'user';
+        const { userType, setUserType } = useAuthStore.getState();
+        if (userType !== fetchedUserType) {
+          setUserType(fetchedUserType);
+          saveUserType(fetchedUserType);
+          if (fetchedUserType === 'photographer') {
+            useAuthStore.setState({ isExpertMode: true });
+          }
+        }
+      }
+      return data;
+    },
     staleTime: 1000 * 30,
   });
 

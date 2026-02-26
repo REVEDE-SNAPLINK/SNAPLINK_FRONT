@@ -2,19 +2,21 @@ import LoginView from './LoginView';
 import { useAuthStore } from '@/store/authStore';
 import { showSimpleErrorAlert } from '@/utils/error';
 import { Platform } from 'react-native';
+import remoteConfig from '@react-native-firebase/remote-config';
+import { useEffect, useState } from 'react';
 
 // 테스트 계정 ID (플랫폼별 구분)
 const TEST_ACCOUNT_IDS = {
   ios: {
-    test1: 'ios-test-account-111',
-    test2: 'ios-test-account-22',
+    test1: 'ios-test-account-1',
+    test2: 'ios-test-account-2',
   },
   android: {
     test1: 'android-test-account-1',
     test2: 'android-test-account-2',
   },
 };
-// 2cfc64221039787cfdbc4755cba1ead237eaf3b1
+
 /**
  * 사용자가 로그인을 취소한 경우인지 확인
  * - Kakao: 메시지에 'cancel' 포함 또는 특정 에러 코드
@@ -36,6 +38,28 @@ const isLoginCanceled = (error: any): boolean => {
 
 export default function LoginContainer() {
   const { signInWithKakao, signInWithApple, signInWithTestAccount } = useAuthStore();
+  const [isReviewMode, setIsReviewMode] = useState(false);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+
+        await remoteConfig().setConfigSettings({
+          minimumFetchIntervalMillis: 0,
+        });
+
+        await remoteConfig().fetchAndActivate();
+
+        const value = remoteConfig().getValue('is_review_mode').asBoolean();
+        console.log(value);
+        setIsReviewMode(value);
+      } catch (e) {
+        console.error('Remote config fetch failed', e);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   const handleKakaoLogin = async () => {
     try {
@@ -79,6 +103,7 @@ export default function LoginContainer() {
 
   return (
     <LoginView
+      isReviewMode={isReviewMode}
       onKakaoLogin={handleKakaoLogin}
       onTest1Login={handleTest1Login}
       onTest2Login={handleTest2Login}

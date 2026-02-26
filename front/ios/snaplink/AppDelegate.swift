@@ -47,7 +47,7 @@ class AppDelegate: ExpoAppDelegate, UNUserNotificationCenterDelegate {
   }
 
   // APNs 토큰 등록 성공
-  func application(
+  override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
@@ -57,7 +57,7 @@ class AppDelegate: ExpoAppDelegate, UNUserNotificationCenterDelegate {
   }
 
   // APNs 토큰 등록 실패
-  func application(
+  override func application(
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {

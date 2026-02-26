@@ -10,9 +10,8 @@ import { Platform } from 'react-native';
 // import Naver from '@/assets/icons/naver.svg';
 // import Google from '@/assets/icons/google.svg';
 
-const IS_REVIEW_MODE = false;
-
 type LoginViewProps = {
+  isReviewMode: boolean;
   onKakaoLogin: () => void;
   onTest1Login: () => void;
   onTest2Login: () => void;
@@ -22,6 +21,7 @@ type LoginViewProps = {
 }
 
 export default function LoginView({
+  isReviewMode,
   onKakaoLogin,
   onTest1Login,
   onTest2Login,
@@ -46,7 +46,7 @@ export default function LoginView({
 
       <SocialLoginContainer>
         {/* 테스트 계정 버튼 */}
-        {IS_REVIEW_MODE && (
+        {isReviewMode && (
           <>
             <SocialLoginButton
               backgroundColor="#FEE500"

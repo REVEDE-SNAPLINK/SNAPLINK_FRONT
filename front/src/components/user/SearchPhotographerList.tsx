@@ -3,7 +3,8 @@ import Typography from '@/components/theme/Typography.tsx';
 import Icon from '@/components/Icon.tsx';
 import { theme } from '@/theme';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import { FlatList, RefreshControl, ScrollView, Pressable } from 'react-native';
+import { RefreshControl, ScrollView, Pressable } from 'react-native';
+import { LegendList } from '@legendapp/list';
 import Loading from '@/components/Loading.tsx';
 import AIIcon from '@/assets/icons/ai-button-small.svg';
 import StarIcon from '@/assets/icons/star-review.svg';
@@ -51,7 +52,7 @@ export default function SearchPhotographerList({
   };
 
   return (
-    <FlatList
+    <LegendList
       testID="photographer-list"
       data={isInteractionsComplete ? photographers : []}
       keyExtractor={(item) => item.id}
@@ -76,7 +77,9 @@ export default function SearchPhotographerList({
       }
       ItemSeparatorComponent={ItemSeparator}
       showsVerticalScrollIndicator={false}
-      removeClippedSubviews={false}
+      estimatedItemSize={250}
+      recycleItems={true}
+      drawDistance={800}
     />
   );
 }
@@ -89,7 +92,6 @@ interface SearchPhotographerItemProps {
   isAIRecommendation?: boolean;
 }
 
-import FastImage from 'react-native-fast-image';
 
 export const SearchPhotographerItem = ({ photographer, index, onPress, aiRecommendationScore, isAIRecommendation = false }: SearchPhotographerItemProps) => {
   const genderLabel = photographer.gender === 'MALE' ? '남성작가' : '여성작가';
@@ -113,24 +115,27 @@ export const SearchPhotographerItem = ({ photographer, index, onPress, aiRecomme
         </ResultCaption>
       )}
       {photographer.portfolioImages.length > 0 &&
-        <FlatList
+        <LegendList
           horizontal
           data={photographer.portfolioImages}
           keyExtractor={(item, index) => `${photographer.id}-${index}`}
           showsHorizontalScrollIndicator={false}
           style={{ marginBottom: 5 }}
           renderItem={({ item, index: photoIndex }) => (
-            <PhotofolioImageWrapper>
-              <PhotofolioImage
-                uri={item}
-                requestWidth={202}
-                priority={index < 2 && photoIndex === 0 ? FastImage.priority.high : (index > 4 ? FastImage.priority.low : FastImage.priority.normal)}
-              />
-            </PhotofolioImageWrapper>
+            <Pressable onPress={handlePress}>
+              <PhotofolioImageWrapper>
+                <PhotofolioImage
+                  uri={item}
+                  requestWidth={202}
+                  priority={index < 2 && photoIndex === 0 ? 'high' : (index > 4 ? 'low' : 'normal')}
+                  recyclingKey={item}
+                />
+              </PhotofolioImageWrapper>
+            </Pressable>
           )}
-          windowSize={5}
-          initialNumToRender={3}
-          removeClippedSubviews={true}
+          estimatedItemSize={202}
+          recycleItems={true}
+          drawDistance={400}
         />
       }
       <Pressable onPress={handlePress}>

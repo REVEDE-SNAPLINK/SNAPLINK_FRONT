@@ -1,19 +1,20 @@
-import { Image, ImageProps } from 'react-native';
-import FastImage, { FastImageProps, Priority, ResizeMode } from 'react-native-fast-image';
+import { Image as ExpoImage, ImageProps as ExpoImageProps, ImageContentFit } from 'expo-image';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 
 const DefaultProfileImage = require('@/assets/imgs/default_profile.png');
 
-interface ServerImageProps extends Omit<ImageProps, 'source' | 'resizeMode'> {
+interface ServerImageProps extends Omit<ExpoImageProps, 'source'> {
   uri?: string;
-  priority?: Priority;
-  resizeMode?: ResizeMode;
+  priority?: 'low' | 'normal' | 'high';
+  /** legacy react-native-fast-image prop mapping */
+  resizeMode?: 'contain' | 'cover' | 'stretch' | 'center' | 'repeat';
   /**
    * CloudFront 이미지 리사이저 요청용 width 파라미터
    * 예) width가 400이면 ?w=400 파라미터를 추가하여 썸네일로 가져옴
    */
   requestWidth?: number;
   type?: 'profile' | 'default';
+  recyclingKey?: string;
 }
 
 /**
@@ -38,25 +39,35 @@ const isFullUrl = (uri: unknown): boolean => {
   return uri.startsWith('http://') || uri.startsWith('https://');
 };
 
+const mapResizeModeToContentFit = (resizeMode?: string): ImageContentFit => {
+  if (resizeMode === 'contain') return 'contain';
+  if (resizeMode === 'stretch') return 'fill';
+  if (resizeMode === 'center') return 'none';
+  return 'cover';
+};
+
 export default function ServerImage({
   uri,
-  priority = FastImage.priority.normal,
-  resizeMode = FastImage.resizeMode.cover,
+  priority = 'normal',
+  resizeMode = 'cover',
   requestWidth,
   type = 'default',
+  recyclingKey,
   ...rest
 }: ServerImageProps) {
+  const contentFit = rest.contentFit || mapResizeModeToContentFit(resizeMode);
+
   // uri가 string이 아니면 placeholder
   if (typeof uri !== 'string' || uri.trim() === '') {
     if (type === 'profile') {
-      return <Image {...rest} source={DefaultProfileImage} />;
+      return <ExpoImage {...rest} source={DefaultProfileImage} contentFit={contentFit} recyclingKey={recyclingKey} />;
     }
-    return <Image {...rest} />;
+    return <ExpoImage {...rest} contentFit={contentFit} recyclingKey={recyclingKey} />;
   }
 
-  // 로컬 파일은 기본 Image 사용 (FastImage는 로컬 파일 지원 제한적)
+  // 로컬 파일 (expo-image 지원)
   if (isLocalUri(uri)) {
-    return <Image {...rest} source={{ uri }} />;
+    return <ExpoImage {...rest} source={{ uri }} contentFit={contentFit} recyclingKey={recyclingKey} />;
   }
 
   let imageUri = isFullUrl(uri) ? uri : CLOUDFRONT_BASE_URL + uri;
@@ -70,14 +81,14 @@ export default function ServerImage({
   }
 
   return (
-    <FastImage
-      {...(rest as Omit<FastImageProps, 'source'>)}
-      source={{
-        uri: imageUri,
-        priority,
-        cache: FastImage.cacheControl.immutable,
-      }}
-      resizeMode={resizeMode}
+    <ExpoImage
+      {...rest}
+      source={{ uri: imageUri }}
+      priority={priority}
+      cachePolicy="memory-disk"
+      contentFit={contentFit}
+      transition={200}
+      recyclingKey={recyclingKey}
     />
   );
 }

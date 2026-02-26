@@ -81,12 +81,10 @@ export default function ProfileImageUpload({
     <UploadProfileButtonWrapper marginTop={marginTop} marginBottom={marginBottom}>
       <UploadProfileButton size={size} onPress={onPress}>
         <ProfileImageWrapper size={size}>
-          {imageURI && (
-            useNativeImage ? (
-              <LocalProfileImage source={{ uri: imageURI }} />
-            ) : (
-              <ProfileImage uri={imageURI} />
-            )
+          {useNativeImage && imageURI ? (
+            <LocalProfileImage source={{ uri: imageURI }} />
+          ) : (
+            <ProfileImage uri={imageURI} />
           )}
         </ProfileImageWrapper>
         <UploadProfileIconWrapper>

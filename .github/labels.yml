@@ -30,10 +30,6 @@
   color: 0075ca
   description: 문서 수정 또는 README, 주석 개선
 
-- name: good first issue
-  color: 7057ff
-  description: 초보자에게 적합한 이슈
-
 - name: discussion
   color: cfd3d7
   description: 아이디어, 토론 또는 기획 관련

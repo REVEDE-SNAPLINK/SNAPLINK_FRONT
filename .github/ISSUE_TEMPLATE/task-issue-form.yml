@@ -17,7 +17,7 @@ body:
     attributes:
       label: '상위 에픽 (Ticket Number)'
       description: '선택 입력: 에픽에 연결하려면 Ticket Number를 입력하세요. 비워두면 Task만 생성됩니다.'
-      placeholder: '예) KAN-123'
+      placeholder: '예) SNP-123'
     validations:
       required: false
 

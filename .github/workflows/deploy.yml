@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       deploy_type: ${{ steps.decide.outputs.deploy_type }}
+      has_front_changes: ${{ steps.changes.outputs.has_front_changes }}
       has_native_ios: ${{ steps.changes.outputs.has_native_ios }}
       has_native_android: ${{ steps.changes.outputs.has_native_android }}
       target_version: ${{ steps.version.outputs.target_version }}
@@ -62,12 +63,24 @@ jobs:
 
           if [ -z "$BASE_SHA" ]; then
             echo "⚠️ Cannot determine base SHA, assuming native changes"
+            echo "has_front_changes=true" >> $GITHUB_OUTPUT
             echo "has_native_ios=true" >> $GITHUB_OUTPUT
             echo "has_native_android=true" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "📍 Comparing $BASE_SHA..HEAD"
+
+          # front/ 폴더 전체 변경 감지 (게이트)
+          FRONT_CHANGES=$(git diff --name-only "$BASE_SHA" HEAD -- 'front/' | head -5)
+          if [ -n "$FRONT_CHANGES" ]; then
+            echo "📂 Changes detected in front/:"
+            echo "$FRONT_CHANGES"
+            echo "has_front_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️ No changes in front/ directory"
+            echo "has_front_changes=false" >> $GITHUB_OUTPUT
+          fi
 
           # iOS native 변경 감지
           IOS_CHANGES=$(git diff --name-only "$BASE_SHA" HEAD -- \
@@ -159,6 +172,7 @@ jobs:
         id: decide
         run: |
           MANUAL_TYPE="${{ github.event.inputs.deploy_type }}"
+          HAS_FRONT_CHANGES="${{ steps.changes.outputs.has_front_changes }}"
           HAS_NATIVE_IOS="${{ steps.changes.outputs.has_native_ios }}"
           HAS_NATIVE_ANDROID="${{ steps.changes.outputs.has_native_android }}"
           REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded || 'false' }}"
@@ -167,6 +181,13 @@ jobs:
           if [ "$MANUAL_TYPE" == "native" ] || [ "$MANUAL_TYPE" == "ota" ] || [ "$MANUAL_TYPE" == "promote" ]; then
             echo "deploy_type=$MANUAL_TYPE" >> $GITHUB_OUTPUT
             echo "🎯 Manual deploy type: $MANUAL_TYPE"
+            exit 0
+          fi
+
+          # front/ 폴더에 변경이 없으면 배포 스킵
+          if [ "$HAS_FRONT_CHANGES" == "false" ]; then
+            echo "deploy_type=skip" >> $GITHUB_OUTPUT
+            echo "⏭️ No changes in front/ — skipping deployment"
             exit 0
           fi
 
@@ -188,7 +209,7 @@ jobs:
   quality:
     name: Code Quality Check
     needs: detect
-    if: needs.detect.outputs.deploy_type != 'promote'
+    if: needs.detect.outputs.deploy_type != 'promote' && needs.detect.outputs.deploy_type != 'skip'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -218,7 +239,7 @@ jobs:
   deploy-ios:
     name: iOS Deploy (${{ needs.detect.outputs.deploy_type }})
     needs: [detect, quality]
-    if: always() && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote')
+    if: always() && needs.detect.outputs.deploy_type != 'skip' && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote')
     runs-on: macos-14
     timeout-minutes: 60
     defaults:
@@ -344,7 +365,7 @@ jobs:
   deploy-android:
     name: Android Deploy (${{ needs.detect.outputs.deploy_type }})
     needs: [detect, quality]
-    if: always() && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote')
+    if: always() && needs.detect.outputs.deploy_type != 'skip' && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:

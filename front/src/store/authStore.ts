@@ -24,6 +24,7 @@ import crashlytics from '@react-native-firebase/crashlytics';
 import { updateNotificationSettings } from '@/api/user.ts';
 import { Alert } from '@/components/theme';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
+import NaverLogin from '@react-native-seoul/naver-login';
 
 let isRefreshing = false;
 let refreshPromise: Promise<any> | null = null;
@@ -51,6 +52,7 @@ type AuthState = {
   bootstrap: () => Promise<void>;
   signInWithKakao: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithApple: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signInWithNaver: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE' | 'APPLE', token: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithTestAccount: (testId: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signUpWithTestAccount: (formData: SignUpFormData) => Promise<void>;
@@ -167,10 +169,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('Kakao Login failed: No accessToken');
       }
 
+      console.log(response);
+
       return await get().signInWithProviderToken('KAKAO', response.accessToken);
     } catch (e) {
       set({ status: 'anon' });
       console.error('signInWithKakaoCode error:', e);
+      throw e;
+    }
+  },
+
+  async signInWithNaver(): Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'> {
+    set({ status: 'loading' });
+    try {
+      const { successResponse, failureResponse } = await NaverLogin.login();
+
+      if (failureResponse) {
+        throw new Error(`Naver Login failed: ${failureResponse.message}`);
+      }
+
+      if (!successResponse?.accessToken) {
+        throw new Error('Naver Login failed: No accessToken');
+      }
+
+      return await get().signInWithProviderToken('NAVER', successResponse.accessToken);
+    } catch (e) {
+      set({ status: 'anon' });
+      console.error('signInWithNaver error:', e);
       throw e;
     }
   },

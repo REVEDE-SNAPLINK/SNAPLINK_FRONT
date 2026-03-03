@@ -7,7 +7,7 @@ import Logo from '@/assets/imgs/logo.svg';
 import Kakao from '@/assets/icons/kakao.svg';
 import Apple from '@/assets/icons/apple.svg';
 import { Platform } from 'react-native';
-// import Naver from '@/assets/icons/naver.svg';
+import Naver from '@/assets/icons/naver.svg';
 // import Google from '@/assets/icons/google.svg';
 
 type LoginViewProps = {
@@ -16,7 +16,7 @@ type LoginViewProps = {
   onTest1Login: () => void;
   onTest2Login: () => void;
   onAppleLogin: () => void;
-  // onNaverLogin: () => void;
+  onNaverLogin: () => void;
   // onGoogleLogin: () => void;
 }
 
@@ -26,7 +26,7 @@ export default function LoginView({
   onTest1Login,
   onTest2Login,
   onAppleLogin,
-  // onNaverLogin,
+  onNaverLogin,
   // onGoogleLogin,
 }: LoginViewProps) {
   return (
@@ -77,13 +77,14 @@ export default function LoginView({
             onPress={onAppleLogin}
           />
         }
+        <SocialLoginButton
+          backgroundColor='#03C75A'
+          textColor="#fff"
+          Icon={Naver}
+          text='네이버'
+          onPress={onNaverLogin}
+        />
         {/* TODO: 비즈니스 문제로 추후 추가 */}
-        {/*<SocialLoginButton*/}
-        {/*  backgroundColor='#03C75A'*/}
-        {/*  textColor="#fff"*/}
-        {/*  Icon={Naver}*/}
-        {/*  text='네이버'*/}
-        {/*  onPress={onNaverLogin}*/}
         {/*/>*/}
         {/*<SocialLoginButton*/}
         {/*  backgroundColor='#EAEAEA'*/}

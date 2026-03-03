@@ -57,6 +57,11 @@
 	<string>QN75OU4FgYz6H2LL8f-Fm4HsBQ9I41oeY35L7x</string>
 	<key>CodePushServerUrl</key>
 	<string>https://api.revopush.org</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>naversearchapp</string>
+		<string>naversearchthirdlogin</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -105,10 +110,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>naversearchapp</string>
-		<string>naversearchthirdlogin</string>
-	</array>
 </dict>
 </plist>

@@ -114,15 +114,15 @@ export const SearchPhotographerItem = ({ photographer, index, onPress, aiRecomme
           </Typography>
         </ResultCaption>
       )}
-      {photographer.portfolioImages.length > 0 &&
-        <LegendList
+      {photographer.portfolioImages.length > 0 && (
+        <ScrollView
           horizontal
-          data={photographer.portfolioImages}
-          keyExtractor={(item, index) => `${photographer.id}-${index}`}
           showsHorizontalScrollIndicator={false}
           style={{ marginBottom: 5 }}
-          renderItem={({ item, index: photoIndex }) => (
-            <Pressable onPress={handlePress}>
+          contentContainerStyle={{ paddingRight: 20 }}
+        >
+          {photographer.portfolioImages.map((item, photoIndex) => (
+            <Pressable key={`${photographer.id}-${photoIndex}`} onPress={handlePress}>
               <PhotofolioImageWrapper>
                 <PhotofolioImage
                   uri={item}
@@ -132,12 +132,9 @@ export const SearchPhotographerItem = ({ photographer, index, onPress, aiRecomme
                 />
               </PhotofolioImageWrapper>
             </Pressable>
-          )}
-          estimatedItemSize={202}
-          recycleItems={true}
-          drawDistance={400}
-        />
-      }
+          ))}
+        </ScrollView>
+      )}
       <Pressable onPress={handlePress}>
         <PhotographerInfoWrapper>
           <Typography

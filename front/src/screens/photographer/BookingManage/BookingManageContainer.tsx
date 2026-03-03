@@ -2,7 +2,7 @@ import { useState } from 'react';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import BookingManageView from '@/screens/photographer/BookingManage/BookingManageView.tsx';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { usePhotographerBookingsInfiniteQuery } from '@/queries/bookings.ts';
 import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/bookings.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';

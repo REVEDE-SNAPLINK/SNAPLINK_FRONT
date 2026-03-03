@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { FlatList, ActivityIndicator } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import { Typography } from '@/components/theme';
-import Icon from '@/components/Icon';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import { Typography } from '@/components/ui';
+import Icon from '@/components/ui/Icon';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
 import dayjs from 'dayjs';
 import { useNoticesInfiniteQuery, useNoticeDetailQuery } from '@/queries/notices';

@@ -19,7 +19,7 @@ import {
   useUpdatePostMutation,
   useDeletePostMutation,
 } from '@/mutations/community.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import analytics from '@react-native-firebase/analytics';
 import { usePhotographerProfileQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';

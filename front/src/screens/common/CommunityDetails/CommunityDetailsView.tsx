@@ -1,5 +1,5 @@
 import { RefObject, useState, useRef, useCallback, createContext, useContext } from 'react';
-import BackButton from '@/components/common/BackButton';
+import BackButton from '@/components/layout/BackButton';
 import styled from '@/utils/scale/CustomStyled.ts';
 import {
   Dimensions,
@@ -10,9 +10,9 @@ import {
   View,
   FlatList,
 } from 'react-native';
-import IconButton from '@/components/IconButton.tsx';
+import IconButton from '@/components/ui/IconButton.tsx';
 import UploadIcon from '@/assets/icons/upload-white.svg';
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 import HeartIcon from '@/assets/icons/heart-black.svg';
 import HeartRedIcon from '@/assets/icons/heart-red.svg';
 import ChatIcon from '@/assets/icons/chat-blank-black.svg';
@@ -21,14 +21,14 @@ import MoreIcon from '@/assets/icons/more.svg';
 import SendIcon from '@/assets/icons/send.svg';
 import { theme } from '@/theme';
 import { Comment, CommunityPost, CommunityPostImage } from '@/api/community.ts';
-import ServerImage from '@/components/ServerImage.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
 import LinearGradient from 'react-native-linear-gradient';
 import ArrowLeftIcon from '@/assets/icons/arrow-left-white.svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import SlideModal from '@/components/theme/SlideModal.tsx';
+import SlideModal from '@/components/ui/SlideModal.tsx';
 import { GetPhotographerProfileResponse } from '@/api/photographers.ts';
 import AddTagIcon from '@/assets/icons/add-tag.svg';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import SearchIcon from '@/assets/icons/search-white.svg';
 import { GetSearchUserResponse } from '@/api/user.ts';
 import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';

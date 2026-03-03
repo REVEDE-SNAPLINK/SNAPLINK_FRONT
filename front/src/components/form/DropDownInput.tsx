@@ -13,7 +13,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from '
 import styled from '@/utils/scale/CustomStyled.ts';
 import FormErrorMessage from '@/components/form/FormErrorMessage.tsx';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import { theme } from '@/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {

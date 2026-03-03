@@ -1,7 +1,7 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import WriteReviewView from '@/screens/user/WriteReview/WriteReviewView.tsx';
 import { useState, useCallback } from 'react';
-import { Alert } from '@/components/theme/Alert';
+import { Alert } from '@/components/ui/Alert';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { useCreateReservationReviewMutation, useUpdateReviewMutation } from '@/mutations/reviews.ts';

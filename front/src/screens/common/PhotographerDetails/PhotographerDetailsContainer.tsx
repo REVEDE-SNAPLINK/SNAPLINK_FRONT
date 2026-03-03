@@ -17,7 +17,7 @@ import { chatQueryKeys } from '@/queries/keys.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
 import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { Share } from 'react-native';
 import { useUpdatePhotographerProfileMutation } from '@/mutations/photographers';
 import { REASON, reportUser } from '@/api/reports.ts';

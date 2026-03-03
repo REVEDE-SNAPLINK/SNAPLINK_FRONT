@@ -6,11 +6,11 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Checkbox from '@/components/theme/Checkbox';
+import Checkbox from '@/components/ui/Checkbox';
 import { GetConceptsResponse } from '@/api/concepts.ts';
 
 export interface Tag {

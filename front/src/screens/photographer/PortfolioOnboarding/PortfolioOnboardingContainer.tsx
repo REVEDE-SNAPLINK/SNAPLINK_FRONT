@@ -12,7 +12,7 @@ import {
   useSignPhotographerMutation,
 } from '@/mutations/photographers.ts';
 import { usePatchUserProfileImageMutation } from '@/mutations/user.ts';
-import { Alert, requestPermission } from '@/components/theme';
+import { Alert, requestPermission } from '@/components/ui';
 import {
   CameraOptions,
   ImageLibraryOptions,
@@ -23,7 +23,7 @@ import {
 import { Image as ImageCompressor } from 'react-native-compressor';
 import { generateImageFilename } from '@/utils/format.ts';
 import { DayOfWeek, PhotographerScheduleItem, UploadImageFile } from '@/api/photographers.ts';
-import { isLocalUri } from '@/components/ServerImage.tsx';
+import { isLocalUri } from '@/components/ui/ServerImage.tsx';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords.ts';
 
 const TOTAL_STEPS = 9;

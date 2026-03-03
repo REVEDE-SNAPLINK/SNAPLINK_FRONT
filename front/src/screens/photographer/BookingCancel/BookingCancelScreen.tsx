@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton, Typography, TextInput, Alert } from '@/components/theme';
+import { SubmitButton, Typography, TextInput, Alert } from '@/components/ui';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useCancelBookingMutation } from '@/mutations/bookings.ts';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';

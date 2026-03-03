@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';

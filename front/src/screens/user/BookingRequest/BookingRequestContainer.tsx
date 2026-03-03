@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useCreateBookingMutation } from '@/mutations/bookings.ts';
 import { useEffect, useRef } from 'react';
 import { showErrorAlert } from '@/utils/error';

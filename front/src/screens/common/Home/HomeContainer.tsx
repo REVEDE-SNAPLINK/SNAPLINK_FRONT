@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import analytics from '@react-native-firebase/analytics';
 import HomeView from '@/screens/common/Home/HomeView.tsx';
-import { BannerItem } from '@/components/user/Banner.tsx';
+import { BannerItem } from '@/components/domain/home/Banner.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import SignupCompletionModal from '@/components/auth/SignupCompletionModal.tsx';
+import SignupCompletionModal from '@/components/domain/auth/SignupCompletionModal.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Query } from '@/queries/photographers.ts';
 

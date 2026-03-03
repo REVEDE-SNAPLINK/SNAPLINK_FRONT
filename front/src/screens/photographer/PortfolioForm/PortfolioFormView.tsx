@@ -1,10 +1,10 @@
 import { Control, Controller } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import { SubmitButton, Typography } from '@/components/theme';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
 import ImageUploadInput from '@/components/form/ImageUploadInput';
-import { TextInput } from '@/components/theme';
-import Checkbox from '@/components/theme/Checkbox';
+import { TextInput } from '@/components/ui';
+import Checkbox from '@/components/ui/Checkbox';
 import { UploadImageFile } from '@/api/photographers';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 

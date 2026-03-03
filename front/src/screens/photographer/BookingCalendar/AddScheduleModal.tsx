@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Platform, Animated, Dimensions, BackHandler } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
-import IconButton from '@/components/IconButton';
+import IconButton from '@/components/ui/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
 import TimeCircleIcon from '@/assets/icons/time-circle.svg';
 import DocumentIcon from '@/assets/icons/document.svg';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
-import Icon from '@/components/Icon';
-import { Typography, Alert } from '@/components/theme';
-import PrimaryToggleButton from '@/components/theme/PrimaryToggleButton';
+import Icon from '@/components/ui/Icon';
+import { Typography, Alert } from '@/components/ui';
+import PrimaryToggleButton from '@/components/ui/PrimaryToggleButton';
 import DatePicker from 'react-native-date-picker';
 import { theme } from '@/theme';
 import { PersonalSchedule, ScheduleType } from '@/store/modalStore';

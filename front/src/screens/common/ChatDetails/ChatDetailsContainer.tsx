@@ -10,7 +10,7 @@ import { chatQueryKeys } from '@/queries/keys';
 import { ChatMessage } from '@/api/chat';
 import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
 import { requestPermission } from '@/utils/permissions';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { pick } from '@react-native-documents/picker';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';

@@ -10,7 +10,7 @@ import {
   checkNotifications,
   NotificationOption,
 } from 'react-native-permissions';
-import { Alert } from '@/components/theme/Alert';
+import { Alert } from '@/components/ui/Alert';
 import {
   PermissionType,
   PERMISSION_MESSAGES,

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import UserViewPhotosView from '@/screens/user/ViewPhotos/UserViewPhotosView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useBookingPhotosQuery } from '@/queries/bookings.ts';
 import { BookingPhoto } from '@/api/bookings.ts';

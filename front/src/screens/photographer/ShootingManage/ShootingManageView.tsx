@@ -1,13 +1,13 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 import MoreIcon from '@/assets/icons/more.svg'
-import IconButton from '@/components/IconButton.tsx';
+import IconButton from '@/components/ui/IconButton.tsx';
 import { formatNumber } from '@/utils/format.ts';
 import { useState } from 'react';
-import SlideModal from '@/components/theme/SlideModal.tsx';
+import SlideModal from '@/components/ui/SlideModal.tsx';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg'
 import {
   EditingDeadline,

@@ -1,9 +1,9 @@
 import { useMemo, useRef } from 'react';
 import { Control, Controller, useWatch } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled.ts';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import { SubmitButton, Typography } from '@/components/theme';
-import Checkbox from '@/components/theme/Checkbox';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import Checkbox from '@/components/ui/Checkbox';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 

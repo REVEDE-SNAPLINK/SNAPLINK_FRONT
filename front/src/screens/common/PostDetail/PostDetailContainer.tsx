@@ -5,7 +5,7 @@ import PostDetailView from './PostDetailView';
 import { usePortfolioPostQuery } from '@/queries/photographers';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useDeletePortfolioMutation } from '@/mutations/photographers';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
 
 import analytics from '@react-native-firebase/analytics';

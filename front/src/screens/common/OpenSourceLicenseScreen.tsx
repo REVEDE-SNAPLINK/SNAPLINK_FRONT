@@ -1,6 +1,6 @@
 import { FlatList, Text, View } from 'react-native';
 import rawLicenses from '@/assets/licenses.json';
-import ScreenContainer from '@/components/common/ScreenContainer.tsx';
+import ScreenContainer from '@/components/layout/ScreenContainer.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 

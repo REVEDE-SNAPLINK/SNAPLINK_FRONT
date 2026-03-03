@@ -2,11 +2,11 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import ReviewDetailsView from '@/screens/common/ReviewDetails/ReviewDetailsView.tsx';
 import { useDeleteReviewMutation } from '@/mutations/reviews.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { MyReviewItem } from '@/api/reviews.ts';
 import { showErrorAlert } from '@/utils/error';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
-import Loading from '@/components/Loading.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
 
 type ReviewDetailsRouteProp = RouteProp<MainStackParamList, 'ReviewDetails'>;
 

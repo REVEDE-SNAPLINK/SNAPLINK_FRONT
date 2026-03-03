@@ -1,9 +1,9 @@
 import styled from '@/utils/scale/CustomStyled';
-import { Typography } from '@/components/theme';
-import ServerImage from '@/components/ServerImage';
+import { Typography } from '@/components/ui';
+import ServerImage from '@/components/ui/ServerImage';
 import { ChatRoomItem } from '@/api/chat';
 import { formatTimeAgo } from '@/utils/format';
-import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
+import HeaderWithBackButton from '@/components/layout/HeaderWithBackButton.tsx';
 
 // 마지막 메시지 타입에 따른 표시 텍스트 변환
 const formatLastMessage = (message: string | undefined): string => {

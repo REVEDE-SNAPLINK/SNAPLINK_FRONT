@@ -1,5 +1,5 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
-import { SubmitButton, TextInput, Typography } from '@/components/theme';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import { SubmitButton, TextInput, Typography } from '@/components/ui';
 // import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
 import {
@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import CrossIcon from '@/assets/icons/cross.svg';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
 
 interface AIRecommdationFormViewProps {

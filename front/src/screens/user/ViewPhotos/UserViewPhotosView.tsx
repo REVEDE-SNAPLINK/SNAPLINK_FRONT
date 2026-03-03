@@ -1,12 +1,12 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
-import Typography from '@/components/theme/Typography.tsx';
+import Typography from '@/components/ui/Typography.tsx';
 import FolderIcon from '@/assets/icons/folder.svg';
 import DownloadIcon from '@/assets/icons/download.svg';
-import Icon from '@/components/Icon.tsx';
-import PhotoGrid from '@/components/PhotoGrid.tsx';
-import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import Icon from '@/components/ui/Icon.tsx';
+import PhotoGrid from '@/components/media/PhotoGrid.tsx';
+import LoadingSpinner from '@/components/feedback/LoadingSpinner.tsx';
 import { Dimensions } from 'react-native';
 import { BookingZip } from '@/api/bookings.ts';
 

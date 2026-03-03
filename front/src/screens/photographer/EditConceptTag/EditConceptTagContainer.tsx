@@ -3,7 +3,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import EditConceptTagView from '@/screens/photographer/EditConceptTag/EditConceptTagView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useConceptsQuery, useTagsQuery } from '@/queries/meta.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 
 type EditConceptTagRouteProp = RouteProp<MainStackParamList, 'EditConceptTag'>;
 

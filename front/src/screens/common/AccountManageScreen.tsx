@@ -1,12 +1,12 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg';
 import { useAuthStore } from '@/store/authStore.ts';
-import { Alert, Typography } from '@/components/theme';
+import { Alert, Typography } from '@/components/ui';
 import { usePhotographerStatusQuery } from '@/queries/photographers.ts';
 import { useActivePhotographerMutation, useInactivePhotographerMutation } from '@/mutations/photographers.ts';
 import { showErrorAlert } from '@/utils/error';

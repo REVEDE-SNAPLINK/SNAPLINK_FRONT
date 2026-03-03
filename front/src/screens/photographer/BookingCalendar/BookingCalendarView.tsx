@@ -3,11 +3,11 @@ import {
   ScheduleCalendarGrid,
   EnhancedScheduleData,
   MonthPicker,
-} from '@/components/ScheduleCalendar.tsx';
+} from '@/components/domain/booking/ScheduleCalendar.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetPhotographerDayDetailResponse } from '@/api/schedules';
 import { formatTime } from '@/utils/format.ts';

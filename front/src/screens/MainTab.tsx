@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { StatusBar, View } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
-import BottomNavigation, { TabItem } from '@/components/navigation/BottomNavigation';
+import BottomNavigation, { TabItem } from '@/components/layout/BottomNavigation';
 import HomeContainer from '@/screens/common/Home/HomeContainer';
 import CommunityContainer from '@/screens/common/Community/CommunityContainer';
 import BookmarksContainer from '@/screens/user/Bookmarks/BookmarksContainer.tsx';

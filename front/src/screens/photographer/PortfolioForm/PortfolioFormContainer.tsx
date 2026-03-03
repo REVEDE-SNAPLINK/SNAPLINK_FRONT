@@ -4,7 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import PortfolioFormView, { PortfolioFormData } from './PortfolioFormView';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
 import { useCreatePortfolioMutation, useUpdatePortfolioMutation } from '@/mutations/photographers';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { UploadImageFile } from '@/api/photographers';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
 import { usePortfolioPostQuery } from '@/queries/photographers';

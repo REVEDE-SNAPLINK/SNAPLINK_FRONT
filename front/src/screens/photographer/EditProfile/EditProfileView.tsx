@@ -1,12 +1,12 @@
 import React from 'react';
 import { Control, Controller } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import TextInput from '@/components/theme/TextInput.tsx';
-import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
+import TextInput from '@/components/ui/TextInput.tsx';
+import ProfileImageUpload from '@/components/media/ProfileImageUpload.tsx';
 
 export interface EditProfileFormData {
   description: string;

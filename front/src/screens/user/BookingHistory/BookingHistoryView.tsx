@@ -1,9 +1,9 @@
 import { FlatList, RefreshControl } from 'react-native';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import HistoryCard from '@/components/common/HistoryCard';
-import Typography from '@/components/theme/Typography.tsx';
-import Loading from '@/components/Loading.tsx';
+import HistoryCard from '@/components/domain/history/HistoryCard';
+import Typography from '@/components/ui/Typography.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
 import { theme } from '@/theme';
 import { formatReservationDateTime } from '@/utils/format';
 import { UserBookingListItem } from '@/api/bookings.ts';

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation';
 import BlockManageView from './BlockManageView';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useBlocksQuery } from '@/queries/block';
 import { useUnblockUserMutation } from '@/mutations/block';
 

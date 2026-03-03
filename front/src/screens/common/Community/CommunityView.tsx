@@ -1,18 +1,18 @@
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
-import Typography from '@/components/theme/Typography.tsx';
+import Typography from '@/components/ui/Typography.tsx';
 import SearchIcon from '@/assets/icons/search-white.svg';
-import IconButton from '@/components/IconButton.tsx';
+import IconButton from '@/components/ui/IconButton.tsx';
 import { Dimensions, FlatList, RefreshControl } from 'react-native';
 import HeartRedIcon from '@/assets/icons/heart-red.svg';
 import HeartIcon from '@/assets/icons/heart-black.svg';
 import ChatIcon from '@/assets/icons/chat-blank-black.svg';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { CommunityPost, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
-import ServerImage from '@/components/ServerImage.tsx';
-import NotificationButton from '@/components/theme/NotificationButton.tsx';
-import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
+import NotificationButton from '@/components/ui/NotificationButton.tsx';
+import SortButton, { SortOption } from '@/components/ui/SortButton.tsx';
 import { formatTimeAgo } from '@/utils/format.ts';
 import { useState } from 'react';
 

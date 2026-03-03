@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { requestPermission } from '@/utils/permissions.ts';
 import { ImageLibraryOptions, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
 import { generateImageFilename, normalizeImageMime } from '@/utils/format.ts';

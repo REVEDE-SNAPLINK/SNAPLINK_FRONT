@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import NotificationSettingView from '@/screens/common/NotificationSetting/NotificationSettingView.tsx';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { checkPermission, requestPermission } from '@/utils/permissions';
 import { useNotificationSettingsQuery } from "@/queries/user.ts";
 import { usePatchNotificationSettingMutation } from "@/mutations/user.ts";

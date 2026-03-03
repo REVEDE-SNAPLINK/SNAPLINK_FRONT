@@ -11,7 +11,7 @@ import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
 import { formatReservationDateTime } from '@/utils/format.ts';
 import { showErrorAlert } from '@/utils/error';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 

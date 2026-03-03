@@ -22,7 +22,7 @@ import { queryClient } from '@/config/queryClient.ts';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { updateNotificationSettings } from '@/api/user.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import NaverLogin from '@react-native-seoul/naver-login';
 

@@ -4,8 +4,8 @@ import { useModalStore, PersonalSchedule, ReportModalParams } from '@/store/moda
 import MainStack from '@/navigation/stacks/MainStack.tsx';
 import AuthStack from '@/navigation/stacks/AuthStack.tsx';
 import { RootStackParamList } from '@/types/navigation';
-import CommunityPostModal from '@/components/common/CommunityPostModal';
-import ReportModal from '@/components/common/ReportModal';
+import CommunityPostModal from '@/components/domain/community/CommunityPostModal';
+import ReportModal from '@/components/domain/community/ReportModal';
 import AddScheduleModal from '@/screens/photographer/BookingCalendar/AddScheduleModal';
 import ScheduleDetailModal from '@/screens/photographer/BookingCalendar/ScheduleDetailModal';
 import { CreateCommunityPostParams } from '@/api/community.ts';

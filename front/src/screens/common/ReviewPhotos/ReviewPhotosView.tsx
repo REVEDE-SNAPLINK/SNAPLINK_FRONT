@@ -1,9 +1,9 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Dimensions, FlatList } from 'react-native';
-import ServerImage from '@/components/ServerImage.tsx';
-import PhotoViewerModal from '@/components/common/PhotoViewerModal.tsx';
-import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
+import PhotoViewerModal from '@/components/media/PhotoViewerModal.tsx';
+import LoadingSpinner from '@/components/feedback/LoadingSpinner.tsx';
 
 interface ReviewPhotosViewProps {
   photos: string[];

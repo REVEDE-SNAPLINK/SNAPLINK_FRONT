@@ -8,7 +8,7 @@ import { reviewsQueryKeys } from '@/queries/keys.ts';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useCancelBookingFromCustomerMutation } from '@/mutations/bookings.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { GetBookingReviewMeResponse } from '@/api/reviews.ts';
 

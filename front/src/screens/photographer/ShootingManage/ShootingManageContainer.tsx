@@ -8,7 +8,7 @@ import { useWeeklyScheduleQuery } from '@/queries/schedules.ts';
 import { useDeleteShootingMutation, useUpdateShootingMutation } from '@/mutations/shootings.ts';
 import { shootingsQueryKeys } from '@/queries/keys.ts';
 import { getShootingOptions } from '@/api/shootings.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore.ts';
 import analytics from '@react-native-firebase/analytics';
 

@@ -1,16 +1,16 @@
-import ScreenContainer from '@/components/common/ScreenContainer.tsx';
+import ScreenContainer from '@/components/layout/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import SearchIcon from '@/assets/icons/search.svg';
-import { Typography } from '@/components/theme';
-import Filter from '@/components/user/filter/Filter.tsx';
-import FilterModal from '@/components/user/filter/FilterModal.tsx';
+import { Typography } from '@/components/ui';
+import Filter from '@/components/domain/photographer/Filter.tsx';
+import FilterModal from '@/components/domain/photographer/FilterModal.tsx';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
-import SearchPhotographerList from '@/components/user/SearchPhotographerList.tsx';
+import SearchPhotographerList from '@/components/domain/photographer/SearchPhotographerList.tsx';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { FlatList, RefreshControl } from 'react-native';
-import Loading from '@/components/Loading.tsx';
-import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
+import LoadingSpinner from '@/components/feedback/LoadingSpinner.tsx';
 
 interface PhotographerWithScore extends PhotographerSearchItem {
   aiScore: number;

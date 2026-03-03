@@ -48,7 +48,7 @@ import {
   requestNotifications,
   RESULTS,
 } from 'react-native-permissions';
-import {Alert} from '@/components/theme/Alert';
+import {Alert} from '@/components/ui/Alert';
 
 describe('permissions', () => {
   beforeEach(() => {

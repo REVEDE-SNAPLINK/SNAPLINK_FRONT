@@ -11,7 +11,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import ProfileView from '@/screens/common/Profile/ProfileView.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
 import { requestPermission } from '@/utils/permissions.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { usePatchUserProfileImageMutation } from '@/mutations/user.ts';
 import { generateImageFilename } from '@/utils/format.ts';
 import { useMeQuery } from '@/queries/user.ts';

@@ -7,14 +7,14 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
-import Checkbox from '@/components/theme/Checkbox.tsx';
-import OptionItem, { Option, TimeOptionItem } from '@/components/OptionItem.tsx';
+import Checkbox from '@/components/ui/Checkbox.tsx';
+import OptionItem, { Option, TimeOptionItem } from '@/components/ui/OptionItem.tsx';
 import { theme } from '@/theme';
 
 export interface ServiceFormData {

@@ -9,7 +9,7 @@ import {
   useToggleLikeMutation,
 } from '@/mutations/community.ts';
 import { useCommunityPostsQuery } from '@/queries/community.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
 
 export default function CommunityContainer() {

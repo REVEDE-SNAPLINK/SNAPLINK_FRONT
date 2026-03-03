@@ -4,7 +4,7 @@ import { pick, types } from '@react-native-documents/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import PhotographerViewPhotosView from '@/screens/photographer/ViewPhotos/PhotographerViewPhotosView.tsx';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useBookingDetailQuery, useBookingPhotosQuery } from '@/queries/bookings.ts';
 import {
   useUploadBookingZipMutation,

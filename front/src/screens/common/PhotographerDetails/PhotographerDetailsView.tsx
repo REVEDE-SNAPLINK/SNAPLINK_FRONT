@@ -5,11 +5,11 @@ import {
   InteractionManager,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import Typography from '@/components/theme/Typography.tsx';
-import Icon from '@/components/Icon.tsx';
-import Loading from '@/components/Loading.tsx';
+import Typography from '@/components/ui/Typography.tsx';
+import Icon from '@/components/ui/Icon.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
 import { theme } from '@/theme';
 import BookmarkIcon from '@/assets/icons/bookmark-white.svg'
 import ChatIcon from '@/assets/icons/chat-white.svg';
@@ -17,10 +17,10 @@ import UploadIcon from '@/assets/icons/upload.svg';
 import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
 import ActiveStarIcon from '@/assets/icons/star-color.svg'
-import SubmitButton from '@/components/theme/SubmitButton.tsx';
+import SubmitButton from '@/components/ui/SubmitButton.tsx';
 import { GetPhotographerProfileResponse, PhotographerPortfolioThumb } from '@/api/photographers.ts';
-import SlideModal from '@/components/theme/SlideModal.tsx';
-import ServerImage from '@/components/ServerImage.tsx';
+import SlideModal from '@/components/ui/SlideModal.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetShootingResponse, mappingEditDeadline } from '@/api/shootings.ts';
 import { formatNumber } from '@/utils/format.ts';

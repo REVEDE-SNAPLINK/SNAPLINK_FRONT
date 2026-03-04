@@ -66,7 +66,7 @@ export default function BookingManageContainer() {
       title: '현재 예약을 수락하겠습니까?',
       message: '동일한 시간 접수된 다른 예약 촬영 건은 자동으로 거절됩니다.',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '취소', onPress: () => { }, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
@@ -118,7 +118,7 @@ export default function BookingManageContainer() {
       title: '촬영을 완료하시겠습니까?',
       message: '완료로 전환 후 사진 결과물을 업로드할 수 있습니다.',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '취소', onPress: () => { }, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
@@ -163,7 +163,7 @@ export default function BookingManageContainer() {
   return (
     <BookingManageView
       bookings={bookings}
-      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '' }}
+      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '', role: 'PHOTOGRAPHER' }}
       isLoading={isLoading}
       isError={isError}
       isFetchingNextPage={isFetchingNextPage}

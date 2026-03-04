@@ -712,3 +712,84 @@ export const updatePhotographerProfile = async (
 
   if (!response.ok) throw new Error('프로필을 업데이트할 수 없습니다.');
 }
+
+/* ---------------------------------------------
+ * POST /search/multi
+ * AI 멀티모달 작가 검색 (텍스트 + 이미지)
+ * -------------------------------------------- */
+
+export interface MultiSearchPhotographerResult {
+  userId: string;
+  provider: string;
+  email: string;
+  name: string;
+  nickname: string;
+  birthDate: string;
+  gender: string;
+  profileImageUrl: string;
+  role: string;
+  userStatus: string;
+  description: string;
+  basePrice: number;
+  baseTime: number;
+  averageRating: number;
+  reviewCount: number;
+  responseRate: number;
+  avgResponseMinutes: string;
+  matchedImageUrl: string;
+}
+
+export interface SearchPhotographersMultiParams {
+  queryText?: string;
+  queryImages?: UploadImageFile[];
+}
+
+/**
+ * POST /api/photographers/search/multi
+ * AI 멀티모달 검색 (텍스트 + 이미지)
+ *
+ * multipart/form-data:
+ * - queryText: string (선택)
+ * - queryImages: file[] (선택)
+ */
+export const searchPhotographersMulti = async (
+  params: SearchPhotographersMultiParams,
+): Promise<MultiSearchPhotographerResult[]> => {
+  const parts: MultipartPart[] = [];
+
+  if (params.queryText) {
+    parts.push({
+      name: 'queryText',
+      data: JSON.stringify(params.queryText),
+    });
+  }
+
+  if (params.queryImages && params.queryImages.length > 0) {
+    for (const img of params.queryImages) {
+      let filePath = img.uri;
+      if (filePath.startsWith('file://')) {
+        filePath = filePath.replace('file://', '');
+      }
+
+      parts.push({
+        name: 'queryImages',
+        filename: img.name,
+        type: normalizeImageMime(img.type),
+        data: RNBlobUtil.wrap(filePath),
+      });
+    }
+  }
+
+  const response = await authMultipartFetch(
+    `${PHOTOGRAPHERS_BASE}/search/multi`,
+    parts,
+    'POST',
+  );
+
+  if (response.info().status < 200 || response.info().status >= 300) {
+    throw new Error('AI 작가 검색을 완료할 수 없습니다.');
+  }
+
+  const text = response.text() as string;
+  return JSON.parse(text);
+}

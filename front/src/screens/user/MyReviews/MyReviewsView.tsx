@@ -1,5 +1,5 @@
 import ScreenContainer from '@/components/layout/ScreenContainer';
-import Typography from '../../../components/theme/Typography.tsx';
+import Typography from '@/components/ui/Typography.tsx';
 import Icon from '@/components/ui/Icon.tsx';
 import ActiveStarIcon from '@/assets/icons/star-color.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg';

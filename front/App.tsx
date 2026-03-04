@@ -3,13 +3,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from '@/navigation';
-import AuthInitializer from '@/components/AuthInitializer';
+import AuthInitializer from '@/components/providers/AuthInitializer';
 import { queryClient } from '@/config/queryClient';
-import { AlertProvider } from '@/components/theme';
+import { AlertProvider } from '@/components/ui/AlertProvider';
 import analytics from '@react-native-firebase/analytics';
 import { useEffect } from 'react';
-import NotificationHandler from '@/components/NotificationHandler';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import NotificationHandler from '@/components/providers/NotificationHandler';
+import ErrorBoundary from '@/components/feedback/ErrorBoundary';
 import codePush from '@revopush/react-native-code-push';
 import NaverLogin from '@react-native-seoul/naver-login';
 

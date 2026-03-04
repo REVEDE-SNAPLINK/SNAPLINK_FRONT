@@ -6,8 +6,10 @@ import {
   searchPhotographers, getMyScrappedPhotographers,
   getStatusMe,
   getPhotographerRegionsAndConceptsAndTags,
+  searchPhotographersMulti,
+  SearchPhotographersMultiParams,
 } from '@/api/photographers.ts';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { photographersQueryKeys } from '@/queries/keys.ts';
 
 /** 작가 프로필 상세 조회 */
@@ -189,4 +191,14 @@ export const usePhotographerRegionsConceptsTagsQuery = (photographerId: string |
       return getPhotographerRegionsAndConceptsAndTags(photographerId);
     },
     enabled: Boolean(photographerId),
+  });
+
+/**
+ * AI 멀티모달 검색 (텍스트 + 이미지)
+ * useMutation으로 구현 — 이미지 업로드가 포함되므로 1회성 요청으로 처리
+ */
+export const useSearchPhotographersMultiMutation = () =>
+  useMutation({
+    mutationFn: (params: SearchPhotographersMultiParams) =>
+      searchPhotographersMulti(params),
   });

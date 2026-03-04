@@ -75,7 +75,7 @@ class AppDelegate: ExpoAppDelegate, UNUserNotificationCenterDelegate {
     completionHandler([.banner, .sound, .badge])
   }
 
-  func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
     // naver
     if url.scheme == "snaplinkSV1KQ3L7CK" {
       return NaverThirdPartyLoginConnection.getSharedInstance().application(app, open: url, options: options)

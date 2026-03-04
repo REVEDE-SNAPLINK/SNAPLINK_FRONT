@@ -94,7 +94,7 @@ export default function AIRecommdationFormView({
               fontSize={12}
               marginLeft={2}
             >
-              (최소 30자)
+              (선택)
             </Typography>
           </CaptionWrapper>
           <TextInput

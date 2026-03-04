@@ -33,7 +33,11 @@ export default function AIRecommdationFormContainer() {
   }, []);
 
   const handlePressSubmit = () => {
-    navigation.navigate('AIRecommdationResult', { prompt, resultCount: 3 });
+    navigation.navigate('AIRecommdationResult', {
+      prompt,
+      resultCount: 3,
+      ...(image ? { imageUri: image.uri, imageName: image.name, imageType: image.type } : {})
+    });
   };
 
   const handleUploadImage = useCallback(() => {
@@ -68,7 +72,7 @@ export default function AIRecommdationFormContainer() {
     );
   }, []);
 
-  const isFormValid = image !== null && prompt !== '' && prompt.trim().length >= 30;
+  const isFormValid = image !== null;
 
   return (
     <AIRecommdationFormView

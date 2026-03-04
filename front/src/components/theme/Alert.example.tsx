@@ -6,9 +6,9 @@
  */
 
 import React from 'react';
-import {View, Button} from 'react-native';
-import {Alert} from './Alert';
-import {requestPermission, requestMultiplePermissions} from '@/utils/permissions';
+import { View, Button } from 'react-native';
+import { Alert } from '@/components/ui/Alert.tsx';
+import { requestPermission, requestMultiplePermissions } from '@/utils/permissions';
 
 export function AlertExamples() {
   // 1. 기본 Alert (확인 버튼만)
@@ -45,9 +45,9 @@ export function AlertExamples() {
       title: '작업 선택',
       message: '어떤 작업을 수행하시겠습니까?',
       buttons: [
-        {text: '옵션 1', onPress: () => console.log('옵션 1 선택')},
-        {text: '옵션 2', onPress: () => console.log('옵션 2 선택')},
-        {text: '옵션 3', onPress: () => console.log('옵션 3 선택')},
+        { text: '옵션 1', onPress: () => console.log('옵션 1 선택') },
+        { text: '옵션 2', onPress: () => console.log('옵션 2 선택') },
+        { text: '옵션 3', onPress: () => console.log('옵션 3 선택') },
       ],
     });
   };
@@ -57,7 +57,7 @@ export function AlertExamples() {
     Alert.show({
       title: '중요',
       message: '반드시 선택해야 합니다.',
-      buttons: [{text: '확인', onPress: () => {}}],
+      buttons: [{ text: '확인', onPress: () => { } }],
       cancelable: false,
     });
   };
@@ -138,7 +138,7 @@ export function AlertExamples() {
         {
           text: '취소',
           type: 'cancel',
-          onPress: () => {},
+          onPress: () => { },
         },
         {
           text: '사진 촬영',
@@ -183,7 +183,7 @@ export function AlertExamples() {
         {
           text: '취소',
           type: 'cancel',
-          onPress: () => {},
+          onPress: () => { },
         },
         {
           text: '로그아웃',
@@ -198,7 +198,7 @@ export function AlertExamples() {
   };
 
   return (
-    <View style={{padding: 20, gap: 10}}>
+    <View style={{ padding: 20, gap: 10 }}>
       <Button title="1. 기본 Alert" onPress={showBasicAlert} />
       <Button title="2. 확인/취소 Alert" onPress={showConfirmAlert} />
       <Button title="3. 여러 옵션 Alert" onPress={showMultipleOptions} />

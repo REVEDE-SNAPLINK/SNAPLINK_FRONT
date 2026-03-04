@@ -78,6 +78,7 @@ export default function Calendar({
 
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(() => initialDate.substring(0, 7));
   const minMonthStr = minDate ? minDate.substring(0, 7) : '';
+  const isLeftDisabled = minMonthStr !== '' && currentDisplayMonth <= minMonthStr;
 
   const handleDayPress = useCallback((dateString: string) => {
     onChangeDate(dateString);
@@ -85,11 +86,10 @@ export default function Calendar({
 
   const renderArrow = useCallback((direction: 'left' | 'right') => {
     if (direction === 'left') {
-      const isLeftDisabled = minMonthStr !== '' && currentDisplayMonth <= minMonthStr;
       return <Icon width={24} height={24} Svg={isLeftDisabled ? ArrowLeftGrayIcon : ArrowLeftIcon} />;
     }
     return <Icon width={24} height={24} Svg={ArrowRightIcon} />;
-  }, [currentDisplayMonth, minMonthStr]);
+  }, [isLeftDisabled]);
 
   const renderHeader = useCallback((date: any) => {
     const yyyyMm = dayjs(date).format('YYYY-MM');
@@ -113,6 +113,7 @@ export default function Calendar({
       initialDate={initialDate}
       minDate={minDate}
       maxDate={maxDate}
+      disableArrowLeft={isLeftDisabled}
       onMonthChange={(date) => {
         const year = date.year;
         const month = date.month;

@@ -119,17 +119,19 @@ export default function AIRecommdationResultContainer() {
         setAllPhotographers(mapped);
 
         // Calculate AI recommendation scores (descending from top)
-        const withScores = mapped.slice(0, resultCount * 10).map((photographer, index) => {
-          const baseScore = 95;
-          const maxDecrease = 30; // Maximum decrease range
-          const decrease = (index / (resultCount * 10)) * maxDecrease;
-          const score = Math.max(65, Math.floor(baseScore - decrease + Math.random() * 3));
+        const withScores = mapped.map((photographer, index) => {
+          // Similarity Score from server: e.g., 0.825 -> 83
+          const rawScore = res[index]?.similarityScore || 0;
+          const score = Math.round(rawScore * 100);
 
           return {
             ...photographer,
             aiScore: score,
           };
         });
+
+        // 결과물을 적합도(aiScore) 내림차순으로 정렬
+        withScores.sort((a, b) => b.aiScore - a.aiScore);
 
         setPhotographersWithScores(withScores);
         setIsLoading(false);
@@ -171,7 +173,7 @@ export default function AIRecommdationResultContainer() {
       }
     });
 
-    return filtered.slice(0, resultCount);
+    return filtered;
   }, [photographersWithScores, selectedFilters, resultCount]);
 
   const filterChips = useMemo<FilterChip[]>(() => {

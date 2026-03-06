@@ -755,6 +755,19 @@ const safeRegisterFcmDevice = async () => {
       console.error('[FCM] Failed to update notification preferences:', e);
       // 설정 업데이트 실패해도 FCM 등록은 성공으로 간주
     }
+
+    // Step 7: 토큰 갱신 리스너 등록 (동적으로 토큰이 무효화/재생성되었을 때 서버에 자동 동기화)
+    console.log('[FCM] Setting up onTokenRefresh listener...');
+    messaging().onTokenRefresh(async (newToken) => {
+      console.log('[FCM] Token refreshed automatically:', newToken.substring(0, 20) + '...');
+      try {
+        await registerFCMdevice(newToken);
+        console.log('[FCM] Refreshed token registered with server successfully');
+      } catch (err) {
+        console.error('[FCM] Failed to register refreshed token:', err);
+      }
+    });
+
   } catch (e) {
     console.error('[FCM] safeRegisterFcmDevice failed:', e);
   }

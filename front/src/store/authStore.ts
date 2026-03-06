@@ -439,7 +439,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       NaverLogin.logout().catch(() => { }), // 네이버 로그아웃
     ]);
 
-    set({ status: 'anon', accessToken: null, userId: '' });
+    set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
 
     // Clear all persistent storage
     await Promise.allSettled([
@@ -534,7 +534,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearAppleLoginInfo(),
     ]);
 
-    set({ status: 'anon', accessToken: null, userId: '' });
+    set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
 
     // Query 캐시 초기화
     queryClient.clear();
@@ -598,7 +598,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearAppleLoginInfo(),
             clearNaverLoginInfo(),
           ]);
-          set({ status: 'anon', accessToken: null, userId: '' });
+          set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
           queryClient.clear();
 
           // 화면 네비게이션 복귀와 Alert 표시가 동시에 일어나면서 발생하는 터치 블록(Freeze) 버그를 막기 위해 지연 호출

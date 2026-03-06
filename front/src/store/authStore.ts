@@ -12,6 +12,8 @@ import {
   clearUserType,
   saveAppleLoginInfo,
   clearAppleLoginInfo,
+  saveNaverLoginInfo,
+  clearNaverLoginInfo,
 } from '@/auth/tokenStore.ts';
 import messaging from '@react-native-firebase/messaging';
 import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
@@ -190,6 +192,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (!successResponse?.accessToken) {
         throw new Error('Naver Login failed: No accessToken');
+      }
+
+      const profile = await NaverLogin.getProfile(successResponse.accessToken);
+
+      if (profile && profile.message === 'success' && profile.response) {
+        const { name, email, gender, birthyear, birthday } = profile.response;
+        let mappedGender: 'MALE' | 'FEMALE' | undefined;
+        if (gender === 'M') mappedGender = 'MALE';
+        else if (gender === 'W' || gender === 'F') mappedGender = 'FEMALE';
+
+        let formattedBirthDate: string | undefined;
+        if (birthyear && birthday) {
+          formattedBirthDate = `${birthyear}-${birthday}`; // "YYYY-MM-DD"
+        }
+
+        await saveNaverLoginInfo({
+          name: name || undefined,
+          email: email || undefined,
+          gender: mappedGender,
+          birthDate: formattedBirthDate,
+        });
       }
 
       return await get().signInWithProviderToken('NAVER', successResponse.accessToken);
@@ -423,6 +446,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearUserId(),
       clearUserType(),
       clearAppleLoginInfo(),
+      clearNaverLoginInfo(),
     ]);
 
     // Query 캐시 초기화
@@ -468,8 +492,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           saveUserType(userType),
         ]);
 
-        // 회원가입 완료 후 저장된 애플 로그인 정보 삭제
-        await clearAppleLoginInfo();
+        // 회원가입 완료 후 저장된 애플, 네이버 로그인 정보 삭제
+        await Promise.allSettled([
+          clearAppleLoginInfo(),
+          clearNaverLoginInfo(),
+        ]);
 
         set({
           status: 'authed',
@@ -564,6 +591,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearRefreshToken(),
             clearUserId(),
             clearUserType(),
+            clearAppleLoginInfo(),
+            clearNaverLoginInfo(),
           ]);
           set({ status: 'anon', accessToken: null, userId: '' });
           queryClient.clear();

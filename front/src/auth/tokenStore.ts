@@ -10,6 +10,7 @@ const USER_ID_KEY = '@snaplink:userId';
 const USER_TYPE_KEY = '@snaplink:userType';
 const APPLE_NAME_KEY = '@snaplink:appleName';
 const APPLE_EMAIL_KEY = '@snaplink:appleEmail';
+const NAVER_PROFILE_KEY = '@snaplink:naverProfile';
 
 export async function saveRefreshToken(refreshToken: string) {
   await Keychain.setGenericPassword(
@@ -112,4 +113,24 @@ export async function clearAppleLoginInfo(): Promise<void> {
     AsyncStorage.removeItem(APPLE_NAME_KEY),
     AsyncStorage.removeItem(APPLE_EMAIL_KEY),
   ]);
+}
+
+export type NaverProfileInfo = {
+  name?: string;
+  email?: string;
+  gender?: 'MALE' | 'FEMALE';
+  birthDate?: string; // YYYY-MM-DD
+};
+
+export async function saveNaverLoginInfo(info: NaverProfileInfo): Promise<void> {
+  await AsyncStorage.setItem(NAVER_PROFILE_KEY, JSON.stringify(info));
+}
+
+export async function loadNaverLoginInfo(): Promise<NaverProfileInfo | null> {
+  const data = await AsyncStorage.getItem(NAVER_PROFILE_KEY);
+  return data ? JSON.parse(data) : null;
+}
+
+export async function clearNaverLoginInfo(): Promise<void> {
+  await AsyncStorage.removeItem(NAVER_PROFILE_KEY);
 }

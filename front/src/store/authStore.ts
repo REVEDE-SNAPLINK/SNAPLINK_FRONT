@@ -568,17 +568,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ status: 'anon', accessToken: null, userId: '' });
           queryClient.clear();
 
-          // 사용자 친화적인 세션 만료 안내
-          Alert.show({
-            title: '로그인이 필요합니다',
-            message: '오랫동안 사용하지 않아 자동으로 로그아웃 되었습니다.\n계속 이용하시려면 다시 로그인해주세요.',
-            buttons: [
-              {
-                text: '확인',
-                onPress: () => { },
-              },
-            ],
-          });
+          // 화면 네비게이션 복귀와 Alert 표시가 동시에 일어나면서 발생하는 터치 블록(Freeze) 버그를 막기 위해 지연 호출
+          setTimeout(() => {
+            Alert.show({
+              title: '로그인이 필요합니다',
+              message: '오랫동안 사용하지 않아 자동으로 로그아웃 되었습니다.\n계속 이용하시려면 다시 로그인해주세요.',
+              buttons: [
+                {
+                  text: '확인',
+                  onPress: () => { },
+                },
+              ],
+            });
+          }, 500);
         } else {
           // 네트워크 에러 등 일시적 실패는 토큰만 null로
           set({ accessToken: null });

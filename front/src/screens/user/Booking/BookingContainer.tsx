@@ -233,7 +233,10 @@ export default function BookingContainer() {
 
     // Update currentMonth when date changes
     const [year, month] = date.split('-').map(Number);
-    setCurrentMonth({ year, month });
+    setCurrentMonth(prev => {
+      if (prev.year === year && prev.month === month) return prev;
+      return { year, month };
+    });
   };
 
   const handleMonthChange = (year: number, month: number) => {

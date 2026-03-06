@@ -737,6 +737,7 @@ export interface MultiSearchPhotographerResult {
   responseRate: number;
   avgResponseMinutes: string;
   matchedImageUrl: string;
+  similarityScore: number;
 }
 
 export interface SearchPhotographersMultiParams {

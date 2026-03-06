@@ -1,13 +1,13 @@
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Calendar as RNCalendar, LocaleConfig } from 'react-native-calendars';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import Typography from '@/components/ui/Typography.tsx';
-import ArrowLeftIcon from '@/assets/icons/arrow-left2.svg';
+import ArrowLeftIcon from '@/assets/icons/arrow-left-black.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import dayjs from 'dayjs';
 import Icon from '@/components/ui/Icon.tsx';
-import { useMemo, useState, useEffect } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useDerivedValue, SharedValue, useSharedValue } from 'react-native-reanimated';
 // MonthPicker는 BookingCalendarView에서 사용
 export { default as MonthPicker } from 'react-native-month-year-picker';
@@ -47,6 +47,63 @@ interface ScheduleCalendarProps {
 
 const DAY_HEIGHT = 42;
 
+const CALENDAR_THEME = {
+  textSectionTitleColor: theme.colors.textPrimary,
+  textDayHeaderFontFamily: 'Pretendard-SemiBold',
+  textDayHeaderFontSize: 13,
+  textDayFontWeight: 'semibold' as const,
+};
+
+const DayWrapper = styled.TouchableOpacity<{ selected: boolean; eventColor: string | null }>`
+  width: 37.57px;
+  height: ${DAY_HEIGHT}px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 100px;
+
+  ${({ eventColor, selected }) =>
+    eventColor && !selected
+      ? `background-color: ${eventColor};`
+      : ''}
+
+  ${({ selected }) =>
+    selected
+      ? `background-color: ${theme.colors.primary};`
+      : ''}
+`;
+
+const AnimatedDayWrapper = Animated.createAnimatedComponent(DayWrapper);
+
+type AnimatedDayCellProps = {
+  dateString: string;
+  day: number;
+  isSelected: boolean;
+  eventColor: string | null;
+  textColor: string;
+  style: any;
+  onPress: (d: string) => void;
+};
+
+const AnimatedDayCell = React.memo(({ dateString, day, isSelected, eventColor, textColor, style, onPress }: AnimatedDayCellProps) => (
+  <AnimatedDayWrapper
+    style={style}
+    selected={isSelected}
+    eventColor={eventColor}
+    onPress={() => onPress(dateString)}
+    activeOpacity={0.8}
+  >
+    <Typography
+      fontSize={13}
+      fontWeight="semiBold"
+      lineHeight="140%"
+      letterSpacing="-2.5%"
+      color={textColor}
+    >
+      {day}
+    </Typography>
+  </AnimatedDayWrapper>
+));
+
 export default function ScheduleCalendar({
   selectedDate,
   onSelectDate,
@@ -70,31 +127,41 @@ export default function ScheduleCalendar({
     return map;
   }, [scheduleData]);
 
-  const getEventColor = (dateString: string) => {
+  const getEventColor = useCallback((dateString: string) => {
     const scheduleItem = scheduleMap.get(dateString);
     if (!scheduleItem) return null;
 
-    if (scheduleItem.hasBooking) {
-      return 'rgba(0, 169, 128, 0.2)'; // primary color
-    }
-    if (scheduleItem.photographerHoliday) {
-      return 'rgba(232, 78, 78, 0.2)'; // red for holiday
-    }
-    if (scheduleItem.hasPersonalSchedule) {
-      return `${theme.colors.textPrimary}33`; // textPrimary with 20% opacity
-    }
-    if (scheduleItem.publicHoliday) {
-      return 'rgba(255, 178, 63, 0.2)'; // red for holiday
-    }
+    if (scheduleItem.hasBooking) return 'rgba(0, 169, 128, 0.2)';
+    if (scheduleItem.photographerHoliday) return 'rgba(232, 78, 78, 0.2)';
+    if (scheduleItem.hasPersonalSchedule) return `${theme.colors.textPrimary}33`;
+    if (scheduleItem.publicHoliday) return 'rgba(255, 178, 63, 0.2)';
     return null;
-  };
+  }, [scheduleMap]);
 
   const dayMarginStyle = useAnimatedStyle(() => ({
     marginBottom: dayMarginBottom.value,
   }));
 
-  const AnimatedDayWrapper =
-    Animated.createAnimatedComponent(DayWrapper);
+  const handleDayPress = useCallback((dateString: string) => {
+    onSelectDate(dateString);
+  }, [onSelectDate]);
+
+  const renderArrow = useCallback((direction: 'left' | 'right') => (
+    direction === 'left'
+      ? <Icon width={24} height={24} Svg={ArrowLeftIcon} />
+      : <Icon width={24} height={24} Svg={ArrowRightIcon} />
+  ), []);
+
+  const renderHeader = useCallback((date: any) => (
+    <Typography
+      testID="calendar-header"
+      fontSize={16}
+      fontWeight="semiBold"
+      color={theme.colors.disabled}
+    >
+      {dayjs(date).format('YYYY.MM')}
+    </Typography>
+  ), []);
 
   return containerHeight > 0 ? (
     <RNCalendar
@@ -106,27 +173,9 @@ export default function ScheduleCalendar({
           onMonthChange(yearMonth);
         }
       }}
-      theme={{
-        textSectionTitleColor: theme.colors.textPrimary,
-        textDayHeaderFontFamily: 'Pretendard-SemiBold',
-        textDayHeaderFontSize: 13,
-        textDayFontWeight: 'semibold',
-      }}
-      renderArrow={(direction) =>
-        direction === 'left'
-          ? <Icon width={24} height={24} Svg={ArrowLeftIcon} />
-          : <Icon width={24} height={24} Svg={ArrowRightIcon} />
-      }
-      renderHeader={(date) => (
-        <Typography
-          testID="calendar-header"
-          fontSize={16}
-          fontWeight="semiBold"
-          color={theme.colors.disabled}
-        >
-          {dayjs(date).format('YYYY.MM')}
-        </Typography>
-      )}
+      theme={CALENDAR_THEME}
+      renderArrow={renderArrow}
+      renderHeader={renderHeader}
       dayComponent={({ date }) => {
         const dateString = date?.dateString ?? '';
         const isSelected = selectedDate === dateString;
@@ -149,46 +198,20 @@ export default function ScheduleCalendar({
               : theme.colors.textPrimary;
 
         return (
-          <AnimatedDayWrapper
-            style={dayMarginStyle}
-            selected={isSelected}
+          <AnimatedDayCell
+            dateString={dateString}
+            day={date?.day ?? 0}
+            isSelected={isSelected}
             eventColor={eventColor}
-            onPress={() => onSelectDate(dateString)}
-            activeOpacity={0.8}
-          >
-            <Typography
-              fontSize={13}
-              fontWeight="semiBold"
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              color={textColor}
-            >
-              {date?.day}
-            </Typography>
-          </AnimatedDayWrapper>
+            textColor={textColor}
+            style={dayMarginStyle}
+            onPress={handleDayPress}
+          />
         );
       }}
     />
   ) : null;
 }
-
-const DayWrapper = styled.TouchableOpacity<{ selected: boolean; eventColor: string | null }>`
-  width: 37.57px;
-  height: ${DAY_HEIGHT}px;
-  justify-content: center;
-  align-items: center;
-  border-radius: 100px;
-
-  ${({ eventColor, selected }) =>
-    eventColor && !selected
-      ? `background-color: ${eventColor};`
-      : ''}
-
-  ${({ selected }) =>
-    selected
-      ? `background-color: ${theme.colors.primary};`
-      : ''}
-`;
 
 // ============ 분리된 컴포넌트들 (가로 스와이프용) ============
 
@@ -334,44 +357,37 @@ export function ScheduleCalendarGrid({
     return map;
   }, [scheduleData]);
 
-  const getEventColor = (dateString: string) => {
+  const getEventColor = useCallback((dateString: string) => {
     const scheduleItem = scheduleMap.get(dateString);
     if (!scheduleItem) return null;
 
-    if (scheduleItem.hasBooking) {
-      return 'rgba(0, 169, 128, 0.2)';
-    }
-    if (scheduleItem.photographerHoliday) {
-      return 'rgba(232, 78, 78, 0.2)';
-    }
-    if (scheduleItem.hasPersonalSchedule) {
-      return `${theme.colors.textPrimary}33`;
-    }
-    if (scheduleItem.publicHoliday) {
-      return 'rgba(255, 178, 63, 0.2)';
-    }
+    if (scheduleItem.hasBooking) return 'rgba(0, 169, 128, 0.2)';
+    if (scheduleItem.photographerHoliday) return 'rgba(232, 78, 78, 0.2)';
+    if (scheduleItem.hasPersonalSchedule) return `${theme.colors.textPrimary}33`;
+    if (scheduleItem.publicHoliday) return 'rgba(255, 178, 63, 0.2)';
     return null;
-  };
+  }, [scheduleMap]);
 
   const dayMarginStyle = useAnimatedStyle(() => ({
     marginBottom: dayMarginBottom.value,
   }));
 
-  const AnimatedDayWrapper = Animated.createAnimatedComponent(DayWrapper);
+  const handleDayPress = useCallback((dateString: string) => {
+    onSelectDate(dateString);
+  }, [onSelectDate]);
+
+  const renderHeader = useCallback(() => <View style={{ height: 0 }} />, []);
 
   return (
     <RNCalendar
       key={displayYearMonth}
       initialDate={`${displayYearMonth}-01`}
       hideArrows={true}
-      renderHeader={() => <View style={{ height: 0 }} />}
+      renderHeader={renderHeader}
       hideDayNames={false}
       theme={{
-        textSectionTitleColor: theme.colors.textPrimary,
-        textDayHeaderFontFamily: 'Pretendard-SemiBold',
-        textDayHeaderFontSize: 13,
-        textDayFontWeight: 'semibold',
-        // @ts-ignore - stylesheet.calendar.header는 react-native-calendars에서 지원하지만 타입 정의에 없음
+        ...CALENDAR_THEME,
+        // @ts-ignore
         'stylesheet.calendar.header': {
           header: {
             height: 0,
@@ -398,23 +414,15 @@ export function ScheduleCalendarGrid({
               : theme.colors.textPrimary;
 
         return (
-          <AnimatedDayWrapper
-            style={dayMarginStyle}
-            selected={isSelected}
+          <AnimatedDayCell
+            dateString={dateString}
+            day={date?.day ?? 0}
+            isSelected={isSelected}
             eventColor={eventColor}
-            onPress={() => onSelectDate(dateString)}
-            activeOpacity={0.8}
-          >
-            <Typography
-              fontSize={13}
-              fontWeight="semiBold"
-              lineHeight="140%"
-              letterSpacing="-2.5%"
-              color={textColor}
-            >
-              {date?.day}
-            </Typography>
-          </AnimatedDayWrapper>
+            textColor={textColor}
+            style={dayMarginStyle}
+            onPress={handleDayPress}
+          />
         );
       }}
     />

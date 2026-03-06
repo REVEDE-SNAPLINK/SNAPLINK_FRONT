@@ -1,5 +1,5 @@
-import React, {useEffect, useRef} from 'react';
-import {Modal, Animated} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Modal, Animated } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/ui/Typography.tsx';
 import SubmitButton from '@/components/ui/SubmitButton.tsx';
@@ -72,8 +72,18 @@ export function AlertComponent({
         }),
       ]).start();
     } else {
-      scaleAnim.setValue(0);
-      opacityAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [visible, scaleAnim, opacityAnim]);
 
@@ -85,19 +95,19 @@ export function AlertComponent({
 
   return (
     <Modal
-      visible={visible}
+      visible={true}
       transparent
       animationType="none"
       onRequestClose={handleOverlayPress}
     >
       <Container>
         <Overlay onPress={handleOverlayPress} activeOpacity={1}>
-          <AnimatedOverlayBackground style={{opacity: opacityAnim}} />
+          <AnimatedOverlayBackground style={{ opacity: opacityAnim }} />
         </Overlay>
 
         <AnimatedModalContainer
           style={{
-            transform: [{scale: scaleAnim}],
+            transform: [{ scale: scaleAnim }],
             opacity: opacityAnim,
           }}
         >
@@ -163,13 +173,13 @@ export function AlertComponent({
 
 // Global Alert Manager
 class AlertManager {
-  private listener: ((options: AlertOptions & {id: string}) => void) | null =
+  private listener: ((options: AlertOptions & { id: string }) => void) | null =
     null;
   private hideListener: ((id: string) => void) | null = null;
   private currentId = 0;
 
   setListener(
-    listener: (options: AlertOptions & {id: string}) => void,
+    listener: (options: AlertOptions & { id: string }) => void,
     hideListener: (id: string) => void,
   ) {
     this.listener = listener;
@@ -185,7 +195,7 @@ class AlertManager {
     }
 
     const id = `alert-${++this.currentId}`;
-    this.listener({...options, id});
+    this.listener({ ...options, id });
   }
 
   hide(id: string) {
@@ -236,10 +246,10 @@ const ContentWrapper = styled.View`
   margin-bottom: 16px;
 `;
 
-const ButtonWrapper = styled.View<{buttonCount: number}>`
+const ButtonWrapper = styled.View<{ buttonCount: number }>`
   width: 100%;
   flex-direction: row;
-  justify-content: ${({buttonCount}) =>
+  justify-content: ${({ buttonCount }) =>
     buttonCount === 1 ? 'center' : 'space-between'};
 `;
 
@@ -247,8 +257,8 @@ const ButtonContainer = styled.View<{
   buttonCount: number;
   isLastButton: boolean;
 }>`
-  ${({buttonCount}) => (buttonCount === 1 ? 'min-width: 285px;' : 'flex: 1;')}
-  margin-right: ${({isLastButton, buttonCount}) =>
+  ${({ buttonCount }) => (buttonCount === 1 ? 'min-width: 285px;' : 'flex: 1;')}
+  margin-right: ${({ isLastButton, buttonCount }) =>
     !isLastButton && buttonCount > 1 ? '9px' : '0'};
 `;
 

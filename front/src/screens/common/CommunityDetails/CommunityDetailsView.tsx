@@ -555,6 +555,9 @@ export default function CommunityDetailsView({
           </ContentHeader>
           <ContentContainer>
             <ContentTextWrapper>
+              <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%">
+                {post.content}
+              </Typography>
               {post.taggedUsers.length > 0 && (
                 <TagButton onPress={onPressTag}>
                   <Typography
@@ -568,9 +571,6 @@ export default function CommunityDetailsView({
                   </Typography>
                 </TagButton>
               )}
-              <Typography fontSize={14} lineHeight="140%" letterSpacing="-2.5%">
-                {post.content}
-              </Typography>
             </ContentTextWrapper>
             <ActionWrapper>
               <ActionButton onPress={onPressLike}>
@@ -1043,8 +1043,6 @@ const ContentContainer = styled.View`
 `;
 
 const ContentTextWrapper = styled.View`
-  flex-direction: row;
-  align-items: center;
   margin-bottom: 10px;
 `;
 
@@ -1192,7 +1190,7 @@ const TaggedPhotographerButton = styled.Pressable`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  height: 80px;
+  height: 50px;
 `
 
 const TaggedPhotographerInfo = styled.View`

@@ -436,6 +436,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await Promise.allSettled([
       logoutApi(),
       safeDeleteFcmToken(),
+      NaverLogin.logout().catch(() => { }), // 네이버 로그아웃
     ]);
 
     set({ status: 'anon', accessToken: null, userId: '' });
@@ -521,6 +522,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       () => ({ ok: true as const }),
       (e) => ({ ok: false as const, e }),
     );
+
+    // 네이버 연동 해제 (best-effort)
+    await NaverLogin.deleteToken().catch(() => { });
 
     // Clear all persistent storage
     await Promise.allSettled([

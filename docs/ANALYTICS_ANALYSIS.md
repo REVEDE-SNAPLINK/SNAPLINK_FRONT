@@ -27,7 +27,7 @@
 | **Acquisition Scale**| 신규 유입 규모 (Install -> Sign-up) | `first_open`, `app_open`, `signup_completed` | Line Chart |
 | **Activation Rate** | 첫 방문자 중 의미 있는 행동 수행 비율 | (작가상세 OR 메시지 OR 예약시도 유저) / `first_open` 유저 | Donut Chart |
 | **Channel Quality** | 유입 경로별 전환 효율 분석 | `source`, `utm_medium`, `utm_campaign` | Horizontal Bar Chart |
-| **Deep Link CVR** | 고유 링크(작가/게시물)별 유입 및 복귀율 | `app_open` 시의 `entry_url` 파라미터 분석 | Vertical Bar Chart |
+| **Deep Link CVR** | 딥링크 유입 → 목적지 도달 성공률 | `deep_link_open` → `deep_link_landing_resolved` (resolve_success: true) | Vertical Bar Chart |
 
 ---
 
@@ -49,7 +49,7 @@
 | **Inquiry Funnel** | 문의 시작 -> 첫 메시지 -> 작가 응답 | `chat_initiated` -> `chat_message_sent` -> `photographer_response` | Funnel Chart |
 | **Booking Funnel** | 예약 의도 -> 폼 제출 -> 확정 | `booking_intent` -> `booking_request_submitted` -> `booking_confirmed` | Funnel Chart |
 | **Churn Analysis** | 예약 폼 단계별 이탈 지점 분석 | `booking_form_abandoned` 의 `step` 파라미터 | Horizontal Bar Chart |
-| **Cancellation** | 예약 확정 후 취소 사유 및 비율 | `booking_cancelled` (추가필요) 의 `reason` 파라미터 | Pie Chart |
+| **Cancellation** | 예약 확정 후 취소 주체 및 비율 | `booking_cancelled_by_user`, `booking_cancelled_by_photographer`, `booking_rejected_by_photographer` | Pie Chart |
 
 ---
 
@@ -94,6 +94,15 @@
 ---
 
 > **Document Metadata**
-> - Update Level: Full KPI Mapping (Ver 2.2)
+> - Update Level: Full KPI Mapping (Ver 2.3)
 > - Generated for: Admin Dashboard Implementation
-> - Last Updated: 2026-02-07 17:30
+> - Last Updated: 2026-03-08
+
+---
+
+## 📌 관련 문서
+
+| 문서 | 설명 |
+|------|------|
+| [firebase_tracking_data.md](./firebase_tracking_data.md) | 이벤트/파라미터 수집 명세서 (구현 상세) |
+| [firebase_tracking_todo.md](./firebase_tracking_todo.md) | 서버/DB 조인 필요 항목 (TODO) |

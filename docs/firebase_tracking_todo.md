@@ -45,3 +45,7 @@
 ---
 
 > 이 항목들은 서버팀과 협의하여 BigQuery 이벤트 스키마를 맞춘 뒤 순차적으로 구현할 수 있습니다.
+
+---
+
+> **관련 문서**: [이벤트 수집 명세서](./firebase_tracking_data.md) · [KPI 대시보드 설계](./ANALYTICS_ANALYSIS.md)

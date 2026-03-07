@@ -118,6 +118,10 @@ export default function BookingCalendarView({
     });
   }, []);
 
+  const setGestureAnimating = useCallback((isAnimating: boolean) => {
+    isGestureAnimatingRef.current = isAnimating;
+  }, []);
+
   // 방법 C: 월 목록을 상태로 관리 [이전달, 현재달, 다음달]
   const [months, setMonths] = useState(() => [
     getPrevMonth(currentYearMonth),
@@ -329,7 +333,7 @@ export default function BookingCalendarView({
       const SNAP_FULL = defaultHeight + (containerHeight - defaultHeight) * 0.6;
 
       // 수정 C: 제스처 애니메이션 플래그 설정 → useEffect 이중 트리거 방지
-      runOnJS(() => { isGestureAnimatingRef.current = true; })();
+      runOnJS(setGestureAnimating)(true);
 
       if (renderTypeSV.value === 'FULL') {
         if (velocity > 500 || current < SNAP_FULL) {
@@ -339,7 +343,7 @@ export default function BookingCalendarView({
           });
         } else {
           sheetHeight.value = withSpring(containerHeight, SNAP_SPRING_CONFIG);
-          runOnJS(() => { isGestureAnimatingRef.current = false; })();
+          runOnJS(setGestureAnimating)(false);
         }
         return;
       }
@@ -383,7 +387,7 @@ export default function BookingCalendarView({
 
       const THRESHOLD = defaultHeight * 0.3;
 
-      runOnJS(() => { isGestureAnimatingRef.current = true; })();
+      runOnJS(setGestureAnimating)(true);
 
       if (velocity < -300 || current > THRESHOLD) {
         sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
@@ -392,7 +396,7 @@ export default function BookingCalendarView({
         });
       } else {
         sheetHeight.value = withSpring(0, SNAP_SPRING_CONFIG);
-        runOnJS(() => { isGestureAnimatingRef.current = false; })();
+        runOnJS(setGestureAnimating)(false);
       }
     });
 

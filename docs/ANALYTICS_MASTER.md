@@ -66,6 +66,8 @@
 | ↳ | `rank_index` | Number | 목록에서 몇 번째 위/아래의 카드가 더 많은 노출 점유율을 갖는지 알고리즘 배치 효율 검증 |
 | **`creator_card_click`** | (Impression과 동일) | - | `Impression 대비 클릭률(CTR)` 분석. 작가 메인 썸네일과 가격표의 매력도를 수학적으로 계량화 |
 | **`photographer_profile_view`**| `photographer_id`, `source` | String | 최종적으로 작가 프로필의 일간 도달 트래픽을 합산하고, 유입 매체(홈 vs 검색 vs 외부공유) 셰어 비중 확인 |
+| **`photographer_view`** | `photographer_id`, `user` | String | 즐겨찾기(북마크) 인벤토리 등 여러 경로에서 작가를 확인하는 단순 조회 볼륨 |
+| **`portfolio_post_view`** | `portfolio_id` | String | 작가 프로필 내부가 아닌, 특정 포트폴리오 게시글 단건에 대한 유저 조회(열람) 집중도 파악 |
 | **`profile_scroll_depth`** | (스크롤 임계점 비율) | 단위(%) | 프로필 화면에서 25%, 50%, 90% 하단부까지 진입한 사람의 비율. 페이지 이탈 UX/UI 구간 디버깅 |
 | **`profile_portfolio_clicked`**| (선택된 포트폴리오 ID) | - | 프로필 내 썸네일을 터치해 크게 뷰어로 킨 유저의 '심도 깊은 관여율' 측정 |
 | **`profile_review..._clicked`**| - | - | 프로필 내 리뷰 탭 열람률. (리뷰 신뢰도의 영업 견인 능력을 확인) |
@@ -90,6 +92,7 @@
 | **`booking_cancelled_by_user`**| `reason_length` | Number | 단순 변심/이탈 노쇼 비율 측정. 사유 텍스트 단어 길이로 진정성 파악 |
 | **`booking_detail_view`** | `booking_id`, `user_id` | - | 예약 후 유저가 자신의 일정을 앱에 켜서 확인하는 리텐션 관여 정도 (불안감 측정) |
 | **`review_start`** <br/>/ **`..._create_complete`** | `booking_id`, `user_id` | String | [납품 완료 후기] 모듈 진입 시점과 DB 저장 완료 시점 쌍. 리뷰 인벤토리 수집의 전환율(Review CVR) 파악 |
+| **`review_view`** | `review_id`, `user_id` | String | 내 리뷰 목록이나 타인의 예약 후기를 개별적으로 한 번 더 눌러 열람한 볼륨 파악 |
 | **`review_edit_start`** <br/>/ **`..._edit_complete`** | `review_id`, `user_id` | String | 작성된 리뷰를 정성껏 수정/보강하는 충성 유저의 행동 분석 |
 | **`photo_download_...`**| (관련 이벤트 4종 통합명) | - | `photo_zip_download_as_is`, `photo_zip_download_extracted`, `photo_download_as_zip`, `photo_download_individual` 발생 |
 | ↳ | `count` | Number | 다운로드 받은 원본/보정본 사진 수. 묶음 통채 Zip 저장율 VS 낱장 개별 다운로드 성향을 파악하여 차후 Cloud 다운로드 UI/UX 모델 개선점 추출 |
@@ -101,13 +104,16 @@ B2B 관점의 공급망 체류 및 성실도를 분석합니다.
 | 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
 | **`photographer_booking_...`**| (예약 승인류 통칭) | - | 작가 단 예약 상세(`detail_view`), 앱 단 예약 승락(`approved`) 플로우 비율. 앱에서 빠른 영업 승객이 이뤄지는지 확인. |
-| **`..._rejected_by...`** | `reason_length` | Number | 작가가 직접 취소/반려 사유 입력. 작가의 영업 거절(No-Book) 비율, 사유 충실도를 통해 플랫폼 공급 건전성 체크 |
-| **`photographer_..._cancelled_by...`**| (사유 등) | - | 기 승낙된 일정을 작가가 변심/이탈 취소한 심각한 장애 상황 패널티 추산 |
+| **`booking_rejected_by_...`** | `reason_length` | Number | 작가가 모달창 등을 통해 직접 반려 사유를 쓰고 예약 거절을 누름. 작가의 영업 거절(No-Book) 비율, 사유 충실도를 통해 플랫폼 공급 건전성 체크 |
+| **`photographer_booking_rejected`**| - | - | 작가 예약 관리 탭에서 [거절 확정] 처리가 완료됨 |
+| **`booking_cancelled_by_...`** | (사유 등) | - | 이미 승낙 확정된 일정을 작가가 변심/이탈 취소한 심각한 장애 상황 패널티 추산 |
 | **`photographer_booking_completed`**| - | - | 촬영 완료 상태 진입 선언 |
 | **`shooting_service_action`**| - | - | 작가가 서비스 패키지나 가격을 올리고 내릴 때의 상품 업데이트 Active 활성 지수 측정 |
-| **`personal_schedule_created`**<br/>/ **`..._deleted`**| - | - | 캘린더 휴무나 스케줄 등록 빈도. (프로필 관리를 꾸준히 하는 우수 셀러 지표) |
+| **`personal_schedule_created`**<br/>/ **`..._updated`** / **`..._deleted`** | - | - | 캘린더 개인 일정 등록/수정/삭제 조작 빈도 |
+| **`holiday_deleted`** | - | - | 휴무일 등록을 해제하는 작가 조작. (영업일 증가 척도) |
 | **`portfolio_post_created`** / **`updated`** / **`deleted`** | - | - | 포트폴리오 피드 업데이트 Active 활성 지수 |
-| **`photographer_original_...`**| (원본 업로드류 통칭) | - | 작가가 사진을 올릴 때 Zip 통채로 올리는지(`uploaded`), 앱단 압축을 타는지(`created`) 파악. 업로더 UX 병목 파악 |
+| **`photographer_original_...`**| (원본 업로드류 통칭) | - | 작가가 원본 납품 시 Zip 통째로 올리는지(`uploaded`), 앱단 압축을 타는지(`created`), 개별 삭제하는지(`deleted`) 파악. 업로더 UX 병목 선별기 |
+| **`photographer_booking_photos_...`**| (보정본 납품류 통칭) | - | 보정본 결과물을 유저에게 전달할 때 `_view`, `_added`, `_deleted` 등 개별 뷰/수정 액션 추적. 납품 난이도 평가용 |
 | **`activation_chat_entered`** | - | - | 양측 모두 채팅방 화면 첫 렌더 시 (단순 푸시 클릭이 아닌 실제 대화 콘텍스트 진입 시점 열람 체크) |
 | **`photographer_response`** | - | - | 작가가 상대방에게 채팅을 하나라도 '응답' 반환 완료 |
 | **`photographer_first_response_time`**| `response_time_seconds`| Number | (가장 중요) 첫 상담부터 작가의 빠른 최초 응답까지 걸린 지연 시간! "응답률 100% 작가" 등 어드민 플랫폼 칭호 부여 알고리즘의 원천 소스 |

@@ -95,10 +95,10 @@ export default function BookingCalendarView({
   onPressAddSchedule,
   onMonthChange,
 }: BookingCalendarViewProps) {
-  // 초기 높이를 미리 계산하여 깜빡임 방지
-  const initialContainerHeight = SCREEN_HEIGHT;
+  // 초기 높이를 0으로 설정하여 onLayout 이전에는 렌더링되지 않도록 함
+  const initialContainerHeight = 0;
   const initialCalendarHeight = CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT;
-  const initialDefaultHeight = initialContainerHeight - initialCalendarHeight + 20;
+  const initialDefaultHeight = 0;
 
   const [containerHeight, setContainerHeight] = useState(initialContainerHeight);
   const [defaultHeight, setDefaultHeight] = useState(initialDefaultHeight);
@@ -106,6 +106,9 @@ export default function BookingCalendarView({
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const isPickerActiveRef = useRef(false); // 다이얼로그가 열려있거나 처리 중인지 추적
   const isGestureAnimatingRef = useRef(false); // 제스처 애니메이션 진행 중 플래그
+
+  // onLayout 측정 완료 여부
+  const isLayoutReady = containerHeight > 0;
 
   // renderType 갱신을 requestAnimationFrame으로 지연하여 애니메이션 프레임과 분리
   const deferredSetRenderType = useCallback((type: 'HIDDEN' | 'DEFAULT' | 'FULL') => {
@@ -436,61 +439,63 @@ export default function BookingCalendarView({
           setContainerHeight(e.nativeEvent.layout.height);
         }}
       >
-        <GestureDetector gesture={calendarPanGesture}>
-          <Animated.View style={{ flex: 1 }}>
-            {/* 고정 헤더 */}
-            <ScheduleCalendarHeader
-              currentYearMonth={months[1]}
-              onPressLeft={handlePressLeft}
-              onPressRight={handlePressRight}
-              onPressYearMonth={handlePressYearMonth}
-            />
-            {/* 가로 스와이프 가능한 날짜 그리드 */}
-            {isAdjacentMonthsReady ? (
-              <ScrollView
-                ref={scrollViewRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                scrollEnabled={renderType !== 'FULL'}
-                onMomentumScrollEnd={handleScrollEnd}
-                scrollEventThrottle={16}
-                contentOffset={{ x: SCREEN_WIDTH, y: 0 }}
-              >
-                {months.map((month) => (
-                  <View key={month} style={{ width: SCREEN_WIDTH }}>
-                    <ScheduleCalendarGrid
-                      displayYearMonth={month}
-                      selectedDate={selectedDate}
-                      onSelectDate={handleSelectDate}
-                      scheduleData={scheduleData}
-                      containerHeight={containerHeight}
-                      sheetHeight={sheetHeight}
-                      defaultHeight={defaultHeight}
-                      calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
-                      dayRowHeight={DAY_HEIGHT}
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-            ) : (
-              /* 현재달만 먼저 렌더링 */
-              <View style={{ width: SCREEN_WIDTH }}>
-                <ScheduleCalendarGrid
-                  displayYearMonth={months[1]}
-                  selectedDate={selectedDate}
-                  onSelectDate={handleSelectDate}
-                  scheduleData={scheduleData}
-                  containerHeight={containerHeight}
-                  sheetHeight={sheetHeight}
-                  defaultHeight={defaultHeight}
-                  calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
-                  dayRowHeight={DAY_HEIGHT}
-                />
-              </View>
-            )}
-          </Animated.View>
-        </GestureDetector>
+        <Animated.View style={{ flex: 1, opacity: isLayoutReady ? 1 : 0 }}>
+          <GestureDetector gesture={calendarPanGesture}>
+            <Animated.View style={{ flex: 1 }}>
+              {/* 고정 헤더 */}
+              <ScheduleCalendarHeader
+                currentYearMonth={months[1]}
+                onPressLeft={handlePressLeft}
+                onPressRight={handlePressRight}
+                onPressYearMonth={handlePressYearMonth}
+              />
+              {/* 가로 스와이프 가능한 날짜 그리드 */}
+              {isAdjacentMonthsReady ? (
+                <ScrollView
+                  ref={scrollViewRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  scrollEnabled={renderType !== 'FULL'}
+                  onMomentumScrollEnd={handleScrollEnd}
+                  scrollEventThrottle={16}
+                  contentOffset={{ x: SCREEN_WIDTH, y: 0 }}
+                >
+                  {months.map((month) => (
+                    <View key={month} style={{ width: SCREEN_WIDTH }}>
+                      <ScheduleCalendarGrid
+                        displayYearMonth={month}
+                        selectedDate={selectedDate}
+                        onSelectDate={handleSelectDate}
+                        scheduleData={scheduleData}
+                        containerHeight={containerHeight}
+                        sheetHeight={sheetHeight}
+                        defaultHeight={defaultHeight}
+                        calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
+                        dayRowHeight={DAY_HEIGHT}
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                /* 현재달만 먼저 렌더링 */
+                <View style={{ width: SCREEN_WIDTH }}>
+                  <ScheduleCalendarGrid
+                    displayYearMonth={months[1]}
+                    selectedDate={selectedDate}
+                    onSelectDate={handleSelectDate}
+                    scheduleData={scheduleData}
+                    containerHeight={containerHeight}
+                    sheetHeight={sheetHeight}
+                    defaultHeight={defaultHeight}
+                    calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
+                    dayRowHeight={DAY_HEIGHT}
+                  />
+                </View>
+              )}
+            </Animated.View>
+          </GestureDetector>
+        </Animated.View>
         <BookingContentContainer style={animatedStyle}>
           <GestureDetector gesture={panGesture}>
             <View>

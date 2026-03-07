@@ -439,32 +439,55 @@ export default function BookingCalendarView({
           setContainerHeight(e.nativeEvent.layout.height);
         }}
       >
-        <Animated.View style={{ flex: 1, opacity: isLayoutReady ? 1 : 0 }}>
+        <Animated.View style={{ flex: 1 }}>
           <GestureDetector gesture={calendarPanGesture}>
             <Animated.View style={{ flex: 1 }}>
-              {/* 고정 헤더 */}
-              <ScheduleCalendarHeader
-                currentYearMonth={months[1]}
-                onPressLeft={handlePressLeft}
-                onPressRight={handlePressRight}
-                onPressYearMonth={handlePressYearMonth}
-              />
-              {/* 가로 스와이프 가능한 날짜 그리드 */}
-              {isAdjacentMonthsReady ? (
-                <ScrollView
-                  ref={scrollViewRef}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  scrollEnabled={renderType !== 'FULL'}
-                  onMomentumScrollEnd={handleScrollEnd}
-                  scrollEventThrottle={16}
-                  contentOffset={{ x: SCREEN_WIDTH, y: 0 }}
-                >
-                  {months.map((month) => (
-                    <View key={month} style={{ width: SCREEN_WIDTH }}>
+              {/* 
+                고정 헤더 & 가로 스와이프 가능한 날짜 그리드
+                - isLayoutReady가 true가 될 때(onLayout으로 컨테이너 높이 계산 완료 후) 렌더링하여
+                ScheduleCalendarGrid의 useSharedValue 초깃값이 정확하게 들어가도록 함.
+                - opacity 토글만 하면 1프레임 딜레이로 인한 마진 팽창이 보일 수 있으므로 아예 마운트를 지연시킴.
+              */}
+              {isLayoutReady && (
+                <>
+                  <ScheduleCalendarHeader
+                    currentYearMonth={months[1]}
+                    onPressLeft={handlePressLeft}
+                    onPressRight={handlePressRight}
+                    onPressYearMonth={handlePressYearMonth}
+                  />
+                  {isAdjacentMonthsReady ? (
+                    <ScrollView
+                      ref={scrollViewRef}
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      scrollEnabled={renderType !== 'FULL'}
+                      onMomentumScrollEnd={handleScrollEnd}
+                      scrollEventThrottle={16}
+                      contentOffset={{ x: SCREEN_WIDTH, y: 0 }}
+                    >
+                      {months.map((month) => (
+                        <View key={month} style={{ width: SCREEN_WIDTH }}>
+                          <ScheduleCalendarGrid
+                            displayYearMonth={month}
+                            selectedDate={selectedDate}
+                            onSelectDate={handleSelectDate}
+                            scheduleData={scheduleData}
+                            containerHeight={containerHeight}
+                            sheetHeight={sheetHeight}
+                            defaultHeight={defaultHeight}
+                            calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
+                            dayRowHeight={DAY_HEIGHT}
+                          />
+                        </View>
+                      ))}
+                    </ScrollView>
+                  ) : (
+                    /* 현재달만 먼저 렌더링 */
+                    <View style={{ width: SCREEN_WIDTH }}>
                       <ScheduleCalendarGrid
-                        displayYearMonth={month}
+                        displayYearMonth={months[1]}
                         selectedDate={selectedDate}
                         onSelectDate={handleSelectDate}
                         scheduleData={scheduleData}
@@ -475,23 +498,8 @@ export default function BookingCalendarView({
                         dayRowHeight={DAY_HEIGHT}
                       />
                     </View>
-                  ))}
-                </ScrollView>
-              ) : (
-                /* 현재달만 먼저 렌더링 */
-                <View style={{ width: SCREEN_WIDTH }}>
-                  <ScheduleCalendarGrid
-                    displayYearMonth={months[1]}
-                    selectedDate={selectedDate}
-                    onSelectDate={handleSelectDate}
-                    scheduleData={scheduleData}
-                    containerHeight={containerHeight}
-                    sheetHeight={sheetHeight}
-                    defaultHeight={defaultHeight}
-                    calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
-                    dayRowHeight={DAY_HEIGHT}
-                  />
-                </View>
+                  )}
+                </>
               )}
             </Animated.View>
           </GestureDetector>

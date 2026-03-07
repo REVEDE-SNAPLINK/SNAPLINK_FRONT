@@ -205,10 +205,10 @@ export default function SearchPhotographerContainer() {
   const photographers = data?.pages.flatMap((page) => page.content);
 
   useEffect(() => {
-    if (photographers) {
-      setTotalCount(photographers.length);
+    if (data?.pages[0].totalElements) {
+      setTotalCount(data.pages[0].totalElements);
     }
-  }, [photographers]);
+  }, [data]);
 
   const handlePressBack = () => {
     navigation.goBack();

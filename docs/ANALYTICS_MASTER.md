@@ -1,12 +1,10 @@
 # SNAPLINK 데이터 분석 및 수집 마스터 명세서 (Analytics Master)
 
-본 문서는 SNAPLINK의 비즈니스 지표(KPI)를 분석하기 위한 대시보드 구조와, 이를 뒷받침하는 Firebase Analytics / Crashlytics의 프론트엔드 데이터 수집 명세를 하나로 묶은 통합 문서입니다.
+본 문서는 SNAPLINK의 비즈니스 지표(KPI)를 분석하기 위한 대시보드 구조와, 이를 뒷받침하는 Firebase Analytics / Crashlytics의 프론트엔드 데이터 수집 명세를 하나로 묶은 통합 문서입니다. 전 프론트엔드 환경에서 모든 이벤트는 `utils/analytics.ts`의 `safeLogEvent` 래핑 함수를 통해 수집됩니다.
 
 ---
 
 ## 📊 1. 비즈니스 지표 (KPI) 및 대시보드 설계
-
-앱의 전반적인 활성도, 유입 경로, 사용자 탐색, 예약, 공급자 지표를 위한 기본 방향성입니다.
 
 | 카테고리 | 핵심 지표 (Metrics) | 분석 내용 및 의미 | 활용 데이터(이벤트/파라미터) |
 | :--- | :--- | :--- | :--- |
@@ -18,67 +16,117 @@
 
 ---
 
-## 📝 2. Firebase Analytics 이벤트 및 파라미터 상세 수집 명세
+## 📝 2. Firebase Analytics 이벤트 및 파라미터 완전 수집 명세
 
-모든 이벤트는 클라이언트 사이드(`utils/analytics.ts`)의 `safeLogEvent` 래핑 함수를 통해 수집됩니다. 각 이벤트와 그에 속한 각 **파라미터**는 철저히 대시보드 분석 목적을 띄고 있습니다.
+모든 개별 이벤트들과 그 파라미터가 "대시보드에서 어떻게 쓰이기 위해 존재하는가"를 기술한 상세 사전입니다.
 
 ### 2.1 공통 속성 (User Properties) 및 라이프사이클 이벤트
 
-| 이벤트명 / 동작 | 수집 시점 | 세부 파라미터 명세 | 파라미터 역할 및 수집 목적 |
+| 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
-| **`setUserId`** | 로그인/가입 완료 시 전역 설정 | `userId` | 해당 기기에서 발생하는 모든 후속 오프라인/온라인 행동 이벤트들에 유저 고유 식별자를 매핑하여 한 명의 온전한 유저 행동 여정(User Journey) 선을 완성하기 위함 |
-| **`setUserProperties`**| 로그인/가입 완료 시 전역 설정 | `user_type`<br>`signup_date` | `user_type`('user'\|'photographer')별 세그먼트를 분리하고, `signup_date` (YYYY-MM-DD)를 통해 동기들 간의 '가입 코호트 리텐션 곡선'을 추적하기 위함 |
-| **`session_start`** | 포그라운드 진입 시 자동 발생 | - | DAU/WAU 측정 및 유저 당 하루 평균 앱 런칭 횟수를 계산하는 절댓값 기준 |
-| **`session_end`** | 배경으로 돌리거나 앱을 종료할 때 | `duration_seconds` (Number) | 유저가 해당 1회 세션 동안 앱을 켜두고 활동한 시간(초)을 수치화하여 평균 체류 시간(Avg. Duration)을 분석하기 위함 |
-| **`first_open`** / **`app_open`** | 최초 설치 직후 열림 / 이후 일반 실행 | `user_id`, `user_type`, `platform` | 설치 규모 및 누적 구동량을 측정하며, `platform`('ios'\|'android') 값을 통해 OS별 마케팅 효과와 사용자 분포 비율을 추출하기 위함 |
-| **`screen_view`** | OS / React Navigation 에 의한 화면 전환 시 | `screen_name`, `platform`, `user_id`, `user_type`, `session_start_timestamp` | 유저의 앱 내 UI/UX 탐색 깊이(Screens/Session)를 파악하고, 어느 특정 경로로 움직이는지 Path Flow Analysis 토폴로지를 구성하기 위함 |
+| **`setUserId`** | `userId` | String | (이벤트가 아님) 기기에서 발생할 모든 후속 이벤트들에 특정 유저 식별자를 각인하여 행동 여정(User Journey)을 하나로 묶음 |
+| **`setUserProperties`** | `user_type` | 'user' \| 'photographer' | 애널리틱스 뷰에서 B2C고객/B2B작가의 트래픽 스펙트럼과 세그먼트를 분리 필터링하기 위함 |
+| ↳ | `signup_date` | Date String | 회원가입 일자를 기록하여 동기들 간의 '가입 코호트 리텐션 곡선' 트래킹 |
+| **`session_start`** | (자동) | - | 앱 포그라운드 진입. DAU/WAU 측정 및 유저 당 하루 평균 방문 횟수를 구하는 절댓값 기준 |
+| **`session_end`** | `duration_seconds` | Number | 배경(Background) 전환 시 앱 체류 시간(초)을 수치화하여 평균 체류 시간(Avg. Duration) 통계화 |
+| **`first_open`** <br/>/ **`app_open`** | `user_id` | String | 신규 설치/구동 볼륨 파악 |
+| ↳ | `user_type` | String | 구동자의 롤 파악 |
+| ↳ | `platform` | 'ios' \| 'android' | OS별 마케팅 효과와 사용자 분포 비율을 추출 |
+| **`screen_view`** | `screen_name` | String | (현재는 Navigation 변경 시 자동 수집) 유저의 앱 내 UX 탐색 깊이와 Path Flow 구성 |
 
-### 2.2 외부 유입 및 딥링크 (Deep Link)
+### 2.2 딥링크(Deep Link) 유입 및 성과 측정
 
-| 이벤트명 / 동작 | 수집 시점 | 세부 파라미터 명세 | 파라미터 역할 및 수집 목적 |
+| 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
-| **`deep_link_open`** | 딥링크(URI/App Link)를 터치하여 강제로 앱이 호출된 최전단 시점 | `link_url` (String)<br>`link_type` ('portfolio' 등)<br>`target_id` (String)<br>`source_channel` (String)<br>`tracking_code` (UUID)<br>`is_first_open_after_install` (Boolean) | **link_url**: 원본 URL 로그 추적<br>**link_type/target_id**: 해당 유입이 특정 포트폴리오 랜딩인지 작가 프로필 랜딩인지 분류<br>**source_channel/tracking_code**: 해당 URL이 카카오톡, 시스템 공유 등 어디서 복사된 것인지 유입 성과(Attribution) 판단<br>**is_first...**: 해당 터치로 인해 마켓을 거쳐 '설치'에 이르게 한 쾌거(Acquisition)인지 파악 |
-| **`deep_link_landing_resolved`** | 파싱된 딥링크의 인자를 바탕으로 해당 탭/화면으로의 라우팅 처리가 마무리된 후 | `original_link_type` (String)<br>`resolved_screen` (String)<br>`resolve_success` (Boolean)<br>`fail_reason` (String) | 전달된 딥링크 로직이 정상 작동하여 유저가 약속된 목적지에 도달했는가(CVR)를 감시하고, `resolve_success: false` 시 `fail_reason`(잘못된 인자 유입, 삭제된 게시물 등) 파라미터로 장애/버그 유발 원인을 디버깅 |
+| **`deep_link_open`** <br/>*(초기 딥링크 핑)* | `link_url` | String | 파싱되기 전의 날것(Raw) 원본 URL 로그 |
+| ↳ | `link_type` | 'portfolio' \| 'community' 등 | 해당 유입이 커뮤니티 피드 타겟인지 작가 프로필 타겟인지 카테고리화 |
+| ↳ | `target_id` | String | 목적지(작가, 게시글)의 고유 아이디 |
+| ↳ | `source_channel` | String | (현재 제한적) 해당 딥링크가 시스템 공유 등 어떤 루트로 발생했는지 Attribution 판단 |
+| ↳ | `tracking_code` | UUID | 유포자와 방문자를 매핑하는 트래킹 키 값. 바이럴 확산 계수(K-Factor) 역추적용 |
+| ↳ | `is_first_open...` | Boolean | `true`일 경우 신규 인스톨 캠페인/마케팅이 성공한 '획득(Acquisition)'임을 증명 |
+| **`deep_link_landing_...`** <br/>*(처리 결과 로그)*| `original_link_type` | String | 목표했던 링크 타입 |
+| ↳ | `resolved_screen` | String | 실제로 라우팅에 성공해 진입시킨 React Navigation 스크린 이름 |
+| ↳ | `resolve_success` | Boolean | 실패 시 `false` 기록, 딥링크 깨짐(Broken link)에 따른 전환율 이탈률 수치 제어 |
+| ↳ | `fail_reason` | String | 알 수 없는 인자 등 딥링크 장애/버그 유발 원인 디버깅용 텍스트 |
 
-### 2.3 회원 인증 및 탐색 인게이지먼트 (Discovery)
+### 2.3 탐색 및 발견 (Discovery & Engagement)
 
-| 이벤트명 / 동작 | 수집 시점 | 세부 파라미터 명세 | 파라미터 역할 및 수집 목적 |
+| 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
-| **`login`** / **`sign_up`** | 소셜 로그인 API가 종결되고 로컬 앱 캐시에 토큰이 들어오는 시점 | `method` ('naver', 'apple', 'test_account')<br>`user_type`, `signup_date` | `method` 파라미터로 어떤 소셜 인증 공급사 의존도가 높은지 점유율을 계산하기 위함 |
-| **`home_feed_view`** | 메인 홈 탭 진입 피드 로딩 후 | - | 시작 허브 화면 도달률 및 피드 조회 횟수 파악 |
-| **`creator_card_impression`** | 피드 내에서 작가 카드가 화면 뷰포트에 보여질 때 (30초 중복 핑 방지) | `photographer_id` (String)<br>`source` (String)<br>`feed_type` (String)<br>`rank_index` (Number) | **photographer_id/feed_type**: 인기 작가나 추천 작가 등 누구의 카드가 많이 뿌려졌는지 현황 파악<br>**source/rank_index**: 목록에서 몇 번째 줄(순서)에서 가장 노출 빈도가 높은지 피드 구성력의 UI 효율을 검증 |
-| **`creator_card_click`** | 위 카드 중 하나를 유저가 터치했을 때 | 노출 이벤트 파라미터와 동일 | Impression 대비 실질 클릭률(CTR 매트릭스)을 구성하여 해당 작가 썸네일 포트폴리오의 매력도를 수학적으로 계량화 |
-| **`search_photographer`** | 유저가 검색어를 치고 찾기 버튼을 액션 | `search_key` (String)<br>`result_count` (Number) | `search_key`에 들어간 지역/스타일 단어를 수집하여 유저들의 수요 트렌드를 읽어내고, `result_count: 0`인 실패 키워드들을 발굴하여 공급 확충 전략에 반영 |
-| **`search_result_view`** | 검색 후 결과 리스트 페이지 렌더링 | 파라미터 동일 | 위 요청 대비 실제 렌더링 완료 전환률 |
-| **`ai_recommendation_start`** | AI 추천 시작 버튼을 눌렀을 때 | `prompt` (String) | `prompt` 텍스트로 사용자가 AI에 어떤 긴 맥락의 요청을 내리는지 요구사항 유형화 |
-| **`photographer_profile_view`** | 검색이나 피드를 넘어 상세 프로필 도달 | `photographer_id`, `source` | 최종적으로 작가 개인 페이지의 일간/주간 트래픽을 합산하고, 유입 매체(`source`)별 트래픽 셰어 비중 확인 |
-| **`share_link_created`** | 포트폴리오 뷰 등에서 앱 내 [외부로 공유] 액션을 취했을 때 | `link_type`, `target_id`<br>`share_channel` ('system_share')<br>`tracking_code` (UUID) | 바이럴 확산력을 재기 위해 발급된 `tracking_code`를 서버 측 딥링크 유입 이벤트와 조인하여 K-factor 증폭 계간 산출 |
-| **`bookmark_toggle`** | 찜하기 버튼 토글 (Click) | `photographer_id`, `user_id` | 당장 예약하진 않아도 킵해두는 유저의 대기수요율 측정 |
+| **`login`** / **`sign_up`** | `method` | 'naver'\|'apple' 등 | 가입 계정 제공사 별 트래픽 점유율 및 가입 선호도 측정 |
+| ↳ | `user_type` / `signup_date` | String | 1.1의 User Properties와 동일한 값 명시적 백업 기록 |
+| **`home_feed_view`** | - | - | 홈 화면 전체 로드 완료에 대한 기본 앵커 |
+| **`search_photographer`** | `search_key` | String | 유저가 입력한 검색어 단어(지역/스타일)의 트렌드 수요 및 빈도 집계 |
+| ↳ | `result_count` | Number | 검색 결과 갯수. `0`개 결과 매칭 실패율을 파악하여 작가 공급 확충 데이터로 사용 |
+| **`search_result_view`** | (위와 동일) | - | 검색 시도 대비 실제 검색 화면 렌더링 전환 성공률 |
+| **`ai_recommendation_start`**| `prompt` | String | 유저가 AI 챗봇에 질의하는 요구사항(문장/맥락)을 수집하여 NLP 데이터셋 마련 |
+| **`ai_recommendation..._view`**| `result_count` | Number | 추천 알고리즘 결과물 제공 성능(0개 매칭 방어율) 파악 |
+| **`creator_card_impression`**| `photographer_id` | String | 피드에서 뷰포트에 카드(썸네일)가 들어왔을 때 기록 (30초 중복 핑 방지) |
+| ↳ | `source` / `feed_type` | String | 이 카드가 '홈 추천'에서 떴는지, '검색 결과'에서 떴는지 인벤토리 출처 파악 |
+| ↳ | `rank_index` | Number | 목록에서 몇 번째 위/아래의 카드가 더 많은 노출 점유율을 갖는지 알고리즘 배치 효율 검증 |
+| **`creator_card_click`** | (Impression과 동일) | - | `Impression 대비 클릭률(CTR)` 분석. 작가 메인 썸네일과 가격표의 매력도를 수학적으로 계량화 |
+| **`photographer_profile_view`**| `photographer_id`, `source` | String | 최종적으로 작가 프로필의 일간 도달 트래픽을 합산하고, 유입 매체(홈 vs 검색 vs 외부공유) 셰어 비중 확인 |
+| **`profile_scroll_depth`** | (스크롤 임계점 비율) | 단위(%) | 프로필 화면에서 25%, 50%, 90% 하단부까지 진입한 사람의 비율. 페이지 이탈 UX/UI 구간 디버깅 |
+| **`profile_portfolio_clicked`**| (선택된 포트폴리오 ID) | - | 프로필 내 썸네일을 터치해 크게 뷰어로 킨 유저의 '심도 깊은 관여율' 측정 |
+| **`profile_review..._clicked`**| - | - | 프로필 내 리뷰 탭 열람률. (리뷰 신뢰도의 영업 견인 능력을 확인) |
+| **`share_link_created`** | `link_type`, `target_id` | String | 공유된 대상 식별 |
+| ↳ | `share_channel` | 'system_share' | (차후 고도화) 유저가 복사해재낀 채널의 매체력 평가 |
+| ↳ | `tracking_code` | UUID | 발급된 UUID. 링크 복사 버튼 클릭 빈도와 유포량을 분석 |
+| **`bookmark_toggle`** | `photographer_id`, `user` | String | 찜 버튼 On/Off 시 기록. 예약 하락 시기에 작가의 잠재 고객 리스트 볼륨을 어드민에 제공 |
 
-### 2.4 문의 / 예약 (Booking Funnel) 및 사후 처리
+### 2.4 문의 및 예약(Booking Funnel), 구매 후 경험
 
-| 이벤트명 / 동작 | 수집 시점 | 세부 파라미터 명세 | 파라미터 역할 및 수집 목적 |
+해당 퍼널 이벤트의 목표는 `의도 발생 → 양식 거부율 → 협의 → 확정`의 Drop-off 지점(이탈 구간)을 추적하는 것입니다.
+
+| 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
-| **`booking_intent`** | 예약/문의 버튼을 눌러보거나 진입하려는 순간 | - | 프로필 방문 후 실제 퍼널 진입 의사가 있는 활성 유저(Activation) 비율 산출 단서 |
-| **`chat_initiated`** | 실제 채팅방 컨텍스트 진입 완료 | - | 단순 의사가 아닌 메시지 입력 직전 단계 돌파율 확인 |
-| **`booking_form_abandoned`** | '예약 신청서' 폼 작성 화면에서 중도 이탈(뒤로가기/포기) 시 | `step` (String)<br>`time_spent_seconds` (Number)<br>기타 작성 중이던 상품 타입 정보 | **step**: 날짜 선택, 상품 선택 등 어느 부분에서 가장 많이 막히고 이탈하는지 파이프라인 누수 병목(Bottleneck) 확인<br>**time_spent...**: 유저가 포기하기 전까지 얼마나 고민하다 나갔는지 UX 난이도 추측 |
-| **`booking_request_submitted`** | 폼 작성 및 정보 최종 전송 타격 시 | `request_details_length` 등 | 유저가 남긴 요청사항의 길이 및 구체성 파악을 통해 리드(Lead) 질 평가 |
-| **`booking_confirmed`** | 작가 승인까지 완료되어 매출 확정이 이뤄진 케이스 | - | 최종 KPI인 결제/수주 확정 총량 수집 |
-| **`booking_cancelled_...`** / **`booking_rejected_...`** | 사용자 변심 취소 / 작가의 요청 반려가 일어났을 때 | `reason_length` (Number) | 취소 주체가 누구인지 분류하여 '노쇼율' VS '작가 영업 포기율'을 가려내고, 이유 칸에 써맨 텍스트 크기 단위로 변심/반려 사유의 진정성 파악 |
-| **`photo_zip_download_as_is`** / **`extracted`** / **`individual`** | 보정본 또는 원본 납품 사진 다운로드 관련 | `count` (다운로드 사진 수량) | 유저가 Zip 형태로 일괄 저장하는 비율 대비, 개별 사진만 쏙 빼가는 비율을 파악해 차후 Cloud UX 방식 개편 기획안에 활용 |
-| **`review_start`** / **`review_create_complete`** | 예약 후기 생성 구간 진입 및 DB 쓰기 완료 | `booking_id`, `user_id` | 예약/납품을 마친 사용자들을 얼마나 후기 인벤토리 작성으로 이끌어냈는가 증명률 확보 |
+| **`booking_intent`** | - | - | [예약/문의] 버튼 첫 터치. 프로필 도달 대비 실제 구매 의지가 있는 Hot 리드 비율 측정 |
+| **`chat_initiated`** | - | - | 버튼 클릭 후 챗방 생성 완료 핑. 대화방 렌더링 과정의 네트워크성/UI성 중도 차단 방어 분석 |
+| **`booking_form_abandoned`**| `step` | String | (고객 이탈 시) 날짜 입력, 상품 선택 등 어느 Step에서 창을 X 닫고 이탈하는지 파이프라인 누수 병목 확인 |
+| ↳ | `time_spent_seconds` | Number | 해당 폼에서 고민하다 포기하기까지 걸린 시간. 작성 난이도 UX 추척 |
+| ↳ | 상품/날짜 정보 등 | Any | 포기된 예약건에 담겨 있던 상품/가격대 정보 (너무 비싼 것만 이탈하는지 등 분석) |
+| **`booking_request...`** | `request_details_length` | Number | 예약 폼이 전송 완료(Submit)될 때, 세부 요구사항 텍스트 길이를 통해 리드의 진정성/구체성 평가 |
+| **`booking_confirmed`** | - | - | 영업 최종 수주. KPI 중 가장 핵심인 '결제금 전환' 총량 수집용 |
+| **`booking_cancelled_by_user`**| `reason_length` | Number | 단순 변심/이탈 노쇼 비율 측정. 사유 텍스트 단어 길이로 진정성 파악 |
+| **`booking_detail_view`** | `booking_id`, `user_id` | - | 예약 후 유저가 자신의 일정을 앱에 켜서 확인하는 리텐션 관여 정도 (불안감 측정) |
+| **`review_start`** <br/>/ **`..._create_complete`** | `booking_id`, `user_id` | String | [납품 완료 후기] 모듈 진입 시점과 DB 저장 완료 시점 쌍. 리뷰 인벤토리 수집의 전환율(Review CVR) 파악 |
+| **`review_edit_start`** <br/>/ **`..._edit_complete`** | `review_id`, `user_id` | String | 작성된 리뷰를 정성껏 수정/보강하는 충성 유저의 행동 분석 |
+| **`photo_download_...`**| (관련 이벤트 4종 통합명) | - | `photo_zip_download_as_is`, `photo_zip_download_extracted`, `photo_download_as_zip`, `photo_download_individual` 발생 |
+| ↳ | `count` | Number | 다운로드 받은 원본/보정본 사진 수. 묶음 통채 Zip 저장율 VS 낱장 개별 다운로드 성향을 파악하여 차후 Cloud 다운로드 UI/UX 모델 개선점 추출 |
 
-### 2.5 작가 공급망 운영(Supply) 및 커뮤니티(Community) 상호작용
+### 2.5 작가 공급망 운영(Supply)과 채팅
 
-| 이벤트명 / 동작 | 수집 시점 | 세부 파라미터 명세 | 파라미터 역할 및 수집 목적 |
+B2B 관점의 공급망 체류 및 성실도를 분석합니다.
+
+| 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
-| **`shooting_service_action`** / **`personal_schedule_created`** | 작가 탭에서 상품을 만들고 수정하거나 스케줄러 휴무 설정 달력 조작 시 | - | 공급자 단의 '활성 작가(Active Creators)' 상태를 유지하는 비율과 영업 지속성 지표 검증 |
-| **`portfolio_post_created`** | 포트폴리오를 새로 업로드 | - | - |
-| **`community_post_create`** | 새 커뮤니티 질문글/자유글 생성 작성 완료 시 | - | 컨수머 및 크리에이터의 커뮤니티 참여 관여도 평가 |
-| **`community_post_view`** / **`share`** / **`like`** / **`comment_create`** | 피드 내 글 열람 / 웹 공유 / 하트 / 댓글 남기기 | - | 특정 커뮤니티 글이 유저 액션을 끌어모으는 바이럴 점수(Engagement Score) 산출 |
-| **`activation_chat_entered`** | 타인/작가/고객 채팅방 인입 렌더링 시 | - | 푸시 알림 후 실제 소통방 대기로 진입하는 열람률 카운팅 |
-| **`photographer_response`** / **`photographer_first_response_time`** | 작가가 푸시나 채팅방 안에서 문의자에게 타겟팅된 응답 발송 시 | `response_time_seconds` (Number) | 문의 발생 후 작가가 최초 응답하기까지 걸린 시간의 평균/중앙값을 추출. 서비스 신뢰도(CS)와 '우수 연락자' 칭호를 자동 판별하는 핵심 데이터로 쓰임 |
-| **`chat_message_sent`** | 메세지가 성공적으로 소켓이나 서버단에 Write 되었을 때 | `message_count` (채팅 누계)<br>`message_length` (단위 메시지 텍스트 양) | 작가/고객 간 대화가 짧은 단답인지, 충분한 길이의 컨설팅인지 커뮤니케이션 밀도 분석 |
+| **`photographer_booking_...`**| (예약 승인류 통칭) | - | 작가 단 예약 상세(`detail_view`), 앱 단 예약 승락(`approved`) 플로우 비율. 앱에서 빠른 영업 승객이 이뤄지는지 확인. |
+| **`..._rejected_by...`** | `reason_length` | Number | 작가가 직접 취소/반려 사유 입력. 작가의 영업 거절(No-Book) 비율, 사유 충실도를 통해 플랫폼 공급 건전성 체크 |
+| **`photographer_..._cancelled_by...`**| (사유 등) | - | 기 승낙된 일정을 작가가 변심/이탈 취소한 심각한 장애 상황 패널티 추산 |
+| **`photographer_booking_completed`**| - | - | 촬영 완료 상태 진입 선언 |
+| **`shooting_service_action`**| - | - | 작가가 서비스 패키지나 가격을 올리고 내릴 때의 상품 업데이트 Active 활성 지수 측정 |
+| **`personal_schedule_created`**<br/>/ **`..._deleted`**| - | - | 캘린더 휴무나 스케줄 등록 빈도. (프로필 관리를 꾸준히 하는 우수 셀러 지표) |
+| **`portfolio_post_created`** / **`updated`** / **`deleted`** | - | - | 포트폴리오 피드 업데이트 Active 활성 지수 |
+| **`photographer_original_...`**| (원본 업로드류 통칭) | - | 작가가 사진을 올릴 때 Zip 통채로 올리는지(`uploaded`), 앱단 압축을 타는지(`created`) 파악. 업로더 UX 병목 파악 |
+| **`activation_chat_entered`** | - | - | 양측 모두 채팅방 화면 첫 렌더 시 (단순 푸시 클릭이 아닌 실제 대화 콘텍스트 진입 시점 열람 체크) |
+| **`photographer_response`** | - | - | 작가가 상대방에게 채팅을 하나라도 '응답' 반환 완료 |
+| **`photographer_first_response_time`**| `response_time_seconds`| Number | (가장 중요) 첫 상담부터 작가의 빠른 최초 응답까지 걸린 지연 시간! "응답률 100% 작가" 등 어드민 플랫폼 칭호 부여 알고리즘의 원천 소스 |
+| **`chat_message_sent`** | `message_count` | Number | 총 오간 메시지 사이클 횟수. |
+| ↳ | `message_length` | Number | 작가단/고객단의 컨설팅 깊이. 즉결 결제냐, 진상/긴 상담이냐 분석 |
+
+### 2.6 커뮤니티 (Community) 활성화 지표
+
+유저들이 사진작가를 구하지 않을 때도 앱에 머물게 하는 체류 기능에 대한 지표입니다.
+
+| 이벤트명 / 동작 | 수행 파라미터 | 파라미터 역할 및 수집 목적 |
+| :--- | :--- | :--- |
+| **`community_post_create_start`** | - | [게시글 작성] 모달 버튼 클릭 관여율 |
+| **`community_post_create`** | - | 실제 작성된 콘텐츠 인벤토리 발생 (DB Write 성공률) |
+| **`community_post_view`** | - | 홈탭 등에서 열린 글이 얼마나 많이 조회되는지 콘텐츠 트래픽 파악 |
+| **`community_post_like`** | - | 글 호응도(하트) 인터랙션 바이럴 평가 |
+| **`community_post_share`** | - | 외부로 질문/자랑을 퍼다 나르는 외부 바이럴 지수 계산용 |
+| **`community_comment_create`** <br/>/ **`delete`** / **`edit`** | - | 글 안에서 댓글 왈가왈부 인게이지먼트 평가 |
+| **`community_post_delete`** <br/>/ **`edit`** | - | 게시글의 휘발 및 수정 관여 |
 
 ---
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import analytics from '@react-native-firebase/analytics';
+import { EnhancedScheduleData } from '@/components/domain/booking/ScheduleCalendar.tsx';
 import BookingCalendarView from '@/screens/photographer/BookingCalendar/BookingCalendarView.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
@@ -112,14 +113,18 @@ export default function BookingCalendarContainer() {
     !!userId && !!selectedDate
   );
 
+  // 수정 E: 이전 데이터를 useRef로 보존하여 fetch 중 색상 깜빡임 방지
+  const prevScheduleMapRef = useRef<Map<string, {
+    hasBooking: boolean;
+    publicHoliday: boolean;
+    photographerHoliday: boolean;
+    hasPersonalSchedule: boolean;
+  }>>(new Map());
+
   // Enhanced schedule data from API (5 months: prevPrev, prev, current, next, nextNext)
   const enhancedScheduleData = useMemo(() => {
-    const schedulesByDate = new Map<string, {
-      hasBooking: boolean;
-      publicHoliday: boolean;
-      photographerHoliday: boolean;
-      hasPersonalSchedule: boolean;
-    }>();
+    // 이전 캐시를 기반으로 시작 (fetch 중인 월은 이전 값 유지)
+    const schedulesByDate = new Map(prevScheduleMapRef.current);
 
     // Helper to add month data to map
     const addMonthData = (data: typeof monthScheduleData, targetYear: number, targetMonth: number) => {
@@ -146,6 +151,9 @@ export default function BookingCalendarContainer() {
     addMonthData(monthScheduleData, year, month);
     addMonthData(nextMonthScheduleData, nextYear, nextMonth);
     addMonthData(nextNextMonthScheduleData, nextNextYear, nextNextMonth);
+
+    // 캐시 업데이트
+    prevScheduleMapRef.current = schedulesByDate;
 
     // Convert map to array
     return Array.from(schedulesByDate.entries()).map(([date, data]) => ({

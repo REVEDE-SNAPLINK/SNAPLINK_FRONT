@@ -378,6 +378,50 @@ export function ScheduleCalendarGrid({
 
   const renderHeader = useCallback(() => <View style={{ height: 0 }} />, []);
 
+  // 수정 F: dayComponent를 useCallback으로 안정화
+  const renderDayComponent = useCallback(({ date }: any) => {
+    const dateString = date?.dateString ?? '';
+    const isSelected = selectedDate === dateString;
+
+    const dateYearMonth = dayjs(dateString).format('YYYY-MM');
+    const isCurrentMonth = dateYearMonth === displayYearMonth;
+
+    const eventColor = getEventColor(dateString);
+    const isSunday = new Date(date?.dateString || '').getDay() === 0;
+
+    const textColor = isSelected
+      ? '#fff'
+      : !isCurrentMonth
+        ? theme.colors.disabled
+        : isSunday
+          ? '#E84E4E'
+          : theme.colors.textPrimary;
+
+    return (
+      <AnimatedDayCell
+        dateString={dateString}
+        day={date?.day ?? 0}
+        isSelected={isSelected}
+        eventColor={eventColor}
+        textColor={textColor}
+        style={dayMarginStyle}
+        onPress={handleDayPress}
+      />
+    );
+  }, [selectedDate, displayYearMonth, getEventColor, dayMarginStyle, handleDayPress]);
+
+  // 수정 F: theme 객체를 useMemo로 안정화하여 불필요한 RNCalendar 리렌더 방지
+  const calendarTheme = useMemo(() => ({
+    ...CALENDAR_THEME,
+    // @ts-ignore
+    'stylesheet.calendar.header': {
+      header: {
+        height: 0,
+        opacity: 0,
+      },
+    },
+  }), []);
+
   return (
     <RNCalendar
       key={displayYearMonth}
@@ -385,46 +429,8 @@ export function ScheduleCalendarGrid({
       hideArrows={true}
       renderHeader={renderHeader}
       hideDayNames={false}
-      theme={{
-        ...CALENDAR_THEME,
-        // @ts-ignore
-        'stylesheet.calendar.header': {
-          header: {
-            height: 0,
-            opacity: 0,
-          },
-        },
-      }}
-      dayComponent={({ date }) => {
-        const dateString = date?.dateString ?? '';
-        const isSelected = selectedDate === dateString;
-
-        const dateYearMonth = dayjs(dateString).format('YYYY-MM');
-        const isCurrentMonth = dateYearMonth === displayYearMonth;
-
-        const eventColor = getEventColor(dateString);
-        const isSunday = new Date(date?.dateString || '').getDay() === 0;
-
-        const textColor = isSelected
-          ? '#fff'
-          : !isCurrentMonth
-            ? theme.colors.disabled
-            : isSunday
-              ? '#E84E4E'
-              : theme.colors.textPrimary;
-
-        return (
-          <AnimatedDayCell
-            dateString={dateString}
-            day={date?.day ?? 0}
-            isSelected={isSelected}
-            eventColor={eventColor}
-            textColor={textColor}
-            style={dayMarginStyle}
-            onPress={handleDayPress}
-          />
-        );
-      }}
+      theme={calendarTheme}
+      dayComponent={renderDayComponent}
     />
   );
 }

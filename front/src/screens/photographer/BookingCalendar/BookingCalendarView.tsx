@@ -17,7 +17,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   runOnJS,
-  withTiming, interpolate, Extrapolate,
+  withSpring, interpolate, Extrapolate,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 
@@ -41,6 +41,16 @@ const CALENDAR_HEADER_HEIGHT = 76;
 const DAY_HEIGHT = 62;
 const MAX_WEEK_COUNT = 6; // 캘린더 최대 주차 수 (높이 통일 기준)
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// 통일된 스프링 설정 (iOS 네이티브 시트와 유사한 느낌)
+const SNAP_SPRING_CONFIG = {
+  damping: 22,
+  stiffness: 220,
+  mass: 1,
+  overshootClamping: false,
+  restDisplacementThreshold: 0.5,
+  restSpeedThreshold: 0.5,
+};
 
 // 이전달 계산
 const getPrevMonth = (yearMonth: string) => {
@@ -95,6 +105,15 @@ export default function BookingCalendarView({
   const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const isPickerActiveRef = useRef(false); // 다이얼로그가 열려있거나 처리 중인지 추적
+  const isGestureAnimatingRef = useRef(false); // 제스처 애니메이션 진행 중 플래그
+
+  // renderType 갱신을 requestAnimationFrame으로 지연하여 애니메이션 프레임과 분리
+  const deferredSetRenderType = useCallback((type: 'HIDDEN' | 'DEFAULT' | 'FULL') => {
+    requestAnimationFrame(() => {
+      setRenderType(type);
+      isGestureAnimatingRef.current = false;
+    });
+  }, []);
 
   // 방법 C: 월 목록을 상태로 관리 [이전달, 현재달, 다음달]
   const [months, setMonths] = useState(() => [
@@ -253,9 +272,12 @@ export default function BookingCalendarView({
   const hasSchedules = bookings.length > 0 || personalSchedules.length > 0 || hasPublicHoliday || hasPhotographerHoliday;
   const isDateSelected = selectedDate && selectedDate.trim() !== '';
 
+  // 수정 A: 초기 상태가 HIDDEN이므로  sheetHeight=0으로 시작하되,
+  // ScheduleCalendarGrid에 전달되는 containerHeight가 이미 initialContainerHeight로
+  // 세팅되어 있으므로 hiddenMaxMargin이 올바르게 초기 계산됨
   const sheetHeight = useSharedValue(0);
   const dragStartHeight = useSharedValue(0);
-  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('DEFAULT');
+  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -274,7 +296,7 @@ export default function BookingCalendarView({
 
   useEffect(() => {
     renderTypeSV.value = renderType;
-  }, [renderType, renderTypeSV]);
+  }, [renderType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 날짜 선택 핸들러 - HIDDEN 상태에서 날짜를 선택하면 DEFAULT로 전환
   const handleSelectDate = (date: string) => {
@@ -303,34 +325,38 @@ export default function BookingCalendarView({
       const SNAP_HIDDEN = defaultHeight * 0.4;
       const SNAP_FULL = defaultHeight + (containerHeight - defaultHeight) * 0.6;
 
+      // 수정 C: 제스처 애니메이션 플래그 설정 → useEffect 이중 트리거 방지
+      runOnJS(() => { isGestureAnimatingRef.current = true; })();
+
       if (renderTypeSV.value === 'FULL') {
         if (velocity > 500 || current < SNAP_FULL) {
-          sheetHeight.value = withTiming(defaultHeight, {}, () => {
+          sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
             renderTypeSV.value = 'DEFAULT';
-            runOnJS(setRenderType)('DEFAULT');
+            runOnJS(deferredSetRenderType)('DEFAULT');
           });
         } else {
-          sheetHeight.value = withTiming(containerHeight);
+          sheetHeight.value = withSpring(containerHeight, SNAP_SPRING_CONFIG);
+          runOnJS(() => { isGestureAnimatingRef.current = false; })();
         }
         return;
       }
 
       if (velocity > 500 || current < SNAP_HIDDEN) {
-        sheetHeight.value = withTiming(0, { duration: 250 }, () => {
+        sheetHeight.value = withSpring(0, SNAP_SPRING_CONFIG, () => {
           renderTypeSV.value = 'HIDDEN';
-          runOnJS(setRenderType)('HIDDEN');
+          runOnJS(deferredSetRenderType)('HIDDEN');
         });
       }
       else if (velocity < -500 || current > SNAP_FULL) {
-        sheetHeight.value = withTiming(containerHeight, {}, () => {
+        sheetHeight.value = withSpring(containerHeight, SNAP_SPRING_CONFIG, () => {
           renderTypeSV.value = 'FULL';
-          runOnJS(setRenderType)('FULL');
+          runOnJS(deferredSetRenderType)('FULL');
         });
       }
       else {
-        sheetHeight.value = withTiming(defaultHeight, {}, () => {
+        sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
           renderTypeSV.value = 'DEFAULT';
-          runOnJS(setRenderType)('DEFAULT');
+          runOnJS(deferredSetRenderType)('DEFAULT');
         });
       }
     });
@@ -354,19 +380,24 @@ export default function BookingCalendarView({
 
       const THRESHOLD = defaultHeight * 0.3;
 
+      runOnJS(() => { isGestureAnimatingRef.current = true; })();
+
       if (velocity < -300 || current > THRESHOLD) {
-        sheetHeight.value = withTiming(defaultHeight, { duration: 250 }, () => {
+        sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
           renderTypeSV.value = 'DEFAULT';
-          runOnJS(setRenderType)('DEFAULT');
+          runOnJS(deferredSetRenderType)('DEFAULT');
         });
       } else {
-        sheetHeight.value = withTiming(0, { duration: 250 });
+        sheetHeight.value = withSpring(0, SNAP_SPRING_CONFIG);
+        runOnJS(() => { isGestureAnimatingRef.current = false; })();
       }
     });
 
-  // renderType 변경 시 sheetHeight 애니메이션
+  // renderType 변경 시 sheetHeight 애니메이션 (비제스처 전환용)
   useEffect(() => {
     if (!containerHeight || !defaultHeight) return;
+    // 수정 C: 제스처가 이미 애니메이션을 처리 중이면 건너뜀
+    if (isGestureAnimatingRef.current) return;
 
     const sheetTargetMap = {
       HIDDEN: 0,
@@ -377,7 +408,7 @@ export default function BookingCalendarView({
     const sheetTarget = sheetTargetMap[renderType];
 
     if (Math.abs(sheetHeight.value - sheetTarget) > 1) {
-      sheetHeight.value = withTiming(sheetTarget, { duration: 300 });
+      sheetHeight.value = withSpring(sheetTarget, SNAP_SPRING_CONFIG);
     }
   }, [renderType, containerHeight, defaultHeight, sheetHeight]);
 

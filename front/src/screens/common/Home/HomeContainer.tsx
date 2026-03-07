@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import analytics from '@react-native-firebase/analytics';
 import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/domain/home/Banner.tsx';
@@ -7,6 +7,8 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import SignupCompletionModal from '@/components/domain/auth/SignupCompletionModal.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Query } from '@/queries/photographers.ts';
+import { safeLogEvent, safeLogImpression } from '@/utils/analytics.ts';
+import { Platform } from 'react-native';
 
 const dummyBannerItems: BannerItem[] = [
   {
@@ -30,6 +32,45 @@ export default function HomeContainer() {
 
   const latestList = latest3?.content ?? [];
   const topRatedList = topRated3?.content ?? [];
+
+  const impressionLogged = useRef(false);
+
+  // Home 피드 노출 이벤트 + 작가 카드 impression (고정 3+3개)
+  useEffect(() => {
+    if (impressionLogged.current) return;
+    if (latestList.length === 0 && topRatedList.length === 0) return;
+    impressionLogged.current = true;
+
+    safeLogEvent('home_feed_view', {
+      feed_type: 'all',
+      user_id: userId,
+      user_type: userType,
+    });
+
+    // latest 3 impression
+    latestList.forEach((item: any, index: number) => {
+      safeLogImpression('creator_card_impression', `home_latest_${item.photographerId}`, {
+        photographer_id: item.photographerId,
+        source: 'home_feed_latest',
+        feed_type: 'latest',
+        rank_index: index,
+        user_id: userId,
+        user_type: userType,
+      });
+    });
+
+    // topRated 3 impression
+    topRatedList.forEach((item: any, index: number) => {
+      safeLogImpression('creator_card_impression', `home_popular_${item.photographerId}`, {
+        photographer_id: item.photographerId,
+        source: 'home_feed_popular',
+        feed_type: 'popular',
+        rank_index: index,
+        user_id: userId,
+        user_type: userType,
+      });
+    });
+  }, [latestList, topRatedList, userId, userType]);
 
   // AI 클릭 → ai_recommendation_start
   const handlePressAI = () => {
@@ -56,13 +97,20 @@ export default function HomeContainer() {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
 
-  // 추천 작가 클릭 → photographer_profile_view
+  // 추천 작가 클릭 → photographer_profile_view + creator_card_click
   const handlePressAllPhotographerItem = (photographerId: string) => {
     analytics().logEvent('photographer_profile_view', {
       user_id: userId,
       user_type: userType,
       photographer_id: photographerId,
       source: 'home_feed_latest',
+    });
+    safeLogEvent('creator_card_click', {
+      photographer_id: photographerId,
+      source: 'home_feed_latest',
+      feed_type: 'latest',
+      user_id: userId,
+      user_type: userType,
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'home_feed_latest' });
   };
@@ -73,6 +121,13 @@ export default function HomeContainer() {
       user_type: userType,
       photographer_id: photographerId,
       source: 'home_feed_popular',
+    });
+    safeLogEvent('creator_card_click', {
+      photographer_id: photographerId,
+      source: 'home_feed_popular',
+      feed_type: 'popular',
+      user_id: userId,
+      user_type: userType,
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'home_feed_popular' });
   };

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { safeLogEvent, generateTrackingCode, setCrashlyticsContext } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
@@ -132,11 +133,22 @@ export default function PhotographerDetailsContainer() {
 
   const handlePressShare = useCallback(() => {
     if (profileData?.nickname) {
+      const trackingCode = generateTrackingCode();
+      const shareUrl = `https://link.snaplink.run/tab/home/photographer/${photographerId}?tc=${trackingCode}`;
       Share.share({
-        message: `${profileData?.nickname}\nhttps://link.snaplink.run/tab/home/photographer/${photographerId}`,
+        message: `${profileData?.nickname}\n${shareUrl}`,
+      });
+
+      safeLogEvent('share_link_created', {
+        link_type: 'photographer_profile',
+        target_id: photographerId,
+        share_channel: 'system_share',
+        creator_user_id: userId || 'anonymous',
+        creator_user_type: userType || 'guest',
+        tracking_code: trackingCode,
       });
     }
-  }, [profileData?.nickname, photographerId]);
+  }, [profileData?.nickname, photographerId, userId, userType]);
 
   const handlePressFavorite = useCallback(() => {
     scrapMutation.mutate(photographerId);

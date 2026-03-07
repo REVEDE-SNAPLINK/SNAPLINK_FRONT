@@ -10,6 +10,7 @@ import { showErrorAlert } from '@/utils/error';
 
 import analytics from '@react-native-firebase/analytics';
 import { Share } from 'react-native';
+import { safeLogEvent, generateTrackingCode } from '@/utils/analytics.ts';
 
 type PostDetailRouteProp = RouteProp<MainStackParamList, 'PostDetail'>;
 
@@ -110,8 +111,19 @@ export default function PostDetailContainer() {
     const params = new URLSearchParams();
     params.append('profileImageURI', profileImageURI);
     if (post) {
+      const trackingCode = generateTrackingCode();
+      params.append('tc', trackingCode);
       Share.share({
         message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/home/portfolio/${postId}?${params}`,
+      });
+
+      safeLogEvent('share_link_created', {
+        link_type: 'portfolio_post',
+        target_id: String(postId),
+        share_channel: 'system_share',
+        creator_user_id: userId || 'anonymous',
+        creator_user_type: userType || 'guest',
+        tracking_code: trackingCode,
       });
     }
   }

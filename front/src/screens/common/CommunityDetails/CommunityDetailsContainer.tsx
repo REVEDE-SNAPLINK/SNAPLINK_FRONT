@@ -21,6 +21,7 @@ import {
 } from '@/mutations/community.ts';
 import { Alert } from '@/components/ui';
 import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent, generateTrackingCode } from '@/utils/analytics.ts';
 import { usePhotographerProfileQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
@@ -153,10 +154,10 @@ export default function CommunityDetailsContainer() {
   };
 
   const handlePressShare = () => {
-    // setIsShareModalVisible(true);
     if (post) {
+      const trackingCode = generateTrackingCode();
       Share.share({
-        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}`,
+        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}?tc=${trackingCode}`,
       });
       // Firebase Analytics: 공유 이벤트
       analytics().logEvent('community_post_share', {
@@ -164,6 +165,15 @@ export default function CommunityDetailsContainer() {
         user_id: userId || 'anonymous',
         user_type: userType || 'guest',
         platform: Platform.OS,
+      });
+
+      safeLogEvent('share_link_created', {
+        link_type: 'community_post',
+        target_id: String(post.id),
+        share_channel: 'system_share',
+        creator_user_id: userId || 'anonymous',
+        creator_user_type: userType || 'guest',
+        tracking_code: trackingCode,
       });
     }
   };

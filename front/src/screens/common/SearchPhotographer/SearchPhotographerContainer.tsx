@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
@@ -208,6 +209,17 @@ export default function SearchPhotographerContainer() {
     if (data?.pages[0].totalElements) {
       setTotalCount(data.pages[0].totalElements);
     }
+
+    // 검색 결과 로드 시 search_result_view 이벤트
+    if (data?.pages[0] && searchKey) {
+      safeLogEvent('search_result_view', {
+        search_key: searchKey,
+        result_count: data.pages[0].totalElements ?? 0,
+        user_id: userId,
+        user_type: userType,
+        source: 'SearchPhotographer',
+      });
+    }
   }, [data]);
 
   const handlePressBack = () => {
@@ -260,6 +272,14 @@ export default function SearchPhotographerContainer() {
       user_type: userType,
       photographer_id: photographerId,
       source: 'SearchPhotographer',
+    });
+    // 검색 결과에서 작가 카드 클릭 이벤트
+    safeLogEvent('creator_card_click', {
+      photographer_id: photographerId,
+      source: 'search',
+      feed_type: 'search_result',
+      user_id: userId,
+      user_type: userType,
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'search' });
   };

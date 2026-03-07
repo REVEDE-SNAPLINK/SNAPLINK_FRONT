@@ -84,17 +84,27 @@ export default function BookingHistoryContainer() {
       title: '예약을 취소하시겠습니까?',
       message: '취소 후에는 다시 되돌릴 수 없습니다. 무분별하거나 고의적인 반복 취소는 운영 정책에 따라 서비스 이용에 제한을 받을 수 있습니다.',
       buttons: [
-        { text: '뒤로', type: 'cancel', onPress: () => {} },
-        { text: '확인', onPress: () => {
+        { text: '뒤로', type: 'cancel', onPress: () => { } },
+        {
+          text: '확인', onPress: () => {
             cancelBookingMutation.mutate(bookingId, {
               onSuccess: () => {
+                // 고객 측 예약 취소 이벤트
+                analytics().logEvent('booking_cancelled_by_user', {
+                  booking_id: bookingId,
+                  user_id: userId,
+                  user_type: userType,
+                  cancel_stage: 'requested', // WAITING_FOR_APPROVAL 상태에서만 취소 가능
+                });
+
                 Alert.show({
                   title: '취소 완료',
                   message: '취소가 완료되었습니다.'
                 })
               }
             });
-        }},
+          }
+        },
       ]
     })
   }

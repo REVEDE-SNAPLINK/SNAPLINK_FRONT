@@ -6,6 +6,8 @@ import { SubmitButton, Typography, TextInput, Alert } from '@/components/ui';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useCancelBookingMutation } from '@/mutations/bookings.ts';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import analytics from '@react-native-firebase/analytics';
+import { useAuthStore } from '@/store/authStore.ts';
 
 type BookingCancelRouteProp = RouteProp<MainStackParamList, 'BookingCancel'>;
 
@@ -13,6 +15,7 @@ export default function BookingCancelScreen() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingCancelRouteProp>();
   const { bookingId } = route.params;
+  const { userId } = useAuthStore();
 
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +34,9 @@ export default function BookingCancelScreen() {
       title: '예약을 취소하시겠습니까?',
       message: '고객과의 사전 협의 없는 일방적인 예약 취소는 이용 제한 등의 페널티로 이어질 수 있습니다. 반드시 고객과 원만한 협의 후 취소를 진행해 주세요.',
       buttons: [
-        { text: '뒤로', type: 'cancel', onPress: () => {} },
-        { text: '예약 취소' , onPress: async () => {
+        { text: '뒤로', type: 'cancel', onPress: () => { } },
+        {
+          text: '예약 취소', onPress: async () => {
             const trimmedReason = reason.trim();
 
             if (!trimmedReason) {
@@ -42,6 +46,16 @@ export default function BookingCancelScreen() {
 
             try {
               await cancelBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
+
+              // 작가 측 예약 취소 이벤트
+              analytics().logEvent('booking_cancelled_by_photographer', {
+                booking_id: bookingId,
+                user_id: userId,
+                user_type: 'photographer',
+                cancel_stage: 'accepted', // APPROVED 상태에서만 취소 가능
+                reason_length: trimmedReason.length,
+              });
+
               Alert.show({
                 title: '취소 완료',
                 message: '취소가 완료되었습니다.',
@@ -53,7 +67,8 @@ export default function BookingCancelScreen() {
               const message = e?.message ?? '예약을 취소할 수 없어요. 잠시 후 다시 시도해주세요.';
               setError(message);
             }
-          } },
+          }
+        },
       ]
     })
   };

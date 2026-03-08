@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import analytics from '@react-native-firebase/analytics';
+
 import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/domain/home/Banner.tsx';
 import { useNavigation } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import SignupCompletionModal from '@/components/domain/auth/SignupCompletionModal.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Query } from '@/queries/photographers.ts';
-import { safeLogEvent, safeLogImpression } from '@/utils/analytics.ts';
+import { safeLogEvent, trackImpression } from '@/utils/analytics.ts';
 import { Platform } from 'react-native';
 
 const dummyBannerItems: BannerItem[] = [
@@ -49,7 +49,7 @@ export default function HomeContainer() {
 
     // latest 3 impression
     latestList.forEach((item: any, index: number) => {
-      safeLogImpression('creator_card_impression', `home_latest_${item.photographerId}`, {
+      trackImpression('creator_card_impression', `home_latest_${item.photographerId}`, 'home_feed_latest', {
         photographer_id: item.photographerId,
         source: 'home_feed_latest',
         feed_type: 'latest',
@@ -61,7 +61,7 @@ export default function HomeContainer() {
 
     // topRated 3 impression
     topRatedList.forEach((item: any, index: number) => {
-      safeLogImpression('creator_card_impression', `home_popular_${item.photographerId}`, {
+      trackImpression('creator_card_impression', `home_popular_${item.photographerId}`, 'home_feed_popular', {
         photographer_id: item.photographerId,
         source: 'home_feed_popular',
         feed_type: 'popular',
@@ -74,9 +74,7 @@ export default function HomeContainer() {
 
   // AI 클릭 → ai_recommendation_start
   const handlePressAI = () => {
-    analytics().logEvent('ai_recommendation_start', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('ai_recommendation_start', {
       source: 'Home',
     });
     navigation.navigate('AIRecommdationForm');
@@ -84,9 +82,7 @@ export default function HomeContainer() {
 
   // 검색 키워드 제출 → search_photographer
   const handleSubmitSearchKey = () => {
-    analytics().logEvent('search_photographer', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('search_photographer', {
       search_key: searchKey,
       source: 'Home',
     });
@@ -99,9 +95,7 @@ export default function HomeContainer() {
 
   // 추천 작가 클릭 → photographer_profile_view + creator_card_click
   const handlePressAllPhotographerItem = (photographerId: string) => {
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('photographer_profile_view', {
       photographer_id: photographerId,
       source: 'home_feed_latest',
     });
@@ -116,9 +110,7 @@ export default function HomeContainer() {
   };
 
   const handlePressPopularPhotographerItem = (photographerId: string) => {
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('photographer_profile_view', {
       photographer_id: photographerId,
       source: 'home_feed_popular',
     });

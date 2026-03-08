@@ -8,7 +8,7 @@ import { Alert } from '@/components/ui';
 import { UploadImageFile } from '@/api/photographers';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
 import { usePortfolioPostQuery } from '@/queries/photographers';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore';
 import { showErrorAlert } from '@/utils/error';
 
@@ -132,8 +132,7 @@ export default function PortfolioFormContainer() {
         },
         {
           onSuccess: () => {
-            analytics().logEvent('portfolio_post_updated', {
-              user_id: userId || '',
+            safeLogEvent('portfolio_post_updated', {
               post_id: postId,
               deleted_count: deletePhotoIds.length,
               new_count: newPhotos.length,
@@ -170,8 +169,7 @@ export default function PortfolioFormContainer() {
       },
       {
         onSuccess: () => {
-          analytics().logEvent('portfolio_post_created', {
-            user_id: userId || '',
+          safeLogEvent('portfolio_post_created', {
             photo_count: photoURIs.length,
             is_linked: data.portfolioIsLinked,
           });

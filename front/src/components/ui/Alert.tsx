@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Modal, Animated } from 'react-native';
+import { Animated } from 'react-native';
 import styled from '@/utils/scale/CustomStyled.ts';
 import Typography from '@/components/ui/Typography.tsx';
 import SubmitButton from '@/components/ui/SubmitButton.tsx';
@@ -94,12 +94,7 @@ export function AlertComponent({
   };
 
   return (
-    <Modal
-      visible={true}
-      transparent
-      animationType="none"
-      onRequestClose={handleOverlayPress}
-    >
+    <FullScreenOverlay pointerEvents={visible ? 'auto' : 'none'}>
       <Container>
         <Overlay onPress={handleOverlayPress} activeOpacity={1}>
           <AnimatedOverlayBackground style={{ opacity: opacityAnim }} />
@@ -154,10 +149,8 @@ export function AlertComponent({
                     width="100%"
                     size="small"
                     text={button.text}
-                    onPress={async () => {
+                    onPress={() => {
                       onClose();
-                      // Alert 닫기 애니메이션을 위한 딜레이
-                      await new Promise(resolve => setTimeout(resolve, 100));
                       button.onPress();
                     }}
                   />
@@ -167,7 +160,7 @@ export function AlertComponent({
           )}
         </AnimatedModalContainer>
       </Container>
-    </Modal>
+    </FullScreenOverlay>
   );
 }
 
@@ -206,6 +199,15 @@ class AlertManager {
 }
 
 export const Alert = new AlertManager();
+
+const FullScreenOverlay = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+`;
 
 const Container = styled.View`
   flex: 1;

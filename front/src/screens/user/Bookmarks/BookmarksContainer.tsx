@@ -5,7 +5,7 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMyScrappedPhotographersInfiniteQuery } from '@/queries/photographers.ts';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
 const PAGE_SIZE = 20;
@@ -34,7 +34,7 @@ export default function BookmarksContainer() {
   const totalCount = data?.pages[0]?.totalElements ?? 0;
 
   const handlePressPhotographer = (photographerId: string) => {
-    analytics().logEvent('photographer_view', { photographer_id: photographerId, user_id: userId });
+    safeLogEvent('photographer_view', { photographer_id: photographerId });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'bookmarks' });
   };
 
@@ -49,7 +49,7 @@ export default function BookmarksContainer() {
   };
 
   const handleToggleBookmark = (photographerId: string) => {
-    analytics().logEvent('bookmark_toggle', { photographer_id: photographerId, user_id: userId });
+    safeLogEvent('bookmark_toggle', { photographer_id: photographerId });
     toggleScrapMutation.mutate(photographerId);
   };
 

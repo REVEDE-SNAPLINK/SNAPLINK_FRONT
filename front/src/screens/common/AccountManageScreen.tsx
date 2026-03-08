@@ -32,7 +32,7 @@ export default function AccountManageScreen() {
       buttons: [
         {
           text: '취소',
-          onPress: () => {},
+          onPress: () => { },
           type: 'cancel',
         },
         {
@@ -55,13 +55,12 @@ export default function AccountManageScreen() {
         buttons: [
           {
             text: '취소',
-            onPress: () => {},
+            onPress: () => { },
             type: 'cancel',
           },
           {
             text: '비공개 전환',
-            onPress: async () => {
-
+            onPress: () => {
               // 비공개 전환
               inactiveMutation.mutate(undefined, {
                 onSuccess: () => {
@@ -90,7 +89,7 @@ export default function AccountManageScreen() {
         buttons: [
           {
             text: '취소',
-            onPress: () => {},
+            onPress: () => { },
             type: 'cancel',
           },
           {
@@ -130,7 +129,7 @@ export default function AccountManageScreen() {
       buttons: [
         {
           text: '취소',
-          onPress: () => {},
+          onPress: () => { },
           type: 'cancel',
         },
         {

@@ -9,7 +9,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import JSZip from 'jszip';
 import RNFS from 'react-native-fs';
@@ -74,7 +74,7 @@ export default function UserViewPhotosContainer() {
       buttons: [
         { text: 'ZIP 파일', onPress: () => handleDownloadZipAsIs(zip.url) },
         { text: '압축 해제', onPress: () => handleDownloadZipExtracted(zip.url) },
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
       ],
     });
   };
@@ -83,7 +83,7 @@ export default function UserViewPhotosContainer() {
    * 원본/보정본.zip을 ZIP 파일 그대로 다운로드
    */
   const handleDownloadZipAsIs = async (zipUrl: string) => {
-    analytics().logEvent('photo_zip_download_as_is', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('photo_zip_download_as_is', { booking_id: bookingId });
     setIsProcessing(true);
 
     try {
@@ -132,7 +132,7 @@ export default function UserViewPhotosContainer() {
    * 원본/보정본.zip을 압축 해제하여 개별 이미지로 다운로드
    */
   const handleDownloadZipExtracted = async (zipUrl: string) => {
-    analytics().logEvent('photo_zip_download_extracted', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('photo_zip_download_extracted', { booking_id: bookingId });
     setIsProcessing(true);
 
     try {
@@ -170,7 +170,7 @@ export default function UserViewPhotosContainer() {
             const fileUri = tempPath.startsWith('file://') ? tempPath : `file://${tempPath}`;
             await CameraRoll.save(fileUri, { type: 'photo' });
             // 임시 파일 삭제
-            await RNFS.unlink(tempPath).catch(() => {});
+            await RNFS.unlink(tempPath).catch(() => { });
           } else {
             // Android: 갤러리에서 인식되도록
             await RNBlobUtil.fs.scanFile([{ path: tempPath }]);
@@ -181,7 +181,7 @@ export default function UserViewPhotosContainer() {
       }
 
       // 캐시 파일 삭제
-      await RNFS.unlink(response.path()).catch(() => {});
+      await RNFS.unlink(response.path()).catch(() => { });
 
       if (savedCount === 0) {
         Alert.show({
@@ -231,7 +231,7 @@ export default function UserViewPhotosContainer() {
       buttons: [
         { text: 'ZIP으로 압축', onPress: () => handleDownloadPhotosAsZip(photosToDownload) },
         { text: '개별 이미지', onPress: () => handleDownloadPhotosIndividually(photosToDownload) },
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
       ],
     });
   };
@@ -240,7 +240,7 @@ export default function UserViewPhotosContainer() {
    * 보여지는 이미지를 ZIP으로 압축하여 다운로드
    */
   const handleDownloadPhotosAsZip = async (photos: BookingPhoto[]) => {
-    analytics().logEvent('photo_download_as_zip', { booking_id: bookingId, user_id: userId, count: photos.length });
+    safeLogEvent('photo_download_as_zip', { booking_id: bookingId, count: photos.length });
     setIsProcessing(true);
 
     try {
@@ -258,7 +258,7 @@ export default function UserViewPhotosContainer() {
         zip.file(fileName, base64Data, { base64: true });
 
         // 캐시 파일 삭제
-        await RNFS.unlink(response.path()).catch(() => {});
+        await RNFS.unlink(response.path()).catch(() => { });
       }
 
       const zipContent = await zip.generateAsync({
@@ -300,7 +300,7 @@ export default function UserViewPhotosContainer() {
    * 보여지는 이미지를 개별로 다운로드
    */
   const handleDownloadPhotosIndividually = async (photos: BookingPhoto[]) => {
-    analytics().logEvent('photo_download_individual', { booking_id: bookingId, user_id: userId, count: photos.length });
+    safeLogEvent('photo_download_individual', { booking_id: bookingId, count: photos.length });
     setIsProcessing(true);
 
     try {
@@ -324,7 +324,7 @@ export default function UserViewPhotosContainer() {
           await CameraRoll.save(fileUri, { type: 'photo' });
 
           // 임시 파일 삭제
-          await RNFS.unlink(savedPath).catch(() => {});
+          await RNFS.unlink(savedPath).catch(() => { });
         }
 
         Alert.show({

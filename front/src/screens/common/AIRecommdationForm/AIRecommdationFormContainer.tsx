@@ -3,8 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { Alert } from '@/components/ui';
 import { requestPermission } from '@/utils/permissions.ts';
 import { ImageLibraryOptions, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
@@ -16,15 +15,9 @@ export default function AIRecommdationFormContainer() {
   const [image, setImage] = useState<UploadImageFile | null>(null);
   const [prompt, setPrompt] = useState<string>('');
 
-  const { userId, userType } = useAuthStore();
-
   useEffect(() => {
     // Log ai_recommendation_start when the form is opened
-    analytics().logEvent('ai_recommendation_start', {
-      user_id: userId,
-      user_type: userType,
-      screen: 'AIRecommdationForm',
-    });
+    safeLogEvent('ai_recommendation_start');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

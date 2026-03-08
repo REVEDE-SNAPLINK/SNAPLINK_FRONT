@@ -8,7 +8,7 @@ import { useDeletePortfolioMutation } from '@/mutations/photographers';
 import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
 
-import analytics from '@react-native-firebase/analytics';
+
 import { Share } from 'react-native';
 import { safeLogEvent, generateTrackingCode } from '@/utils/analytics.ts';
 
@@ -31,15 +31,13 @@ export default function PostDetailContainer() {
   useEffect(() => {
     if (!post) return;
 
-    analytics().logEvent('portfolio_post_view', {
+    safeLogEvent('portfolio_post_view', {
       screen_name: 'PostDetail',
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
       post_id: postId,
       photographer_id: post.photographerId,
       source: source || 'unknown', // 유입 경로 로깅
     });
-  }, [post, postId, userId, userType, source]);
+  }, [post, postId, source]);
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -76,9 +74,7 @@ export default function PostDetailContainer() {
           onPress: () => {
             deletePortfolio(undefined, {
               onSuccess: () => {
-                analytics().logEvent('portfolio_post_deleted', {
-                  user_id: userId || '',
-                  user_type: userType || 'guest',
+                safeLogEvent('portfolio_post_deleted', {
                   post_id: postId,
                 });
 

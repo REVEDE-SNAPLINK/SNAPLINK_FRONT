@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react';
-import analytics from '@react-native-firebase/analytics';
 import { useAuthStore } from '@/store/authStore.ts';
 import { safeLogEvent } from '@/utils/analytics.ts';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -215,8 +214,6 @@ export default function SearchPhotographerContainer() {
       safeLogEvent('search_result_view', {
         search_key: searchKey,
         result_count: data.pages[0].totalElements ?? 0,
-        user_id: userId,
-        user_type: userType,
         source: 'SearchPhotographer',
       });
     }
@@ -228,9 +225,7 @@ export default function SearchPhotographerContainer() {
 
   const handleSubmitSearchKey = () => {
     // Log search_photographer event when search is submitted
-    analytics().logEvent('search_photographer', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('search_photographer', {
       search_key: searchKey,
       source: 'SearchPhotographer',
     });
@@ -267,9 +262,7 @@ export default function SearchPhotographerContainer() {
 
   const handlePressPhotographer = (photographerId: string) => {
     // Log photographer_profile_view event when photographer is pressed
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('photographer_profile_view', {
       photographer_id: photographerId,
       source: 'SearchPhotographer',
     });
@@ -278,8 +271,6 @@ export default function SearchPhotographerContainer() {
       photographer_id: photographerId,
       source: 'search',
       feed_type: 'search_result',
-      user_id: userId,
-      user_type: userType,
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'search' });
   };

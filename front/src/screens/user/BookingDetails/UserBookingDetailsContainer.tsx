@@ -1,10 +1,10 @@
 import UserBookingDetailsView from '@/screens/user/BookingDetails/UserBookingDetailsView.tsx';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
-import analytics from '@react-native-firebase/analytics';
+import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
@@ -56,25 +56,23 @@ export default function UserBookingDetailsContainer() {
     }
   }, [isReviewError, shouldFetchReview, bookingId, navigation]);
 
-  useEffect(() => {
-    analytics().logEvent('screen_view', {
-      screen_name: 'BookingDetails',
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
-    });
-  }, [userId, userType]);
+  useFocusEffect(
+    useCallback(() => {
+      trackScreenView('BookingDetails');
+    }, [])
+  );
 
   const handlePressBack = () => navigation.goBack();
 
   const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { bookingId });
 
   const handlePressWriteReview = () => {
-    analytics().logEvent('review_start', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('review_start', { booking_id: bookingId });
     navigation.navigate('WriteReview', { bookingId });
   };
 
   const handlePressShowMyReview = () => {
-    analytics().logEvent('review_view', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('review_view', { booking_id: bookingId });
     // 이미 pre-fetch된 데이터가 있으면 바로 네비게이션
     if (bookingReview) {
       navigation.navigate('ReviewDetails', { bookingId });
@@ -115,9 +113,9 @@ export default function UserBookingDetailsContainer() {
         region=""
         additionalRequest=""
         isLoading={isLoading}
-        onOpenChatRoom={() => {}}
-      navigation={navigation}
-    />
+        onOpenChatRoom={() => { }}
+        navigation={navigation}
+      />
     );
   }
 

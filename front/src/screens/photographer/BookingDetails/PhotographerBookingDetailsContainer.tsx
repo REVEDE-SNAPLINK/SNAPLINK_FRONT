@@ -2,7 +2,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetails/PhotographerBookingDetailsView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { queryClient } from '@/config/queryClient.ts';
@@ -23,9 +23,7 @@ export default function PhotographerBookingDetailsContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressViewPhotos = () => {
-    analytics().logEvent('photographer_booking_photos_view', {
-      user_id: userId,
-      user_type: 'photographer',
+    safeLogEvent('photographer_booking_photos_view', {
       bookingId,
     });
     navigation.navigate('ViewPhotos', { bookingId });
@@ -56,9 +54,9 @@ export default function PhotographerBookingDetailsContainer() {
         region=""
         additionalRequest=""
         isLoading={isLoading}
-        onOpenChatRoom={() => {}}
-      navigation={navigation}
-    />
+        onOpenChatRoom={() => { }}
+        navigation={navigation}
+      />
     );
   }
 

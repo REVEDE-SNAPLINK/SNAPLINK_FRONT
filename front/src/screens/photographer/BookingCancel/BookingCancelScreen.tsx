@@ -6,7 +6,7 @@ import { SubmitButton, Typography, TextInput, Alert } from '@/components/ui';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useCancelBookingMutation } from '@/mutations/bookings.ts';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import analytics from '@react-native-firebase/analytics';
+import { trackBookingEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
 type BookingCancelRouteProp = RouteProp<MainStackParamList, 'BookingCancel'>;
@@ -48,10 +48,7 @@ export default function BookingCancelScreen() {
               await cancelBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
 
               // 작가 측 예약 취소 이벤트
-              analytics().logEvent('booking_cancelled_by_photographer', {
-                booking_id: bookingId,
-                user_id: userId,
-                user_type: 'photographer',
+              trackBookingEvent('booking_cancelled_by_photographer', bookingId.toString(), userId, {
                 cancel_stage: 'accepted', // APPROVED 상태에서만 취소 가능
                 reason_length: trimmedReason.length,
               });

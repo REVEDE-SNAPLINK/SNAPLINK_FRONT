@@ -6,7 +6,7 @@ import { SubmitButton, Typography, TextInput, Alert } from '@/components/ui';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useRejectBookingMutation } from '@/mutations/bookings.ts';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import analytics from '@react-native-firebase/analytics';
+import { trackBookingEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
 type BookingRejectRouteProp = RouteProp<MainStackParamList, 'BookingReject'>;
@@ -48,10 +48,7 @@ export default function BookingRejectScreen() {
               await rejectBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
 
               // 작가 측 예약 거절 이벤트 (기존 BookingManageContainer의 photographer_booking_rejected와 보완)
-              analytics().logEvent('booking_rejected_by_photographer', {
-                booking_id: bookingId,
-                photographer_id: userId,
-                user_type: 'photographer',
+              trackBookingEvent('booking_rejected_by_photographer', bookingId.toString(), userId, {
                 reason_length: trimmedReason.length, // 사유 원문은 개인정보로 미수집
               });
 

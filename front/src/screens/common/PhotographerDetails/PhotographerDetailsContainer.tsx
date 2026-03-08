@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { safeLogEvent, generateTrackingCode, setCrashlyticsContext } from '@/utils/analytics.ts';
+import { safeLogEvent, generateTrackingCode, setCrashlyticsContext, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
@@ -158,11 +157,7 @@ export default function PhotographerDetailsContainer() {
     chatMutation.mutate({ receiverId: photographerId }, {
       onSuccess: (response) => {
         // Log chat_initiated event when chat room is created
-        analytics().logEvent('chat_initiated', {
-          user_id: userId,
-          user_type: userType,
-          photographer_id: photographerId,
-          room_id: response,
+        trackChatEvent('chat_initiated', response.toString(), photographerId, {
           source: source || 'direct', // 프로필 내에서의 행위
           entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
         });
@@ -179,10 +174,7 @@ export default function PhotographerDetailsContainer() {
 
   const handlePressReservation = useCallback(() => {
     // Log booking_intent event when reservation button is pressed
-    analytics().logEvent('booking_intent', {
-      user_id: userId,
-      user_type: userType,
-      photographer_id: photographerId,
+    trackBookingEvent('booking_intent', undefined, photographerId, {
       source: source || 'direct',
       entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
     });
@@ -200,10 +192,8 @@ export default function PhotographerDetailsContainer() {
 
     // ✅ Track review tab click
     if (tab === 'reviews') {
-      analytics().logEvent('profile_review_tab_clicked', {
+      safeLogEvent('profile_review_tab_clicked', {
         photographer_id: photographerId,
-        user_id: userId,
-        user_type: userType,
       });
 
       crashlytics().log(`⭐ Review tab clicked on profile ${photographerId}`);
@@ -212,11 +202,9 @@ export default function PhotographerDetailsContainer() {
 
   const handlePressPortfolioImage = useCallback((id: number) => {
     // ✅ Track portfolio click
-    analytics().logEvent('profile_portfolio_clicked', {
+    safeLogEvent('profile_portfolio_clicked', {
       photographer_id: photographerId,
       portfolio_id: id,
-      user_id: userId,
-      user_type: userType,
       source: 'profile_page',
     });
 
@@ -241,19 +229,17 @@ export default function PhotographerDetailsContainer() {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const scrollPercentage = ((contentOffset.y + layoutMeasurement.height) / contentSize.height) * 100;
 
-    [25, 50, 75, 100].forEach(depth => {
+    [25, 50, 90].forEach(depth => {
       if (scrollPercentage >= depth && !scrollDepthTracked.current[depth as keyof typeof scrollDepthTracked.current]) {
-        analytics().logEvent('profile_scroll_depth', {
+        safeLogEvent('profile_scroll_depth', {
           photographer_id: photographerId,
           depth_percentage: depth,
-          user_id: userId,
-          user_type: userType,
         });
 
         scrollDepthTracked.current[depth as keyof typeof scrollDepthTracked.current] = true;
       }
     });
-  }, [photographerId, userId, userType]);
+  }, [photographerId]);
 
   // Transform review summary to view model
   const reviews =

@@ -1,4 +1,5 @@
 import React, {useState, useEffect, ReactNode} from 'react';
+import {StyleSheet, View} from 'react-native';
 import {Alert, AlertComponent, AlertOptions} from './Alert';
 
 interface AlertState extends AlertOptions {
@@ -29,6 +30,12 @@ interface AlertProviderProps {
  * }
  * ```
  */
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+
 export function AlertProvider({children}: AlertProviderProps) {
   const [alerts, setAlerts] = useState<AlertState[]>([]);
 
@@ -64,7 +71,7 @@ export function AlertProvider({children}: AlertProviderProps) {
   };
 
   return (
-    <>
+    <View style={styles.container}>
       {children}
       {alerts.map(alert => (
         <AlertComponent
@@ -77,6 +84,6 @@ export function AlertProvider({children}: AlertProviderProps) {
           cancelable={alert.cancelable}
         />
       ))}
-    </>
+    </View>
   );
 }

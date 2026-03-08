@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
 import { useUserBookingsInfiniteQuery } from '@/queries/bookings.ts'
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 import { reviewsQueryKeys } from '@/queries/keys.ts';
-import analytics from '@react-native-firebase/analytics';
+import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useCancelBookingFromCustomerMutation } from '@/mutations/bookings.ts';
 import { Alert } from '@/components/ui';
@@ -38,13 +38,11 @@ export default function BookingHistoryContainer() {
   const { data: bookingReview, isError: isReviewError } = useBookingReviewMeQuery(selectedBookingId);
   const cancelBookingMutation = useCancelBookingFromCustomerMutation();
 
-  useEffect(() => {
-    analytics().logEvent('screen_view', {
-      screen_name: 'BookingHistory',
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
-    });
-  }, [userId, userType]);
+  useFocusEffect(
+    useCallback(() => {
+      trackScreenView('BookingHistory');
+    }, [])
+  );
 
   useEffect(() => {
     if (bookingReview && selectedBookingId) {
@@ -69,7 +67,7 @@ export default function BookingHistoryContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressBookingDetail = (bookingId: number) => {
-    analytics().logEvent('booking_detail_view', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('booking_detail_view', { booking_id: bookingId });
     navigation.navigate('BookingDetails', { bookingId });
   };
 
@@ -90,10 +88,8 @@ export default function BookingHistoryContainer() {
             cancelBookingMutation.mutate(bookingId, {
               onSuccess: () => {
                 // 고객 측 예약 취소 이벤트
-                analytics().logEvent('booking_cancelled_by_user', {
+                safeLogEvent('booking_cancelled_by_user', {
                   booking_id: bookingId,
-                  user_id: userId,
-                  user_type: userType,
                   cancel_stage: 'requested', // WAITING_FOR_APPROVAL 상태에서만 취소 가능
                 });
 
@@ -112,7 +108,7 @@ export default function BookingHistoryContainer() {
   const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { bookingId })
 
   const handlePressWriteReview = (bookingId: number) => {
-    analytics().logEvent('review_start', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('review_start', { booking_id: bookingId });
     navigation.navigate('WriteReview', { bookingId });
   };
 

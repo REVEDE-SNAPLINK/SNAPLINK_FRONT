@@ -18,7 +18,7 @@ import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent, trackChatEvent } from '@/utils/analytics.ts';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { useLeaveChatRoomMutation } from "@/mutations/chat.ts";
 import { useBlockChatUserMutation, useUnblockChatUserMutation } from "@/mutations/block.ts";
@@ -159,11 +159,8 @@ export default function ChatDetailsContainer() {
 
   useEffect(() => {
     const logChatEntered = async () => {
-      await analytics().logEvent('activation_chat_entered', {
+      await safeLogEvent('activation_chat_entered', {
         room_id: roomId,
-        platform: Platform.OS,
-        user_id: userId || 'anonymous',
-        user_type: userType || 'guest',
       });
     };
 
@@ -325,12 +322,11 @@ export default function ChatDetailsContainer() {
             const now = Date.now();
             const responseTime = lastUserMessageTimeRef.current ? (now - lastUserMessageTimeRef.current) / 1000 : null;
 
-            analytics().logEvent('photographer_response', {
+            safeLogEvent('photographer_response', {
               photographer_id: message.senderId,
               room_id: roomId,
               is_first_response: photographerFirstResponseRef.current,
               response_time_seconds: responseTime,
-              user_id: userId,
             });
 
             crashlytics().log(`✉️ Photographer responded in room ${roomId} (${responseTime}s)`);
@@ -340,7 +336,7 @@ export default function ChatDetailsContainer() {
 
               // 첫 응답 시간 별도 추적
               if (responseTime !== null) {
-                analytics().logEvent('photographer_first_response_time', {
+                safeLogEvent('photographer_first_response_time', {
                   photographer_id: message.senderId,
                   response_time_seconds: responseTime,
                   response_time_minutes: Math.round(responseTime / 60),
@@ -459,9 +455,7 @@ export default function ChatDetailsContainer() {
       console.log('[ChatDetails] Sending message:', JSON.stringify(messageData, null, 2));
 
       // ✅ 메시지 전송 이벤트 로깅
-      analytics().logEvent('chat_message_sent', {
-        user_id: userId,
-        room_id: roomId,
+      trackChatEvent('chat_message_sent', roomId.toString(), undefined, {
         is_first_message: isFirstMessage,
         message_length: messageInput.trim().length,
         message_count: messageCount + 1,
@@ -678,20 +672,22 @@ export default function ChatDetailsContainer() {
         title: '상대방에 대한 차단을 해제하시겠습니까?',
         message: '이제 상대방의 게시물을 다시 볼 수 있으며, 서로 채팅을 주고받을 수 있습니다.',
         buttons: [
-          { text: '취소', onPress: () => {}, type: 'cancel' },
-          { text: '차단 해제', onPress: () => {
-            unblockMutate({ targetId: opponentId, roomId }, {
-              onSuccess: () => {
-                Alert.show({
-                  title: '차단 해제 완료',
-                  message: '해당 사용자가 차단 해제되었습니다.',
-                  buttons: [
-                    { text: '확인', onPress: () => {}}
-                  ]
-                });
-              }
-            })
-            }, type: 'default' },
+          { text: '취소', onPress: () => { }, type: 'cancel' },
+          {
+            text: '차단 해제', onPress: () => {
+              unblockMutate({ targetId: opponentId, roomId }, {
+                onSuccess: () => {
+                  Alert.show({
+                    title: '차단 해제 완료',
+                    message: '해당 사용자가 차단 해제되었습니다.',
+                    buttons: [
+                      { text: '확인', onPress: () => { } }
+                    ]
+                  });
+                }
+              })
+            }, type: 'default'
+          },
         ]
       })
     } else {
@@ -700,26 +696,30 @@ export default function ChatDetailsContainer() {
         title: `상대방을 차단하시겠습니까?`,
         message: "차단 시 상대방의 모든 게시물이 숨겨지며, 채팅을 주고받을 수 없습니다.",
         buttons: [
-          { text: '취소', onPress: () => {}, type: 'cancel' },
-          { text: '차단', onPress: () => {
-            blockMutate({ targetId: opponentId, roomId }, {
-              onSuccess: () => {
-                Alert.show({
-                  title: '차단 완료',
-                  message: '해당 사용자가 차단되었습니다.',
-                  buttons: [
-                    { text: '확인', onPress: () => {
-                      if (navigation.canGoBack()) {
-                        navigation.goBack();
-                      } else {
-                        navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+          { text: '취소', onPress: () => { }, type: 'cancel' },
+          {
+            text: '차단', onPress: () => {
+              blockMutate({ targetId: opponentId, roomId }, {
+                onSuccess: () => {
+                  Alert.show({
+                    title: '차단 완료',
+                    message: '해당 사용자가 차단되었습니다.',
+                    buttons: [
+                      {
+                        text: '확인', onPress: () => {
+                          if (navigation.canGoBack()) {
+                            navigation.goBack();
+                          } else {
+                            navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+                          }
+                        }
                       }
-                    }}
-                  ]
-                });
-              }
-            })
-            }, type: 'destructive' },
+                    ]
+                  });
+                }
+              })
+            }, type: 'destructive'
+          },
         ]
       })
     }
@@ -745,10 +745,12 @@ export default function ChatDetailsContainer() {
             title: '소중한 의견 감사합니다',
             message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.',
             buttons: [
-              { text: '확인', onPress: () => {
+              {
+                text: '확인', onPress: () => {
                   closeReportModal();
                   setIsModalVisible(false);
-                }}
+                }
+              }
             ]
           });
         } catch (error) {
@@ -769,21 +771,23 @@ export default function ChatDetailsContainer() {
       title: '채팅방을 나가시겠어요?',
       message: '나가기 버튼을 누르면 이 채팅방이 목록에서 사라지고 대화 내용이 모두 삭제됩니다.',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
-        { text: '나가기', onPress: () => {
+        { text: '취소', onPress: () => { }, type: 'cancel' },
+        {
+          text: '나가기', onPress: () => {
             leaveMutate(roomId, {
               onSuccess: () => {
                 navigation.goBack();
               }
             })
-          }, type: 'destructive' },
+          }, type: 'destructive'
+        },
       ]
     })
     leaveMutate
   }
 
   // 파일 메타데이터 가져오기 (HEAD 요청)
-  const fetchFileMetadata =  useCallback(async (fileUrl: string) => {
+  const fetchFileMetadata = useCallback(async (fileUrl: string) => {
     try {
       const response = await fetch(fileUrl, { method: 'HEAD' });
 

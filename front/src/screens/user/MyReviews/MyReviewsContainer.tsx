@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
 import { Alert } from '@/components/ui';
@@ -6,9 +6,9 @@ import { showErrorAlert } from '@/utils/error';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { GetMyReviewsResponse, MyReviewItem } from '@/api/reviews.ts';
-import analytics from '@react-native-firebase/analytics';
+import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 
 export default function MyReviewsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -18,23 +18,21 @@ export default function MyReviewsContainer() {
   const deleteReviewMutation = useDeleteReviewMutation();
   const { userId, userType } = useAuthStore();
 
-  useEffect(() => {
-    analytics().logEvent('screen_view', {
-      screen_name: 'MyReviews',
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
-    });
-  }, [userId, userType]);
+  useFocusEffect(
+    useCallback(() => {
+      trackScreenView('MyReviews');
+    }, [])
+  );
 
   const handlePressBack = () => navigation.goBack();
 
   const handlePressReview = (review: MyReviewItem) => {
-    analytics().logEvent('review_view', { review_id: review.reviewId, user_id: userId });
+    safeLogEvent('review_view', { review_id: review.reviewId });
     navigation.navigate('ReviewDetails', { review });
   };
 
   const handlePressEdit = (review: MyReviewItem) => {
-    analytics().logEvent('review_edit_start', { review_id: review.reviewId, user_id: userId });
+    safeLogEvent('review_edit_start', { review_id: review.reviewId });
     navigation.navigate('WriteReview', { review });
   };
 
@@ -45,7 +43,7 @@ export default function MyReviewsContainer() {
       buttons: [
         {
           text: '취소',
-          onPress: () => {},
+          onPress: () => { },
         },
         {
           text: '삭제',

@@ -1,5 +1,5 @@
 import BookingView from '@/screens/user/Booking/BookingView.tsx';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
@@ -61,10 +61,7 @@ export default function BookingContainer() {
 
   useEffect(() => {
     // Log booking_intent when Booking screen opens
-    analytics().logEvent('booking_intent', {
-      user_id: userId,
-      user_type: userType,
-      photographer_id: photographerId,
+    trackBookingEvent('booking_intent', undefined, photographerId, {
       screen: 'Booking',
     });
 
@@ -76,9 +73,7 @@ export default function BookingContainer() {
       if (!formCompletedRef.current && formStartTimeRef.current) {
         const timeSpentSeconds = (Date.now() - formStartTimeRef.current) / 1000;
 
-        analytics().logEvent('booking_form_abandoned', {
-          user_id: userId,
-          user_type: userType,
+        safeLogEvent('booking_form_abandoned', {
           photographer_id: photographerId,
           step: 'product_selection',
           time_spent_seconds: Math.round(timeSpentSeconds),
@@ -89,7 +84,7 @@ export default function BookingContainer() {
         });
       }
     };
-  }, [userId, photographerId, userType, selectedDate, selectedProductIdField, selectedRegionId, selectedTime]);
+  }, [photographerId, selectedDate, selectedProductIdField, selectedRegionId, selectedTime]);
 
 
   // Fetch shooting products
@@ -360,22 +355,7 @@ export default function BookingContainer() {
     const regionCity = selectedRegion?.city || '';
 
     // Log booking_request_submitted
-    analytics().logEvent('booking_request_submitted', {
-      user_id: userId,
-      user_type: userType,
-      photographer_id: photographerId,
-      product_id: data.productId,
-      shooting_date: data.date,
-      start_time: data.time,
-      options: JSON.stringify(options),
-      region: regionCity,
-    });
-
-    // Log booking_confirmed (for demonstration, as actual confirmation is after request)
-    analytics().logEvent('booking_confirmed', {
-      user_id: userId,
-      user_type: userType,
-      photographer_id: photographerId,
+    trackBookingEvent('booking_request_submitted', undefined, photographerId, {
       product_id: data.productId,
       shooting_date: data.date,
       start_time: data.time,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { EnhancedScheduleData } from '@/components/domain/booking/ScheduleCalendar.tsx';
 import BookingCalendarView from '@/screens/photographer/BookingCalendar/BookingCalendarView.tsx';
 import { useNavigation } from '@react-navigation/native';
@@ -173,9 +173,7 @@ export default function BookingCalendarContainer() {
 
 
   const handlePressBookingItem = (bookingId: number) => {
-    analytics().logEvent('photographer_booking_detail_view', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('photographer_booking_detail_view', {
       bookingId,
     });
     navigation.navigate('BookingDetails', { bookingId });
@@ -281,9 +279,7 @@ export default function BookingCalendarContainer() {
   const handleSubmitSchedule = async (schedule: Omit<UIPersonalSchedule, 'id'>) => {
     // AddScheduleModal already handles mutation, just log analytics
     closeAddScheduleModal();
-    analytics().logEvent('personal_schedule_created', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('personal_schedule_created', {
       start_date: schedule.startDate.toISOString().split('T')[0],
       end_date: schedule.endDate.toISOString().split('T')[0],
       title: schedule.title,

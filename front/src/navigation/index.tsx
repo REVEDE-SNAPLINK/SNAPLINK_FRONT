@@ -14,9 +14,10 @@ import {
   safeLogEvent,
   parseDeepLinkUrl,
   checkAndMarkFirstInstall,
-  resetImpressionCache,
   setCrashlyticsContext,
   safeCrashlyticsLog,
+  trackDeepLinkOpen,
+  resetImpressionCache,
 } from '@/utils/analytics.ts';
 
 export const navigationRef = createNavigationContainerRef();
@@ -55,18 +56,28 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
 
   // ── deep_link_open 이벤트 로깅 ──
   const parsed = parseDeepLinkUrl(url);
-  setCrashlyticsContext({ flow: 'deep_link', entityId: parsed.targetId, entityType: parsed.linkType === 'photographer_profile' ? 'photographer' : parsed.linkType === 'community_post' || parsed.linkType === 'portfolio_post' ? 'post' : parsed.linkType === 'booking' ? 'booking' : parsed.linkType === 'chat' ? 'room' : undefined });
+
+  // EntityType 매핑
+  const mapEntityType = (linkType: string) => {
+    switch (linkType) {
+      case 'photographer_profile': return 'photographer';
+      case 'portfolio_post': return 'portfolio_post';
+      case 'community_post': return 'community_post';
+      case 'booking': return 'booking';
+      case 'chat': return 'room';
+      default: return undefined;
+    }
+  };
+
+  setCrashlyticsContext({
+    flow: 'deep_link',
+    entityId: parsed.targetId,
+    entityType: mapEntityType(parsed.linkType)
+  });
   safeCrashlyticsLog(`🔗 Deep link opened: ${parsed.linkType} / ${parsed.targetId}`);
 
-  await safeLogEvent('deep_link_open', {
-    link_url: url.length > 500 ? url.substring(0, 500) : url,
-    link_type: parsed.linkType,
-    target_id: parsed.targetId,
-    source_channel: parsed.sourceChannel,
-    tracking_code: parsed.trackingCode ?? '',
+  trackDeepLinkOpen(url, parsed, {
     is_first_open_after_install: options?.isFirstInstall ?? false,
-    user_id: options?.userId ?? 'anonymous',
-    user_type: options?.userType ?? 'guest',
   });
 
   if (!navigationRef.isReady()) {
@@ -99,15 +110,13 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
   if (!pathMatch) {
     console.warn('❌ Invalid deeplink format:', routePath);
     // deep_link_landing_resolved: 실패
-    await safeLogEvent('deep_link_landing_resolved', {
+    safeLogEvent('deep_link_landing_resolved', {
       original_link_type: parsed.linkType,
       original_target_id: parsed.targetId,
       resolved_screen: '',
       resolved_target_id: '',
       resolve_success: false,
       fail_reason: 'invalid_link',
-      user_id: options?.userId ?? 'anonymous',
-      user_type: options?.userType ?? 'guest',
     });
     return;
   }
@@ -214,15 +223,13 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
     console.log('🎯 Navigating to:', screenName, 'with params:', screenParams);
 
     // deep_link_landing_resolved: 성공
-    await safeLogEvent('deep_link_landing_resolved', {
+    safeLogEvent('deep_link_landing_resolved', {
       original_link_type: parsed.linkType,
       original_target_id: parsed.targetId,
       resolved_screen: screenName,
       resolved_target_id: screenParams.photographerId ?? screenParams.postId ?? screenParams.bookingId ?? screenParams.roomId ?? screenParams.reviewId ?? screenParams.noticeId ?? '',
       resolve_success: true,
       fail_reason: '',
-      user_id: options?.userId ?? 'anonymous',
-      user_type: options?.userType ?? 'guest',
     });
 
     // Reset navigation stack with Home first, then target screen
@@ -255,7 +262,7 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
   } else {
     console.warn('❌ Unknown route:', tab, remainingPath);
     // deep_link_landing_resolved: 실패 (알 수 없는 라우트)
-    await safeLogEvent('deep_link_landing_resolved', {
+    safeLogEvent('deep_link_landing_resolved', {
       original_link_type: parsed.linkType,
       original_target_id: parsed.targetId,
       resolved_screen: '',

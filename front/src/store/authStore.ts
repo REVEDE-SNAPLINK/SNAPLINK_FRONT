@@ -23,6 +23,7 @@ import { Platform, Linking } from 'react-native';
 import { queryClient } from '@/config/queryClient.ts';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { setAnalyticsUserContext, safeLogEvent } from '@/utils/analytics.ts';
 import { updateNotificationSettings } from '@/api/user.ts';
 import { Alert } from '@/components/ui';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
@@ -116,6 +117,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         ]);
 
         const resolvedUserType = savedUserType || 'user';
+        setAnalyticsUserContext(savedUserId || undefined, resolvedUserType); // 부트스트랩 완료 시 동기화
+
         set({
           accessToken: token,
           status: 'authed',
@@ -137,6 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await clearRefreshToken();
         await clearUserId();
         await clearUserType();
+        setAnalyticsUserContext(undefined, 'guest'); // Analytics 게스트
         set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
       } else {
         // 네트워크 에러 등 일시적 에러: 저장된 정보로 복구 시도
@@ -147,6 +151,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (savedUserId) {
           const resolvedUserType = savedUserType || 'user';
+          setAnalyticsUserContext(savedUserId, resolvedUserType); // Offline Sync
           set({
             status: 'authed',
             accessToken: null,
@@ -264,7 +269,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
 
-        await analytics().logEvent('login', {
+        // 메모리 상의 Helper 에도 전달하여 이후 파라미터 자동 삽입되게 함
+        setAnalyticsUserContext(response.userId, userType);
+
+        await safeLogEvent('login', {
           method: provider.toLowerCase(),
         });
 
@@ -328,7 +336,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
 
-        await analytics().logEvent('login', {
+        setAnalyticsUserContext(response.userId, userType);
+
+        await safeLogEvent('login', {
           method: 'test_account',
         });
 
@@ -388,7 +398,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const userType = response.role === 'USER' ? 'user' : 'photographer';
         const signupDate = new Date().toISOString().split('T')[0];
 
-        await analytics().logEvent('sign_up', {
+        setAnalyticsUserContext(response.userId, userType);
+
+        await safeLogEvent('sign_up', {
           user_id: response.userId,
           user_type: userType,
           signup_date: signupDate,
@@ -440,6 +452,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       NaverLogin.logout().catch(() => { }), // 네이버 로그아웃
     ]);
 
+    setAnalyticsUserContext(undefined, 'guest');
     set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
     useModalStore.getState().resetAllModals();
 
@@ -466,7 +479,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const userType = response.role === 'USER' ? 'user' : 'photographer';
         const signupDate = new Date().toISOString().split('T')[0];
 
-        await analytics().logEvent('sign_up', {
+        setAnalyticsUserContext(response.userId, userType);
+
+        safeLogEvent('sign_up', {
           user_id: response.userId,
           user_type: userType,
           signup_date: signupDate,
@@ -536,6 +551,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearAppleLoginInfo(),
     ]);
 
+    setAnalyticsUserContext(undefined, 'guest');
     set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
     useModalStore.getState().resetAllModals();
 
@@ -601,6 +617,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearAppleLoginInfo(),
             clearNaverLoginInfo(),
           ]);
+          setAnalyticsUserContext(undefined, 'guest');
           set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
           useModalStore.getState().resetAllModals();
           queryClient.clear();

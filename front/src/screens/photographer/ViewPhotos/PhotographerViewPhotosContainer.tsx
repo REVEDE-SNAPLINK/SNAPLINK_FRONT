@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { pick, types } from '@react-native-documents/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import PhotographerViewPhotosView from '@/screens/photographer/ViewPhotos/PhotographerViewPhotosView.tsx';
@@ -67,7 +67,7 @@ export default function PhotographerViewPhotosContainer() {
       buttons: [
         { text: 'ZIP 파일 선택', onPress: handleDirectOriginalZipUpload },
         { text: '이미지 선택', onPress: handleGalleryToOriginalZipUpload },
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
       ],
     });
   };
@@ -92,8 +92,7 @@ export default function PhotographerViewPhotosContainer() {
         setIsDelivered(true);
       }
 
-      analytics().logEvent('photographer_original_zip_uploaded', {
-        user_type: 'photographer',
+      safeLogEvent('photographer_original_zip_uploaded', {
         bookingId,
         file_name: zipFile.name,
       });
@@ -157,10 +156,9 @@ export default function PhotographerViewPhotosContainer() {
         setIsDelivered(true);
       }
 
-      await RNFS.unlink(finalZipPath).catch(() => {});
+      await RNFS.unlink(finalZipPath).catch(() => { });
 
-      analytics().logEvent('photographer_original_zip_created', {
-        user_type: 'photographer',
+      safeLogEvent('photographer_original_zip_created', {
         bookingId,
         count: result.assets.length,
       });
@@ -190,7 +188,7 @@ export default function PhotographerViewPhotosContainer() {
       title: '삭제 확인',
       message: '원본/보정본.zip을 삭제하시겠습니까?',
       buttons: [
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
         {
           text: '삭제',
           onPress: async () => {
@@ -199,8 +197,7 @@ export default function PhotographerViewPhotosContainer() {
               await updatePhotos({ deleteZipId: data.zip!.id });
               await refetch();
 
-              analytics().logEvent('photographer_original_zip_deleted', {
-                user_type: 'photographer',
+              safeLogEvent('photographer_original_zip_deleted', {
                 bookingId,
               });
 
@@ -230,7 +227,7 @@ export default function PhotographerViewPhotosContainer() {
       buttons: [
         { text: '이미지 선택', onPress: handleGalleryUpload },
         { text: 'ZIP 파일', onPress: handleZipAndUnzipUpload },
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
       ],
     });
   };
@@ -290,11 +287,10 @@ export default function PhotographerViewPhotosContainer() {
 
       for (const photo of newPhotos) {
         const path = photo.uri.replace('file://', '');
-        await RNFS.unlink(path).catch(() => {});
+        await RNFS.unlink(path).catch(() => { });
       }
 
-      analytics().logEvent('photographer_photos_added_zip', {
-        user_type: 'photographer',
+      safeLogEvent('photographer_photos_added_zip', {
         bookingId,
         count: newPhotos.length,
       });
@@ -344,8 +340,7 @@ export default function PhotographerViewPhotosContainer() {
         setIsDelivered(true);
       }
 
-      analytics().logEvent('photographer_booking_photos_added', {
-        user_type: 'photographer',
+      safeLogEvent('photographer_booking_photos_added', {
         bookingId,
         count: newPhotos.length,
       });
@@ -378,7 +373,7 @@ export default function PhotographerViewPhotosContainer() {
       title: '사진 삭제',
       message: `${deletePhotoIds.length}개의 사진을 삭제하시겠습니까?`,
       buttons: [
-        { text: '취소', type: 'cancel', onPress: () => {} },
+        { text: '취소', type: 'cancel', onPress: () => { } },
         {
           text: '삭제',
           onPress: async () => {
@@ -387,8 +382,7 @@ export default function PhotographerViewPhotosContainer() {
               await updatePhotos({ deletePhotoIds });
               await refetch();
 
-              analytics().logEvent('photographer_booking_photos_deleted', {
-                user_type: 'photographer',
+              safeLogEvent('photographer_booking_photos_deleted', {
                 bookingId,
                 count: deletePhotoIds.length,
               });

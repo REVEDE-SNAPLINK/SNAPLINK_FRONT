@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Animated, BackHandler, Dimensions, Platform } from 'react-native';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import styled from '@/utils/scale/CustomStyled';
 import IconButton from '@/components/ui/IconButton';
 import CancelIcon from '@/assets/icons/cancel.svg';
@@ -107,9 +107,7 @@ export default function ScheduleDetailModal({
 
   const handleSubmitSchedule = async (updatedSchedule: Omit<PersonalSchedule, 'id'>) => {
     closeAddScheduleModal();
-    analytics().logEvent('personal_schedule_updated', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('personal_schedule_updated', {
       start_date: updatedSchedule.startDate.toISOString().split('T')[0],
       end_date: updatedSchedule.endDate.toISOString().split('T')[0],
       title: updatedSchedule.title,
@@ -140,7 +138,7 @@ export default function ScheduleDetailModal({
         title: isHoliday ? '휴가를 삭제할까요?' : '일정을 삭제할까요?',
         message: '삭제한 일정은 복구할 수 없어요.',
         buttons: [
-          { text: '취소', type: 'cancel', onPress: () => {} },
+          { text: '취소', type: 'cancel', onPress: () => { } },
           {
             text: '삭제',
             type: 'destructive',
@@ -187,25 +185,20 @@ export default function ScheduleDetailModal({
                     }
                   }
 
-                  analytics().logEvent('holiday_deleted', {
-                    user_id: userId,
-                    user_type: 'photographer',
-                  });
+                  safeLogEvent('holiday_deleted');
                   onClose();
                 } catch (error) {
                   Alert.show({
                     title: '휴가 삭제 실패',
                     message: '휴가 삭제에 실패했습니다. 다시 시도해주세요.',
-                    buttons: [{ text: '확인', onPress: () => {} }],
+                    buttons: [{ text: '확인', onPress: () => { } }],
                   });
                 }
               } else if (scheduleId && !isHoliday) {
                 // API를 통한 개인 일정 삭제 (휴가가 아닐 때만)
                 deleteMutation.mutate(scheduleId, {
                   onSuccess: () => {
-                    analytics().logEvent('personal_schedule_deleted', {
-                      user_id: userId ?? '',
-                      user_type: 'photographer',
+                    safeLogEvent('personal_schedule_deleted', {
                       schedule_id: scheduleId,
                     });
                     onClose();
@@ -214,7 +207,7 @@ export default function ScheduleDetailModal({
                     Alert.show({
                       title: '일정 삭제 실패',
                       message: '일정 삭제에 실패했습니다. 다시 시도해주세요.',
-                      buttons: [{ text: '확인', onPress: () => {} }],
+                      buttons: [{ text: '확인', onPress: () => { } }],
                     });
                   },
                 });

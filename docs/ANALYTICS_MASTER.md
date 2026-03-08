@@ -82,13 +82,15 @@
 
 | 이벤트명 / 동작 | 수행 파라미터 | 데이터 타입 | 파라미터 역할 및 수집 목적 |
 | :--- | :--- | :--- | :--- |
-| **`booking_intent`** | - | - | [예약/문의] 버튼 첫 터치. 프로필 도달 대비 실제 구매 의지가 있는 Hot 리드 비율 측정 |
-| **`chat_initiated`** | - | - | 버튼 클릭 후 챗방 생성 완료 핑. 대화방 렌더링 과정의 네트워크성/UI성 중도 차단 방어 분석 |
+| **`inquiry_start`** | - | - | 작가 프로필에서 [예약/문의] 버튼 클릭. 프로필 도달 대비 실제 구매 의지가 있는 Hot 리드 비율 측정 |
+| **`chat_room_created`** | - | - | 버튼 클릭 후 챗방 생성 완료 핑. 대화방 렌더링 과정의 네트워크성/UI성 중도 차단 방어 분석 |
+| **`first_message_sent`**| - | - | 첫 문의 메시지가 성공적으로 서버에 전달된 시점 |
 | **`booking_form_abandoned`**| `step` | String | (고객 이탈 시) 날짜 입력, 상품 선택 등 어느 Step에서 창을 X 닫고 이탈하는지 파이프라인 누수 병목 확인 |
 | ↳ | `time_spent_seconds` | Number | 해당 폼에서 고민하다 포기하기까지 걸린 시간. 작성 난이도 UX 추척 |
 | ↳ | 상품/날짜 정보 등 | Any | 포기된 예약건에 담겨 있던 상품/가격대 정보 (너무 비싼 것만 이탈하는지 등 분석) |
-| **`booking_request...`** | `request_details_length` | Number | 예약 폼이 전송 완료(Submit)될 때, 세부 요구사항 텍스트 길이를 통해 리드의 진정성/구체성 평가 |
-| **`booking_confirmed`** | - | - | 영업 최종 수주. KPI 중 가장 핵심인 '결제금 전환' 총량 수집용 |
+| **`booking_request_submitted`** | `request_details_length` | Number | 예약 폼 전송 이벤트. 세부 요구사항 텍스트 길이를 통해 리드의 진정성/구체성 평가 |
+| **`booking_request_delivery_succeeded`** | - | - | 예약 폼 서버 전송(요청) 성공 지표 |
+| **`booking_accepted`** | - | - | 영업 최종 수주(작가의 수락). KPI 중 가장 핵심인 '결제금 전환' 총량 수집용 |
 | **`booking_cancelled_by_user`**| `reason_length` | Number | 단순 변심/이탈 노쇼 비율 측정. 사유 텍스트 단어 길이로 진정성 파악 |
 | **`booking_detail_view`** | `booking_id`, `user_id` | - | 예약 후 유저가 자신의 일정을 앱에 켜서 확인하는 리텐션 관여 정도 (불안감 측정) |
 | **`review_start`** <br/>/ **`..._create_complete`** | `booking_id`, `user_id` | String | [납품 완료 후기] 모듈 진입 시점과 DB 저장 완료 시점 쌍. 리뷰 인벤토리 수집의 전환율(Review CVR) 파악 |

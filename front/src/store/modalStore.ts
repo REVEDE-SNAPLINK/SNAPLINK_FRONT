@@ -84,6 +84,9 @@ interface ModalStore {
   ) => void;
   closeReportModal: () => void;
   setReportModalLoading: (isLoading: boolean) => void;
+
+  /** 모든 모달을 닫음 (로그아웃 시 터치 블록 방지) */
+  resetAllModals: () => void;
 }
 
 export const useModalStore = create<ModalStore>((set) => ({
@@ -209,4 +212,12 @@ export const useModalStore = create<ModalStore>((set) => ({
         isLoading,
       },
     })),
+
+  resetAllModals: () =>
+    set({
+      communityPostModal: { visible: false, initialPost: undefined, onSubmit: undefined, isLoading: false },
+      addScheduleModal: { visible: false, initialSchedule: undefined, onSubmit: undefined, isDuplicate: false, initialStartDate: undefined },
+      scheduleDetailModal: { visible: false, schedule: undefined, scheduleId: undefined },
+      reportModal: { visible: false, targetId: undefined, targetType: undefined, targetUserType: undefined, initialReason: undefined, onSubmit: undefined, isLoading: false },
+    }),
 }));

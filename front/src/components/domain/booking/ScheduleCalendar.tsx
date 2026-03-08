@@ -292,7 +292,8 @@ interface ScheduleCalendarGridProps {
   maxWeekCount?: number;
 }
 
-export function ScheduleCalendarGrid({
+// React.memo로 래핑하여 props 변경 시에만 리렌더 (시트 전환 중 프레임 드랍 방지)
+export const ScheduleCalendarGrid = React.memo(function ScheduleCalendarGrid({
   displayYearMonth,
   selectedDate,
   onSelectDate,
@@ -433,4 +434,4 @@ export function ScheduleCalendarGrid({
       dayComponent={renderDayComponent}
     />
   );
-}
+});

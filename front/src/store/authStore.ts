@@ -27,6 +27,7 @@ import { updateNotificationSettings } from '@/api/user.ts';
 import { Alert } from '@/components/ui';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import NaverLogin from '@react-native-seoul/naver-login';
+import { useModalStore } from '@/store/modalStore';
 
 let isRefreshing = false;
 let refreshPromise: Promise<any> | null = null;
@@ -440,6 +441,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     ]);
 
     set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
+    useModalStore.getState().resetAllModals();
 
     // Clear all persistent storage
     await Promise.allSettled([
@@ -535,6 +537,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     ]);
 
     set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
+    useModalStore.getState().resetAllModals();
 
     // Query 캐시 초기화
     queryClient.clear();
@@ -599,6 +602,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearNaverLoginInfo(),
           ]);
           set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
+          useModalStore.getState().resetAllModals();
           queryClient.clear();
 
           // 화면 네비게이션 복귀와 Alert 표시가 동시에 일어나면서 발생하는 터치 블록(Freeze) 버그를 막기 위해 지연 호출

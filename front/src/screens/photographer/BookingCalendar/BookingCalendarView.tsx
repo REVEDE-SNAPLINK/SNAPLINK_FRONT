@@ -17,7 +17,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   runOnJS,
-  withSpring, interpolate, Extrapolate,
+  withTiming, Easing, interpolate, Extrapolate,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 
@@ -42,14 +42,10 @@ const DAY_HEIGHT = 62;
 const MAX_WEEK_COUNT = 6; // 캘린더 최대 주차 수 (높이 통일 기준)
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// 통일된 스프링 설정 (iOS 네이티브 시트와 유사한 느낌)
-const SNAP_SPRING_CONFIG = {
-  damping: 22,
-  stiffness: 220,
-  mass: 1,
-  overshootClamping: false,
-  restDisplacementThreshold: 0.5,
-  restSpeedThreshold: 0.5,
+// 통일된 타이밍 설정 (빠르고 예측 가능한 감속 커브)
+const SNAP_TIMING_CONFIG = {
+  duration: 280,
+  easing: Easing.out(Easing.cubic),
 };
 
 // 이전달 계산
@@ -95,31 +91,23 @@ export default function BookingCalendarView({
   onPressAddSchedule,
   onMonthChange,
 }: BookingCalendarViewProps) {
-  // 초기 높이를 0으로 설정하여 onLayout 이전에는 렌더링되지 않도록 함
-  const initialContainerHeight = 0;
-  const initialCalendarHeight = CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT;
-  const initialDefaultHeight = 0;
-
-  const [containerHeight, setContainerHeight] = useState(initialContainerHeight);
-  const [defaultHeight, setDefaultHeight] = useState(initialDefaultHeight);
+  const [containerHeight, setContainerHeight] = useState(0);
+  // containerHeight에서 동기 계산 (useEffect 비동기 딜레이 제거)
+  const defaultHeight = containerHeight > 0
+    ? containerHeight - (CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT) + 20
+    : 0;
   const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const isPickerActiveRef = useRef(false); // 다이얼로그가 열려있거나 처리 중인지 추적
-  const isGestureAnimatingRef = useRef(false); // 제스처 애니메이션 진행 중 플래그
 
   // onLayout 측정 완료 여부
   const isLayoutReady = containerHeight > 0;
 
-  // renderType 갱신을 requestAnimationFrame으로 지연하여 애니메이션 프레임과 분리
+  // 제스처 완료 후 React state만 동기화 (애니메이션은 제스처 onEnd에서 이미 처리됨)
   const deferredSetRenderType = useCallback((type: 'HIDDEN' | 'DEFAULT' | 'FULL') => {
     requestAnimationFrame(() => {
       setRenderType(type);
-      isGestureAnimatingRef.current = false;
     });
-  }, []);
-
-  const setGestureAnimating = useCallback((isAnimating: boolean) => {
-    isGestureAnimatingRef.current = isAnimating;
   }, []);
 
   // 방법 C: 월 목록을 상태로 관리 [이전달, 현재달, 다음달]
@@ -292,26 +280,22 @@ export default function BookingCalendarView({
     };
   });
 
-  // containerHeight가 변경되면 defaultHeight 계산 (6주 기준으로 고정)
-  useEffect(() => {
-    if (!containerHeight) return;
-    // 항상 6주 기준으로 계산하여 하단 바 높이 고정
-    const calendarHeight = CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT;
-    const newDefaultHeight = containerHeight - calendarHeight + 20;
-    setDefaultHeight(newDefaultHeight);
-  }, [containerHeight]);
-
-  useEffect(() => {
-    renderTypeSV.value = renderType;
-  }, [renderType]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // 날짜 선택 핸들러 - HIDDEN 상태에서 날짜를 선택하면 DEFAULT로 전환
-  const handleSelectDate = (date: string) => {
-    if (renderType === 'HIDDEN') {
+  // 날짜 선택 핸들러 - HIDDEN 상태에서 날짜를 선택하면 DEFAULT로 전환 (직접 애니메이션)
+  // useCallback으로 참조 안정화 → ScheduleCalendarGrid 리렌더 방지
+  const handleSelectDate = useCallback((date: string) => {
+    if (renderTypeSV.value === 'HIDDEN' && defaultHeight > 0) {
+      // 1. 날짜 하이라이트 + state 즉시 반영
+      renderTypeSV.value = 'DEFAULT';
       setRenderType('DEFAULT');
+      onSelectDate(date);
+      // 2. 리렌더가 끝난 후 애니메이션 시작 (프레임 드랍 방지)
+      requestAnimationFrame(() => {
+        sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG);
+      });
+      return;
     }
     onSelectDate(date);
-  };
+  }, [defaultHeight, onSelectDate, renderTypeSV, sheetHeight]);
 
   const DRAG_DAMPING = 0.8;
 
@@ -332,36 +316,32 @@ export default function BookingCalendarView({
       const SNAP_HIDDEN = defaultHeight * 0.4;
       const SNAP_FULL = defaultHeight + (containerHeight - defaultHeight) * 0.6;
 
-      // 수정 C: 제스처 애니메이션 플래그 설정 → useEffect 이중 트리거 방지
-      runOnJS(setGestureAnimating)(true);
-
       if (renderTypeSV.value === 'FULL') {
         if (velocity > 500 || current < SNAP_FULL) {
-          sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
+          sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG, () => {
             renderTypeSV.value = 'DEFAULT';
             runOnJS(deferredSetRenderType)('DEFAULT');
           });
         } else {
-          sheetHeight.value = withSpring(containerHeight, SNAP_SPRING_CONFIG);
-          runOnJS(setGestureAnimating)(false);
+          sheetHeight.value = withTiming(containerHeight, SNAP_TIMING_CONFIG);
         }
         return;
       }
 
       if (velocity > 500 || current < SNAP_HIDDEN) {
-        sheetHeight.value = withSpring(0, SNAP_SPRING_CONFIG, () => {
+        sheetHeight.value = withTiming(0, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'HIDDEN';
           runOnJS(deferredSetRenderType)('HIDDEN');
         });
       }
       else if (velocity < -500 || current > SNAP_FULL) {
-        sheetHeight.value = withSpring(containerHeight, SNAP_SPRING_CONFIG, () => {
+        sheetHeight.value = withTiming(containerHeight, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'FULL';
           runOnJS(deferredSetRenderType)('FULL');
         });
       }
       else {
-        sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
+        sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'DEFAULT';
           runOnJS(deferredSetRenderType)('DEFAULT');
         });
@@ -387,37 +367,15 @@ export default function BookingCalendarView({
 
       const THRESHOLD = defaultHeight * 0.3;
 
-      runOnJS(setGestureAnimating)(true);
-
       if (velocity < -300 || current > THRESHOLD) {
-        sheetHeight.value = withSpring(defaultHeight, SNAP_SPRING_CONFIG, () => {
+        sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'DEFAULT';
           runOnJS(deferredSetRenderType)('DEFAULT');
         });
       } else {
-        sheetHeight.value = withSpring(0, SNAP_SPRING_CONFIG);
-        runOnJS(setGestureAnimating)(false);
+        sheetHeight.value = withTiming(0, SNAP_TIMING_CONFIG);
       }
     });
-
-  // renderType 변경 시 sheetHeight 애니메이션 (비제스처 전환용)
-  useEffect(() => {
-    if (!containerHeight || !defaultHeight) return;
-    // 수정 C: 제스처가 이미 애니메이션을 처리 중이면 건너뜀
-    if (isGestureAnimatingRef.current) return;
-
-    const sheetTargetMap = {
-      HIDDEN: 0,
-      DEFAULT: defaultHeight,
-      FULL: containerHeight,
-    };
-
-    const sheetTarget = sheetTargetMap[renderType];
-
-    if (Math.abs(sheetHeight.value - sheetTarget) > 1) {
-      sheetHeight.value = withSpring(sheetTarget, SNAP_SPRING_CONFIG);
-    }
-  }, [renderType, containerHeight, defaultHeight, sheetHeight]);
 
   const floatingAnimatedStyle = useAnimatedStyle(() => {
     const fadeStart = defaultHeight * 0.6;

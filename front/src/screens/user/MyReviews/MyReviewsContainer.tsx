@@ -7,7 +7,6 @@ import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { GetMyReviewsResponse, MyReviewItem } from '@/api/reviews.ts';
 import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { useCallback } from 'react';
 
 export default function MyReviewsContainer() {
@@ -16,7 +15,6 @@ export default function MyReviewsContainer() {
   // Fetch my reviews
   const { data, isLoading, error } = useMyReviewsInfiniteQuery({ size: 10 });
   const deleteReviewMutation = useDeleteReviewMutation();
-  const { userId, userType } = useAuthStore();
 
   useFocusEffect(
     useCallback(() => {

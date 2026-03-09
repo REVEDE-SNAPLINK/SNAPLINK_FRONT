@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { EnhancedScheduleData } from '@/components/domain/booking/ScheduleCalendar.tsx';
 import BookingCalendarView from '@/screens/photographer/BookingCalendar/BookingCalendarView.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';

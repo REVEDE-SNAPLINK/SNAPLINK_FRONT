@@ -6,13 +6,11 @@ import { useMyScrappedPhotographersInfiniteQuery } from '@/queries/photographers
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 
 const PAGE_SIZE = 20;
 
 export default function BookmarksContainer() {
   const navigation = useNavigation<MainNavigationProp>();
-  const { userId } = useAuthStore();
 
   const {
     data,

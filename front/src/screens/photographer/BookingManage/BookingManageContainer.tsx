@@ -7,7 +7,6 @@ import { usePhotographerBookingsInfiniteQuery } from '@/queries/bookings.ts';
 import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/bookings.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { showErrorAlert } from '@/utils/error';
 
 const PAGE_SIZE = 10;
@@ -15,7 +14,6 @@ const PAGE_SIZE = 10;
 export default function BookingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { userId } = useAuthStore();
 
   const { mutate: approveMutation } = useApproveBookingMutation();
   const { mutate: completeMutaion } = useCompleteBookingMutation();

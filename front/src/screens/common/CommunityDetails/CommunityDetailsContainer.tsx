@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Share, TextInput, InteractionManager, Platform } from 'react-native';
+import { Share, TextInput, InteractionManager } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import {

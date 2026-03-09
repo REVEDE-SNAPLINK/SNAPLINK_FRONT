@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { safeLogEvent, generateTrackingCode, setCrashlyticsContext, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
+import { safeLogEvent, generateTrackingCode, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
@@ -170,7 +170,7 @@ export default function PhotographerDetailsContainer() {
         });
       }
     });
-  }, [chatMutation, photographerId, navigation, queryClient, userId, userType, source]);
+  }, [chatMutation, photographerId, navigation, queryClient, source]);
 
   const handlePressReservation = useCallback(() => {
     // Log booking_intent event when reservation button is pressed
@@ -179,7 +179,7 @@ export default function PhotographerDetailsContainer() {
       entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
     });
     navigation.navigate('Booking', { photographerId });
-  }, [navigation, photographerId, userId, userType, source]);
+  }, [navigation, photographerId, source]);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -198,7 +198,7 @@ export default function PhotographerDetailsContainer() {
 
       crashlytics().log(`⭐ Review tab clicked on profile ${photographerId}`);
     }
-  }, [photographerId, userId, userType]);
+  }, [photographerId]);
 
   const handlePressPortfolioImage = useCallback((id: number) => {
     // ✅ Track portfolio click
@@ -214,7 +214,7 @@ export default function PhotographerDetailsContainer() {
       postId: id,
       profileImageURI: profileData?.profileImageUrl || ''
     });
-  }, [navigation, profileData, photographerId, userId, userType]);
+  }, [navigation, profileData, photographerId]);
 
   const handlePressShowAllReviews = useCallback(() => {
     navigation.navigate('Reviews', { photographerId });

@@ -316,7 +316,7 @@ export default function AppNavigator() {
     };
 
     handleInitialURL();
-  }, []);
+  }, [userId, userType]);
 
   // Handle deep links when app is already open
   useEffect(() => {
@@ -335,7 +335,7 @@ export default function AppNavigator() {
       console.log('🛑 Removing deep link listener');
       subscription.remove();
     };
-  }, []);
+  }, [userId, userType]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextState => {

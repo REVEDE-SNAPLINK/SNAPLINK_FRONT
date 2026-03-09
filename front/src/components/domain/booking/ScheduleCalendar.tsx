@@ -7,7 +7,7 @@ import ArrowLeftIcon from '@/assets/icons/arrow-left-black.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import dayjs from 'dayjs';
 import Icon from '@/components/ui/Icon.tsx';
-import { View, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import Animated, { useAnimatedStyle, useDerivedValue, SharedValue, useSharedValue } from 'react-native-reanimated';
 // MonthPicker는 BookingCalendarView에서 사용
 export { default as MonthPicker } from 'react-native-month-year-picker';

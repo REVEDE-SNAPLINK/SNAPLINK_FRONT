@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 import HomeView from '@/screens/common/Home/HomeView.tsx';
 import { BannerItem } from '@/components/domain/home/Banner.tsx';
@@ -8,7 +8,6 @@ import SignupCompletionModal from '@/components/domain/auth/SignupCompletionModa
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Query } from '@/queries/photographers.ts';
 import { safeLogEvent, trackImpression } from '@/utils/analytics.ts';
-import { Platform } from 'react-native';
 
 const dummyBannerItems: BannerItem[] = [
   {
@@ -30,8 +29,8 @@ export default function HomeContainer() {
   const { data: latest3 } = useMainPhotographersLatestTop3Query();
   const { data: topRated3 } = useMainPhotographersTopRatedTop3Query();
 
-  const latestList = latest3?.content ?? [];
-  const topRatedList = topRated3?.content ?? [];
+  const latestList = useMemo(() => latest3?.content ?? [], [latest3]);
+  const topRatedList = useMemo(() => topRated3?.content ?? [], [topRated3]);
 
   const impressionLogged = useRef(false);
 

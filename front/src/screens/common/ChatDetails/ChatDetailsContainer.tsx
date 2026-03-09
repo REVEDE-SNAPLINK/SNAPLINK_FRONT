@@ -481,7 +481,7 @@ export default function ChatDetailsContainer() {
         message: '메시지 전송에 실패했습니다.',
       });
     }
-  }, [messageInput, roomId, userId, isFirstMessage, messageCount]);
+  }, [messageInput, roomId, isFirstMessage, messageCount]);
 
   const handlePressAlbum = useCallback(async () => {
     requestPermission('photo', async () => {

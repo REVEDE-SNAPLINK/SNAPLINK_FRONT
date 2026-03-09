@@ -1,17 +1,15 @@
-import React, { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Dimensions, GestureResponderEvent, TouchableWithoutFeedback } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import styled from '@/utils/scale/CustomStyled.ts';
-import LinearGradient from 'react-native-linear-gradient';
 import { openUrl } from '@/utils/link.ts';
 import { navigateByDeepLink } from '@/navigation';
 import Carousel from 'react-native-reanimated-carousel';
-import Animated, { useAnimatedStyle, useSharedValue, interpolate, Extrapolate, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, interpolate, Extrapolate } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ITEM_WIDTH = SCREEN_WIDTH - 40;
-const SIDE_SPACING = 20;
 const AUTO_PLAY_INTERVAL = 3000;
 
 export type BannerItem = {
@@ -162,22 +160,6 @@ const BannerSlide = styled.View`
 const BannerImage = styled(ExpoImage)`
   width: 100%;
   height: 100%;
-`;
-
-const BannerOverlay = styled(LinearGradient)`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 65%;
-  z-index: 5;
-`;
-
-const TextOverlay = styled.View`
-  position: absolute;
-  bottom: 33px;
-  left: 26px;
-  z-index: 10;
 `;
 
 const DotContainer = styled.View`

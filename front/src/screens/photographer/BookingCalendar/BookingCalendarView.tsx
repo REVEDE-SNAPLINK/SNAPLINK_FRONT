@@ -40,7 +40,7 @@ interface BookingCalendarViewProps {
 const CALENDAR_HEADER_HEIGHT = 76;
 const DAY_HEIGHT = 62;
 const MAX_WEEK_COUNT = 6; // 캘린더 최대 주차 수 (높이 통일 기준)
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // 통일된 타이밍 설정 (빠르고 예측 가능한 감속 커브)
 const SNAP_TIMING_CONFIG = {

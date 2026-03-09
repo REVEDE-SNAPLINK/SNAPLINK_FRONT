@@ -1,6 +1,5 @@
 import BookingView from '@/screens/user/Booking/BookingView.tsx';
 import { safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -23,7 +22,6 @@ interface BookingFormInputs {
 }
 
 export default function BookingContainer() {
-  const { userId, userType } = useAuthStore();
   const route = useRoute<BookingRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
   const { photographerId } = route.params;

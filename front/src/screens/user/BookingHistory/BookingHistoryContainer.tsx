@@ -6,7 +6,6 @@ import { MainNavigationProp } from '@/types/navigation.ts';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 import { reviewsQueryKeys } from '@/queries/keys.ts';
 import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { useCancelBookingFromCustomerMutation } from '@/mutations/bookings.ts';
 import { Alert } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,7 +19,6 @@ export default function BookingHistoryContainer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<number | undefined>(undefined);
   const [deletedReviewBookingIds, setDeletedReviewBookingIds] = useState<Set<number>>(new Set());
-  const { userId, userType } = useAuthStore();
 
   const {
     data,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Calendar as RNCalendar, LocaleConfig } from 'react-native-calendars';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';

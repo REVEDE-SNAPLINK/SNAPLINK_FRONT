@@ -6,7 +6,6 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { useCreateReservationReviewMutation, useUpdateReviewMutation } from '@/mutations/reviews.ts';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { showErrorAlert } from '@/utils/error';
 
 // Form validation constants
@@ -19,7 +18,6 @@ export default function WriteReviewContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
   const { bookingId, review } = route.params;
-  const { userId } = useAuthStore();
 
   // Determine if we're in edit mode
   const isEditMode = !!review;

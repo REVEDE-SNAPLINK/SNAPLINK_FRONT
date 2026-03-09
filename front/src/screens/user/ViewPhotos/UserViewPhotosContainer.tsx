@@ -10,7 +10,6 @@ import { Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import JSZip from 'jszip';
 import RNFS from 'react-native-fs';
 import { showErrorAlert } from '@/utils/error';
@@ -19,7 +18,6 @@ export default function UserViewPhotosContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'ViewPhotos'>>();
   const { bookingId } = route.params;
-  const { userId } = useAuthStore();
 
   const { data, isLoading } = useBookingPhotosQuery(bookingId);
 

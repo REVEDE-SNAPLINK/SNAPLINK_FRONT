@@ -1,6 +1,5 @@
 import BookingRequestView from '@/screens/user/BookingRequest/BookingRequestView.tsx';
 import { trackBookingEvent, safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
@@ -16,7 +15,6 @@ interface BookingRequestFormInputs {
 }
 
 export default function BookingRequestContainer() {
-  const { userId, userType } = useAuthStore();
   const route = useRoute<BookingRequestRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
   const { photographerId, productId, options, shootingDate, startTime, region } = route.params;

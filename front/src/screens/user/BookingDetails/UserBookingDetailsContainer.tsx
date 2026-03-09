@@ -5,7 +5,6 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useState, useEffect, useCallback } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
@@ -20,7 +19,7 @@ export default function UserBookingDetailsContainer() {
   const route = useRoute<BookingDetailsRouteProp>();
   const { bookingId } = route.params;
   const [shouldFetchReview, setShouldFetchReview] = useState(false);
-  const { userId, userType } = useAuthStore()
+
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
 

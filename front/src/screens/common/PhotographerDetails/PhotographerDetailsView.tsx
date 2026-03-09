@@ -107,7 +107,7 @@ export default function PhotographerDetailsView({
   isPhotographer,
   isMyProfile,
   shootingData,
-  shootingOptions,
+  // shootingOptions,
   onPressAddPortfolio,
   portfolioImages,
   isLoadingPhotographer,

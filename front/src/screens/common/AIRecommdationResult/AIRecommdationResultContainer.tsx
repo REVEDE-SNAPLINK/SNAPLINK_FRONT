@@ -79,7 +79,6 @@ export default function AIRecommdationResultContainer() {
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
   const [initialFilterIndex, setInitialFilterIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [allPhotographers, setAllPhotographers] = useState<PhotographerSearchItem[]>([]);
   const [photographersWithScores, setPhotographersWithScores] = useState<(PhotographerSearchItem & { aiScore: number })[]>([]);
 
   const { mutate: searchMulti } = useSearchPhotographersMultiMutation();
@@ -111,8 +110,6 @@ export default function AIRecommdationResultContainer() {
           portfolioImages: item.matchedImageUrl ? [item.matchedImageUrl] : [],
         }));
 
-        setAllPhotographers(mapped);
-
         // Calculate AI recommendation scores (descending from top)
         const withScores = mapped.map((photographer, index) => {
           // Similarity Score from server: e.g., 0.825 -> 83
@@ -136,7 +133,7 @@ export default function AIRecommdationResultContainer() {
         setIsLoading(false);
       }
     });
-  }, [prompt, imageUri, imageName, imageType, searchMulti, resultCount]);
+  }, [prompt, imageUri, imageName, imageType, searchMulti]);
 
   useEffect(() => {
     fetchResults();
@@ -169,7 +166,7 @@ export default function AIRecommdationResultContainer() {
     });
 
     return filtered;
-  }, [photographersWithScores, selectedFilters, resultCount]);
+  }, [photographersWithScores, selectedFilters]);
 
   const filterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];

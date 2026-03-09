@@ -3,7 +3,6 @@ import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import PhotographerBookingDetailsView from '@/screens/photographer/BookingDetails/PhotographerBookingDetailsView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { queryClient } from '@/config/queryClient.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
@@ -15,7 +14,6 @@ export default function PhotographerBookingDetailsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingDetailsRouteProp>();
   const { bookingId } = route.params;
-  const { userId } = useAuthStore();
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
   const { mutate: chatMutate } = useCreateOrGetChatRoomMutation();

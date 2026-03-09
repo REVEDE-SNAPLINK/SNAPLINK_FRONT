@@ -9,7 +9,6 @@ import { UploadImageFile } from '@/api/photographers';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
 import { usePortfolioPostQuery } from '@/queries/photographers';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { useAuthStore } from '@/store/authStore';
 import { showErrorAlert } from '@/utils/error';
 
 type PortfolioFormRouteProp = RouteProp<MainStackParamList, 'PortfolioForm'>;
@@ -23,7 +22,6 @@ export default function PortfolioFormContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<PortfolioFormRouteProp>();
   const { postId } = route.params || {};
-  const { userId } = useAuthStore();
   const { mutate: uploadPortfolio, isPending: isCreating } = useCreatePortfolioMutation();
 
   const isEditMode = !!postId;

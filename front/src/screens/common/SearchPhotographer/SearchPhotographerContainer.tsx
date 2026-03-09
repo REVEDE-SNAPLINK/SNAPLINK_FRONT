@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore.ts';
 import { safeLogEvent } from '@/utils/analytics.ts';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
@@ -23,7 +22,6 @@ type SearchPhotographerRouteProp = RouteProp<MainStackParamList, 'SearchPhotogra
 const PAGE_SIZE = 10;
 
 export default function SearchPhotographerContainer() {
-  const { userId, userType } = useAuthStore();
   const route = useRoute<SearchPhotographerRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
 
@@ -217,7 +215,7 @@ export default function SearchPhotographerContainer() {
         source: 'SearchPhotographer',
       });
     }
-  }, [data]);
+  }, [data, searchKey]);
 
   const handlePressBack = () => {
     navigation.goBack();

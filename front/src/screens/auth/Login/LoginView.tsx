@@ -49,13 +49,13 @@ export default function LoginView({
         {isReviewMode && (
           <>
             <SocialLoginButton
-              backgroundColor="#FEE500"
+              backgroundColor="#00A980"
               Icon={Kakao}
               text={`테스트 계정 1`}
               onPress={onTest1Login}
             />
             <SocialLoginButton
-              backgroundColor="#FEE500"
+              backgroundColor="#00A980"
               Icon={Kakao}
               text={`테스트 계정 2`}
               onPress={onTest2Login}
@@ -63,7 +63,14 @@ export default function LoginView({
           </>
         )}
         <SocialLoginButton
-          backgroundColor="#FEE500"
+          backgroundColor='#03C75A'
+          textColor="#fff"
+          Icon={Naver}
+          text='네이버'
+          onPress={onNaverLogin}
+        />
+        <SocialLoginButton
+          backgroundColor="#161612ff"
           Icon={Kakao}
           text="카카오"
           onPress={onKakaoLogin}
@@ -77,13 +84,6 @@ export default function LoginView({
             onPress={onAppleLogin}
           />
         }
-        <SocialLoginButton
-          backgroundColor='#03C75A'
-          textColor="#fff"
-          Icon={Naver}
-          text='네이버'
-          onPress={onNaverLogin}
-        />
         {/* TODO: 비즈니스 문제로 추후 추가 */}
         {/*/>*/}
         {/*<SocialLoginButton*/}

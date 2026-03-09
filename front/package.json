@@ -1,6 +1,6 @@
 {
   "name": "snaplink",
-  "version": "1.0.3",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -12,9 +12,9 @@
     "codepush android": "revopush release-react snaplink android",
     "licenses": "license-checker --json --out src/assets/licenses.json",
     "version": "sed -i '' \"s/versionName \\\".*\\\"/versionName \\\"$npm_package_version\\\"/\" android/app/build.gradle && sed -i '' \"s/MARKETING_VERSION = .*;/MARKETING_VERSION = $npm_package_version;/g\" ios/snaplink.xcodeproj/project.pbxproj && git add android/app/build.gradle ios/snaplink.xcodeproj/project.pbxproj package.json package-lock.json",
-    "release:patch": "npm version patch --no-git-tag-version && git add package.json package-lock.json && git commit -m \"chore: bump version to $npm_package_version\"",
-    "release:minor": "npm version minor --no-git-tag-version && git add package.json package-lock.json && git commit -m \"feat: minor version up to $npm_package_version\"",
-    "release:set": "npm version --no-git-tag-version && git add package.json package-lock.json && git commit -m \"chore: manual version set to $npm_package_version\""
+    "release:patch": "npm version patch --no-git-tag-version && git commit -m \"chore: bump version to $(node -p \\\"require('./package.json').version\\\")\"",
+    "release:minor": "npm version minor --no-git-tag-version && git commit -m \"feat: minor version up to $(node -p \\\"require('./package.json').version\\\")\"",
+    "release:set": "f() { npm version \"$1\" --no-git-tag-version && git commit -m \"chore: manual version set to $(node -p \\\"require('./package.json').version\\\")\"; }; f"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -6,7 +6,7 @@ import Typography from '@/components/ui/Typography';
 
 type SocialLoginButtonProps = TouchableOpacityProps & {
   backgroundColor: string;
-  Icon: React.FC<SvgProps>;
+  Icon?: React.FC<SvgProps>;
   text: string;
   textColor?: string;
 }
@@ -45,13 +45,13 @@ export default function SocialLoginButton({
 }: SocialLoginButtonProps) {
   return (
     <StyledButton $backgroundColor={backgroundColor} {...rest}>
-      <Icon width={16} height={16} />
+      {Icon && <Icon width={16} height={16} />}
       <Typography
         color={textColor}
         fontSize={14}
         fontWeight="medium"
         lineHeight={20}
-        marginLeft={27}
+        marginLeft={Icon ? 27 : 0}
       >
         {' '}{text}로 로그인
       </Typography>

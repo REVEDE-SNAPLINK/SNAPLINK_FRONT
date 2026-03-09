@@ -460,7 +460,7 @@ jobs:
           SNAPLINK_RELEASE_STORE_PASSWORD=$KEYSTORE_PASSWORD
           SNAPLINK_RELEASE_KEY_PASSWORD=$KEY_PASSWORD
           SNAPLINK_RELEASE_KEY_ALIAS=$KEY_ALIAS
-          SNAPLINK_RELEASE_STORE_FILE=release.keystore
+          SNAPLINK_RELEASE_STORE_FILE=../release.keystore
           EOF
 
       - name: Create Google Play service account JSON

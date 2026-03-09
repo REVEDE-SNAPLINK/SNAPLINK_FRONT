@@ -16,10 +16,10 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
 
-      - name: Checkout dev code
+      - name: Checkout develop code
         uses: actions/checkout@v4
         with:
-          ref: dev
+          ref: develop
 
       - name: Template Issue Parser
         uses: stefanbuck/github-issue-praser@v3

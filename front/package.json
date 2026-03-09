@@ -1,6 +1,6 @@
 {
   "name": "snaplink",
-  "version": "1.0.4",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -11,7 +11,11 @@
     "codepush ios": "revopush release-react snaplink ios",
     "codepush android": "revopush release-react snaplink android",
     "licenses": "license-checker --json --out src/assets/licenses.json",
-    "postversion": "react-native-version --target android && cd ios && agvtool new-marketing-version $(node -p \"require('../package.json').version\") && sed -i '' \"s/MARKETING_VERSION = .*;/MARKETING_VERSION = $(node -p \\\"require('../package.json').version\\\");/g\" snaplink.xcodeproj/project.pbxproj"
+    "version": "sed -i '' \"s/versionName \\\".*\\\"/versionName \\\"$npm_package_version\\\"/\" android/app/build.gradle && sed -i '' \"s/MARKETING_VERSION = .*;/MARKETING_VERSION = $npm_package_version;/g\" ios/snaplink.xcodeproj/project.pbxproj && git add android/app/build.gradle ios/snaplink.xcodeproj/project.pbxproj",
+    "release:patch": "npm version patch -m \"chore(release): bump version to %s\"",
+    "release:minor": "npm version minor -m \"feat(release): minor version up to %s\"",
+    "release:set": "npm version -m \"chore(release): manual version set to %s\"",
+    "release:set-no-git": "npm version --no-git-tag-version"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -100,7 +104,6 @@
     "license-checker": "^25.0.1",
     "prettier": "2.8.8",
     "react-native-svg-transformer": "^1.5.1",
-    "react-native-version": "^4.0.0",
     "react-test-renderer": "19.1.0",
     "typescript": "^5.8.3"
   },

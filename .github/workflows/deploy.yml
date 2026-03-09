@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
   workflow_dispatch:
     inputs:
       deploy_type:
@@ -46,6 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       deploy_type: ${{ steps.decide.outputs.deploy_type }}
+      deployment: ${{ steps.decide.outputs.deployment }}
       has_front_changes: ${{ steps.changes.outputs.has_front_changes }}
       has_native_ios: ${{ steps.changes.outputs.has_native_ios }}
       has_native_android: ${{ steps.changes.outputs.has_native_android }}
@@ -130,40 +131,33 @@ jobs:
 
       - name: Check Revopush cumulative count
         id: revopush_count
-        if: github.event.inputs.deploy_type == 'auto' || github.event.inputs.deploy_type == '' || github.event_name == 'push'
-        continue-on-error: true
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
-          # Revopush 배포 히스토리 조회 (iOS 기준)
-          # REVOPUSH_ACCESS_KEY가 없으면 스킵
+          BRANCH="${{ github.ref_name }}"
+          # main이면 Production, 그 외(develop)면 Staging 조회
+          if [ "$BRANCH" == "main" ]; then
+            DEPLOY_TARGET="Production"
+          else
+            DEPLOY_TARGET="Staging"
+          fi
+          echo "deployment=$DEPLOY_TARGET" >> $GITHUB_OUTPUT
+
           if [ -z "$REVOPUSH_ACCESS_KEY" ]; then
-            echo "⚠️ REVOPUSH_ACCESS_KEY not set, skipping count check"
-            echo "count=0" >> $GITHUB_OUTPUT
             echo "exceeded=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink/ios Production --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
-          
-          # 배포 횟수 카운트 (테이블 헤더와 구분선 제외)
+          # 해당 채널의 히스토리 조회
+          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink/ios $DEPLOY_TARGET --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
           if [ -n "$HISTORY" ]; then
             COUNT=$(echo "$HISTORY" | grep -c "^|" || true)
-            # 헤더 행 2줄 제외
             COUNT=$((COUNT > 2 ? COUNT - 2 : 0))
           else
             COUNT=0
           fi
-
-          echo "📊 Revopush cumulative OTA count: $COUNT"
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-
-          if [ "$COUNT" -ge 10 ]; then
-            echo "⚠️ Revopush count >= 10, recommend native build"
-            echo "exceeded=true" >> $GITHUB_OUTPUT
-          else
-            echo "exceeded=false" >> $GITHUB_OUTPUT
-          fi
+          echo "📊 Revopush ($DEPLOY_TARGET) count: $COUNT"
+          [ "$COUNT" -ge 10 ] && echo "exceeded=true" >> $GITHUB_OUTPUT || echo "exceeded=false" >> $GITHUB_OUTPUT
 
       - name: Detect version bump
         id: version_bump
@@ -198,40 +192,36 @@ jobs:
       - name: Decide deploy type
         id: decide
         run: |
-          MANUAL_TYPE="${{ github.event.inputs.deploy_type }}"
-          HAS_FRONT_CHANGES="${{ steps.changes.outputs.has_front_changes }}"
+          BRANCH="${{ github.ref_name }}"
+          DEPLOYMENT="${{ steps.revopush_count.outputs.deployment }}"
+          REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded }}"
+          VERSION_CHANGED="${{ steps.version_bump.outputs.changed }}"
           HAS_NATIVE_IOS="${{ steps.changes.outputs.has_native_ios }}"
           HAS_NATIVE_ANDROID="${{ steps.changes.outputs.has_native_android }}"
-          REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded || 'false' }}"
-          VERSION_CHANGED="${{ steps.version_bump.outputs.changed || 'false' }}"
 
-          # 수동 트리거에서 타입이 지정된 경우
-          if [ "$MANUAL_TYPE" == "native" ] || [ "$MANUAL_TYPE" == "ota" ] || [ "$MANUAL_TYPE" == "promote" ]; then
-            echo "deploy_type=$MANUAL_TYPE" >> $GITHUB_OUTPUT
-            echo "🎯 Manual deploy type: $MANUAL_TYPE"
+          echo "deployment=$DEPLOYMENT" >> $GITHUB_OUTPUT
+
+          # 수동 실행 처리
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.deploy_type }}" != "auto" ]; then
+            echo "deploy_type=${{ github.event.inputs.deploy_type }}" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # front/ 폴더에 변경이 없으면 배포 스킵 (수동 실행 시에는 스킵 안 함)
-          if [ "$HAS_FRONT_CHANGES" == "false" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
-            echo "deploy_type=skip" >> $GITHUB_OUTPUT
-            echo "⏭️ No changes in front/ — skipping deployment"
-            exit 0
-          fi
-
-          # 자동 감지 로직
-          if [ "$VERSION_CHANGED" == "true" ]; then
-            echo "deploy_type=native" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: native (Version BUMP detected: ${{ steps.version_bump.outputs.prev }} -> ${{ steps.version_bump.outputs.curr }})"
-          elif [ "$HAS_NATIVE_IOS" == "true" ] || [ "$HAS_NATIVE_ANDROID" == "true" ]; then
-            echo "deploy_type=native" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: native (native file changes found)"
-          elif [ "$REVOPUSH_EXCEEDED" == "true" ]; then
-            echo "deploy_type=native" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: native (Revopush cumulative >= 10)"
+          # 자동 결정 로직
+          if [ "$BRANCH" == "develop" ]; then
+            # develop은 카운트 상관없이 네이티브 수정 있으면 native, 아니면 ota
+            if [ "$VERSION_CHANGED" == "true" ] || [ "$HAS_NATIVE_IOS" == "true" ] || [ "$HAS_NATIVE_ANDROID" == "true" ]; then
+              echo "deploy_type=native" >> $GITHUB_OUTPUT
+            else
+              echo "deploy_type=ota" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "deploy_type=ota" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: ota (JS/TS changes only)"
+            # main(운영)은 네이티브 수정 OR 카운트 10회 초과 시 native
+            if [ "$VERSION_CHANGED" == "true" ] || [ "$HAS_NATIVE_IOS" == "true" ] || [ "$HAS_NATIVE_ANDROID" == "true" ] || [ "$REVOPUSH_EXCEEDED" == "true" ]; then
+              echo "deploy_type=native" >> $GITHUB_OUTPUT
+            else
+              echo "deploy_type=ota" >> $GITHUB_OUTPUT
+            fi
           fi
 
   # ─────────────────────────────────────────────
@@ -367,17 +357,14 @@ jobs:
           fi
 
       # ── Revopush OTA ──
-      - name: Deploy via Revopush (Staging)
+      - name: Deploy via Revopush
         if: needs.detect.outputs.deploy_type == 'ota'
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
+          DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
           TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
-          TARGET_ARG=""
-          if [ -n "$TARGET_VERSION" ]; then
-            TARGET_ARG="target_version:$TARGET_VERSION"
-          fi
-          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging $TARGET_ARG
+          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush deployment:$DEPLOYMENT target_version:$TARGET_VERSION
 
       # ── Revopush Promote ──
       - name: Promote Revopush (Staging → Production)
@@ -496,17 +483,14 @@ jobs:
           fi
 
       # ── Revopush OTA ──
-      - name: Deploy via Revopush (Staging)
+      - name: Deploy via Revopush
         if: needs.detect.outputs.deploy_type == 'ota'
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
+          DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
           TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
-          TARGET_ARG=""
-          if [ -n "$TARGET_VERSION" ]; then
-            TARGET_ARG="target_version:$TARGET_VERSION"
-          fi
-          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging $TARGET_ARG
+          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:$DEPLOYMENT target_version:$TARGET_VERSION
 
       # ── Revopush Promote ──
       - name: Promote Revopush (Staging → Production)

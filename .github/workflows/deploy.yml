@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
   workflow_dispatch:
     inputs:
       deploy_type:
@@ -345,7 +345,17 @@ jobs:
           IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
           CHANGELOG: ${{ github.event.inputs.changelog || 'Bug fixes and improvements' }}
-        run: cd ios && bundle exec --gemfile=../Gemfile fastlane beta
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          echo "🚀 Branch: $BRANCH"
+
+          if [ "$BRANCH" == "main" ]; then
+            cd ios && bundle exec --gemfile=../Gemfile fastlane release
+          elif [ "$BRANCH" == "develop" ]; then
+            cd ios && bundle exec --gemfile=../Gemfile fastlane beta
+          else
+            echo "⚠️ No deployment rule for branch: $BRANCH"
+          fi
 
       # ── Revopush OTA ──
       - name: Deploy via Revopush (Staging)

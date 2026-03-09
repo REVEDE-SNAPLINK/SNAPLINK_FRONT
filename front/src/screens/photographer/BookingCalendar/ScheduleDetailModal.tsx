@@ -312,7 +312,7 @@ export default function ScheduleDetailModal({
         </AnimatedContainer>
       </Overlay>
 
-      <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal} showHeader={false}>
+      <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal} showHeader={false} minHeight={220}>
         <EditModalWrapper>
           {displaySchedule?.scheduleType !== 'holiday' && (
             <>

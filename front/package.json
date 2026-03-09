@@ -1,6 +1,6 @@
 {
   "name": "snaplink",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -9,7 +9,8 @@
     "start": "react-native start",
     "test": "jest",
     "codepush ios": "revopush release-react snaplink ios",
-    "codepush android": "revopush release-react snaplink android"
+    "codepush android": "revopush release-react snaplink android",
+    "licenses": "license-checker --json --out src/assets/licenses.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

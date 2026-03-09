@@ -284,6 +284,9 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Update Open Source Licenses
+        run: npm run licenses
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -405,6 +408,9 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Update Open Source Licenses
+        run: npm run licenses
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

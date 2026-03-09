@@ -203,8 +203,8 @@ jobs:
             exit 0
           fi
 
-          # front/ 폴더에 변경이 없으면 배포 스킵
-          if [ "$HAS_FRONT_CHANGES" == "false" ]; then
+          # front/ 폴더에 변경이 없으면 배포 스킵 (수동 실행 시에는 스킵 안 함)
+          if [ "$HAS_FRONT_CHANGES" == "false" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
             echo "deploy_type=skip" >> $GITHUB_OUTPUT
             echo "⏭️ No changes in front/ — skipping deployment"
             exit 0

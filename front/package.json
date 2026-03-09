@@ -1,6 +1,6 @@
 {
   "name": "snaplink",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -10,7 +10,8 @@
     "test": "jest",
     "codepush ios": "revopush release-react snaplink ios",
     "codepush android": "revopush release-react snaplink android",
-    "licenses": "license-checker --json --out src/assets/licenses.json"
+    "licenses": "license-checker --json --out src/assets/licenses.json",
+    "postversion": "react-native-version --target android && cd ios && agvtool new-marketing-version $(node -p \"require('../package.json').version\") && sed -i '' \"s/MARKETING_VERSION = .*;/MARKETING_VERSION = $(node -p \\\"require('../package.json').version\\\");/g\" snaplink.xcodeproj/project.pbxproj"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -99,6 +100,7 @@
     "license-checker": "^25.0.1",
     "prettier": "2.8.8",
     "react-native-svg-transformer": "^1.5.1",
+    "react-native-version": "^4.0.0",
     "react-test-renderer": "19.1.0",
     "typescript": "^5.8.3"
   },

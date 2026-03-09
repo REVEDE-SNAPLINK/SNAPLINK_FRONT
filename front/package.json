@@ -1,6 +1,6 @@
 {
   "name": "snaplink",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -11,11 +11,10 @@
     "codepush ios": "revopush release-react snaplink ios",
     "codepush android": "revopush release-react snaplink android",
     "licenses": "license-checker --json --out src/assets/licenses.json",
-    "version": "sed -i '' \"s/versionName \\\".*\\\"/versionName \\\"$npm_package_version\\\"/\" android/app/build.gradle && sed -i '' \"s/MARKETING_VERSION = .*;/MARKETING_VERSION = $npm_package_version;/g\" ios/snaplink.xcodeproj/project.pbxproj && git add android/app/build.gradle ios/snaplink.xcodeproj/project.pbxproj",
-    "release:patch": "npm version patch -m \"chore(release): bump version to %s\"",
-    "release:minor": "npm version minor -m \"feat(release): minor version up to %s\"",
-    "release:set": "npm version -m \"chore(release): manual version set to %s\"",
-    "release:set-no-git": "npm version --no-git-tag-version"
+    "version": "sed -i '' \"s/versionName \\\".*\\\"/versionName \\\"$npm_package_version\\\"/\" android/app/build.gradle && sed -i '' \"s/MARKETING_VERSION = .*;/MARKETING_VERSION = $npm_package_version;/g\" ios/snaplink.xcodeproj/project.pbxproj && git add android/app/build.gradle ios/snaplink.xcodeproj/project.pbxproj package.json package-lock.json",
+    "release:patch": "npm version patch --no-git-tag-version && git add package.json package-lock.json && git commit -m \"chore: bump version to $npm_package_version\"",
+    "release:minor": "npm version minor --no-git-tag-version && git add package.json package-lock.json && git commit -m \"feat: minor version up to $npm_package_version\"",
+    "release:set": "npm version --no-git-tag-version && git add package.json package-lock.json && git commit -m \"chore: manual version set to $npm_package_version\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

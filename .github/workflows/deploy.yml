@@ -463,12 +463,6 @@ jobs:
           SNAPLINK_RELEASE_STORE_FILE=../release.keystore
           EOF
 
-      - name: Create Google Play service account JSON
-        if: needs.detect.outputs.deploy_type == 'native'
-        env:
-          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-        run: echo "$GOOGLE_PLAY_JSON_KEY" > google-play-key.json
-
       - name: Grant execute permission for gradlew
         if: needs.detect.outputs.deploy_type == 'native'
         working-directory: ./front/android
@@ -478,7 +472,7 @@ jobs:
       - name: Build and Deploy to Play Store
         if: needs.detect.outputs.deploy_type == 'native'
         env:
-          GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
         run: |
           BRANCH="${{ github.ref_name }}"
@@ -528,4 +522,3 @@ jobs:
         run: |
           rm -f android/release.keystore
           rm -f android/keystore.properties
-          rm -f google-play-key.json

@@ -271,7 +271,7 @@ jobs:
     name: iOS Deploy (${{ needs.detect.outputs.deploy_type }})
     needs: [detect, quality]
     if: always() && needs.detect.outputs.deploy_type != 'skip' && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote') && (github.event.inputs.platform == '' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios')
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     defaults:
       run:
@@ -281,7 +281,7 @@ jobs:
 
       - name: Select Xcode
         if: needs.detect.outputs.deploy_type == 'native'
-        run: sudo xcode-select -switch /Applications/Xcode_16.1.app
+        run: sudo xcode-select -switch /Applications/Xcode_26.3.app
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

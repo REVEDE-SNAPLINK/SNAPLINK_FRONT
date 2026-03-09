@@ -16,7 +16,7 @@ import {
   clearNaverLoginInfo,
 } from '@/auth/tokenStore.ts';
 import messaging from '@react-native-firebase/messaging';
-import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
+import { registerFCMdevice } from '@/api/fcm.ts';
 import { login } from '@react-native-kakao/user';
 import { jwtDecode } from 'jwt-decode';
 import { Platform, Linking } from 'react-native';
@@ -445,10 +445,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async signOut() {
-    // 서버 로그아웃/FCM 정리는 best-effort
+    // 서버 로그아웃/FCM 정리는 best-effort (FCM 토큰 삭제는 서버 로그아웃 API에서 처리)
     await Promise.allSettled([
       logoutApi(),
-      safeDeleteFcmToken(),
       NaverLogin.logout().catch(() => { }), // 네이버 로그아웃
     ]);
 
@@ -558,9 +557,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Query 캐시 초기화
     queryClient.clear();
 
-    // FCM 정리는 best-effort
-    await safeDeleteFcmToken();
-
     // 필요하면 호출한 쪽에서 에러 핸들링할 수 있게 throw
     if (!result.ok) throw result.e;
   },
@@ -661,24 +657,6 @@ const isJwtExpired = (token: string, skewSeconds = 30) => {
   }
 };
 
-const safeDeleteFcmToken = async () => {
-  try {
-    console.log('[FCM] Deleting FCM token from server...');
-
-    const fcmToken = await messaging().getToken().catch(() => null);
-
-    if (!fcmToken) {
-      console.log('[FCM] No FCM token found, skip deletion');
-      return;
-    }
-
-    console.log('[FCM] FCM token to delete:', fcmToken.substring(0, 20) + '...');
-    await deleteFCMToken(fcmToken);
-    console.log('[FCM] FCM token deleted successfully from server');
-  } catch (e) {
-    console.error('[FCM] safeDeleteFcmToken failed:', e);
-  }
-};
 
 const safeRegisterFcmDevice = async () => {
   try {

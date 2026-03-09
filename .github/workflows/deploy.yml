@@ -356,22 +356,25 @@ jobs:
             echo "⚠️ No deployment rule for branch: $BRANCH"
           fi
 
-      # ── Revopush OTA ──
+      # ── Revopush OTA (iOS) ──
+      - name: Setup Revopush CLI
+        if: needs.detect.outputs.deploy_type == 'ota' || needs.detect.outputs.deploy_type == 'promote'
+        uses: 'revopush/revopush-github-action@v1'
+        with:
+          version: 'latest'
+          accessKey: ${{ secrets.REVOPUSH_ACCESS_KEY }}
+
       - name: Deploy via Revopush
         if: needs.detect.outputs.deploy_type == 'ota'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
           DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
           TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
-          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush deployment:$DEPLOYMENT target_version:$TARGET_VERSION
+          # Fastlane 없이 직접 실행 (front 폴더 기준)
+          revopush release-react snaplink ios -d $DEPLOYMENT -t $TARGET_VERSION
 
-      # ── Revopush Promote ──
-      - name: Promote Revopush (Staging → Production)
+      - name: Promote Revopush
         if: needs.detect.outputs.deploy_type == 'promote'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
-        run: cd ios && bundle exec --gemfile=../Gemfile fastlane codepush_promote from:Staging to:Production
+        run: revopush promote snaplink ios Staging Production
 
       # ── Cleanup ──
       - name: Upload build artifacts
@@ -482,22 +485,25 @@ jobs:
             echo "⚠️ No deployment rule for branch: $BRANCH"
           fi
 
-      # ── Revopush OTA ──
+      # ── Revopush OTA (Android) ──
+      - name: Setup Revopush CLI
+        if: needs.detect.outputs.deploy_type == 'ota' || needs.detect.outputs.deploy_type == 'promote'
+        uses: 'revopush/revopush-github-action@v1'
+        with:
+          version: 'latest'
+          accessKey: ${{ secrets.REVOPUSH_ACCESS_KEY }}
+
       - name: Deploy via Revopush
         if: needs.detect.outputs.deploy_type == 'ota'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
           DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
           TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
-          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:$DEPLOYMENT target_version:$TARGET_VERSION
+          # Fastlane 없이 직접 실행 (front 폴더 기준)
+          revopush release-react snaplink android -d $DEPLOYMENT -t $TARGET_VERSION
 
-      # ── Revopush Promote ──
-      - name: Promote Revopush (Staging → Production)
+      - name: Promote Revopush
         if: needs.detect.outputs.deploy_type == 'promote'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
-        run: cd android && bundle exec --gemfile=../Gemfile fastlane codepush_promote from:Staging to:Production
+        run: revopush promote snaplink android Staging Production
 
       # ── Cleanup ──
       - name: Upload build artifacts

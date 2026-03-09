@@ -20,7 +20,6 @@ default_platform(:ios)
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    # App Store Connect API Key 인증 설정
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
@@ -28,13 +27,11 @@ platform :ios do
       is_key_content_base64: true
     )
 
-    # Increment build number (use timestamp or CI build number in GitHub Actions)
     increment_build_number(
       xcodeproj: "snaplink.xcodeproj",
       build_number: latest_testflight_build_number(api_key: api_key) + 1
     )
 
-    # Sync version number from package.json
     json_path = File.join(File.dirname(__FILE__), "../../package.json")
     package = JSON.parse(File.read(json_path))
     package_version = package["version"]
@@ -44,11 +41,9 @@ platform :ios do
       version_number: package_version
     )
 
-    # Get provisioning profile name from environment or use default
     profile_name = ENV["IOS_PROVISIONING_PROFILE_NAME"] || "match AppStore com.revede.snaplink"
     app_identifier = ENV["IOS_APP_IDENTIFIER"] || "com.revede.snaplink"
 
-    # Build the app
     build_app(
       workspace: "snaplink.xcworkspace",
       scheme: "snaplink",
@@ -57,39 +52,24 @@ platform :ios do
       output_directory: "../build/ios",
       skip_profile_detection: true,
       export_options: {
-        provisioningProfiles: {
-          app_identifier => profile_name
-        }
+        provisioningProfiles: { app_identifier => profile_name }
       },
       xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='#{profile_name}' ENABLE_USER_SCRIPT_SANDBOXING=NO",
       silent: false,
       suppress_xcode_output: false
     )
 
-    # Upload to TestFlight
-    upload_to_testflight(
-      api_key: api_key,
-      skip_waiting_for_build_processing: true
-    )
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
   end
 
   desc "Download certificates and provisioning profiles"
   lane :certificates do
-    match(
-      type: "appstore",
-      readonly: true,
-      app_identifier: "com.revede.snaplink"
-    )
+    match(type: "appstore", readonly: true, app_identifier: "com.revede.snaplink")
   end
 
   desc "Push a new release build to the App Store"
   lane :release do
-    # Increment build number
-    increment_build_number(
-      xcodeproj: "snaplink.xcodeproj"
-    )
-
-    # Build the app
+    increment_build_number(xcodeproj: "snaplink.xcodeproj")
     build_app(
       workspace: "snaplink.xcworkspace",
       scheme: "snaplink",
@@ -98,28 +78,7 @@ platform :ios do
       output_directory: "../build/ios",
       xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.revede.snaplink'"
     )
-
-    # Upload to App Store
-    upload_to_app_store(
-      skip_metadata: false,
-      skip_screenshots: true,
-      submit_for_review: false
-    )
+    upload_to_app_store(skip_metadata: false, skip_screenshots: true, submit_for_review: false)
   end
 
-  desc "Deploy update via Revopush"
-  lane :codepush do |options|
-    deployment_name = options[:deployment] || "Staging"
-    target_version = options[:target_version] ? "-t #{options[:target_version]}" : ""
-    
-    sh("cd .. && npx @revopush/code-push-cli release-react snaplink ios -d #{deployment_name} #{target_version} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
-  end
-
-  desc "Promote Revopush update from one deployment to another"
-  lane :codepush_promote do |options|
-    from = options[:from] || "Staging"
-    to = options[:to] || "Production"
-    
-    sh("cd .. && npx @revopush/code-push-cli promote snaplink ios #{from} #{to} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
-  end
 end

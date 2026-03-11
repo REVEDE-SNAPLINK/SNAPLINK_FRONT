@@ -1,13 +1,14 @@
 import styled from '@/utils/scale/CustomStyled';
-import Typography from '@/components/theme/Typography';
-import SocialLoginButton from '@/components/SocialLoginButton';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import Icon from '@/components/Icon.tsx';
+import Typography from '@/components/ui/Typography';
+import SocialLoginButton from '@/components/domain/auth/SocialLoginButton';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import Title from '@/components/ui/Title';
+import Icon from '@/components/ui/Icon.tsx';
 import Logo from '@/assets/imgs/logo.svg';
 import Kakao from '@/assets/icons/kakao.svg';
 import Apple from '@/assets/icons/apple.svg';
-import { Platform } from 'react-native';
-// import Naver from '@/assets/icons/naver.svg';
+import { Platform, View } from 'react-native';
+import Naver from '@/assets/icons/naver.svg';
 // import Google from '@/assets/icons/google.svg';
 
 type LoginViewProps = {
@@ -16,7 +17,7 @@ type LoginViewProps = {
   onTest1Login: () => void;
   onTest2Login: () => void;
   onAppleLogin: () => void;
-  // onNaverLogin: () => void;
+  onNaverLogin: () => void;
   // onGoogleLogin: () => void;
 }
 
@@ -26,7 +27,7 @@ export default function LoginView({
   onTest1Login,
   onTest2Login,
   onAppleLogin,
-  // onNaverLogin,
+  onNaverLogin,
   // onGoogleLogin,
 }: LoginViewProps) {
   return (
@@ -46,22 +47,43 @@ export default function LoginView({
 
       <SocialLoginContainer>
         {/* 테스트 계정 버튼 */}
-        {isReviewMode && (
+        {isReviewMode ? (
           <>
             <SocialLoginButton
-              backgroundColor="#FEE500"
-              Icon={Kakao}
+              backgroundColor="#FFFBEB"
+              textColor="#D97706"
               text={`테스트 계정 1`}
               onPress={onTest1Login}
             />
             <SocialLoginButton
-              backgroundColor="#FEE500"
-              Icon={Kakao}
+              backgroundColor="#FFFBEB"
+              textColor="#D97706"
               text={`테스트 계정 2`}
               onPress={onTest2Login}
             />
           </>
+        ) : (
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Title style={{ marginBottom: 6 }}>
+              <Typography
+                fontSize={14}
+                fontWeight="semiBold"
+                letterSpacing="-2.5%"
+                lineHeight="140%"
+                color="#fff"
+              >
+                ⚡️ 3초만에 간편 로그인하기
+              </Typography>
+            </Title>
+          </View>
         )}
+        <SocialLoginButton
+          backgroundColor='#03A94D'
+          textColor="#fff"
+          Icon={Naver}
+          text='네이버'
+          onPress={onNaverLogin}
+        />
         <SocialLoginButton
           backgroundColor="#FEE500"
           Icon={Kakao}
@@ -78,12 +100,6 @@ export default function LoginView({
           />
         }
         {/* TODO: 비즈니스 문제로 추후 추가 */}
-        {/*<SocialLoginButton*/}
-        {/*  backgroundColor='#03C75A'*/}
-        {/*  textColor="#fff"*/}
-        {/*  Icon={Naver}*/}
-        {/*  text='네이버'*/}
-        {/*  onPress={onNaverLogin}*/}
         {/*/>*/}
         {/*<SocialLoginButton*/}
         {/*  backgroundColor='#EAEAEA'*/}

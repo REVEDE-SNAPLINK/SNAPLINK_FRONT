@@ -52,10 +52,7 @@ export const useChatRoomsQuery = () => {
       return newData;
     },
     staleTime: 1000 * 10,
-    // 폴링 간격을 30초로 늘림 (새 메시지는 푸시 알림으로 감지)
-    refetchInterval: 1000 * 30,
-    // 백그라운드에서는 푸시 알림에 의존하므로 폴링 비활성화
-    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true, // 포커스될 때만 업데이트
   });
 };
 
@@ -94,10 +91,7 @@ export const useChatRoomQuery = (roomId: number | undefined) => {
     },
     enabled: typeof roomId === 'number',
     staleTime: 1000 * 60, // 1 minute
-    // 폴링 간격을 30초로 늘림 (새 메시지는 푸시 알림으로 감지)
-    refetchInterval: 1000 * 30,
-    // 백그라운드에서는 푸시 알림에 의존하므로 폴링 비활성화
-    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true, // 포커스될 때만 업데이트
   });
 };
 

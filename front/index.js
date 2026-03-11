@@ -12,8 +12,11 @@ import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('[Background] FCM message received:', remoteMessage);
 
-  // notifee로 로컬 알림 표시
-  await displayNotification(remoteMessage);
+  // OS가 자동으로 알림을 띄워주는 경우(notification 블록 존재), Notifee를 띄우면 중복 발생.
+  // 알림 블록이 없을 때(Data-only Message)만 커스텀으로 로컬 알림을 표시
+  if (!remoteMessage.notification) {
+    await displayNotification(remoteMessage);
+  }
 });
 
 // 알림 표시 헬퍼 함수

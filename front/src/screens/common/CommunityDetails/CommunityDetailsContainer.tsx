@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Share, TextInput, InteractionManager, Platform } from 'react-native';
+import { Share, TextInput, InteractionManager } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import {
@@ -19,8 +19,9 @@ import {
   useUpdatePostMutation,
   useDeletePostMutation,
 } from '@/mutations/community.ts';
-import { Alert } from '@/components/theme';
-import analytics from '@react-native-firebase/analytics';
+import { Alert } from '@/components/ui';
+
+import { safeLogEvent, generateTrackingCode } from '@/utils/analytics.ts';
 import { usePhotographerProfileQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
@@ -129,15 +130,15 @@ export default function CommunityDetailsContainer() {
 
   useEffect(() => {
     if (!post) return;
-    analytics().logEvent('community_post_view', {
+    safeLogEvent('community_post_view', {
       post_id: post.id,
       author_id: post.author.userId,
+      author_user_type: post.author.role?.toLowerCase() ?? 'unknown', // 작가 글인지 고객 글인지
       category: post.categoryLabel,
-      platform: Platform.OS,
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
+      has_tagged_creator: (post.taggedUsers?.length ?? 0) > 0, // 작가 태그 여부
+      viewer_user_type: userType, // 보는 사람이 작가인지 고객인지
     });
-  }, [post, userId, userType]);
+  }, [post, userType]);
 
   // Update modal loading state
   useEffect(() => {
@@ -153,17 +154,26 @@ export default function CommunityDetailsContainer() {
   };
 
   const handlePressShare = () => {
-    // setIsShareModalVisible(true);
     if (post) {
+      const trackingCode = generateTrackingCode();
       Share.share({
-        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}`,
+        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}?tc=${trackingCode}`,
       });
       // Firebase Analytics: 공유 이벤트
-      analytics().logEvent('community_post_share', {
+      safeLogEvent('community_post_share', {
         post_id: post.id,
-        user_id: userId || 'anonymous',
-        user_type: userType || 'guest',
-        platform: Platform.OS,
+        author_user_type: post.author.role?.toLowerCase() ?? 'unknown',
+        has_tagged_creator: (post.taggedUsers?.length ?? 0) > 0,
+        sharer_user_type: userType,
+      });
+
+      safeLogEvent('share_link_created', {
+        link_type: 'community_post',
+        target_id: String(post.id),
+        share_channel: 'system_share',
+        creator_user_id: userId || 'anonymous',
+        creator_user_type: userType || 'guest',
+        tracking_code: trackingCode,
       });
     }
   };
@@ -172,12 +182,12 @@ export default function CommunityDetailsContainer() {
     toggleLikeMutation.mutate(postId, {
       onSuccess: () => {
         // Firebase Analytics: 좋아요 이벤트
-        analytics().logEvent('community_post_like', {
+        safeLogEvent('community_post_like', {
           post_id: postId,
-          user_id: userId || 'anonymous',
-          user_type: userType || 'guest',
-          platform: Platform.OS,
-          liked: !(post?.isLiked), // liked 상태가 토글되므로 이전 상태의 반대
+          liked: !(post?.isLiked),
+          author_user_type: post?.author.role?.toLowerCase() ?? 'unknown',
+          has_tagged_creator: (post?.taggedUsers?.length ?? 0) > 0,
+          viewer_user_type: userType,
         });
       },
     });
@@ -219,11 +229,8 @@ export default function CommunityDetailsContainer() {
             setEditingCommentId(null);
             commentInputRef.current?.blur();
             // Firebase Analytics: 댓글 수정 이벤트
-            analytics().logEvent('community_comment_edit', {
+            safeLogEvent('community_comment_edit', {
               post_id: postId,
-              user_id: userId || 'anonymous',
-              user_type: userType || 'guest',
-              platform: Platform.OS,
               comment_id: editingCommentId,
             });
           },
@@ -254,14 +261,14 @@ export default function CommunityDetailsContainer() {
             setCommentInput('');
             setReplyTo(null);
             // Firebase Analytics: 댓글 작성 이벤트
-            analytics().logEvent('community_comment_create', {
+            safeLogEvent('community_comment_create', {
               post_id: postId,
-              user_id: userId || 'anonymous',
-              user_type: userType || 'guest',
-              platform: Platform.OS,
               comment_id: data?.id,
               is_reply: isReply,
               parent_comment_id: parentCommentId,
+              author_user_type: post?.author.role?.toLowerCase() ?? 'unknown',
+              has_tagged_creator: (post?.taggedUsers?.length ?? 0) > 0,
+              commenter_user_type: userType,
             });
           },
         }
@@ -322,11 +329,8 @@ export default function CommunityDetailsContainer() {
     setIsEditModalVisible(false);
     if (post) {
       // Firebase Analytics: 게시글 수정 이벤트
-      analytics().logEvent('community_post_edit', {
+      safeLogEvent('community_post_edit', {
         post_id: post.id,
-        user_id: userId || 'anonymous',
-        user_type: userType || 'guest',
-        platform: Platform.OS,
       });
       openCommunityPostModal(handleUpdatePost, post);
     }
@@ -342,11 +346,8 @@ export default function CommunityDetailsContainer() {
         {
           text: '삭제', onPress: () => {
             // Firebase Analytics: 게시글 삭제 이벤트
-            analytics().logEvent('community_post_delete', {
+            safeLogEvent('community_post_delete', {
               post_id: postId,
-              user_id: userId || 'anonymous',
-              user_type: userType || 'guest',
-              platform: Platform.OS,
             });
             deletePostMutation.mutate(postId, {
               onSuccess: () => {
@@ -382,11 +383,8 @@ export default function CommunityDetailsContainer() {
     deleteCommentMutation.mutate(commentId, {
       onSuccess: () => {
         // Firebase Analytics: 댓글 삭제 이벤트
-        analytics().logEvent('community_comment_delete', {
+        safeLogEvent('community_comment_delete', {
           post_id: postId,
-          user_id: userId || 'anonymous',
-          user_type: userType || 'guest',
-          platform: Platform.OS,
           comment_id: commentId,
         });
       },
@@ -410,6 +408,12 @@ export default function CommunityDetailsContainer() {
 
   const handlePressTaggedPhotographer = () => {
     if (post?.taggedUsers && post?.taggedUsers.length > 0 && taggedPhotographer) {
+      // 커뮤니티 퍼널 2단계: 게시글의 태그된 작가 클릭
+      safeLogEvent('community_photographer_profile_click', {
+        post_id: post.id,
+        photographer_id: post.taggedUsers[0].userId,
+        click_source: 'tagged_photographer',
+      });
       navigation.navigate('PhotographerDetails', { photographerId: post.taggedUsers[0].userId, source: 'community_tagged' });
     }
   }
@@ -574,6 +578,12 @@ export default function CommunityDetailsContainer() {
 
   const handlePressAuthor = () => {
     if (!post) return;
+    // 커뮤니티 퍼널 2단계: 게시글 작성자(작가) 클릭
+    safeLogEvent('community_photographer_profile_click', {
+      post_id: post.id,
+      photographer_id: post.author.userId,
+      click_source: 'post_author',
+    });
     navigation.navigate('PhotographerDetails', { photographerId: post.author.userId, source: 'community_author' });
   }
 

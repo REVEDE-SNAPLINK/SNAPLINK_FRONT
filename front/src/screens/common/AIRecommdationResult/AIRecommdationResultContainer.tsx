@@ -1,14 +1,13 @@
-import { useState, useMemo, useEffect } from 'react';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import AIRecommdationResultView from '@/screens/common/AIRecommdationResult/AIRecommdationResultView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
-import { PhotographerSearchItem, SearchPhotographersBody } from '@/api/photographers.ts';
+import { PhotographerSearchItem, SearchPhotographersMultiParams } from '@/api/photographers.ts';
 import { useRegionsQuery, useConceptsQuery } from '@/queries/meta.ts';
-import { useSearchPhotographersInfiniteQuery } from '@/queries/photographers.ts';
+import { useSearchPhotographersMultiMutation } from '@/queries/photographers.ts';
 
 import CameraIcon from '@/assets/icons/camera.svg';
 import SendIcon from '@/assets/icons/send.svg';
@@ -22,22 +21,18 @@ import ActiveProfileIcon from '@/assets/icons/profile-white.svg';
 type AIRecommendationResultRouteProp = RouteProp<MainStackParamList, 'AIRecommdationResult'>;
 
 export default function AIRecommdationResultContainer() {
-  const { userId, userType } = useAuthStore();
   useEffect(() => {
     // Log ai_recommendation_result_view when the result screen opens
-    analytics().logEvent('ai_recommendation_result_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('ai_recommendation_result_view', {
       prompt: prompt,
       result_count: resultCount,
-      screen: 'AIRecommdationResult',
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const route = useRoute<AIRecommendationResultRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
 
-  const { prompt, resultCount = 3 } = route.params;
+  const { prompt, resultCount = 3, imageUri, imageName, imageType } = route.params;
 
   const { data: profileData } = useMeQuery();
   const { data: regions = [] } = useRegionsQuery();
@@ -84,56 +79,65 @@ export default function AIRecommdationResultContainer() {
   const [selectedFilters, setSelectedFilters] = useState<FilterValue[]>([]);
   const [initialFilterIndex, setInitialFilterIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [photographersWithScores, setPhotographersWithScores] = useState<(PhotographerSearchItem & { aiScore: number })[]>([]);
+
+  const { mutate: searchMulti } = useSearchPhotographersMultiMutation();
+
+  const fetchResults = useCallback(() => {
+    setIsLoading(true);
+
+    const params: SearchPhotographersMultiParams = {
+      queryText: prompt,
+    };
+
+    if (imageUri && imageName && imageType) {
+      params.queryImages = [{ uri: imageUri, name: imageName, type: imageType }];
+    }
+
+    searchMulti(params, {
+      onSuccess: (res) => {
+        // MultiSearchPhotographerResult -> PhotographerSearchItem 변환
+        const mapped: PhotographerSearchItem[] = res.map((item) => ({
+          id: item.userId,
+          nickname: item.nickname || 'Photographer', // fallback
+          profileImageUrl: item.profileImageUrl || '', // fallback since api doesn't provide
+          averageRating: item.averageRating,
+          reviewCount: item.reviewCount,
+          basePrice: item.basePrice,
+          baseTime: item.baseTime,
+          gender: item.gender === 'MALE' ? 'MALE' : 'FEMALE',
+          concepts: [],
+          portfolioImages: item.matchedImageUrl ? [item.matchedImageUrl] : [],
+        }));
+
+        // Calculate AI recommendation scores (descending from top)
+        const withScores = mapped.map((photographer, index) => {
+          // Similarity Score from server: e.g., 0.825 -> 83
+          const rawScore = res[index]?.similarityScore || 0;
+          const score = Math.round(rawScore * 100);
+
+          return {
+            ...photographer,
+            aiScore: score,
+          };
+        });
+
+        // 결과물을 적합도(aiScore) 내림차순으로 정렬
+        withScores.sort((a, b) => b.aiScore - a.aiScore);
+
+        setPhotographersWithScores(withScores);
+        setIsLoading(false);
+      },
+      onError: (err) => {
+        console.error(err);
+        setIsLoading(false);
+      }
+    });
+  }, [prompt, imageUri, imageName, imageType, searchMulti]);
 
   useEffect(() => {
-    setTimeout(() => setIsLoading(false), 2500);
-  }, []);
-
-  // API search body
-  const searchBody = useMemo<SearchPhotographersBody>(() => ({
-    gender: null,
-    regionIds: null,
-    conceptIds: null,
-    maxPrice: null,
-    minPrice: null,
-    query: prompt,
-    sort: "RECOMMENDED"
-  }), [prompt]);
-
-  // Fetch photographers
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-    isRefetching,
-  } = useSearchPhotographersInfiniteQuery(
-    { size: 3 },
-    searchBody,
-  );
-
-  // Flatten paginated data
-  const allPhotographers = useMemo<PhotographerSearchItem[]>(() => {
-    if (!data) return [];
-    return data.pages.flatMap((page) => page.content);
-  }, [data]);
-
-  // Calculate AI recommendation scores (descending from top)
-  const photographersWithScores = useMemo(() => {
-    return allPhotographers.slice(0, resultCount * 10).map((photographer, index) => {
-      // Generate score: start from 95-99, decrease gradually
-      const baseScore = 95;
-      const maxDecrease = 30; // Maximum decrease range
-      const decrease = (index / (resultCount * 10)) * maxDecrease;
-      const score = Math.max(65, Math.floor(baseScore - decrease + Math.random() * 3)); // Add some randomness
-
-      return {
-        ...photographer,
-        aiScore: score,
-      };
-    });
-  }, [allPhotographers, resultCount]);
+    fetchResults();
+  }, [fetchResults]);
 
   // Client-side filtering
   const filteredPhotographers = useMemo(() => {
@@ -161,8 +165,8 @@ export default function AIRecommdationResultContainer() {
       }
     });
 
-    return filtered.slice(0, resultCount);
-  }, [photographersWithScores, selectedFilters, resultCount]);
+    return filtered;
+  }, [photographersWithScores, selectedFilters]);
 
   const filterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
@@ -225,19 +229,15 @@ export default function AIRecommdationResultContainer() {
   };
 
   const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    // No-op for AI multi search (all results fetched at once)
   };
 
   const handleRefresh = () => {
-    refetch();
+    fetchResults();
   };
 
   const handlePressPhotographer = (photographerId: string) => {
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('photographer_profile_view', {
       photographer_id: photographerId,
       source: 'AIRecommdationResult',
     });
@@ -297,8 +297,8 @@ export default function AIRecommdationResultContainer() {
       photographers={filteredPhotographers}
       onLoadMore={handleLoadMore}
       onRefresh={handleRefresh}
-      isRefreshing={isRefetching}
-      isFetchingNextPage={isFetchingNextPage}
+      isRefreshing={isLoading}
+      isFetchingNextPage={false}
       onPressPhotographer={handlePressPhotographer}
       isLoading={isLoading}
       navigation={navigation}

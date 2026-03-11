@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Platform } from 'react-native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import CommunityView, { SortByKey } from '@/screens/common/Community/CommunityView.tsx';
 import { CreateCommunityPostParams, COMMUNITY_CATEGORY_ENUM, COMMUNITY_CATEGORIES } from '@/api/community.ts';
@@ -9,12 +10,15 @@ import {
   useToggleLikeMutation,
 } from '@/mutations/community.ts';
 import { useCommunityPostsQuery } from '@/queries/community.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
+import { useAuthStore } from '@/store/authStore.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
 
 export default function CommunityContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const { openCommunityPostModal, closeCommunityPostModal, setCommunityPostModalLoading } = useModalStore();
+  const { userId, userType } = useAuthStore();
 
   const [selectedCategory, setSelectedCategory] = useState<COMMUNITY_CATEGORY_ENUM>('DAILY');
   const [sortBy, setSortBy] = useState<SortByKey>('LATEST');
@@ -105,7 +109,20 @@ export default function CommunityContainer() {
 
   const handleCreatePost = (params: CreateCommunityPostParams) => {
     createPostMutation(params, {
-      onSuccess: () => {
+      onSuccess: (data: any) => {
+        // 커뮤니티 게시글 생성 완료 이벤트
+        safeLogEvent('community_post_create', {
+          post_id: data?.id ?? '',
+          author_id: userId,
+          user_type: userType,
+          category: params.category,
+          has_image: (params.images?.length ?? 0) > 0,
+          image_count: params.images?.length ?? 0,
+          text_length: params.content?.length ?? 0,
+          has_tagged_creator: (params.taggedUserIds?.length ?? 0) > 0, // 작가 태그 여부
+          platform: Platform.OS,
+        });
+
         Alert.show({
           title: '완료',
           message: '게시글이 등록되었습니다.',
@@ -131,6 +148,12 @@ export default function CommunityContainer() {
   };
 
   const handleOpenModal = () => {
+    // 게시글 작성 시작 이벤트 (퍼널 분석: 모달 오픈 → 실제 작성 완료 전환율)
+    safeLogEvent('community_post_create_start', {
+      user_id: userId,
+      user_type: userType,
+      platform: Platform.OS,
+    });
     openCommunityPostModal(handleCreatePost);
   };
 

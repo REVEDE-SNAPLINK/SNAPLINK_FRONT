@@ -8,9 +8,9 @@ import { useWeeklyScheduleQuery } from '@/queries/schedules.ts';
 import { useDeleteShootingMutation, useUpdateShootingMutation } from '@/mutations/shootings.ts';
 import { shootingsQueryKeys } from '@/queries/keys.ts';
 import { getShootingOptions } from '@/api/shootings.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore.ts';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 
 export default function ShootingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -51,9 +51,7 @@ export default function ShootingManageContainer() {
 
   const handlePressCreateProduct = () => {
     // Firebase Analytics 이벤트: 촬영 서비스 생성 버튼 클릭
-    analytics().logEvent('shooting_service_action', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('shooting_service_action', {
       action_type: 'create',
     });
     navigation.navigate('ServiceForm', {});
@@ -61,9 +59,7 @@ export default function ShootingManageContainer() {
 
   const handlePressEditProduct = (productId: number) => {
     // Firebase Analytics 이벤트: 촬영 서비스 수정 버튼 클릭
-    analytics().logEvent('shooting_service_action', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('shooting_service_action', {
       action_type: 'edit',
       product_id: productId,
     });
@@ -72,9 +68,7 @@ export default function ShootingManageContainer() {
 
   const handlePressDeleteProduct = (productId: number) => {
     // Firebase Analytics 이벤트: 촬영 서비스 삭제 버튼 클릭
-    analytics().logEvent('shooting_service_action', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('shooting_service_action', {
       action_type: 'delete',
       product_id: productId,
     });
@@ -85,7 +79,7 @@ export default function ShootingManageContainer() {
         {
           text: '취소',
           type: 'cancel',
-          onPress: () => {},
+          onPress: () => { },
         },
         {
           text: '삭제',
@@ -96,14 +90,14 @@ export default function ShootingManageContainer() {
                 Alert.show({
                   title: '삭제 완료',
                   message: '촬영 서비스가 삭제되었습니다.',
-                  buttons: [{ text: '확인', onPress: () => {} }],
+                  buttons: [{ text: '확인', onPress: () => { } }],
                 });
               },
               onError: () => {
                 Alert.show({
                   title: '삭제 실패',
                   message: '촬영 서비스 삭제에 실패했습니다.',
-                  buttons: [{ text: '확인', onPress: () => {} }],
+                  buttons: [{ text: '확인', onPress: () => { } }],
                 });
               },
             });
@@ -115,9 +109,7 @@ export default function ShootingManageContainer() {
 
   const handlePressEditSchedule = () => {
     // Firebase Analytics 이벤트: 스케줄 편집 버튼 클릭
-    analytics().logEvent('shooting_service_action', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('shooting_service_action', {
       action_type: 'edit_schedule',
     });
     navigation.navigate('ScheduleForm');
@@ -128,8 +120,9 @@ export default function ShootingManageContainer() {
       title: '기본 상품으로 변경',
       message: '변경하시면 해당 상품 정보가 프로필에 노출됩니다. 변경하시겠습니까?',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
-        { text: '변경', onPress: () => {
+        { text: '취소', onPress: () => { }, type: 'cancel' },
+        {
+          text: '변경', onPress: () => {
             const currentShooting = shootings.find((v) => v.id === productId);
 
             if (currentShooting === undefined) {
@@ -198,7 +191,8 @@ export default function ShootingManageContainer() {
                 });
               }
             })
-          } },
+          }
+        },
       ]
     })
   }

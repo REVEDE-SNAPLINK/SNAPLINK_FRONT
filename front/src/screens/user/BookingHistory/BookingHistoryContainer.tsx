@@ -1,14 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
 import { useUserBookingsInfiniteQuery } from '@/queries/bookings.ts'
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 import { reviewsQueryKeys } from '@/queries/keys.ts';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
+import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
 import { useCancelBookingFromCustomerMutation } from '@/mutations/bookings.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { GetBookingReviewMeResponse } from '@/api/reviews.ts';
 
@@ -20,7 +19,6 @@ export default function BookingHistoryContainer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<number | undefined>(undefined);
   const [deletedReviewBookingIds, setDeletedReviewBookingIds] = useState<Set<number>>(new Set());
-  const { userId, userType } = useAuthStore();
 
   const {
     data,
@@ -38,13 +36,11 @@ export default function BookingHistoryContainer() {
   const { data: bookingReview, isError: isReviewError } = useBookingReviewMeQuery(selectedBookingId);
   const cancelBookingMutation = useCancelBookingFromCustomerMutation();
 
-  useEffect(() => {
-    analytics().logEvent('screen_view', {
-      screen_name: 'BookingHistory',
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
-    });
-  }, [userId, userType]);
+  useFocusEffect(
+    useCallback(() => {
+      trackScreenView('BookingHistory');
+    }, [])
+  );
 
   useEffect(() => {
     if (bookingReview && selectedBookingId) {
@@ -69,7 +65,7 @@ export default function BookingHistoryContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressBookingDetail = (bookingId: number) => {
-    analytics().logEvent('booking_detail_view', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('booking_detail_view', { booking_id: bookingId });
     navigation.navigate('BookingDetails', { bookingId });
   };
 
@@ -84,17 +80,25 @@ export default function BookingHistoryContainer() {
       title: '예약을 취소하시겠습니까?',
       message: '취소 후에는 다시 되돌릴 수 없습니다. 무분별하거나 고의적인 반복 취소는 운영 정책에 따라 서비스 이용에 제한을 받을 수 있습니다.',
       buttons: [
-        { text: '뒤로', type: 'cancel', onPress: () => {} },
-        { text: '확인', onPress: () => {
+        { text: '뒤로', type: 'cancel', onPress: () => { } },
+        {
+          text: '확인', onPress: () => {
             cancelBookingMutation.mutate(bookingId, {
               onSuccess: () => {
+                // 고객 측 예약 취소 이벤트
+                safeLogEvent('booking_cancelled_by_user', {
+                  booking_id: bookingId,
+                  cancel_stage: 'requested', // WAITING_FOR_APPROVAL 상태에서만 취소 가능
+                });
+
                 Alert.show({
                   title: '취소 완료',
                   message: '취소가 완료되었습니다.'
                 })
               }
             });
-        }},
+          }
+        },
       ]
     })
   }
@@ -102,7 +106,7 @@ export default function BookingHistoryContainer() {
   const handlePressViewPhotos = (bookingId: number) => navigation.navigate('ViewPhotos', { bookingId })
 
   const handlePressWriteReview = (bookingId: number) => {
-    analytics().logEvent('review_start', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('review_start', { booking_id: bookingId });
     navigation.navigate('WriteReview', { bookingId });
   };
 

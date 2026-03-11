@@ -1,15 +1,15 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
-import Typography from '@/components/theme/Typography.tsx';
-import SubmitButton from '@/components/theme/SubmitButton.tsx';
-import PhotoGrid from '@/components/PhotoGrid.tsx';
-import LoadingSpinner from '@/components/LoadingSpinner.tsx';
+import Typography from '@/components/ui/Typography.tsx';
+import SubmitButton from '@/components/ui/SubmitButton.tsx';
+import PhotoGrid from '@/components/media/PhotoGrid.tsx';
+import LoadingSpinner from '@/components/feedback/LoadingSpinner.tsx';
 import { Dimensions } from 'react-native';
 import FolderIcon from '@/assets/icons/folder.svg';
 import UploadIcon from '@/assets/icons/upload.svg';
 import TrashIcon from '@/assets/icons/delete.svg';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import { BookingZip } from '@/api/bookings.ts';
 
 interface PhotographerViewPhotosViewProps {

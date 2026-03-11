@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useNavigation } from '@react-navigation/native';
 import BookingManageView from '@/screens/photographer/BookingManage/BookingManageView.tsx';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { usePhotographerBookingsInfiniteQuery } from '@/queries/bookings.ts';
 import { useApproveBookingMutation, useCompleteBookingMutation } from '@/mutations/bookings.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useMeQuery } from '@/queries/user.ts';
-import { useAuthStore } from '@/store/authStore.ts';
 import { showErrorAlert } from '@/utils/error';
 
 const PAGE_SIZE = 10;
@@ -15,7 +14,6 @@ const PAGE_SIZE = 10;
 export default function BookingManageContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { userId } = useAuthStore();
 
   const { mutate: approveMutation } = useApproveBookingMutation();
   const { mutate: completeMutaion } = useCompleteBookingMutation();
@@ -38,10 +36,8 @@ export default function BookingManageContainer() {
   const handlePressBack = () => navigation.goBack();
 
   const handlePressBookingDetail = (bookingId: number) => {
-    analytics().logEvent('photographer_booking_detail_view', {
-      user_id: userId,
-      user_type: 'photographer',
-      bookingId,
+    safeLogEvent('photographer_booking_detail_view', {
+      booking_id: bookingId,
     });
     navigation.navigate('BookingDetails', { bookingId });
   };
@@ -53,10 +49,8 @@ export default function BookingManageContainer() {
   };
 
   const handlePressViewPhotos = (bookingId: number) => {
-    analytics().logEvent('photographer_booking_photos_view', {
-      user_id: userId,
-      user_type: 'photographer',
-      bookingId,
+    safeLogEvent('photographer_booking_photos_view', {
+      booking_id: bookingId,
     });
     navigation.navigate('ViewPhotos', { bookingId });
   }
@@ -66,7 +60,7 @@ export default function BookingManageContainer() {
       title: '현재 예약을 수락하겠습니까?',
       message: '동일한 시간 접수된 다른 예약 촬영 건은 자동으로 거절됩니다.',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '취소', onPress: () => { }, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
@@ -74,10 +68,8 @@ export default function BookingManageContainer() {
               { bookingId },
               {
                 onSuccess: () => {
-                  analytics().logEvent('photographer_booking_approved', {
-                    user_id: userId,
-                    user_type: 'photographer',
-                    bookingId,
+                  safeLogEvent('photographer_booking_approved', {
+                    booking_id: bookingId,
                   });
                   Alert.show({
                     title: '예약 수락 완료',
@@ -101,10 +93,8 @@ export default function BookingManageContainer() {
   };
 
   const handlePressRejectBooking = (bookingId: number) => {
-    analytics().logEvent('photographer_booking_rejected', {
-      user_id: userId,
-      user_type: 'photographer',
-      bookingId,
+    safeLogEvent('photographer_booking_rejected', {
+      booking_id: bookingId,
     });
     navigation.navigate('BookingReject', { bookingId });
   };
@@ -118,7 +108,7 @@ export default function BookingManageContainer() {
       title: '촬영을 완료하시겠습니까?',
       message: '완료로 전환 후 사진 결과물을 업로드할 수 있습니다.',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
+        { text: '취소', onPress: () => { }, type: 'cancel' },
         {
           text: '확인',
           onPress: async () => {
@@ -126,10 +116,8 @@ export default function BookingManageContainer() {
               { bookingId },
               {
                 onSuccess: () => {
-                  analytics().logEvent('photographer_booking_completed', {
-                    user_id: userId,
-                    user_type: 'photographer',
-                    bookingId,
+                  safeLogEvent('photographer_booking_completed', {
+                    booking_id: bookingId,
                   });
                   Alert.show({
                     title: '촬영 완료',
@@ -163,7 +151,7 @@ export default function BookingManageContainer() {
   return (
     <BookingManageView
       bookings={bookings}
-      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '' }}
+      photographerProfile={photographerProfile ?? { nickname: '', name: '', email: '', profileImageURI: '', role: 'PHOTOGRAPHER' }}
       isLoading={isLoading}
       isError={isError}
       isFetchingNextPage={isFetchingNextPage}

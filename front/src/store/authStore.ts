@@ -12,18 +12,23 @@ import {
   clearUserType,
   saveAppleLoginInfo,
   clearAppleLoginInfo,
+  saveNaverLoginInfo,
+  clearNaverLoginInfo,
 } from '@/auth/tokenStore.ts';
 import messaging from '@react-native-firebase/messaging';
-import { deleteFCMToken, registerFCMdevice } from '@/api/fcm.ts';
+import { registerFCMdevice } from '@/api/fcm.ts';
 import { login } from '@react-native-kakao/user';
 import { jwtDecode } from 'jwt-decode';
 import { Platform, Linking } from 'react-native';
 import { queryClient } from '@/config/queryClient.ts';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { setAnalyticsUserContext, safeLogEvent } from '@/utils/analytics.ts';
 import { updateNotificationSettings } from '@/api/user.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
+import NaverLogin from '@react-native-seoul/naver-login';
+import { useModalStore } from '@/store/modalStore';
 
 let isRefreshing = false;
 let refreshPromise: Promise<any> | null = null;
@@ -51,6 +56,7 @@ type AuthState = {
   bootstrap: () => Promise<void>;
   signInWithKakao: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithApple: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
+  signInWithNaver: () => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithProviderToken: (provider: 'KAKAO' | 'NAVER' | 'GOOGLE' | 'APPLE', token: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signInWithTestAccount: (testId: string) => Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'>;
   signUpWithTestAccount: (formData: SignUpFormData) => Promise<void>;
@@ -111,6 +117,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         ]);
 
         const resolvedUserType = savedUserType || 'user';
+        setAnalyticsUserContext(savedUserId || undefined, resolvedUserType); // 부트스트랩 완료 시 동기화
+
         set({
           accessToken: token,
           status: 'authed',
@@ -132,6 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await clearRefreshToken();
         await clearUserId();
         await clearUserType();
+        setAnalyticsUserContext(undefined, 'guest'); // Analytics 게스트
         set({ status: 'anon', accessToken: null, userId: '', bootstrapped: true });
       } else {
         // 네트워크 에러 등 일시적 에러: 저장된 정보로 복구 시도
@@ -142,6 +151,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (savedUserId) {
           const resolvedUserType = savedUserType || 'user';
+          setAnalyticsUserContext(savedUserId, resolvedUserType); // Offline Sync
           set({
             status: 'authed',
             accessToken: null,
@@ -167,10 +177,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('Kakao Login failed: No accessToken');
       }
 
+      console.log(response);
+
       return await get().signInWithProviderToken('KAKAO', response.accessToken);
     } catch (e) {
       set({ status: 'anon' });
       console.error('signInWithKakaoCode error:', e);
+      throw e;
+    }
+  },
+
+  async signInWithNaver(): Promise<'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'> {
+    set({ status: 'loading' });
+    try {
+      const { successResponse, failureResponse } = await NaverLogin.login();
+
+      if (failureResponse) {
+        throw new Error(`Naver Login failed: ${failureResponse.message}`);
+      }
+
+      if (!successResponse?.accessToken) {
+        throw new Error('Naver Login failed: No accessToken');
+      }
+
+      const profile = await NaverLogin.getProfile(successResponse.accessToken);
+
+      if (profile && profile.message === 'success' && profile.response) {
+        const { name, email, gender, birthyear, birthday } = profile.response;
+        let mappedGender: 'MALE' | 'FEMALE' | undefined;
+        if (gender === 'M') mappedGender = 'MALE';
+        else if (gender === 'W' || gender === 'F') mappedGender = 'FEMALE';
+
+        let formattedBirthDate: string | undefined;
+        if (birthyear && birthday) {
+          formattedBirthDate = `${birthyear}-${birthday}`; // "YYYY-MM-DD"
+        }
+
+        await saveNaverLoginInfo({
+          name: name || undefined,
+          email: email || undefined,
+          gender: mappedGender,
+          birthDate: formattedBirthDate,
+        });
+      }
+
+      return await get().signInWithProviderToken('NAVER', successResponse.accessToken);
+    } catch (e) {
+      set({ status: 'anon' });
+      console.error('signInWithNaver error:', e);
       throw e;
     }
   },
@@ -215,7 +269,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
 
-        await analytics().logEvent('login', {
+        // 메모리 상의 Helper 에도 전달하여 이후 파라미터 자동 삽입되게 함
+        setAnalyticsUserContext(response.userId, userType);
+
+        await safeLogEvent('login', {
           method: provider.toLowerCase(),
         });
 
@@ -279,7 +336,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.status === 'LOGIN_SUCCESS') {
         const userType = response.role === 'USER' ? 'user' : 'photographer';
 
-        await analytics().logEvent('login', {
+        setAnalyticsUserContext(response.userId, userType);
+
+        await safeLogEvent('login', {
           method: 'test_account',
         });
 
@@ -339,7 +398,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const userType = response.role === 'USER' ? 'user' : 'photographer';
         const signupDate = new Date().toISOString().split('T')[0];
 
-        await analytics().logEvent('sign_up', {
+        setAnalyticsUserContext(response.userId, userType);
+
+        await safeLogEvent('sign_up', {
           user_id: response.userId,
           user_type: userType,
           signup_date: signupDate,
@@ -384,13 +445,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async signOut() {
-    // 서버 로그아웃/FCM 정리는 best-effort
+    // 서버 로그아웃/FCM 정리는 best-effort (FCM 토큰 삭제는 서버 로그아웃 API에서 처리)
     await Promise.allSettled([
       logoutApi(),
-      safeDeleteFcmToken(),
+      NaverLogin.logout().catch(() => { }), // 네이버 로그아웃
     ]);
 
-    set({ status: 'anon', accessToken: null, userId: '' });
+    setAnalyticsUserContext(undefined, 'guest');
+    set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
+    useModalStore.getState().resetAllModals();
 
     // Clear all persistent storage
     await Promise.allSettled([
@@ -398,6 +461,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearUserId(),
       clearUserType(),
       clearAppleLoginInfo(),
+      clearNaverLoginInfo(),
     ]);
 
     // Query 캐시 초기화
@@ -414,7 +478,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const userType = response.role === 'USER' ? 'user' : 'photographer';
         const signupDate = new Date().toISOString().split('T')[0];
 
-        await analytics().logEvent('sign_up', {
+        setAnalyticsUserContext(response.userId, userType);
+
+        safeLogEvent('sign_up', {
           user_id: response.userId,
           user_type: userType,
           signup_date: signupDate,
@@ -443,8 +509,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           saveUserType(userType),
         ]);
 
-        // 회원가입 완료 후 저장된 애플 로그인 정보 삭제
-        await clearAppleLoginInfo();
+        // 회원가입 완료 후 저장된 애플, 네이버 로그인 정보 삭제
+        await Promise.allSettled([
+          clearAppleLoginInfo(),
+          clearNaverLoginInfo(),
+        ]);
 
         set({
           status: 'authed',
@@ -470,6 +539,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       (e) => ({ ok: false as const, e }),
     );
 
+    // 네이버 연동 해제 (best-effort)
+    await NaverLogin.deleteToken().catch(() => { });
+
     // Clear all persistent storage
     await Promise.allSettled([
       clearRefreshToken(),
@@ -478,13 +550,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearAppleLoginInfo(),
     ]);
 
-    set({ status: 'anon', accessToken: null, userId: '' });
+    setAnalyticsUserContext(undefined, 'guest');
+    set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
+    useModalStore.getState().resetAllModals();
 
     // Query 캐시 초기화
     queryClient.clear();
-
-    // FCM 정리는 best-effort
-    await safeDeleteFcmToken();
 
     // 필요하면 호출한 쪽에서 에러 핸들링할 수 있게 throw
     if (!result.ok) throw result.e;
@@ -539,21 +610,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearRefreshToken(),
             clearUserId(),
             clearUserType(),
+            clearAppleLoginInfo(),
+            clearNaverLoginInfo(),
           ]);
-          set({ status: 'anon', accessToken: null, userId: '' });
+          setAnalyticsUserContext(undefined, 'guest');
+          set({ status: 'anon', accessToken: null, userId: '', isFirst: false, signUpCompletionModalType: false });
+          useModalStore.getState().resetAllModals();
           queryClient.clear();
 
-          // 사용자 친화적인 세션 만료 안내
-          Alert.show({
-            title: '로그인이 필요합니다',
-            message: '오랫동안 사용하지 않아 자동으로 로그아웃 되었습니다.\n계속 이용하시려면 다시 로그인해주세요.',
-            buttons: [
-              {
-                text: '확인',
-                onPress: () => { },
-              },
-            ],
-          });
+          // 화면 네비게이션 복귀와 Alert 표시가 동시에 일어나면서 발생하는 터치 블록(Freeze) 버그를 막기 위해 지연 호출
+          setTimeout(() => {
+            Alert.show({
+              title: '로그인이 필요합니다',
+              message: '오랫동안 사용하지 않아 자동으로 로그아웃 되었습니다.\n계속 이용하시려면 다시 로그인해주세요.',
+              buttons: [
+                {
+                  text: '확인',
+                  onPress: () => { },
+                },
+              ],
+            });
+          }, 500);
         } else {
           // 네트워크 에러 등 일시적 실패는 토큰만 null로
           set({ accessToken: null });
@@ -580,24 +657,6 @@ const isJwtExpired = (token: string, skewSeconds = 30) => {
   }
 };
 
-const safeDeleteFcmToken = async () => {
-  try {
-    console.log('[FCM] Deleting FCM token from server...');
-
-    const fcmToken = await messaging().getToken().catch(() => null);
-
-    if (!fcmToken) {
-      console.log('[FCM] No FCM token found, skip deletion');
-      return;
-    }
-
-    console.log('[FCM] FCM token to delete:', fcmToken.substring(0, 20) + '...');
-    await deleteFCMToken(fcmToken);
-    console.log('[FCM] FCM token deleted successfully from server');
-  } catch (e) {
-    console.error('[FCM] safeDeleteFcmToken failed:', e);
-  }
-};
 
 const safeRegisterFcmDevice = async () => {
   try {
@@ -695,6 +754,19 @@ const safeRegisterFcmDevice = async () => {
       console.error('[FCM] Failed to update notification preferences:', e);
       // 설정 업데이트 실패해도 FCM 등록은 성공으로 간주
     }
+
+    // Step 7: 토큰 갱신 리스너 등록 (동적으로 토큰이 무효화/재생성되었을 때 서버에 자동 동기화)
+    console.log('[FCM] Setting up onTokenRefresh listener...');
+    messaging().onTokenRefresh(async (newToken) => {
+      console.log('[FCM] Token refreshed automatically:', newToken.substring(0, 20) + '...');
+      try {
+        await registerFCMdevice(newToken);
+        console.log('[FCM] Refreshed token registered with server successfully');
+      } catch (err) {
+        console.error('[FCM] Failed to register refreshed token:', err);
+      }
+    });
+
   } catch (e) {
     console.error('[FCM] safeRegisterFcmDevice failed:', e);
   }

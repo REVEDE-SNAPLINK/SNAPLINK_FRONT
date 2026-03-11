@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { SubmitButton, Typography, TextInput, Alert } from '@/components/theme';
+import { SubmitButton, Typography, TextInput, Alert } from '@/components/ui';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useRejectBookingMutation } from '@/mutations/bookings.ts';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { trackBookingEvent } from '@/utils/analytics.ts';
+import { useAuthStore } from '@/store/authStore.ts';
 
 type BookingRejectRouteProp = RouteProp<MainStackParamList, 'BookingReject'>;
 
@@ -13,6 +15,7 @@ export default function BookingRejectScreen() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<BookingRejectRouteProp>();
   const { bookingId } = route.params;
+  const { userId } = useAuthStore();
 
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +34,9 @@ export default function BookingRejectScreen() {
       title: '현재 예약을 거절하시겠습니까?',
       message: '거절 후에는 다시 수락할 수 없습니다.',
       buttons: [
-        { text: '취소', type: "cancel", onPress: () => {} },
-        { text: '에약 거절', onPress: async () => {
+        { text: '취소', type: "cancel", onPress: () => { } },
+        {
+          text: '에약 거절', onPress: async () => {
             const trimmedReason = reason.trim();
 
             if (!trimmedReason) {
@@ -42,6 +46,12 @@ export default function BookingRejectScreen() {
 
             try {
               await rejectBookingMutation.mutateAsync({ bookingId, reason: trimmedReason });
+
+              // 작가 측 예약 거절 이벤트 (기존 BookingManageContainer의 photographer_booking_rejected와 보완)
+              trackBookingEvent('booking_rejected_by_photographer', bookingId.toString(), userId, {
+                reason_length: trimmedReason.length, // 사유 원문은 개인정보로 미수집
+              });
+
               Alert.show({
                 title: '거절 완료',
                 message: '거절이 완료되었습니다.',

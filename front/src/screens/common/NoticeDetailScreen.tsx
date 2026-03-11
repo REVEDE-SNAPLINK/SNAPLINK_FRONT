@@ -1,8 +1,8 @@
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 import dayjs from 'dayjs';
 import styled from '@/utils/scale/CustomStyled';
 // 작성한 커스텀 훅 임포트

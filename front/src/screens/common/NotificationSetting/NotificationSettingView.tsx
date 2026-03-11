@@ -1,6 +1,6 @@
-import ScreenContainer from '@/components/common/ScreenContainer.tsx';
+import ScreenContainer from '@/components/layout/ScreenContainer.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { PrimaryToggleButton, Typography } from '@/components/theme';
+import { PrimaryToggleButton, Typography } from '@/components/ui';
 
 interface NotificationSettingViewProps {
   onPressBack: () => void;

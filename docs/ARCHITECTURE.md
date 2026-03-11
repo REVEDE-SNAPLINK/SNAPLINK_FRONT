@@ -97,15 +97,14 @@ const Button = styled.TouchableOpacity`
 ## 🧭 네비게이션
 
 ### 구조
-```
+```text
 RootNavigator
-├─ SplashScreen (초기)
-├─ OnboardingStack (온보딩 미완료 시)
-├─ AuthStack (미인증)
+├─ AuthStack (status === 'anon' | 'needs_signup')
 │  ├─ Login
-│  └─ SelectType
-└─ MainStack (인증됨)
-   └─ Home
+│  └─ SelectType (권한/약관 동의 등)
+├─ MainStack (status === 'authed')
+│  └─ Home, MyPage 등
+└─ Global Modals (CommunityPostModal, ReportModal 등)
 ```
 
 ### Deep Linking 설정
@@ -139,15 +138,15 @@ const linking = {
 ### Zustand 사용
 
 #### authStore (`useAuthStore`)
-인증 상태, 토큰 관리 및 사용자 정보를 관리합니다.
+인증 상태(`status`), 토큰 관리, 부트스트랩(`bootstrapped`), 및 사용자 정보를 관리합니다.
 
 ```tsx
 import { useAuthStore } from '@/store/authStore';
 
-const { userId, userType, accessToken, signInWithKakao, signOut } = useAuthStore();
+const { status, bootstrapped, userId, userType, signInWithKakao, signInWithApple, signInWithNaver, signOut } = useAuthStore();
 
-// 로그인 (Kakao 예시)
-const status = await signInWithKakao(); // 'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'
+// 로그인 (Kakao, Apple, Naver 등)
+const loginStatus = await signInWithKakao(); // 'LOGIN_SUCCESS' | 'SIGNUP_REQUIRED'
 
 // 로그아웃
 await signOut();
@@ -163,9 +162,10 @@ const { openReportModal, closeReportModal } = useModalStore();
 ```
 
 ### AsyncStorage (Persistent Storage)
-- 리프레시 토큰: `@refresh_token`
+- 권한용 토큰: `@refresh_token`
 - 사용자 고유 ID: `@user_id`
 - 사용자 타입: `@user_type`
+- 서드파티 로그인 임시 정보 보관: `@apple_login_info`, `@naver_login_info`
 
 ## 🎯 반응형 디자인
 

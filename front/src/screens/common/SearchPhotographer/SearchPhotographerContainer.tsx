@@ -1,7 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { safeLogEvent } from '@/utils/analytics.ts';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
@@ -23,7 +22,6 @@ type SearchPhotographerRouteProp = RouteProp<MainStackParamList, 'SearchPhotogra
 const PAGE_SIZE = 10;
 
 export default function SearchPhotographerContainer() {
-  const { userId, userType } = useAuthStore();
   const route = useRoute<SearchPhotographerRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
 
@@ -71,6 +69,15 @@ export default function SearchPhotographerContainer() {
       items: ['여성작가', '남성작가'],
     },
   ], [regions, concepts]);
+
+  // 검색 화면 진입 - 퍼널 1의 시작점
+  useFocusEffect(
+    useCallback(() => {
+      safeLogEvent('search_screen_entered', {
+        initial_search_key: route.params.searchKey || '',
+      });
+    }, [route.params.searchKey])
+  );
 
   const [searchKey, setSearchKey] = useState(route.params.searchKey);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -205,10 +212,19 @@ export default function SearchPhotographerContainer() {
   const photographers = data?.pages.flatMap((page) => page.content);
 
   useEffect(() => {
-    if (photographers) {
-      setTotalCount(photographers.length);
+    if (data?.pages[0].totalElements) {
+      setTotalCount(data.pages[0].totalElements);
     }
-  }, [photographers]);
+
+    // 검색 결과 로드 시 search_result_view 이벤트
+    if (data?.pages[0] && searchKey) {
+      safeLogEvent('search_result_view', {
+        search_key: searchKey,
+        result_count: data.pages[0].totalElements ?? 0,
+        source: 'SearchPhotographer',
+      });
+    }
+  }, [data, searchKey]);
 
   const handlePressBack = () => {
     navigation.goBack();
@@ -216,9 +232,7 @@ export default function SearchPhotographerContainer() {
 
   const handleSubmitSearchKey = () => {
     // Log search_photographer event when search is submitted
-    analytics().logEvent('search_photographer', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('search_photographer', {
       search_key: searchKey,
       source: 'SearchPhotographer',
     });
@@ -254,12 +268,11 @@ export default function SearchPhotographerContainer() {
   };
 
   const handlePressPhotographer = (photographerId: string) => {
-    // Log photographer_profile_view event when photographer is pressed
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    // photographer_profile_view는 PhotographerDetailsContainer 마운트 시 추적 (중복 방지)
+    safeLogEvent('creator_card_click', {
       photographer_id: photographerId,
-      source: 'SearchPhotographer',
+      source: 'search',
+      feed_type: 'search_result',
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'search' });
   };

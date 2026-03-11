@@ -1,12 +1,11 @@
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import WriteReviewView from '@/screens/user/WriteReview/WriteReviewView.tsx';
 import { useState, useCallback } from 'react';
-import { Alert } from '@/components/theme/Alert';
+import { Alert } from '@/components/ui/Alert';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { useCreateReservationReviewMutation, useUpdateReviewMutation } from '@/mutations/reviews.ts';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { showErrorAlert } from '@/utils/error';
 
 // Form validation constants
@@ -19,7 +18,6 @@ export default function WriteReviewContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<RouteProp<MainStackParamList, 'WriteReview'>>();
   const { bookingId, review } = route.params;
-  const { userId } = useAuthStore();
 
   // Determine if we're in edit mode
   const isEditMode = !!review;
@@ -80,7 +78,7 @@ export default function WriteReviewContainer() {
     );
 
     if (isEditMode && review) {
-      analytics().logEvent('review_edit_complete', { review_id: review?.reviewId, user_id: userId });
+      safeLogEvent('review_edit_complete', { review_id: review?.reviewId });
       // Update existing review
       // 음수 photoId는 GetBookingReviewMeResponse에서 변환된 임시 ID이므로 제외
       const validDeletePhotoIds = deletePhotoIds.filter((id) => id > 0);
@@ -114,7 +112,7 @@ export default function WriteReviewContainer() {
         }
       );
     } else if (bookingId) {
-      analytics().logEvent('review_create_complete', { booking_id: bookingId, user_id: userId });
+      safeLogEvent('review_create_complete', { booking_id: bookingId });
       // Create new review
       createMutation.mutate(
         {

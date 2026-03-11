@@ -1,10 +1,8 @@
 import BookingRequestView from '@/screens/user/BookingRequest/BookingRequestView.tsx';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
+import { trackBookingEvent, safeLogEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
-import { Alert } from '@/components/theme';
 import { useCreateBookingMutation } from '@/mutations/bookings.ts';
 import { useEffect, useRef } from 'react';
 import { showErrorAlert } from '@/utils/error';
@@ -16,7 +14,6 @@ interface BookingRequestFormInputs {
 }
 
 export default function BookingRequestContainer() {
-  const { userId, userType } = useAuthStore();
   const route = useRoute<BookingRequestRouteProp>();
   const navigation = useNavigation<MainNavigationProp>();
   const { photographerId, productId, options, shootingDate, startTime, region } = route.params;
@@ -43,9 +40,7 @@ export default function BookingRequestContainer() {
       if (!formCompletedRef.current && formStartTimeRef.current) {
         const timeSpentSeconds = (Date.now() - formStartTimeRef.current) / 1000;
 
-        analytics().logEvent('booking_form_abandoned', {
-          user_id: userId,
-          user_type: userType,
+        safeLogEvent('booking_form_abandoned', {
           photographer_id: photographerId,
           step: 'request_details',
           time_spent_seconds: Math.round(timeSpentSeconds),
@@ -54,53 +49,43 @@ export default function BookingRequestContainer() {
         });
       }
     };
-  }, [userId, userType, photographerId, productId, shootingDate]);
+  }, [photographerId, productId, shootingDate]);
 
   const onSubmit = (data: BookingRequestFormInputs) => {
     // Mark form as completed to prevent abandonment event
     formCompletedRef.current = true;
 
-    // Log booking_request_submitted
-    analytics().logEvent('booking_request_submitted', {
-      user_id: userId,
-      user_type: userType,
-      photographer_id: photographerId,
+    // Log booking_request_submitted (실제 API 호출 직전)
+    trackBookingEvent('booking_request_submitted', undefined, photographerId, {
       product_id: productId,
       shooting_date: shootingDate,
       start_time: startTime,
       options: JSON.stringify(options),
       request_details_length: data.requestDetails?.length ?? 0,
     });
+
     createBookingMutation.mutate({
       photographerId,
       region,
       productId,
       options,
-      shootingDate, // Already ISO string from Booking screen
-      startTime, // HH:mm format
+      shootingDate,
+      startTime,
       requestDetails: data.requestDetails,
     }, {
-      onSuccess: () => {
-        // Log booking_confirmed
-        analytics().logEvent('booking_confirmed', {
-          user_id: userId,
-          user_type: userType,
-          photographer_id: photographerId,
+      onSuccess: (bookingId: number) => {
+        // 예약 생성 완료 (DB 기록 성공) -> bookingId 포함해서 추적
+        trackBookingEvent('booking_request_delivery_succeeded', String(bookingId), photographerId, {
           product_id: productId,
           shooting_date: shootingDate,
           start_time: startTime,
           options: JSON.stringify(options),
         });
-        Alert.show({
-          title: '📸 스냅 사진 예약이 완료되었습니다.',
-          message: '작가님과의 스냅사진 촬영 예약이 완료되었습니다. 자세한 예약 내역은 마이페이지 내 촬영내역에서도 확인할 수 있어요!',
-          buttons: [
-            {
-              text: '확인', onPress: () => {
-                navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
-              }
-            },
-          ]
+
+        // bookingId를 가지고 BookingDetails로 이동 → 이후 상태 변화(확정/취소) 추적 가능
+        navigation.reset({
+          index: 1,
+          routes: [{ name: 'Home' }, { name: 'BookingDetails', params: { bookingId } }],
         });
       },
       onError: (error: Error) => {

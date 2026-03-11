@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import BookingCalendarView from '@/screens/photographer/BookingCalendar/BookingCalendarView.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
@@ -112,14 +112,18 @@ export default function BookingCalendarContainer() {
     !!userId && !!selectedDate
   );
 
+  // 수정 E: 이전 데이터를 useRef로 보존하여 fetch 중 색상 깜빡임 방지
+  const prevScheduleMapRef = useRef<Map<string, {
+    hasBooking: boolean;
+    publicHoliday: boolean;
+    photographerHoliday: boolean;
+    hasPersonalSchedule: boolean;
+  }>>(new Map());
+
   // Enhanced schedule data from API (5 months: prevPrev, prev, current, next, nextNext)
   const enhancedScheduleData = useMemo(() => {
-    const schedulesByDate = new Map<string, {
-      hasBooking: boolean;
-      publicHoliday: boolean;
-      photographerHoliday: boolean;
-      hasPersonalSchedule: boolean;
-    }>();
+    // 이전 캐시를 기반으로 시작 (fetch 중인 월은 이전 값 유지)
+    const schedulesByDate = new Map(prevScheduleMapRef.current);
 
     // Helper to add month data to map
     const addMonthData = (data: typeof monthScheduleData, targetYear: number, targetMonth: number) => {
@@ -147,6 +151,9 @@ export default function BookingCalendarContainer() {
     addMonthData(nextMonthScheduleData, nextYear, nextMonth);
     addMonthData(nextNextMonthScheduleData, nextNextYear, nextNextMonth);
 
+    // 캐시 업데이트
+    prevScheduleMapRef.current = schedulesByDate;
+
     // Convert map to array
     return Array.from(schedulesByDate.entries()).map(([date, data]) => ({
       date,
@@ -165,9 +172,7 @@ export default function BookingCalendarContainer() {
 
 
   const handlePressBookingItem = (bookingId: number) => {
-    analytics().logEvent('photographer_booking_detail_view', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('photographer_booking_detail_view', {
       bookingId,
     });
     navigation.navigate('BookingDetails', { bookingId });
@@ -273,9 +278,7 @@ export default function BookingCalendarContainer() {
   const handleSubmitSchedule = async (schedule: Omit<UIPersonalSchedule, 'id'>) => {
     // AddScheduleModal already handles mutation, just log analytics
     closeAddScheduleModal();
-    analytics().logEvent('personal_schedule_created', {
-      user_id: userId ?? '',
-      user_type: 'photographer',
+    safeLogEvent('personal_schedule_created', {
       start_date: schedule.startDate.toISOString().split('T')[0],
       end_date: schedule.endDate.toISOString().split('T')[0],
       title: schedule.title,

@@ -6,7 +6,7 @@ import EditRegionView, {
 } from '@/screens/photographer/EditRegion/EditRegionView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useRegionsQuery } from '@/queries/meta.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 
 type EditRegionRouteProp = RouteProp<MainStackParamList, 'EditRegion'>;
 

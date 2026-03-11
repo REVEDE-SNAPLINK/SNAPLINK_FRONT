@@ -1,4 +1,4 @@
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 
 /**
  * 네트워크 에러인지 확인합니다.

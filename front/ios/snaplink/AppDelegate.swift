@@ -7,6 +7,7 @@ import KakaoSDKAuth
 import Firebase
 import UserNotifications
 import CodePush
+import NaverThirdPartyLogin
 
 @main
 class AppDelegate: ExpoAppDelegate, UNUserNotificationCenterDelegate {
@@ -72,6 +73,20 @@ class AppDelegate: ExpoAppDelegate, UNUserNotificationCenterDelegate {
   ) {
     // iOS 14+ 에서 배너, 사운드, 배지 모두 표시
     completionHandler([.banner, .sound, .badge])
+  }
+
+  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    // naver
+    if url.scheme == "snaplinkSV1KQ3L7CK" {
+      return NaverThirdPartyLoginConnection.getSharedInstance().application(app, open: url, options: options)
+    }
+
+    // kakao
+    if AuthApi.isKakaoTalkLoginUrl(url) {
+      return AuthController.handleOpenUrl(url: url)
+    }
+
+    return false
   }
 
   // 알림 탭 시

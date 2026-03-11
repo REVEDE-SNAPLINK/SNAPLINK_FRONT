@@ -7,19 +7,19 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import { theme } from '@/theme';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Checkbox from '@/components/theme/Checkbox';
-import TextInput from '@/components/theme/TextInput.tsx';
-import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
+import Checkbox from '@/components/ui/Checkbox';
+import TextInput from '@/components/ui/TextInput.tsx';
+import ProfileImageUpload from '@/components/media/ProfileImageUpload.tsx';
 import { GetRegionsResponse } from '@/api/regions.ts';
 import { GetConceptsResponse } from '@/api/concepts.ts';
 import FormInput from '@/components/form/FormInput.tsx';
 import DropDownInput from '@/components/form/DropDownInput.tsx';
-import OptionItem, { Option, TimeOptionItem } from '@/components/OptionItem.tsx';
+import OptionItem, { Option, TimeOptionItem } from '@/components/ui/OptionItem.tsx';
 import CloseIcon from '@/assets/icons/multiply.svg'
 import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';

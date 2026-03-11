@@ -5,7 +5,7 @@ import ServiceFormView, {
   ServiceFormData,
 } from '@/screens/photographer/ServiceForm/ServiceFormView.tsx';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMyShootingsQuery, useShootingOptionsQuery } from '@/queries/shootings.ts';
 import {

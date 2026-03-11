@@ -25,22 +25,14 @@ platform :android do
 
   desc "Submit a new Beta Build to Play Store (Internal Testing)"
   lane :beta do
-    # Use timestamp for version code to ensure uniqueness without committing changes
     timestamp_code = Time.now.to_i
-    
-    # Update versionCode in build.gradle directly using Ruby
     gradle_path = File.join(File.dirname(__FILE__), "../app/build.gradle")
     gradle_content = File.read(gradle_path)
     new_gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
     File.write(gradle_path, new_gradle_content)
 
-    # Build the app
-    gradle(
-      task: "bundle",
-      build_type: "Release"
-    )
+    gradle(task: "bundle", build_type: "Release")
 
-    # Upload to Play Store Internal Testing track
     upload_to_play_store(
       track: "internal",
       aab: "app/build/outputs/bundle/release/app-release.aab",
@@ -50,23 +42,6 @@ platform :android do
     )
   end
 
-  desc "Deploy update via Revopush"
-  lane :codepush do |options|
-    deployment_name = options[:deployment] || "Staging"
-    target_version = options[:target_version] ? "-t #{options[:target_version]}" : ""
-    
-    sh("cd .. && npx @revopush/code-push-cli release-react snaplink android -d #{deployment_name} #{target_version} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
-  end
-
-  desc "Promote Revopush update from one deployment to another"
-  lane :codepush_promote do |options|
-    from = options[:from] || "Staging"
-    to = options[:to] || "Production"
-    
-    sh("cd .. && npx @revopush/code-push-cli promote snaplink android #{from} #{to} --token #{ENV['REVOPUSH_ACCESS_KEY']}")
-  end
-
-  # Helper to read version from package.json
   def get_package_version
     json_path = File.join(File.dirname(__FILE__), "../../package.json")
     package = JSON.parse(File.read(json_path))
@@ -77,25 +52,14 @@ platform :android do
   lane :deploy do
     package_version = get_package_version
     timestamp_code = Time.now.to_i
-
-    # Update versionName and versionCode in build.gradle directly using Ruby
     gradle_path = File.join(File.dirname(__FILE__), "../app/build.gradle")
     gradle_content = File.read(gradle_path)
-
-    # Update versionName from package.json
     gradle_content = gradle_content.gsub(/versionName "[^"]*"/, "versionName \"#{package_version}\"")
-    # Update versionCode from timestamp
     gradle_content = gradle_content.gsub(/versionCode \d+/, "versionCode #{timestamp_code}")
-
     File.write(gradle_path, gradle_content)
 
-    # Build the app
-    gradle(
-      task: "bundle",
-      build_type: "Release"
-    )
+    gradle(task: "bundle", build_type: "Release")
 
-    # Upload to Play Store Production
     upload_to_play_store(
       track: "production",
       aab: "app/build/outputs/bundle/release/app-release.aab",

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Control, Controller } from 'react-hook-form';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Checkbox from '@/components/theme/Checkbox';
+import Checkbox from '@/components/ui/Checkbox';
 import { GetRegionsResponse } from '@/api/regions.ts';
 
 export interface EditRegionFormData {

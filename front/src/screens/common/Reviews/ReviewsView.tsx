@@ -1,14 +1,14 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
-import Typography from '../../../components/theme/Typography.tsx';
-import Icon from '@/components/Icon.tsx';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import Typography from '@/components/ui/Typography.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import ActiveStarIcon from '@/assets/icons/star-color.svg';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg';
 import React from 'react';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Dimensions, FlatList, RefreshControl } from 'react-native';
 import { GetPhotographerReviewSummaryResponse, PhotographerReviewItem } from '@/api/photographers.ts';
-import ServerImage from '@/components/ServerImage.tsx';
-import Loading from '@/components/Loading.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const REVIEW_GRID_MARGIN = 2;

@@ -3,10 +3,10 @@
 ## 📝 파일 및 폴더 네이밍
 
 ### 파일명
-- **컴포넌트**: PascalCase (예: `LoginView.tsx`, `AppText.tsx`)
+- **컴포넌트**: PascalCase (예: `LoginView.tsx`, `Typography.tsx`)
 - **유틸/훅**: camelCase (예: `useAuth.ts`, `formatDate.ts`)
 - **타입 정의**: camelCase (예: `auth.ts`, `navigation.ts`)
-- **상수**: camelCase (예: `theme.ts`, `colors.ts`)
+- **상수/테마**: camelCase (예: `colors.ts`, `theme.ts`)
 
 ### 폴더명
 - **소문자**: `components`, `screens`, `navigation`
@@ -14,17 +14,17 @@
 
 ## 🎨 스타일링 규칙
 
-### styled-components 사용
+### CustomStyled(자동 스케일링) 기반 사용
 
 ✅ **권장:**
 ```tsx
-import styled from 'styled-components/native';
-import { theme } from '@/constants/theme';
+import { styled } from '@/utils/scale/CustomStyled';
+import { theme } from '@/theme';
 
 const Container = styled.View`
   flex: 1;
-  background-color: ${theme.colors.background};
-  padding: ${theme.spacing.md}px;
+  background-color: ${theme.colors.bgPrimary};
+  padding: 16px;
 `;
 ```
 
@@ -57,7 +57,7 @@ const Title = styled.Text`...`;
 
 ### theme import
 ```tsx
-import { theme } from '@/constants/theme';
+import { theme } from '@/theme';
 ```
 
 ❌ **hook 사용 금지:**
@@ -76,29 +76,29 @@ color: ${theme.colors.textPrimary};
 style={{ color: theme.colors.primary }}
 ```
 
-### 스케일링
+### 스케일링 (수치만 적으면 CustomStyled가 자동 조절)
 ```tsx
-// 가로 (width, horizontal padding/margin)
-width: ${theme.scale(335)}px;
-margin-horizontal: ${theme.scale(32)}px;
+// 가로 세로 모두 숫자+px 입력 시 자동 스케일링 됨
+width: 335px;
+margin-horizontal: 32px;
+height: 55px;
+padding-top: 20px;
 
-// 세로 (height, vertical padding/margin)
-height: ${theme.verticalScale(55)}px;
-padding-top: ${theme.verticalScale(20)}px;
-
-// 폰트/아이콘
-font-size: ${theme.moderateScale(16)}px;
+// 폰트 크기
+font-size: 16px;
 ```
 
 ## 📄 텍스트 컴포넌트
 
-### AppText 사용 필수
+### Typography 사용 필수
 
 ✅ **권장:**
 ```tsx
-<AppText fontSize={16} fontWeight={700} color="primary">
+import { Typography } from '@/components/ui';
+
+<Typography fontSize={16} fontWeight="bold" color="aqua">
   텍스트 내용
-</AppText>
+</Typography>
 ```
 
 ❌ **지양:**
@@ -108,31 +108,30 @@ font-size: ${theme.moderateScale(16)}px;
 </Text>
 ```
 
-### AppText Props
+### Typography Props
 ```tsx
-fontSize: number                                    // 필수: 폰트 크기 (Figma px 값)
-color?: ColorKey | string                           // theme.colors 키 또는 직접 색상값, 기본: 'textPrimary'
-fontWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900  // 기본: 400
-textAlign?: 'left' | 'center' | 'right'            // 기본: 'left'
-lineHeight?: number                                 // 줄 높이 (Figma px 값, verticalScale 적용)
-letterSpacing?: number                              // 자간 (Figma px 값, horizontalScale 적용)
-special?: 'kboBold'                                 // 특수 폰트 (KBODiaGothic-Bold)
-textDecorationLine?: 'none' | 'underline' | 'line-through'
-textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
-marginTop?: number                                  // 상단 마진 (Figma px 값, verticalScale 적용)
-marginBottom?: number                               // 하단 마진 (Figma px 값, verticalScale 적용)
-marginLeft?: number                                 // 좌측 마진 (Figma px 값, horizontalScale 적용)
-marginRight?: number                                // 우측 마진 (Figma px 값, horizontalScale 적용)
-marginHorizontal?: number                           // 좌우 마진 (Figma px 값, horizontalScale 적용)
-marginVertical?: number                             // 상하 마진 (Figma px 값, verticalScale 적용)
+fontSize?: number                                   // 폰트 크기 (Figma px 값, 1.1배 자동 스케일링)
+color?: string                                      // theme.colors 키 또는 직접 색상값, 기본: 'textPrimary'
+fontWeight?: 'thin' | 'light' | 'regular' | 'medium' | 'semibold' | 'bold' | 'extraBold' | 'black' // 기본: 'regular'
+lineHeight?: number | string                        // 줄 높이 (Figma px 값 또는 '%', 1.1배 스케일링 적용)
+letterSpacing?: number | string                     // 자간
+marginTop?: number                                  // 상단 마진
+marginBottom?: number                               // 하단 마진
+marginLeft?: number                                 // 좌측 마진
+marginRight?: number                                // 우측 마진
+marginHorizontal?: number                           // 좌우 마진 
+marginVertical?: number                             // 상하 마진 
 ```
 
-### 특수 폰트 사용
+### 특수 문자열 강제 오버라이드 (지양)
 ```tsx
-// KBODiaGothic-Bold 폰트
-<AppText special="kboBold" fontSize={16}>
-  Revede
-</AppText>
+// 특정 폰트로 강제 오버라이드해야 할 때만
+import { styled } from '@/utils/scale/CustomStyled';
+
+const SpecialText = styled(Text)`
+  font-family: 'KBODiaGothic-Bold';
+  font-size: 16px;
+`;
 ```
 
 ## 🏗 화면 컴포넌트 패턴
@@ -200,11 +199,11 @@ import type { User } from '@/types/auth';
 ### Path Alias 사용
 ```tsx
 // ✅ 권장
-import { theme } from '@/constants/theme';
-import AppText from '@/components/AppText';
+import { theme } from '@/theme';
+import { Typography } from '@/components/ui';
 
 // ❌ 지양
-import { theme } from '../../../constants/theme';
+import { theme } from '../../../theme';
 ```
 
 ## 🔤 네이밍 컨벤션

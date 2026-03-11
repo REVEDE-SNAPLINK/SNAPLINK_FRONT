@@ -107,6 +107,10 @@ export const photographersQueryKeys = {
   // -------- regions, concepts, tags --------
   regionsConceptsTags: (photographerId: string) =>
     [...photographersQueryKeys.all, 'regionsConceptsTags', photographerId] as const,
+
+  // -------- AI multi-modal search --------
+  searchMulti: (queryText?: string) =>
+    [...photographersQueryKeys.all, 'searchMulti', queryText] as const,
 };
 
 // Booking

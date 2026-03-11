@@ -1,14 +1,14 @@
 import styled from '@/utils/scale/CustomStyled.ts';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross.svg';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
 import { useCallback, useState } from 'react';
 import { requestPermission } from '@/utils/permissions.ts';
 import { ImageLibraryOptions, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
-import { Alert, Typography } from '@/components/theme';
+import { Alert, Typography } from '@/components/ui';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
-import ServerImage from '@/components/ServerImage.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,

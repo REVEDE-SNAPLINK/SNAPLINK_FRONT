@@ -196,6 +196,7 @@ jobs:
           DEPLOYMENT="${{ steps.revopush_count.outputs.deployment }}"
           REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded }}"
           VERSION_CHANGED="${{ steps.version_bump.outputs.changed }}"
+          HAS_FRONT_CHANGES="${{ steps.changes.outputs.has_front_changes }}"
           HAS_NATIVE_IOS="${{ steps.changes.outputs.has_native_ios }}"
           HAS_NATIVE_ANDROID="${{ steps.changes.outputs.has_native_android }}"
 
@@ -204,6 +205,13 @@ jobs:
           # 수동 실행 처리
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.deploy_type }}" != "auto" ]; then
             echo "deploy_type=${{ github.event.inputs.deploy_type }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # front/ 변경 없으면 배포 스킵
+          if [ "$HAS_FRONT_CHANGES" != "true" ]; then
+            echo "⏭️ No changes in front/ — skipping deployment"
+            echo "deploy_type=skip" >> $GITHUB_OUTPUT
             exit 0
           fi
 

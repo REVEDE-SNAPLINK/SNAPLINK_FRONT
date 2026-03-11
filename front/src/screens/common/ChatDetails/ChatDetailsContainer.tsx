@@ -13,7 +13,7 @@ import { requestPermission } from '@/utils/permissions';
 import { Alert } from '@/components/ui';
 import { pick } from '@react-native-documents/picker';
 import RNBlobUtil from 'react-native-blob-util';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useAuthStore } from '@/store/authStore.ts';
@@ -87,6 +87,9 @@ export default function ChatDetailsContainer() {
   const [messageReadStates, setMessageReadStates] = useState<Record<number, number>>({});
   const didHydrateReadStatesRef = useRef(false);
   const readStatePersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 상대방 메시지 수신 시 enter(읽음) debounce 타이머
+  const enterDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ✅ 채팅 이벤트 추적용 상태
   const [messageCount, setMessageCount] = useState(0);
@@ -353,11 +356,17 @@ export default function ChatDetailsContainer() {
             }));
           }
 
-          // ✅ 상대방 메시지를 받으면 enter를 다시 호출하여 읽음 처리
-          // (서버에서 READ_EVENT를 상대방에게 발행)
+          // 상대방 메시지를 받으면 debounce 후 enter로 읽음 처리
+          // (연속 메시지 도착 시 마지막 메시지 기준으로 1회만 READ_EVENT 발행)
           if (message.senderId !== userId) {
-            console.log('[ChatDetails] Received message from partner, calling enter for read receipt');
-            stompClient.enter(roomId);
+            if (enterDebounceRef.current) clearTimeout(enterDebounceRef.current);
+            enterDebounceRef.current = setTimeout(() => {
+              enterDebounceRef.current = null;
+              if (stompClientRef.current?.isConnected()) {
+                console.log('[ChatDetails] Sending debounced enter for read receipt');
+                stompClientRef.current.enter(roomId);
+              }
+            }, 300);
           }
 
           // Update query cache with new message
@@ -395,13 +404,51 @@ export default function ChatDetailsContainer() {
     run();
 
     return () => {
-      console.log('[ChatDetails] Disconnecting WebSocket...');
+      // debounce 타이머 정리
+      if (enterDebounceRef.current) {
+        clearTimeout(enterDebounceRef.current);
+        enterDebounceRef.current = null;
+      }
+      console.log('[ChatDetails] Leaving and disconnecting WebSocket...');
+      // leave를 먼저 전송해야 서버가 unread count를 정확히 관리할 수 있음
+      stompClientRef.current?.leave(roomId);
       stompClientRef.current?.disconnect();
       stompClientRef.current = null;
       // 채팅방 나갈 때 목록 갱신하여 unreadCount 반영
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
     };
   }, [roomId, queryClient, userId, userType, chatRoomDetail?.blocked]);
+
+  // 앱이 백그라운드에서 포그라운드로 복귀했을 때 읽음 처리
+  // (백그라운드 중 받은 메시지를 읽음 처리하기 위해 enter 재전송)
+  useEffect(() => {
+    if (chatRoomDetail?.blocked) return;
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        if (stompClientRef.current?.isConnected()) {
+          console.log('[ChatDetails] App foregrounded, sending enter for read receipt');
+          stompClientRef.current.enter(roomId);
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [roomId, chatRoomDetail?.blocked]);
+
+  // [임시] 5초마다 enter를 보내 상대방이 읽었을 때 READ_EVENT를 수신
+  // 서버에서 lastReadMessageId 기반 읽음 관리가 구현되면 제거할 것
+  useEffect(() => {
+    if (chatRoomDetail?.blocked) return;
+
+    const intervalId = setInterval(() => {
+      if (stompClientRef.current?.isConnected()) {
+        stompClientRef.current.enter(roomId);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [roomId, chatRoomDetail?.blocked]);
 
   const handlePressBack = () => {
     navigation.goBack();

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { FlatList, Dimensions, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { FlatList, Dimensions, Keyboard, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
@@ -124,6 +124,7 @@ export default function ChatDetailsView({
   };
 
   const handlePressCross = () => {
+    Keyboard.dismiss();
     setShowExtraButtons(!showExtraButtons);
   };
 
@@ -266,8 +267,9 @@ export default function ChatDetailsView({
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? -insets.bottom : 0}
+      enabled={Platform.OS === 'ios'}
     >
       <ScreenContainer
         headerShown={true}

@@ -4,13 +4,14 @@ import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useState, useEffect, useCallback } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
-import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
+import { trackScreenView, safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
 import { formatReservationDateTime } from '@/utils/format.ts';
 import { showErrorAlert } from '@/utils/error';
 import { Alert } from '@/components/ui';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -60,6 +61,37 @@ export default function UserBookingDetailsContainer() {
       trackScreenView('BookingDetails');
     }, [])
   );
+
+  // 예약 상태 변화 추적 (세션 간 중복 방지: AsyncStorage)
+  // 유저가 BookingDetails를 열었을 때 상태를 보고 최초 1회만 이벤트 발송
+  useEffect(() => {
+    if (!bookingDetails) return;
+
+    const { status, bookingId: id, photographerId: pgId } = bookingDetails;
+    if (status !== 'APPROVED' && status !== 'REJECTED') return;
+
+    const reportOnce = async () => {
+      const storageKey = `analytics:booking_status_reported:${id}`;
+      try {
+        const reported = await AsyncStorage.getItem(storageKey);
+        const reportedStatuses: string[] = reported ? JSON.parse(reported) : [];
+
+        if (reportedStatuses.includes(status)) return;
+
+        if (status === 'APPROVED') {
+          trackBookingEvent('booking_accepted_by_photographer', String(id), pgId);
+        } else if (status === 'REJECTED') {
+          trackBookingEvent('booking_rejected_by_photographer', String(id), pgId);
+        }
+
+        await AsyncStorage.setItem(storageKey, JSON.stringify([...reportedStatuses, status]));
+      } catch {
+        // AsyncStorage 실패해도 앱 동작에 영향 없음
+      }
+    };
+
+    reportOnce();
+  }, [bookingDetails]);
 
   const handlePressBack = () => navigation.goBack();
 

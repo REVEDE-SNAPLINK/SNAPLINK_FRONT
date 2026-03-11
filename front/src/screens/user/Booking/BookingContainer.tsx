@@ -1,5 +1,5 @@
 import BookingView from '@/screens/user/Booking/BookingView.tsx';
-import { safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -58,10 +58,7 @@ export default function BookingContainer() {
   }, []);
 
   useEffect(() => {
-    // Log booking_intent when Booking screen opens
-    trackBookingEvent('booking_intent', undefined, photographerId, {
-      screen: 'Booking',
-    });
+    // booking_intent는 PhotographerDetails에서 예약 버튼 클릭 시 이미 발송됨 (중복 방지)
 
     // Record form start time
     formStartTimeRef.current = Date.now();
@@ -352,14 +349,7 @@ export default function BookingContainer() {
     const selectedRegion = regions?.find((r) => r.id === data.regionId);
     const regionCity = selectedRegion?.city || '';
 
-    // Log booking_request_submitted
-    trackBookingEvent('booking_request_submitted', undefined, photographerId, {
-      product_id: data.productId,
-      shooting_date: data.date,
-      start_time: data.time,
-      options: JSON.stringify(options),
-      region: regionCity,
-    });
+    // booking_request_submitted는 BookingRequestContainer에서 실제 API 호출 시 발송 (중복 방지)
 
     // Navigate to BookingRequest with form data
     navigation.navigate('BookingRequest', {

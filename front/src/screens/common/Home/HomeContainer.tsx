@@ -92,12 +92,8 @@ export default function HomeContainer() {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
 
-  // 추천 작가 클릭 → photographer_profile_view + creator_card_click
+  // photographer_profile_view는 PhotographerDetailsContainer 마운트 시 추적 (중복 방지)
   const handlePressAllPhotographerItem = (photographerId: string) => {
-    safeLogEvent('photographer_profile_view', {
-      photographer_id: photographerId,
-      source: 'home_feed_latest',
-    });
     safeLogEvent('creator_card_click', {
       photographer_id: photographerId,
       source: 'home_feed_latest',
@@ -109,10 +105,6 @@ export default function HomeContainer() {
   };
 
   const handlePressPopularPhotographerItem = (photographerId: string) => {
-    safeLogEvent('photographer_profile_view', {
-      photographer_id: photographerId,
-      source: 'home_feed_popular',
-    });
     safeLogEvent('creator_card_click', {
       photographer_id: photographerId,
       source: 'home_feed_popular',

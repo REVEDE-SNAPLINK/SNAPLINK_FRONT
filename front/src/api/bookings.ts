@@ -291,17 +291,18 @@ export const approveBooking = async (
 
 /**
  * POST /api/bookings
- * 예약 생성
+ * 예약 생성 - 생성된 bookingId(number)를 반환
  */
 export const createBooking = async (
   body: CreateBookingRequest
-)=> {
+): Promise<number> => {
   const response = await authFetch(`${BOOKINGS_BASE}`, {
     method: 'POST',
     json: body,
   });
 
   if (!response.ok) throw new Error('예약을 생성할 수 없습니다.');
+  return response.json();
 }
 
 /**

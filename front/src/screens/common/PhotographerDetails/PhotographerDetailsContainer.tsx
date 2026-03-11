@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { safeLogEvent, generateTrackingCode, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -39,6 +39,14 @@ export default function PhotographerDetailsContainer() {
 
   // Scroll depth tracking
   const scrollDepthTracked = useRef({ 25: false, 50: false, 75: false, 100: false });
+
+  // 프로필 진입 이벤트 - 모든 경로(홈/검색/커뮤니티/북마크 등)를 여기서 일관되게 추적
+  useEffect(() => {
+    safeLogEvent('photographer_profile_view', {
+      photographer_id: photographerId,
+      source: source || 'direct',
+    });
+  }, [photographerId, source]);
 
   // 더미 데이터 (API가 없으므로 임시로 사용)
 

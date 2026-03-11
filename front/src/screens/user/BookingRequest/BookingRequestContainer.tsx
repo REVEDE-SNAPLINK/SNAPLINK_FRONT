@@ -3,7 +3,6 @@ import { trackBookingEvent, safeLogEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import { useForm, Controller } from 'react-hook-form';
-import { Alert } from '@/components/ui';
 import { useCreateBookingMutation } from '@/mutations/bookings.ts';
 import { useEffect, useRef } from 'react';
 import { showErrorAlert } from '@/utils/error';
@@ -56,7 +55,7 @@ export default function BookingRequestContainer() {
     // Mark form as completed to prevent abandonment event
     formCompletedRef.current = true;
 
-    // Log booking_request_submitted
+    // Log booking_request_submitted (실제 API 호출 직전)
     trackBookingEvent('booking_request_submitted', undefined, photographerId, {
       product_id: productId,
       shooting_date: shootingDate,
@@ -70,29 +69,23 @@ export default function BookingRequestContainer() {
       region,
       productId,
       options,
-      shootingDate, // Already ISO string from Booking screen
-      startTime, // HH:mm format
+      shootingDate,
+      startTime,
       requestDetails: data.requestDetails,
     }, {
-      onSuccess: () => {
-        // 예약 생성 완료 (DB 기록 성공) -> booking_request_delivery_succeeded
-        trackBookingEvent('booking_request_delivery_succeeded', undefined, photographerId, {
+      onSuccess: (bookingId: number) => {
+        // 예약 생성 완료 (DB 기록 성공) -> bookingId 포함해서 추적
+        trackBookingEvent('booking_request_delivery_succeeded', String(bookingId), photographerId, {
           product_id: productId,
           shooting_date: shootingDate,
           start_time: startTime,
           options: JSON.stringify(options),
         });
 
-        Alert.show({
-          title: '📸 스냅 사진 예약이 완료되었습니다.',
-          message: '작가님과의 스냅사진 촬영 예약이 완료되었습니다. 자세한 예약 내역은 마이페이지 내 촬영내역에서도 확인할 수 있어요!',
-          buttons: [
-            {
-              text: '확인', onPress: () => {
-                navigation.reset({ index: 1, routes: [{ name: "Home" }, { name: "BookingHistory" }] });
-              }
-            },
-          ]
+        // bookingId를 가지고 BookingDetails로 이동 → 이후 상태 변화(확정/취소) 추적 가능
+        navigation.reset({
+          index: 1,
+          routes: [{ name: 'Home' }, { name: 'BookingDetails', params: { bookingId } }],
         });
       },
       onError: (error: Error) => {

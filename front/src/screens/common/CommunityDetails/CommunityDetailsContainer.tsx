@@ -133,9 +133,12 @@ export default function CommunityDetailsContainer() {
     safeLogEvent('community_post_view', {
       post_id: post.id,
       author_id: post.author.userId,
+      author_user_type: post.author.role?.toLowerCase() ?? 'unknown', // 작가 글인지 고객 글인지
       category: post.categoryLabel,
+      has_tagged_creator: (post.taggedUsers?.length ?? 0) > 0, // 작가 태그 여부
+      viewer_user_type: userType, // 보는 사람이 작가인지 고객인지
     });
-  }, [post]);
+  }, [post, userType]);
 
   // Update modal loading state
   useEffect(() => {
@@ -159,6 +162,9 @@ export default function CommunityDetailsContainer() {
       // Firebase Analytics: 공유 이벤트
       safeLogEvent('community_post_share', {
         post_id: post.id,
+        author_user_type: post.author.role?.toLowerCase() ?? 'unknown',
+        has_tagged_creator: (post.taggedUsers?.length ?? 0) > 0,
+        sharer_user_type: userType,
       });
 
       safeLogEvent('share_link_created', {
@@ -178,7 +184,10 @@ export default function CommunityDetailsContainer() {
         // Firebase Analytics: 좋아요 이벤트
         safeLogEvent('community_post_like', {
           post_id: postId,
-          liked: !(post?.isLiked), // liked 상태가 토글되므로 이전 상태의 반대
+          liked: !(post?.isLiked),
+          author_user_type: post?.author.role?.toLowerCase() ?? 'unknown',
+          has_tagged_creator: (post?.taggedUsers?.length ?? 0) > 0,
+          viewer_user_type: userType,
         });
       },
     });
@@ -257,6 +266,9 @@ export default function CommunityDetailsContainer() {
               comment_id: data?.id,
               is_reply: isReply,
               parent_comment_id: parentCommentId,
+              author_user_type: post?.author.role?.toLowerCase() ?? 'unknown',
+              has_tagged_creator: (post?.taggedUsers?.length ?? 0) > 0,
+              commenter_user_type: userType,
             });
           },
         }
@@ -396,6 +408,12 @@ export default function CommunityDetailsContainer() {
 
   const handlePressTaggedPhotographer = () => {
     if (post?.taggedUsers && post?.taggedUsers.length > 0 && taggedPhotographer) {
+      // 커뮤니티 퍼널 2단계: 게시글의 태그된 작가 클릭
+      safeLogEvent('community_photographer_profile_click', {
+        post_id: post.id,
+        photographer_id: post.taggedUsers[0].userId,
+        click_source: 'tagged_photographer',
+      });
       navigation.navigate('PhotographerDetails', { photographerId: post.taggedUsers[0].userId, source: 'community_tagged' });
     }
   }
@@ -560,6 +578,12 @@ export default function CommunityDetailsContainer() {
 
   const handlePressAuthor = () => {
     if (!post) return;
+    // 커뮤니티 퍼널 2단계: 게시글 작성자(작가) 클릭
+    safeLogEvent('community_photographer_profile_click', {
+      post_id: post.id,
+      photographer_id: post.author.userId,
+      click_source: 'post_author',
+    });
     navigation.navigate('PhotographerDetails', { photographerId: post.author.userId, source: 'community_author' });
   }
 

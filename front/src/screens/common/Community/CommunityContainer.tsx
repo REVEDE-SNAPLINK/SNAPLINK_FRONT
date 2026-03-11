@@ -119,6 +119,7 @@ export default function CommunityContainer() {
           has_image: (params.images?.length ?? 0) > 0,
           image_count: params.images?.length ?? 0,
           text_length: params.content?.length ?? 0,
+          has_tagged_creator: (params.taggedUserIds?.length ?? 0) > 0, // 작가 태그 여부
           platform: Platform.OS,
         });
 

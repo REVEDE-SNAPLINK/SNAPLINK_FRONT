@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { safeLogEvent } from '@/utils/analytics.ts';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import SearchPhotographerView, { SortByKey } from '@/screens/common/SearchPhotographer/SearchPhotographerView.tsx';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
@@ -69,6 +69,15 @@ export default function SearchPhotographerContainer() {
       items: ['여성작가', '남성작가'],
     },
   ], [regions, concepts]);
+
+  // 검색 화면 진입 - 퍼널 1의 시작점
+  useFocusEffect(
+    useCallback(() => {
+      safeLogEvent('search_screen_entered', {
+        initial_search_key: route.params.searchKey || '',
+      });
+    }, [route.params.searchKey])
+  );
 
   const [searchKey, setSearchKey] = useState(route.params.searchKey);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -259,12 +268,7 @@ export default function SearchPhotographerContainer() {
   };
 
   const handlePressPhotographer = (photographerId: string) => {
-    // Log photographer_profile_view event when photographer is pressed
-    safeLogEvent('photographer_profile_view', {
-      photographer_id: photographerId,
-      source: 'SearchPhotographer',
-    });
-    // 검색 결과에서 작가 카드 클릭 이벤트
+    // photographer_profile_view는 PhotographerDetailsContainer 마운트 시 추적 (중복 방지)
     safeLogEvent('creator_card_click', {
       photographer_id: photographerId,
       source: 'search',

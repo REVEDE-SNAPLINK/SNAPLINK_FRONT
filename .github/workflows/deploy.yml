@@ -348,13 +348,7 @@ jobs:
           BRANCH="${{ github.ref_name }}"
           echo "🚀 Branch: $BRANCH"
 
-          if [ "$BRANCH" == "main" ]; then
-            cd ios && bundle exec --gemfile=../Gemfile fastlane release
-          elif [ "$BRANCH" == "develop" ]; then
-            cd ios && bundle exec --gemfile=../Gemfile fastlane beta
-          else
-            echo "⚠️ No deployment rule for branch: $BRANCH"
-          fi
+          cd ios && bundle exec --gemfile=../Gemfile fastlane beta
 
       # ── Revopush OTA (iOS) ──
       - name: Setup Revopush CLI

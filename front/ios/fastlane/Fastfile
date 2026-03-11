@@ -67,18 +67,5 @@ platform :ios do
     match(type: "appstore", readonly: true, app_identifier: "com.revede.snaplink")
   end
 
-  desc "Push a new release build to the App Store"
-  lane :release do
-    increment_build_number(xcodeproj: "snaplink.xcodeproj")
-    build_app(
-      workspace: "snaplink.xcworkspace",
-      scheme: "snaplink",
-      configuration: "Release",
-      export_method: "app-store",
-      output_directory: "../build/ios",
-      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.revede.snaplink'"
-    )
-    upload_to_app_store(skip_metadata: false, skip_screenshots: true, submit_for_review: false)
-  end
 
 end

@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import analytics from '@react-native-firebase/analytics';
+import { useState, useEffect, useRef, useMemo } from 'react';
+
 import HomeView from '@/screens/common/Home/HomeView.tsx';
-import { BannerItem } from '@/components/user/Banner.tsx';
+import { BannerItem } from '@/components/domain/home/Banner.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import SignupCompletionModal from '@/components/auth/SignupCompletionModal.tsx';
+import SignupCompletionModal from '@/components/domain/auth/SignupCompletionModal.tsx';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useMainPhotographersLatestTop3Query, useMainPhotographersTopRatedTop3Query } from '@/queries/photographers.ts';
+import { safeLogEvent, trackImpression } from '@/utils/analytics.ts';
 
 const dummyBannerItems: BannerItem[] = [
   {
@@ -28,14 +29,51 @@ export default function HomeContainer() {
   const { data: latest3 } = useMainPhotographersLatestTop3Query();
   const { data: topRated3 } = useMainPhotographersTopRatedTop3Query();
 
-  const latestList = latest3?.content ?? [];
-  const topRatedList = topRated3?.content ?? [];
+  const latestList = useMemo(() => latest3?.content ?? [], [latest3]);
+  const topRatedList = useMemo(() => topRated3?.content ?? [], [topRated3]);
+
+  const impressionLogged = useRef(false);
+
+  // Home 피드 노출 이벤트 + 작가 카드 impression (고정 3+3개)
+  useEffect(() => {
+    if (impressionLogged.current) return;
+    if (latestList.length === 0 && topRatedList.length === 0) return;
+    impressionLogged.current = true;
+
+    safeLogEvent('home_feed_view', {
+      feed_type: 'all',
+      user_id: userId,
+      user_type: userType,
+    });
+
+    // latest 3 impression
+    latestList.forEach((item: any, index: number) => {
+      trackImpression('creator_card_impression', `home_latest_${item.photographerId}`, 'home_feed_latest', {
+        photographer_id: item.photographerId,
+        source: 'home_feed_latest',
+        feed_type: 'latest',
+        rank_index: index,
+        user_id: userId,
+        user_type: userType,
+      });
+    });
+
+    // topRated 3 impression
+    topRatedList.forEach((item: any, index: number) => {
+      trackImpression('creator_card_impression', `home_popular_${item.photographerId}`, 'home_feed_popular', {
+        photographer_id: item.photographerId,
+        source: 'home_feed_popular',
+        feed_type: 'popular',
+        rank_index: index,
+        user_id: userId,
+        user_type: userType,
+      });
+    });
+  }, [latestList, topRatedList, userId, userType]);
 
   // AI 클릭 → ai_recommendation_start
   const handlePressAI = () => {
-    analytics().logEvent('ai_recommendation_start', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('ai_recommendation_start', {
       source: 'Home',
     });
     navigation.navigate('AIRecommdationForm');
@@ -43,9 +81,7 @@ export default function HomeContainer() {
 
   // 검색 키워드 제출 → search_photographer
   const handleSubmitSearchKey = () => {
-    analytics().logEvent('search_photographer', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('search_photographer', {
       search_key: searchKey,
       source: 'Home',
     });
@@ -56,23 +92,25 @@ export default function HomeContainer() {
     navigation.navigate('SearchPhotographer', { searchKey: '' })
   };
 
-  // 추천 작가 클릭 → photographer_profile_view
+  // photographer_profile_view는 PhotographerDetailsContainer 마운트 시 추적 (중복 방지)
   const handlePressAllPhotographerItem = (photographerId: string) => {
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('creator_card_click', {
       photographer_id: photographerId,
       source: 'home_feed_latest',
+      feed_type: 'latest',
+      user_id: userId,
+      user_type: userType,
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'home_feed_latest' });
   };
 
   const handlePressPopularPhotographerItem = (photographerId: string) => {
-    analytics().logEvent('photographer_profile_view', {
-      user_id: userId,
-      user_type: userType,
+    safeLogEvent('creator_card_click', {
       photographer_id: photographerId,
       source: 'home_feed_popular',
+      feed_type: 'popular',
+      user_id: userId,
+      user_type: userType,
     });
     navigation.navigate('PhotographerDetails', { photographerId, source: 'home_feed_popular' });
   };

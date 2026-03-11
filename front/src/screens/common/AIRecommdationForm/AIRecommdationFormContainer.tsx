@@ -3,9 +3,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
-import { Alert } from '@/components/theme';
+import { safeLogEvent } from '@/utils/analytics.ts';
+import { Alert } from '@/components/ui';
 import { requestPermission } from '@/utils/permissions.ts';
 import { ImageLibraryOptions, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
 import { generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
@@ -16,15 +15,9 @@ export default function AIRecommdationFormContainer() {
   const [image, setImage] = useState<UploadImageFile | null>(null);
   const [prompt, setPrompt] = useState<string>('');
 
-  const { userId, userType } = useAuthStore();
-
   useEffect(() => {
     // Log ai_recommendation_start when the form is opened
-    analytics().logEvent('ai_recommendation_start', {
-      user_id: userId,
-      user_type: userType,
-      screen: 'AIRecommdationForm',
-    });
+    safeLogEvent('ai_recommendation_start');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -33,7 +26,11 @@ export default function AIRecommdationFormContainer() {
   }, []);
 
   const handlePressSubmit = () => {
-    navigation.navigate('AIRecommdationResult', { prompt, resultCount: 3 });
+    navigation.navigate('AIRecommdationResult', {
+      prompt,
+      resultCount: 3,
+      ...(image ? { imageUri: image.uri, imageName: image.name, imageType: image.type } : {})
+    });
   };
 
   const handleUploadImage = useCallback(() => {
@@ -68,7 +65,7 @@ export default function AIRecommdationFormContainer() {
     );
   }, []);
 
-  const isFormValid = image !== null && prompt !== '' && prompt.trim().length >= 30;
+  const isFormValid = image !== null;
 
   return (
     <AIRecommdationFormView

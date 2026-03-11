@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { Typography } from '@/components/theme';
-import Icon from '@/components/Icon.tsx';
+import { Typography } from '@/components/ui';
+import Icon from '@/components/ui/Icon.tsx';
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';

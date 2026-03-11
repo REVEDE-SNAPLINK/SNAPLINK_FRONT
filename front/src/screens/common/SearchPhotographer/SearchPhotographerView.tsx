@@ -1,15 +1,15 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import { theme } from '@/theme';
-import Filter from '@/components/user/filter/Filter.tsx';
-import FilterModal from '@/components/user/filter/FilterModal.tsx';
+import Filter from '@/components/domain/photographer/Filter.tsx';
+import FilterModal from '@/components/domain/photographer/FilterModal.tsx';
 import { FilterCategory, FilterValue, FilterChip } from '@/types/filter.ts';
-import Typography from '@/components/theme/Typography.tsx';
-import SearchPhotographerList from '@/components/user/SearchPhotographerList.tsx';
+import Typography from '@/components/ui/Typography.tsx';
+import SearchPhotographerList from '@/components/domain/photographer/SearchPhotographerList.tsx';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import BackButton from '@/components/common/BackButton';
-import SortButton, { SortOption } from '@/components/common/SortButton.tsx';
+import BackButton from '@/components/layout/BackButton';
+import SortButton, { SortOption } from '@/components/ui/SortButton.tsx';
 import SearchIcon from '@/assets/icons/search-gray.svg';
 
 export const SORT_BY_ENUM = {

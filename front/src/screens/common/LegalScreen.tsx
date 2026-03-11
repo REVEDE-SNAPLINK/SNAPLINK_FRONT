@@ -1,11 +1,11 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg';
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 import { openTermUrl } from '@/utils/link.ts';
 
 export const TERM_ROUTE_LIST = [

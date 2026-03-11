@@ -3,11 +3,11 @@ import {
   ScheduleCalendarGrid,
   EnhancedScheduleData,
   MonthPicker,
-} from '@/components/ScheduleCalendar.tsx';
+} from '@/components/domain/booking/ScheduleCalendar.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import CrossIcon from '@/assets/icons/cross-white.svg';
 import { GetPhotographerDayDetailResponse } from '@/api/schedules';
 import { formatTime } from '@/utils/format.ts';
@@ -17,7 +17,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   runOnJS,
-  withTiming, interpolate, Extrapolate,
+  withTiming, Easing, interpolate, Extrapolate,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 
@@ -40,7 +40,13 @@ interface BookingCalendarViewProps {
 const CALENDAR_HEADER_HEIGHT = 76;
 const DAY_HEIGHT = 62;
 const MAX_WEEK_COUNT = 6; // 캘린더 최대 주차 수 (높이 통일 기준)
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// 통일된 타이밍 설정 (빠르고 예측 가능한 감속 커브)
+const SNAP_TIMING_CONFIG = {
+  duration: 280,
+  easing: Easing.out(Easing.cubic),
+};
 
 // 이전달 계산
 const getPrevMonth = (yearMonth: string) => {
@@ -85,16 +91,24 @@ export default function BookingCalendarView({
   onPressAddSchedule,
   onMonthChange,
 }: BookingCalendarViewProps) {
-  // 초기 높이를 미리 계산하여 깜빡임 방지
-  const initialContainerHeight = SCREEN_HEIGHT;
-  const initialCalendarHeight = CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT;
-  const initialDefaultHeight = initialContainerHeight - initialCalendarHeight + 20;
-
-  const [containerHeight, setContainerHeight] = useState(initialContainerHeight);
-  const [defaultHeight, setDefaultHeight] = useState(initialDefaultHeight);
+  const [containerHeight, setContainerHeight] = useState(0);
+  // containerHeight에서 동기 계산 (useEffect 비동기 딜레이 제거)
+  const defaultHeight = containerHeight > 0
+    ? containerHeight - (CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT) + 20
+    : 0;
   const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const isPickerActiveRef = useRef(false); // 다이얼로그가 열려있거나 처리 중인지 추적
+
+  // onLayout 측정 완료 여부
+  const isLayoutReady = containerHeight > 0;
+
+  // 제스처 완료 후 React state만 동기화 (애니메이션은 제스처 onEnd에서 이미 처리됨)
+  const deferredSetRenderType = useCallback((type: 'HIDDEN' | 'DEFAULT' | 'FULL') => {
+    requestAnimationFrame(() => {
+      setRenderType(type);
+    });
+  }, []);
 
   // 방법 C: 월 목록을 상태로 관리 [이전달, 현재달, 다음달]
   const [months, setMonths] = useState(() => [
@@ -253,9 +267,12 @@ export default function BookingCalendarView({
   const hasSchedules = bookings.length > 0 || personalSchedules.length > 0 || hasPublicHoliday || hasPhotographerHoliday;
   const isDateSelected = selectedDate && selectedDate.trim() !== '';
 
+  // 수정 A: 초기 상태가 HIDDEN이므로  sheetHeight=0으로 시작하되,
+  // ScheduleCalendarGrid에 전달되는 containerHeight가 이미 initialContainerHeight로
+  // 세팅되어 있으므로 hiddenMaxMargin이 올바르게 초기 계산됨
   const sheetHeight = useSharedValue(0);
   const dragStartHeight = useSharedValue(0);
-  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('DEFAULT');
+  const renderTypeSV = useSharedValue<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -263,26 +280,22 @@ export default function BookingCalendarView({
     };
   });
 
-  // containerHeight가 변경되면 defaultHeight 계산 (6주 기준으로 고정)
-  useEffect(() => {
-    if (!containerHeight) return;
-    // 항상 6주 기준으로 계산하여 하단 바 높이 고정
-    const calendarHeight = CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT;
-    const newDefaultHeight = containerHeight - calendarHeight + 20;
-    setDefaultHeight(newDefaultHeight);
-  }, [containerHeight]);
-
-  useEffect(() => {
-    renderTypeSV.value = renderType;
-  }, [renderType, renderTypeSV]);
-
-  // 날짜 선택 핸들러 - HIDDEN 상태에서 날짜를 선택하면 DEFAULT로 전환
-  const handleSelectDate = (date: string) => {
-    if (renderType === 'HIDDEN') {
+  // 날짜 선택 핸들러 - HIDDEN 상태에서 날짜를 선택하면 DEFAULT로 전환 (직접 애니메이션)
+  // useCallback으로 참조 안정화 → ScheduleCalendarGrid 리렌더 방지
+  const handleSelectDate = useCallback((date: string) => {
+    if (renderTypeSV.value === 'HIDDEN' && defaultHeight > 0) {
+      // 1. 날짜 하이라이트 + state 즉시 반영
+      renderTypeSV.value = 'DEFAULT';
       setRenderType('DEFAULT');
+      onSelectDate(date);
+      // 2. 리렌더가 끝난 후 애니메이션 시작 (프레임 드랍 방지)
+      requestAnimationFrame(() => {
+        sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG);
+      });
+      return;
     }
     onSelectDate(date);
-  };
+  }, [defaultHeight, onSelectDate, renderTypeSV, sheetHeight]);
 
   const DRAG_DAMPING = 0.8;
 
@@ -305,32 +318,32 @@ export default function BookingCalendarView({
 
       if (renderTypeSV.value === 'FULL') {
         if (velocity > 500 || current < SNAP_FULL) {
-          sheetHeight.value = withTiming(defaultHeight, {}, () => {
+          sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG, () => {
             renderTypeSV.value = 'DEFAULT';
-            runOnJS(setRenderType)('DEFAULT');
+            runOnJS(deferredSetRenderType)('DEFAULT');
           });
         } else {
-          sheetHeight.value = withTiming(containerHeight);
+          sheetHeight.value = withTiming(containerHeight, SNAP_TIMING_CONFIG);
         }
         return;
       }
 
       if (velocity > 500 || current < SNAP_HIDDEN) {
-        sheetHeight.value = withTiming(0, { duration: 250 }, () => {
+        sheetHeight.value = withTiming(0, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'HIDDEN';
-          runOnJS(setRenderType)('HIDDEN');
+          runOnJS(deferredSetRenderType)('HIDDEN');
         });
       }
       else if (velocity < -500 || current > SNAP_FULL) {
-        sheetHeight.value = withTiming(containerHeight, {}, () => {
+        sheetHeight.value = withTiming(containerHeight, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'FULL';
-          runOnJS(setRenderType)('FULL');
+          runOnJS(deferredSetRenderType)('FULL');
         });
       }
       else {
-        sheetHeight.value = withTiming(defaultHeight, {}, () => {
+        sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'DEFAULT';
-          runOnJS(setRenderType)('DEFAULT');
+          runOnJS(deferredSetRenderType)('DEFAULT');
         });
       }
     });
@@ -355,31 +368,14 @@ export default function BookingCalendarView({
       const THRESHOLD = defaultHeight * 0.3;
 
       if (velocity < -300 || current > THRESHOLD) {
-        sheetHeight.value = withTiming(defaultHeight, { duration: 250 }, () => {
+        sheetHeight.value = withTiming(defaultHeight, SNAP_TIMING_CONFIG, () => {
           renderTypeSV.value = 'DEFAULT';
-          runOnJS(setRenderType)('DEFAULT');
+          runOnJS(deferredSetRenderType)('DEFAULT');
         });
       } else {
-        sheetHeight.value = withTiming(0, { duration: 250 });
+        sheetHeight.value = withTiming(0, SNAP_TIMING_CONFIG);
       }
     });
-
-  // renderType 변경 시 sheetHeight 애니메이션
-  useEffect(() => {
-    if (!containerHeight || !defaultHeight) return;
-
-    const sheetTargetMap = {
-      HIDDEN: 0,
-      DEFAULT: defaultHeight,
-      FULL: containerHeight,
-    };
-
-    const sheetTarget = sheetTargetMap[renderType];
-
-    if (Math.abs(sheetHeight.value - sheetTarget) > 1) {
-      sheetHeight.value = withTiming(sheetTarget, { duration: 300 });
-    }
-  }, [renderType, containerHeight, defaultHeight, sheetHeight]);
 
   const floatingAnimatedStyle = useAnimatedStyle(() => {
     const fadeStart = defaultHeight * 0.6;
@@ -405,61 +401,71 @@ export default function BookingCalendarView({
           setContainerHeight(e.nativeEvent.layout.height);
         }}
       >
-        <GestureDetector gesture={calendarPanGesture}>
-          <Animated.View style={{ flex: 1 }}>
-            {/* 고정 헤더 */}
-            <ScheduleCalendarHeader
-              currentYearMonth={months[1]}
-              onPressLeft={handlePressLeft}
-              onPressRight={handlePressRight}
-              onPressYearMonth={handlePressYearMonth}
-            />
-            {/* 가로 스와이프 가능한 날짜 그리드 */}
-            {isAdjacentMonthsReady ? (
-              <ScrollView
-                ref={scrollViewRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                scrollEnabled={renderType !== 'FULL'}
-                onMomentumScrollEnd={handleScrollEnd}
-                scrollEventThrottle={16}
-                contentOffset={{ x: SCREEN_WIDTH, y: 0 }}
-              >
-                {months.map((month) => (
-                  <View key={month} style={{ width: SCREEN_WIDTH }}>
-                    <ScheduleCalendarGrid
-                      displayYearMonth={month}
-                      selectedDate={selectedDate}
-                      onSelectDate={handleSelectDate}
-                      scheduleData={scheduleData}
-                      containerHeight={containerHeight}
-                      sheetHeight={sheetHeight}
-                      defaultHeight={defaultHeight}
-                      calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
-                      dayRowHeight={DAY_HEIGHT}
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-            ) : (
-              /* 현재달만 먼저 렌더링 */
-              <View style={{ width: SCREEN_WIDTH }}>
-                <ScheduleCalendarGrid
-                  displayYearMonth={months[1]}
-                  selectedDate={selectedDate}
-                  onSelectDate={handleSelectDate}
-                  scheduleData={scheduleData}
-                  containerHeight={containerHeight}
-                  sheetHeight={sheetHeight}
-                  defaultHeight={defaultHeight}
-                  calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
-                  dayRowHeight={DAY_HEIGHT}
-                />
-              </View>
-            )}
-          </Animated.View>
-        </GestureDetector>
+        <Animated.View style={{ flex: 1 }}>
+          <GestureDetector gesture={calendarPanGesture}>
+            <Animated.View style={{ flex: 1 }}>
+              {/* 
+                고정 헤더 & 가로 스와이프 가능한 날짜 그리드
+                - isLayoutReady가 true가 될 때(onLayout으로 컨테이너 높이 계산 완료 후) 렌더링하여
+                ScheduleCalendarGrid의 useSharedValue 초깃값이 정확하게 들어가도록 함.
+                - opacity 토글만 하면 1프레임 딜레이로 인한 마진 팽창이 보일 수 있으므로 아예 마운트를 지연시킴.
+              */}
+              {isLayoutReady && (
+                <>
+                  <ScheduleCalendarHeader
+                    currentYearMonth={months[1]}
+                    onPressLeft={handlePressLeft}
+                    onPressRight={handlePressRight}
+                    onPressYearMonth={handlePressYearMonth}
+                  />
+                  {isAdjacentMonthsReady ? (
+                    <ScrollView
+                      ref={scrollViewRef}
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      scrollEnabled={renderType !== 'FULL'}
+                      onMomentumScrollEnd={handleScrollEnd}
+                      scrollEventThrottle={16}
+                      contentOffset={{ x: SCREEN_WIDTH, y: 0 }}
+                    >
+                      {months.map((month) => (
+                        <View key={month} style={{ width: SCREEN_WIDTH }}>
+                          <ScheduleCalendarGrid
+                            displayYearMonth={month}
+                            selectedDate={selectedDate}
+                            onSelectDate={handleSelectDate}
+                            scheduleData={scheduleData}
+                            containerHeight={containerHeight}
+                            sheetHeight={sheetHeight}
+                            defaultHeight={defaultHeight}
+                            calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
+                            dayRowHeight={DAY_HEIGHT}
+                          />
+                        </View>
+                      ))}
+                    </ScrollView>
+                  ) : (
+                    /* 현재달만 먼저 렌더링 */
+                    <View style={{ width: SCREEN_WIDTH }}>
+                      <ScheduleCalendarGrid
+                        displayYearMonth={months[1]}
+                        selectedDate={selectedDate}
+                        onSelectDate={handleSelectDate}
+                        scheduleData={scheduleData}
+                        containerHeight={containerHeight}
+                        sheetHeight={sheetHeight}
+                        defaultHeight={defaultHeight}
+                        calendarHeaderHeight={CALENDAR_HEADER_HEIGHT}
+                        dayRowHeight={DAY_HEIGHT}
+                      />
+                    </View>
+                  )}
+                </>
+              )}
+            </Animated.View>
+          </GestureDetector>
+        </Animated.View>
         <BookingContentContainer style={animatedStyle}>
           <GestureDetector gesture={panGesture}>
             <View>

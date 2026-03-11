@@ -1,15 +1,15 @@
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
-import Typography from '@/components/theme/Typography.tsx';
-import ToggleButton from '@/components/theme/ToggleButton.tsx';
-import Icon from '@/components/Icon.tsx';
-import ProfileImageUpload from '@/components/ProfileImageUpload.tsx';
+import Typography from '@/components/ui/Typography.tsx';
+import ToggleButton from '@/components/ui/ToggleButton.tsx';
+import Icon from '@/components/ui/Icon.tsx';
+import ProfileImageUpload from '@/components/media/ProfileImageUpload.tsx';
 import ChatIcon from '@/assets/icons/chat-black.svg'
 import ActivityIcon from '@/assets/icons/activity.svg'
 import DocumentIcon from '@/assets/icons/document.svg'
 import NotificationIcon from '@/assets/icons/notification.svg'
 import ArrowRightIcon from '@/assets/icons/arrow-right2-gray.svg'
-import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
+import HeaderWithBackButton from '@/components/layout/HeaderWithBackButton.tsx';
 
 interface ProfileViewProps {
   onToggleExpertMode: () => void;

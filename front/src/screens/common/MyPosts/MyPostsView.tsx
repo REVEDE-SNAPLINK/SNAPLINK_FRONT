@@ -1,9 +1,9 @@
 import styled from '@/utils/scale/CustomStyled.ts';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import { Typography } from '@/components/theme';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import { Typography } from '@/components/ui';
 import { CommunityPost } from '@/api/community.ts';
 import { ScrollView } from 'react-native';
-import ServerImage from '@/components/ServerImage.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
 
 interface MyPostsViewProps {
   posts: CommunityPost[];

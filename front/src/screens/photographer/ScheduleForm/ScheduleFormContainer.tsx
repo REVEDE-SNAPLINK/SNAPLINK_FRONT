@@ -2,7 +2,7 @@ import { useCallback, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import ScheduleFormView, { ScheduleFormData } from './ScheduleFormView';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useWeeklyScheduleQuery } from '@/queries/schedules.ts';
 import { useUpdateWeeklyScheduleMutation } from '@/mutations/schedules.ts';

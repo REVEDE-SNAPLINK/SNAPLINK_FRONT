@@ -25,18 +25,13 @@ export type SignInResponse =
 
 // 로그인
 export async function signInApi(provider: string, token: string): Promise<SignInResponse> {
-  // console.log({
-  //   provider,
-  //   token,
-  // })
-
   const response = await fetch(`${AUTH_BASE}/signin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider, token: token }),
   });
 
-  if (!response.ok) throw new Error(`로그인할 수 없습니다. ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error('로그인할 수 없습니다.');
 
   const data = await response.json();
 

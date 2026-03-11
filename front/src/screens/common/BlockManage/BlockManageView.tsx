@@ -1,8 +1,8 @@
 import { FlatList } from 'react-native';
 import styled from '@/utils/scale/CustomStyled';
-import ScreenContainer from '@/components/common/ScreenContainer';
-import { Typography } from '@/components/theme';
-import ServerImage from '@/components/ServerImage';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import { Typography } from '@/components/ui';
+import ServerImage from '@/components/ui/ServerImage';
 import { BlockedUser } from './BlockManageContainer';
 
 interface BlockManageViewProps {

@@ -1,7 +1,7 @@
 import styled from '@/utils/scale/CustomStyled.ts';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import DangerCircleIcon from '@/assets/icons/danger-circle.svg'
-import { Typography } from '@/components/theme';
+import { Typography } from '@/components/ui';
 
 export default function FormErrorMessage ({ message }: { message: string }) {
   return (

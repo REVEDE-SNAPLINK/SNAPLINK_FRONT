@@ -1,18 +1,18 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
-import Typography from '@/components/theme/Typography.tsx';
-import Calendar from '@/components/common/Calendar';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import Typography from '@/components/ui/Typography.tsx';
+import Calendar from '@/components/domain/booking/Calendar';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { theme } from '@/theme';
 import { formatNumber } from '@/utils/format.ts';
-import SubmitButton from '@/components/theme/SubmitButton.tsx';
-import { TimeSelector } from '@/components/TimeSelector.tsx';
-import { ShootingProduct, ShootingOption, OptionLabel } from '@/components/ShootingOptions.tsx';
+import SubmitButton from '@/components/ui/SubmitButton.tsx';
+import { TimeSelector } from '@/components/domain/booking/TimeSelector.tsx';
+import { ShootingProduct, ShootingOption, OptionLabel } from '@/components/domain/booking/ShootingOptions.tsx';
 import { useMemo } from 'react';
 import { ActivityIndicator } from 'react-native';
 import {GetShootingOptionResponse, GetShootingResponse} from "@/api/shootings.ts";
 import { GetAvailableBookingTimeResponse } from '@/api/schedules.ts';
 import { GetRegionsResponse } from '@/api/regions.ts';
-import Checkbox from '@/components/theme/Checkbox.tsx';
+import Checkbox from '@/components/ui/Checkbox.tsx';
 
 interface BookingViewProps {
   onPressBack: () => void;

@@ -1,8 +1,8 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
-import Typography from '@/components/theme/Typography.tsx';
+import ScreenContainer from '@/components/layout/ScreenContainer';
+import Typography from '@/components/ui/Typography.tsx';
 import styled from '@/utils/scale/CustomStyled.ts';
-import SubmitButton from '@/components/theme/SubmitButton.tsx';
-import TextInput from '@/components/theme/TextInput.tsx';
+import SubmitButton from '@/components/ui/SubmitButton.tsx';
+import TextInput from '@/components/ui/TextInput.tsx';
 
 interface BookingRequestViewProps {
   onPressBack: () => void;

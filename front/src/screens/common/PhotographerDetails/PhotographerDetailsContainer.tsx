@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
-import analytics from '@react-native-firebase/analytics';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { safeLogEvent, generateTrackingCode, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
@@ -17,7 +17,7 @@ import { chatQueryKeys } from '@/queries/keys.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
 import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { Share } from 'react-native';
 import { useUpdatePhotographerProfileMutation } from '@/mutations/photographers';
 import { REASON, reportUser } from '@/api/reports.ts';
@@ -39,6 +39,14 @@ export default function PhotographerDetailsContainer() {
 
   // Scroll depth tracking
   const scrollDepthTracked = useRef({ 25: false, 50: false, 75: false, 100: false });
+
+  // 프로필 진입 이벤트 - 모든 경로(홈/검색/커뮤니티/북마크 등)를 여기서 일관되게 추적
+  useEffect(() => {
+    safeLogEvent('photographer_profile_view', {
+      photographer_id: photographerId,
+      source: source || 'direct',
+    });
+  }, [photographerId, source]);
 
   // 더미 데이터 (API가 없으므로 임시로 사용)
 
@@ -132,11 +140,22 @@ export default function PhotographerDetailsContainer() {
 
   const handlePressShare = useCallback(() => {
     if (profileData?.nickname) {
+      const trackingCode = generateTrackingCode();
+      const shareUrl = `https://link.snaplink.run/tab/home/photographer/${photographerId}?tc=${trackingCode}`;
       Share.share({
-        message: `${profileData?.nickname}\nhttps://link.snaplink.run/tab/home/photographer/${photographerId}`,
+        message: `${profileData?.nickname}\n${shareUrl}`,
+      });
+
+      safeLogEvent('share_link_created', {
+        link_type: 'photographer_profile',
+        target_id: photographerId,
+        share_channel: 'system_share',
+        creator_user_id: userId || 'anonymous',
+        creator_user_type: userType || 'guest',
+        tracking_code: trackingCode,
       });
     }
-  }, [profileData?.nickname, photographerId]);
+  }, [profileData?.nickname, photographerId, userId, userType]);
 
   const handlePressFavorite = useCallback(() => {
     scrapMutation.mutate(photographerId);
@@ -146,11 +165,7 @@ export default function PhotographerDetailsContainer() {
     chatMutation.mutate({ receiverId: photographerId }, {
       onSuccess: (response) => {
         // Log chat_initiated event when chat room is created
-        analytics().logEvent('chat_initiated', {
-          user_id: userId,
-          user_type: userType,
-          photographer_id: photographerId,
-          room_id: response,
+        trackChatEvent('chat_initiated', response.toString(), photographerId, {
           source: source || 'direct', // 프로필 내에서의 행위
           entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
         });
@@ -163,19 +178,16 @@ export default function PhotographerDetailsContainer() {
         });
       }
     });
-  }, [chatMutation, photographerId, navigation, queryClient, userId, userType, source]);
+  }, [chatMutation, photographerId, navigation, queryClient, source]);
 
   const handlePressReservation = useCallback(() => {
     // Log booking_intent event when reservation button is pressed
-    analytics().logEvent('booking_intent', {
-      user_id: userId,
-      user_type: userType,
-      photographer_id: photographerId,
+    trackBookingEvent('booking_intent', undefined, photographerId, {
       source: source || 'direct',
       entry_source: source || 'direct', // 프로필에 어느 경로로 진입했는지 (전환율 핵심)
     });
     navigation.navigate('Booking', { photographerId });
-  }, [navigation, photographerId, userId, userType, source]);
+  }, [navigation, photographerId, source]);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -188,23 +200,19 @@ export default function PhotographerDetailsContainer() {
 
     // ✅ Track review tab click
     if (tab === 'reviews') {
-      analytics().logEvent('profile_review_tab_clicked', {
+      safeLogEvent('profile_review_tab_clicked', {
         photographer_id: photographerId,
-        user_id: userId,
-        user_type: userType,
       });
 
       crashlytics().log(`⭐ Review tab clicked on profile ${photographerId}`);
     }
-  }, [photographerId, userId, userType]);
+  }, [photographerId]);
 
   const handlePressPortfolioImage = useCallback((id: number) => {
     // ✅ Track portfolio click
-    analytics().logEvent('profile_portfolio_clicked', {
+    safeLogEvent('profile_portfolio_clicked', {
       photographer_id: photographerId,
       portfolio_id: id,
-      user_id: userId,
-      user_type: userType,
       source: 'profile_page',
     });
 
@@ -214,7 +222,7 @@ export default function PhotographerDetailsContainer() {
       postId: id,
       profileImageURI: profileData?.profileImageUrl || ''
     });
-  }, [navigation, profileData, photographerId, userId, userType]);
+  }, [navigation, profileData, photographerId]);
 
   const handlePressShowAllReviews = useCallback(() => {
     navigation.navigate('Reviews', { photographerId });
@@ -229,19 +237,17 @@ export default function PhotographerDetailsContainer() {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const scrollPercentage = ((contentOffset.y + layoutMeasurement.height) / contentSize.height) * 100;
 
-    [25, 50, 75, 100].forEach(depth => {
+    [25, 50, 90].forEach(depth => {
       if (scrollPercentage >= depth && !scrollDepthTracked.current[depth as keyof typeof scrollDepthTracked.current]) {
-        analytics().logEvent('profile_scroll_depth', {
+        safeLogEvent('profile_scroll_depth', {
           photographer_id: photographerId,
           depth_percentage: depth,
-          user_id: userId,
-          user_type: userType,
         });
 
         scrollDepthTracked.current[depth as keyof typeof scrollDepthTracked.current] = true;
       }
     });
-  }, [photographerId, userId, userType]);
+  }, [photographerId]);
 
   // Transform review summary to view model
   const reviews =

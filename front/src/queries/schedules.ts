@@ -20,8 +20,7 @@ export const usePhotographerMonthSchedulesQuery = (
     queryKey: schedulesQueryKeys.photographerMonth(params),
     queryFn: () => getPhotographerMonthSchedules(params),
     enabled,
-    staleTime: 3000,
-    refetchInterval: 3000,
+    staleTime: 1000 * 60,
     refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
   });
@@ -34,8 +33,7 @@ export const usePhotographerDayDetailQuery = (
     queryKey: schedulesQueryKeys.photographerDay(params),
     queryFn: () => getPhotographerDayDetail(params),
     enabled,
-    staleTime: 3000,
-    refetchInterval: 3000,
+    staleTime: 1000 * 60,
     refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
   });

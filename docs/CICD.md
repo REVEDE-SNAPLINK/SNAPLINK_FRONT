@@ -27,7 +27,7 @@ Github Repository > Settings > Secrets and variables > Actions에 다음 비밀 
 - `ANDROID_KEY_ALIAS`: Key Alias
 - `ANDROID_KEY_PASSWORD`: Key 비밀번호
 - `GOOGLE_PLAY_JSON_KEY`: Google Play Console 서비스 계정 JSON 키
-- `ANDROID_PACKAGE_NAME`: 패키지명 (예: `com.gunlee.snaplink`)
+- `ANDROID_PACKAGE_NAME`: 패키지명 (예: `run.snaplink.client`)
 
 ### iOS
 - `IOS_CERTIFICATES_P12`: Base64로 인코딩된 배포용 인증서(.p12)
@@ -36,7 +36,7 @@ Github Repository > Settings > Secrets and variables > Actions에 다음 비밀 
 - `APPLE_ID`: Apple ID 이메일
 - `APPLE_TEAM_ID`: Team ID
 - `APP_STORE_CONNECT_TEAM_ID`: App Store Connect Team ID
-- `IOS_APP_IDENTIFIER`: Bundle ID (예: `com.revede.snaplink`)
+- `IOS_APP_IDENTIFIER`: Bundle ID (예: `run.snaplink.client`)
 - `IOS_PROVISIONING_PROFILE_NAME`: 프로비저닝 프로파일 이름
 - `FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD`: 앱별 암호 (2FA 우회용)
 

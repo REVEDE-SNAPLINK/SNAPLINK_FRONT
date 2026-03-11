@@ -1,14 +1,14 @@
 import styled from '@/utils/scale/CustomStyled.ts';
-import Typography from '@/components/theme/Typography.tsx';
+import Typography from '@/components/ui/Typography.tsx';
 import { theme } from '@/theme';
 import { PhotographerSearchItem } from '@/api/photographers.ts';
 import { FlatList, TouchableOpacity, RefreshControl, Pressable } from 'react-native';
-import Icon from '@/components/Icon.tsx';
-import Loading from '@/components/Loading.tsx';
-import ServerImage from '@/components/ServerImage.tsx';
+import Icon from '@/components/ui/Icon.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
 import StarIcon from '@/assets/icons/star-review.svg';
 import BookmarkColorIcon from '@/assets/icons/bookmark-color.svg';
-import HeaderWithBackButton from '@/components/common/HeaderWithBackButton.tsx';
+import HeaderWithBackButton from '@/components/layout/HeaderWithBackButton.tsx';
 
 interface BookmarksViewProps {
   photographers: PhotographerSearchItem[];

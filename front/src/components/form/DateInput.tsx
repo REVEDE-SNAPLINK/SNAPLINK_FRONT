@@ -4,7 +4,7 @@ import styled from '@/utils/scale/CustomStyled.ts';
 import FormErrorMessage from '@/components/form/FormErrorMessage';
 import DatePicker from 'react-native-date-picker'
 import CalendarIcon from '@/assets/icons/calendar.svg';
-import Icon from '@/components/Icon.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 
 interface DateInputProps {
   placeholder: string;

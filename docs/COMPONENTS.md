@@ -2,158 +2,110 @@
 
 ## 🎯 공통 컴포넌트
 
-### AppText
+### Typography
 
-테마 기반 텍스트 컴포넌트. 모든 텍스트는 이 컴포넌트를 사용해야 합니다.
+테마 및 폰트 크기 자동 스케일링이 적용된 공통 텍스트 컴포넌트입니다. 앱 내 모든 텍스트는 이 컴포넌트를 기반으로 렌더링해야 합니다.
 
 #### Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `fontSize` | `number` | - | 폰트 크기 (Figma px 값) |
-| `color` | `ColorKey \| string` | `'textPrimary'` | 텍스트 색상 (theme.colors 키 또는 직접 색상값) |
-| `fontWeight` | `100 \| 200 \| ... \| 900` | `400` | 폰트 굵기 (Pretendard) |
-| `textAlign` | `'left' \| 'center' \| 'right'` | `'left'` | 텍스트 정렬 |
-| `lineHeight` | `number` | - | 줄 높이 (Figma px 값, verticalScale 적용됨) |
-| `letterSpacing` | `number` | - | 자간 (Figma px 값, horizontalScale 적용됨) |
-| `special` | `'kboBold'` | - | 특수 폰트 (KBODiaGothic-Bold) |
-| `textDecorationLine` | `'none' \| 'underline' \| 'line-through'` | - | 텍스트 장식선 |
-| `textTransform` | `'none' \| 'uppercase' \| 'lowercase' \| 'capitalize'` | - | 텍스트 변환 |
-| `marginTop` | `number` | - | 상단 마진 (Figma px 값, verticalScale 적용됨) |
-| `marginBottom` | `number` | - | 하단 마진 (Figma px 값, verticalScale 적용됨) |
-| `marginLeft` | `number` | - | 좌측 마진 (Figma px 값, horizontalScale 적용됨) |
-| `marginRight` | `number` | - | 우측 마진 (Figma px 값, horizontalScale 적용됨) |
-| `marginHorizontal` | `number` | - | 좌우 마진 (Figma px 값, horizontalScale 적용됨) |
-| `marginVertical` | `number` | - | 상하 마진 (Figma px 값, verticalScale 적용됨) |
-| `style` | `TextStyle` | - | 추가 스타일 (inline) |
+| `fontSize` | `number` | - | 폰트 크기 (Figma px 값, 1.1배 자동 스케일링) |
+| `color` | `string` | `'textPrimary'` | 텍스트 색상 (theme.colors 키 또는 직접 색상값) |
+| `fontWeight` | `'thin' \| 'extraLight' \| 'light' \| 'regular' \| 'medium' \| 'semibold' \| 'bold' \| 'extraBold' \| 'black'` | `'regular'` | 폰트 굵기 (Pretendard 영문 매핑 계열) |
+| `lineHeight` | `number \| string` | - | 줄 높이 (Figma px 값 또는 '%', 1.1배 스케일링 적용됨) |
+| `letterSpacing` | `number \| string` | - | 자간 |
+| `marginTop`, `marginBottom` | `number` | - | 위/아래 여백 |
+| `marginLeft`, `marginRight` | `number` | - | 좌/우 여백 |
+| `marginHorizontal`, `marginVertical` | `number` | - | 상하/좌우 여백 동시 설정 |
 
 #### 사용 예시
 
 ```tsx
-import AppText from '@/components/AppText';
+import { Typography } from '@/components/ui';
 
 // 기본 사용
-<AppText fontSize={14}>텍스트 내용</AppText>
+<Typography fontSize={14}>텍스트 내용</Typography>
 
 // 크기와 굵기 지정
-<AppText fontSize={16} fontWeight={700}>
+<Typography fontSize={16} fontWeight="semibold">
   제목 텍스트
-</AppText>
+</Typography>
 
 // 색상 지정
-<AppText fontSize={14} color="primary" fontWeight={600}>
+<Typography fontSize={14} color="primary" fontWeight="bold">
   강조 텍스트
-</AppText>
+</Typography>
 
-// 특수 폰트 사용
-<AppText special="kboBold" fontSize={22}>
-  Revede
-</AppText>
+// 줄 높이와 자간 조정 (%)
+<Typography fontSize={14} lineHeight="140%" letterSpacing={-0.5}>
+  줄 간격이 적용된 텍스트
+</Typography>
 
-// 줄 높이와 자간 조정
-<AppText fontSize={14} lineHeight={20} letterSpacing={-0.5}>
-  줄 간격이 넓은 텍스트
-</AppText>
-
-// 마진 사용 (반응형 스케일링 자동 적용)
-<AppText fontSize={14} marginTop={20} marginBottom={10}>
-  마진이 적용된 텍스트
-</AppText>
-
-<AppText fontSize={16} marginVertical={15} marginHorizontal={20}>
-  상하좌우 마진이 적용된 텍스트
-</AppText>
+// 마진 사용
+<Typography fontSize={14} marginTop={20} marginBottom={10}>
+  상하단 마진이 적용된 텍스트
+</Typography>
 
 // 중첩 사용 (색상 혼합)
-<AppText fontSize={16} fontWeight={700}>
-  일반 텍스트 <AppText color="primary">강조 부분</AppText>
-</AppText>
-
-// 텍스트 장식
-<AppText
-  fontSize={14}
-  textDecorationLine="underline"
-  textTransform="uppercase"
->
-  밑줄과 대문자 변환
-</AppText>
-
-// inline style 추가 (최소한으로 사용)
-<AppText
-  fontSize={14}
-  style={{
-    opacity: 0.7
-  }}
->
-  추가 스타일이 필요한 텍스트
-</AppText>
+<Typography fontSize={16} fontWeight="bold">
+  일반 텍스트 <Typography color="mint">포인트 컬러</Typography>
+</Typography>
 ```
 
-#### ColorKey 목록
+#### Color 목록 (theme.colors)
 
 ```typescript
 // Brand colors
-'primary'      // #54C1A1
-'secondary'    // #30B090
-'tertiary'     // #333D49
+'mint'     // #30B090 (중간 민트)
+'aqua'     // #54C1A1 (밝은 청록)
+'teal'     // #74D9D1 (연한 티얼)
+'lavender' // #A68CDA (연보라)
+'sky'      // #A3D3F9 (하늘색)
+'ice'      // #DBFBF9 (아주 옅은 민트)
+'graphite' // #333D49 (짙은 회색)
 
-// Surface colors
-'formBackground'    // #F4F4F4
-'inputBackground'   // #EAEAEA
-'selected'     // #ECECEC
-'disabled'     // #A4A4A4
+// Semantic colors
+'primary'  // #00A980
+'disabled' // #C8C8C8
+'error'    // #E53935
+
+// Background colors
+'bgPrimary'   // #FFFFFF
+'bgSecondary' // #EAEAEA
 
 // Text colors
-'textSecondary' // #646161
-
-// Placeholder colors
-'placeholder'    // #767676
-
-// Other colors
-'black'    // #000000
-'white'    // #FFFFFF
-'yellow'   // #FFB23F
-'red'      // #E84E4E
-'shadow'   // rgba(0, 0, 0, 0.08)
+'textPrimary'   // #2F2C2B
+'textSecondary' // #3C3C3C
 ```
 
-#### 폰트 크기 참고
+#### 폰트 굵기 (FontWeight) 참고
 
-| Pixel | Use Case |
-|-------|----------|
-| 10px | 작은 캡션 |
-| 12px | 캡션, 부가 정보 |
-| 14px | 본문 (기본) |
-| 16px | 부제목 |
-| 22px | 제목 |
-| 40px | 대형 타이틀 |
-
-#### 폰트 굵기 참고
-
-| Weight | Name | Use Case |
-|--------|------|----------|
-| 100 | Thin | 극도로 얇은 텍스트 |
-| 300 | Light | 가벼운 텍스트 |
-| 400 | Regular | 기본 본문 |
-| 500 | Medium | 약간 강조 |
-| 600 | SemiBold | 부제목 |
-| 700 | Bold | 제목, 강조 |
-| 800 | ExtraBold | 강한 강조 |
-| 900 | Black | 최대 굵기 |
+| Prop Value | Weight | Name |
+|------------|--------|------|
+| `thin` | 100 | Thin |
+| `extraLight` | 200 | ExtraLight |
+| `light` | 300 | Light |
+| `regular` | 400 | Regular (기본) |
+| `medium` | 500 | Medium |
+| `semibold` | 600 | SemiBold |
+| `bold` | 700 | Bold |
+| `extraBold`| 800 | ExtraBold |
+| `black` | 900 | Black |
 
 ## 🎨 styled-components 예제
 
 ### 기본 컴포넌트
 
 ```tsx
-import styled from 'styled-components/native';
-import { theme } from '@/constants/theme';
+import { styled } from '@/utils/scale/CustomStyled';
+import { theme } from '@/theme';
 
 // View
 const Container = styled.View`
   flex: 1;
-  background-color: ${theme.colors.background};
-  padding: ${theme.spacing.md}px;
+  background-color: ${theme.colors.bgPrimary};
+  padding: 16px; // CustomStyled가 스케일링을 자동으로 적용
 `;
 
 // ScrollView
@@ -169,29 +121,29 @@ const SafeContainer = styled(SafeAreaView)`
 
 // TouchableOpacity
 const Button = styled.TouchableOpacity`
-  width: ${theme.scale(335)}px;
-  height: ${theme.verticalScale(55)}px;
+  width: 335px;
+  height: 55px;
   background-color: ${theme.colors.primary};
-  border-radius: ${theme.radius.md}px;
+  border-radius: 8px;
   align-items: center;
   justify-content: center;
 `;
 
 // Image
 const Logo = styled.Image`
-  width: ${theme.scale(100)}px;
-  height: ${theme.scale(100)}px;
+  width: 100px;
+  height: 100px;
   resize-mode: contain;
 `;
 
 // TextInput
 const Input = styled.TextInput`
   width: 100%;
-  height: ${theme.verticalScale(48)}px;
-  background-color: ${theme.colors.inputBackground};
-  border-radius: ${theme.radius.sm}px;
-  padding-horizontal: ${theme.spacing.md}px;
-  font-size: ${theme.typography.size.md}px;
+  height: 48px;
+  background-color: ${theme.colors.bgSecondary};
+  border-radius: 4px;
+  padding-horizontal: 16px;
+  font-size: 14px;
   color: ${theme.colors.textPrimary};
 `;
 ```
@@ -207,12 +159,12 @@ const Button = styled.TouchableOpacity<{ disabled?: boolean }>`
 `;
 
 // 복잡한 props
-const Container = styled.View<{ variant: 'primary' | 'secondary' }>`
-  background-color: ${({ variant }) =>
-    variant === 'primary'
+const Container = styled.View<{ $variant: 'primary' | 'secondary' }>`
+  background-color: ${({ $variant }) =>
+    $variant === 'primary'
       ? theme.colors.primary
-      : theme.colors.secondary};
-  padding: ${theme.spacing.md}px;
+      : theme.colors.mint};
+  padding: 16px;
 `;
 
 // 사용
@@ -237,11 +189,11 @@ const Text = styled.Text<{ isActive?: boolean }>`
 ```tsx
 const FloatingButton = styled.TouchableOpacity`
   position: absolute;
-  bottom: ${theme.verticalScale(20)}px;
-  right: ${theme.scale(20)}px;
-  width: ${theme.scale(56)}px;
-  height: ${theme.scale(56)}px;
-  border-radius: ${theme.scale(28)}px;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
   background-color: ${theme.colors.primary};
 `;
 ```
@@ -260,7 +212,7 @@ const CenterContainer = styled.View`
 const Row = styled.View`
   flex-direction: row;
   align-items: center;
-  gap: ${theme.spacing.sm}px;
+  gap: 8px;
 `;
 
 // space-between
@@ -274,13 +226,11 @@ const SpaceBetween = styled.View`
 ### 그림자 효과
 
 ```tsx
-import { boxShadow } from '@/constants/theme';
-
 const Card = styled.View`
-  background-color: ${theme.colors.background};
-  border-radius: ${theme.radius.lg}px;
-  padding: ${theme.spacing.md}px;
-  ${boxShadow.default}
+  background-color: ${theme.colors.bgPrimary};
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.08); // React Native 기본 혹은 box-shadow 스타일
 `;
 
 // 커스텀 그림자
@@ -302,38 +252,37 @@ type ButtonProps = {
 }
 
 const CustomButton = ({ title, onPress, variant = 'primary' }: ButtonProps) => (
-  <StyledButton variant={variant} onPress={onPress}>
-    <AppText color="background" weight={700}>{title}</AppText>
+  <StyledButton $variant={variant} onPress={onPress}>
+    <Typography color="bgPrimary" fontWeight="bold">{title}</Typography>
   </StyledButton>
 );
 ```
 
 ### 2. 테마 값 사용
 ```tsx
-// ✅ 테마 사용
+// ✅ 테마 및 자동 스케일링 기입
 background-color: ${theme.colors.primary};
-padding: ${theme.spacing.md}px;
+padding: 16px; // CustomStyled 적용
 
-// ❌ 하드코딩
-background-color: #54C1A1;
-padding: 16px;
+// ❌ 하드코딩된 색상
+background-color: #00A980;
 ```
 
 ### 3. 반응형 스케일링
 ```tsx
 // ✅ 스케일링 사용
+width: 335px; // CustomStyled 기반으로 자동 스케일링됨
+font-size: 16px;
+
+// ❌ 수동 함수 사용
 width: ${theme.scale(335)}px;
 font-size: ${theme.moderateScale(16)}px;
-
-// ❌ 고정 값
-width: 335px;
-font-size: 16px;
 ```
 
-### 4. AppText 우선 사용
+### 4. Typography 우선 사용
 ```tsx
-// ✅ AppText 사용
-<AppText fontSize={16} fontWeight={700}>제목</AppText>
+// ✅ Typography 사용
+<Typography fontSize={16} fontWeight="bold">제목</Typography>
 
 // ❌ styled.Text 직접 사용
 const Title = styled.Text`

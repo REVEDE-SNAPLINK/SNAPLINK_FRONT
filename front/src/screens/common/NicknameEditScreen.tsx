@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled';
-import { Alert, SubmitButton } from '@/components/theme';
+import { Alert, SubmitButton } from '@/components/ui';
 import FormInput from '@/components/form/FormInput';
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp } from '@/types/navigation.ts';

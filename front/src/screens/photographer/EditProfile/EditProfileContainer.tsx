@@ -5,7 +5,7 @@ import EditProfileView, {
   EditProfileFormData,
 } from '@/screens/photographer/EditProfile/EditProfileView.tsx';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { Alert, requestPermission } from '@/components/theme';
+import { Alert, requestPermission } from '@/components/ui';
 import {
   CameraOptions,
   ImageLibraryOptions,

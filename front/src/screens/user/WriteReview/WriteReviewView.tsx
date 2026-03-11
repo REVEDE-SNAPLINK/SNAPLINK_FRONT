@@ -1,12 +1,12 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import IconButton from '@/components/IconButton.tsx';
-import Typography from '@/components/theme/Typography.tsx';
+import IconButton from '@/components/ui/IconButton.tsx';
+import Typography from '@/components/ui/Typography.tsx';
 import { theme } from '@/theme';
 import InactiveStarIcon from '@/assets/icons/star-gray.svg'
 import ActiveStarIcon from '@/assets/icons/star-color.svg'
-import TextInput from '@/components/theme/TextInput.tsx';
-import SubmitButton from '@/components/theme/SubmitButton.tsx';
+import TextInput from '@/components/ui/TextInput.tsx';
+import SubmitButton from '@/components/ui/SubmitButton.tsx';
 import ImageUploadInput from '@/components/form/ImageUploadInput.tsx';
 import { UploadImageFile } from '@/api/photographers.ts';
 import { openTermUrl } from '@/utils/link.ts';

@@ -1,17 +1,17 @@
 import UserBookingDetailsView from '@/screens/user/BookingDetails/UserBookingDetailsView.tsx';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore.ts';
+import { trackScreenView, safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
 import { formatReservationDateTime } from '@/utils/format.ts';
 import { showErrorAlert } from '@/utils/error';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type BookingDetailsRouteProp = RouteProp<MainStackParamList, 'BookingDetails'>;
 
@@ -20,7 +20,7 @@ export default function UserBookingDetailsContainer() {
   const route = useRoute<BookingDetailsRouteProp>();
   const { bookingId } = route.params;
   const [shouldFetchReview, setShouldFetchReview] = useState(false);
-  const { userId, userType } = useAuthStore()
+
 
   const { data: bookingDetails, isLoading } = useBookingDetailQuery(bookingId);
 
@@ -56,25 +56,54 @@ export default function UserBookingDetailsContainer() {
     }
   }, [isReviewError, shouldFetchReview, bookingId, navigation]);
 
+  useFocusEffect(
+    useCallback(() => {
+      trackScreenView('BookingDetails');
+    }, [])
+  );
+
+  // 예약 상태 변화 추적 (세션 간 중복 방지: AsyncStorage)
+  // 유저가 BookingDetails를 열었을 때 상태를 보고 최초 1회만 이벤트 발송
   useEffect(() => {
-    analytics().logEvent('screen_view', {
-      screen_name: 'BookingDetails',
-      user_id: userId || 'anonymous',
-      user_type: userType || 'guest',
-    });
-  }, [userId, userType]);
+    if (!bookingDetails) return;
+
+    const { status, bookingId: id, photographerId: pgId } = bookingDetails;
+    if (status !== 'APPROVED' && status !== 'REJECTED') return;
+
+    const reportOnce = async () => {
+      const storageKey = `analytics:booking_status_reported:${id}`;
+      try {
+        const reported = await AsyncStorage.getItem(storageKey);
+        const reportedStatuses: string[] = reported ? JSON.parse(reported) : [];
+
+        if (reportedStatuses.includes(status)) return;
+
+        if (status === 'APPROVED') {
+          trackBookingEvent('booking_accepted_by_photographer', String(id), pgId);
+        } else if (status === 'REJECTED') {
+          trackBookingEvent('booking_rejected_by_photographer', String(id), pgId);
+        }
+
+        await AsyncStorage.setItem(storageKey, JSON.stringify([...reportedStatuses, status]));
+      } catch {
+        // AsyncStorage 실패해도 앱 동작에 영향 없음
+      }
+    };
+
+    reportOnce();
+  }, [bookingDetails]);
 
   const handlePressBack = () => navigation.goBack();
 
   const handlePressViewPhotos = () => navigation.navigate('ViewPhotos', { bookingId });
 
   const handlePressWriteReview = () => {
-    analytics().logEvent('review_start', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('review_start', { booking_id: bookingId });
     navigation.navigate('WriteReview', { bookingId });
   };
 
   const handlePressShowMyReview = () => {
-    analytics().logEvent('review_view', { booking_id: bookingId, user_id: userId });
+    safeLogEvent('review_view', { booking_id: bookingId });
     // 이미 pre-fetch된 데이터가 있으면 바로 네비게이션
     if (bookingReview) {
       navigation.navigate('ReviewDetails', { bookingId });
@@ -115,9 +144,9 @@ export default function UserBookingDetailsContainer() {
         region=""
         additionalRequest=""
         isLoading={isLoading}
-        onOpenChatRoom={() => {}}
-      navigation={navigation}
-    />
+        onOpenChatRoom={() => { }}
+        navigation={navigation}
+      />
     );
   }
 

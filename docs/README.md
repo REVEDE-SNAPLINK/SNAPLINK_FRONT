@@ -22,4 +22,4 @@
 | 문서 | 설명 |
 |------|------|
 | [CICD.md](./CICD.md) | CI/CD 파이프라인 (Fastlane, Revopush) |
-| [ANALYTICS_ANALYSIS.md](./ANALYTICS_ANALYSIS.md) | Firebase Analytics 수집 상세 및 어드민 대시보드 기초 자료 |
+| [ANALYTICS_MASTER.md](./ANALYTICS_MASTER.md) | Firebase 데이터 수집 명세 및 KPI 대시보드 마스터 문서 |

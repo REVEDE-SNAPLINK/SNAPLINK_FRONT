@@ -15,11 +15,3 @@ export async function registerFCMdevice(fcmToken: string) {
 
   if (!response.ok) throw new Error(`register fcm device failed: ${response.status}`);
 }
-
-export async function deleteFCMToken(fcmToken: string) {
-  const response = await authFetch(`${FCM_BASE}/logout?fcmToken=${fcmToken}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) throw new Error(`delete fcm token failed: ${response.status}`);
-}

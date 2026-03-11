@@ -7,14 +7,14 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { SubmitButton, Typography } from '@/components/theme';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import { SubmitButton, Typography } from '@/components/ui';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import FormErrorMessage from '@/components/form/FormErrorMessage';
 import FormInput from '@/components/form/FormInput.tsx';
 import DateInput from '@/components/form/DateInput.tsx';
-import RadioGroup, { RadioOption } from '@/components/RadioGroup.tsx';
-import TermsAgreement, { TermItem } from '@/components/TermsAgreement.tsx';
-import Icon from '@/components/Icon.tsx';
+import RadioGroup, { RadioOption } from '@/components/ui/RadioGroup.tsx';
+import TermsAgreement, { TermItem } from '@/components/domain/auth/TermsAgreement.tsx';
+import Icon from '@/components/ui/Icon.tsx';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import TypeUserImg from '@/assets/imgs/type-user.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';

@@ -1,22 +1,22 @@
 import { useState, useRef } from 'react';
-import { FlatList, Dimensions, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { FlatList, Dimensions, Keyboard, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import { Typography } from '@/components/theme';
-import Icon from '@/components/Icon';
+import { Typography } from '@/components/ui';
+import Icon from '@/components/ui/Icon';
 import { theme } from '@/theme';
 import CrossBlackIcon from '@/assets/icons/cross-black.svg';
 import SendIcon from '@/assets/icons/send.svg';
-import IconButton from '@/components/IconButton.tsx';
+import IconButton from '@/components/ui/IconButton.tsx';
 import ImageIcon from '@/assets/icons/image.svg';
 import PaperPlusIcon from '@/assets/icons/paper-plus.svg';
 import { ChatMessage } from '@/api/chat.ts';
 import { formatChatDayjs } from '@/utils/format.ts';
 import MoreIcon from '@/assets/icons/more.svg';
-import SlideModal from '@/components/theme/SlideModal.tsx';
-import ServerImage from '@/components/ServerImage.tsx';
-import FileDownloadButton from '@/components/FileDownloadButton.tsx';
+import SlideModal from '@/components/ui/SlideModal.tsx';
+import ServerImage from '@/components/ui/ServerImage.tsx';
+import FileDownloadButton from '@/components/media/FileDownloadButton.tsx';
 import CrossWhiteIcon from '@/assets/icons/cross-white.svg';
 import DownloadIcon from '@/assets/icons/download-white.svg';
 import { UserType } from '@/types/auth.ts';
@@ -124,6 +124,7 @@ export default function ChatDetailsView({
   };
 
   const handlePressCross = () => {
+    Keyboard.dismiss();
     setShowExtraButtons(!showExtraButtons);
   };
 
@@ -266,8 +267,9 @@ export default function ChatDetailsView({
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? -insets.bottom : 0}
+      enabled={Platform.OS === 'ios'}
     >
       <ScreenContainer
         headerShown={true}

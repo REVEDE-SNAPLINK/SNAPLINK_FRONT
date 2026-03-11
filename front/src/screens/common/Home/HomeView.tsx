@@ -1,14 +1,14 @@
 import { theme } from '@/theme';
 import styled from '@/utils/scale/CustomStyled.ts';
-import Icon from '@/components/Icon.tsx';
-import Typography from '@/components/theme/Typography.tsx';
-import IconButton from '@/components/IconButton.tsx';
-import Banner, { BannerItem } from '@/components/user/Banner.tsx';
-import PhotographerList from '@/components/user/PhotographerList.tsx';
+import Icon from '@/components/ui/Icon.tsx';
+import Typography from '@/components/ui/Typography.tsx';
+import IconButton from '@/components/ui/IconButton.tsx';
+import Banner, { BannerItem } from '@/components/domain/home/Banner.tsx';
+import PhotographerList from '@/components/domain/photographer/PhotographerList.tsx';
 import LogoIcon from '@/assets/icons/logo-icon.svg'
 import AIButtonIcon from '@/assets/icons/ai-button.svg'
 import { PhotographerSearchItem } from '@/api/photographers.ts';
-import NotificationButton from '@/components/theme/NotificationButton.tsx';
+import NotificationButton from '@/components/ui/NotificationButton.tsx';
 import { Dimensions } from 'react-native';
 import SearchIcon from '@/assets/icons/search-gray.svg'
 

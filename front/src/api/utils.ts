@@ -236,14 +236,18 @@ export const authMultipartFetch = async (
       text = retryResult.text;
     }
 
-    // ✅ Crashlytics API 에러 로깅
+    // ✅ Crashlytics API 에러 로깅 (파일 정보 포함)
     if (status < 200 || status >= 300) {
+      const fileParts = parts.filter(p => !!p.filename);
       const errorData = {
         url,
         status,
         method,
         contentType: 'multipart/form-data',
-        responseText: text.slice(0, 500), // 추가된 부분
+        responseText: text.slice(0, 500),
+        fileCount: fileParts.length,
+        fileTypes: fileParts.map(p => p.type ?? 'unknown').join(','),
+        totalPartsCount: parts.length,
       };
 
       crashlytics().recordError(
@@ -252,9 +256,9 @@ export const authMultipartFetch = async (
       );
 
       if (status >= 500) {
-        crashlytics().log(`🚨 Multipart Server Error: ${status} ${url}`);
+        crashlytics().log(`🚨 Multipart Server Error: ${status} ${url} (files: ${fileParts.length})`);
       } else if (status >= 400 && status < 500) {
-        crashlytics().log(`⚠️ Multipart Client Error: ${status} ${url}`);
+        crashlytics().log(`⚠️ Multipart Client Error: ${status} ${url} (files: ${fileParts.length})`);
       }
     }
 

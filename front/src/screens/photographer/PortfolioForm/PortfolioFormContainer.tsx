@@ -4,12 +4,11 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import PortfolioFormView, { PortfolioFormData } from './PortfolioFormView';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
 import { useCreatePortfolioMutation, useUpdatePortfolioMutation } from '@/mutations/photographers';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { UploadImageFile } from '@/api/photographers';
 import { hasForbiddenWords } from '@/utils/hasForbiddenWords';
 import { usePortfolioPostQuery } from '@/queries/photographers';
-import analytics from '@react-native-firebase/analytics';
-import { useAuthStore } from '@/store/authStore';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { showErrorAlert } from '@/utils/error';
 
 type PortfolioFormRouteProp = RouteProp<MainStackParamList, 'PortfolioForm'>;
@@ -23,7 +22,6 @@ export default function PortfolioFormContainer() {
   const navigation = useNavigation<MainNavigationProp>();
   const route = useRoute<PortfolioFormRouteProp>();
   const { postId } = route.params || {};
-  const { userId } = useAuthStore();
   const { mutate: uploadPortfolio, isPending: isCreating } = useCreatePortfolioMutation();
 
   const isEditMode = !!postId;
@@ -132,8 +130,7 @@ export default function PortfolioFormContainer() {
         },
         {
           onSuccess: () => {
-            analytics().logEvent('portfolio_post_updated', {
-              user_id: userId || '',
+            safeLogEvent('portfolio_post_updated', {
               post_id: postId,
               deleted_count: deletePhotoIds.length,
               new_count: newPhotos.length,
@@ -170,8 +167,7 @@ export default function PortfolioFormContainer() {
       },
       {
         onSuccess: () => {
-          analytics().logEvent('portfolio_post_created', {
-            user_id: userId || '',
+          safeLogEvent('portfolio_post_created', {
             photo_count: photoURIs.length,
             is_linked: data.portfolioIsLinked,
           });

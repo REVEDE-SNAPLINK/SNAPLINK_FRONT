@@ -19,6 +19,15 @@ on:
         description: 'OTA 타겟 바이너리 버전 (e.g. 1.0.0, 비워두면 package.json에서 자동 추출)'
         required: false
         default: ''
+      platform:
+        description: '배포 플랫폼'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - android
+          - ios
       changelog:
         description: '릴리즈 변경사항'
         required: false
@@ -37,8 +46,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       deploy_type: ${{ steps.decide.outputs.deploy_type }}
+      deployment: ${{ steps.decide.outputs.deployment }}
+      has_front_changes: ${{ steps.changes.outputs.has_front_changes }}
       has_native_ios: ${{ steps.changes.outputs.has_native_ios }}
       has_native_android: ${{ steps.changes.outputs.has_native_android }}
+      version_changed: ${{ steps.version_bump.outputs.changed }}
       target_version: ${{ steps.version.outputs.target_version }}
     steps:
       - uses: actions/checkout@v4
@@ -62,12 +74,24 @@ jobs:
 
           if [ -z "$BASE_SHA" ]; then
             echo "⚠️ Cannot determine base SHA, assuming native changes"
+            echo "has_front_changes=true" >> $GITHUB_OUTPUT
             echo "has_native_ios=true" >> $GITHUB_OUTPUT
             echo "has_native_android=true" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "📍 Comparing $BASE_SHA..HEAD"
+
+          # front/ 폴더 전체 변경 감지 (게이트)
+          FRONT_CHANGES=$(git diff --name-only "$BASE_SHA" HEAD -- 'front/' | head -5)
+          if [ -n "$FRONT_CHANGES" ]; then
+            echo "📂 Changes detected in front/:"
+            echo "$FRONT_CHANGES"
+            echo "has_front_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️ No changes in front/ directory"
+            echo "has_front_changes=false" >> $GITHUB_OUTPUT
+          fi
 
           # iOS native 변경 감지
           IOS_CHANGES=$(git diff --name-only "$BASE_SHA" HEAD -- \
@@ -107,39 +131,49 @@ jobs:
 
       - name: Check Revopush cumulative count
         id: revopush_count
-        if: github.event.inputs.deploy_type == 'auto' || github.event.inputs.deploy_type == '' || github.event_name == 'push'
-        continue-on-error: true
         env:
           REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
-          # Revopush 배포 히스토리 조회 (iOS 기준)
-          # REVOPUSH_ACCESS_KEY가 없으면 스킵
+          BRANCH="${{ github.ref_name }}"
+          # main이면 Production, 그 외(develop)면 Staging 조회
+          if [ "$BRANCH" == "main" ]; then
+            DEPLOY_TARGET="Production"
+          else
+            DEPLOY_TARGET="Staging"
+          fi
+          echo "deployment=$DEPLOY_TARGET" >> $GITHUB_OUTPUT
+
           if [ -z "$REVOPUSH_ACCESS_KEY" ]; then
-            echo "⚠️ REVOPUSH_ACCESS_KEY not set, skipping count check"
-            echo "count=0" >> $GITHUB_OUTPUT
             echo "exceeded=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink/ios Production --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
-          
-          # 배포 횟수 카운트 (테이블 헤더와 구분선 제외)
+          # 해당 채널의 히스토리 조회
+          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink/ios $DEPLOY_TARGET --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
           if [ -n "$HISTORY" ]; then
             COUNT=$(echo "$HISTORY" | grep -c "^|" || true)
-            # 헤더 행 2줄 제외
             COUNT=$((COUNT > 2 ? COUNT - 2 : 0))
           else
             COUNT=0
           fi
+          echo "📊 Revopush ($DEPLOY_TARGET) count: $COUNT"
+          [ "$COUNT" -ge 10 ] && echo "exceeded=true" >> $GITHUB_OUTPUT || echo "exceeded=false" >> $GITHUB_OUTPUT
 
-          echo "📊 Revopush cumulative OTA count: $COUNT"
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
+      - name: Detect version bump
+        id: version_bump
+        run: |
+          # 이전 커밋의 package.json 버전 추출
+          PREV_VERSION=$(git show HEAD~1:front/package.json 2>/dev/null | node -e "const data = require('fs').readFileSync(0, 'utf-8'); try { console.log(JSON.parse(data).version || '0.0.0'); } catch(e) { console.log('0.0.0'); }" || echo "0.0.0")
+          CURR_VERSION=$(node -p "require('./front/package.json').version")
+          
+          echo "prev=$PREV_VERSION" >> $GITHUB_OUTPUT
+          echo "curr=$CURR_VERSION" >> $GITHUB_OUTPUT
 
-          if [ "$COUNT" -ge 10 ]; then
-            echo "⚠️ Revopush count >= 10, recommend native build"
-            echo "exceeded=true" >> $GITHUB_OUTPUT
+          if [ "$PREV_VERSION" != "$CURR_VERSION" ] && [ "$PREV_VERSION" != "0.0.0" ]; then
+            echo "📈 Version bumped: $PREV_VERSION -> $CURR_VERSION"
+            echo "changed=true" >> $GITHUB_OUTPUT
           else
-            echo "exceeded=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Read version from package.json
@@ -158,28 +192,36 @@ jobs:
       - name: Decide deploy type
         id: decide
         run: |
-          MANUAL_TYPE="${{ github.event.inputs.deploy_type }}"
+          BRANCH="${{ github.ref_name }}"
+          DEPLOYMENT="${{ steps.revopush_count.outputs.deployment }}"
+          REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded }}"
+          VERSION_CHANGED="${{ steps.version_bump.outputs.changed }}"
           HAS_NATIVE_IOS="${{ steps.changes.outputs.has_native_ios }}"
           HAS_NATIVE_ANDROID="${{ steps.changes.outputs.has_native_android }}"
-          REVOPUSH_EXCEEDED="${{ steps.revopush_count.outputs.exceeded || 'false' }}"
 
-          # 수동 트리거에서 타입이 지정된 경우
-          if [ "$MANUAL_TYPE" == "native" ] || [ "$MANUAL_TYPE" == "ota" ] || [ "$MANUAL_TYPE" == "promote" ]; then
-            echo "deploy_type=$MANUAL_TYPE" >> $GITHUB_OUTPUT
-            echo "🎯 Manual deploy type: $MANUAL_TYPE"
+          echo "deployment=$DEPLOYMENT" >> $GITHUB_OUTPUT
+
+          # 수동 실행 처리
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.deploy_type }}" != "auto" ]; then
+            echo "deploy_type=${{ github.event.inputs.deploy_type }}" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # 자동 감지 로직
-          if [ "$HAS_NATIVE_IOS" == "true" ] || [ "$HAS_NATIVE_ANDROID" == "true" ]; then
-            echo "deploy_type=native" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: native (native file changes found)"
-          elif [ "$REVOPUSH_EXCEEDED" == "true" ]; then
-            echo "deploy_type=native" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: native (Revopush cumulative >= 10)"
+          # 자동 결정 로직
+          if [ "$BRANCH" == "develop" ]; then
+            # develop은 카운트 상관없이 네이티브 수정 있으면 native, 아니면 ota
+            if [ "$VERSION_CHANGED" == "true" ] || [ "$HAS_NATIVE_IOS" == "true" ] || [ "$HAS_NATIVE_ANDROID" == "true" ]; then
+              echo "deploy_type=native" >> $GITHUB_OUTPUT
+            else
+              echo "deploy_type=ota" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "deploy_type=ota" >> $GITHUB_OUTPUT
-            echo "🎯 Auto-detected: ota (JS/TS changes only)"
+            # main(운영)은 네이티브 수정 OR 카운트 10회 초과 시 native
+            if [ "$VERSION_CHANGED" == "true" ] || [ "$HAS_NATIVE_IOS" == "true" ] || [ "$HAS_NATIVE_ANDROID" == "true" ] || [ "$REVOPUSH_EXCEEDED" == "true" ]; then
+              echo "deploy_type=native" >> $GITHUB_OUTPUT
+            else
+              echo "deploy_type=ota" >> $GITHUB_OUTPUT
+            fi
           fi
 
   # ─────────────────────────────────────────────
@@ -188,7 +230,7 @@ jobs:
   quality:
     name: Code Quality Check
     needs: detect
-    if: needs.detect.outputs.deploy_type != 'promote'
+    if: needs.detect.outputs.deploy_type != 'promote' && needs.detect.outputs.deploy_type != 'skip'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -218,8 +260,8 @@ jobs:
   deploy-ios:
     name: iOS Deploy (${{ needs.detect.outputs.deploy_type }})
     needs: [detect, quality]
-    if: always() && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote')
-    runs-on: macos-14
+    if: always() && needs.detect.outputs.deploy_type != 'skip' && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote') && (github.event.inputs.platform == '' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios')
+    runs-on: macos-15
     timeout-minutes: 60
     defaults:
       run:
@@ -229,7 +271,7 @@ jobs:
 
       - name: Select Xcode
         if: needs.detect.outputs.deploy_type == 'native'
-        run: sudo xcode-select -switch /Applications/Xcode_16.1.app
+        run: sudo xcode-select -switch /Applications/Xcode_26.3.app
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -240,6 +282,9 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Update Open Source Licenses
+        run: npm run licenses
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -299,27 +344,37 @@ jobs:
           IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
           CHANGELOG: ${{ github.event.inputs.changelog || 'Bug fixes and improvements' }}
-        run: cd ios && bundle exec --gemfile=../Gemfile fastlane beta
-
-      # ── Revopush OTA ──
-      - name: Deploy via Revopush (Staging)
-        if: needs.detect.outputs.deploy_type == 'ota'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
         run: |
-          TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
-          TARGET_ARG=""
-          if [ -n "$TARGET_VERSION" ]; then
-            TARGET_ARG="target_version:$TARGET_VERSION"
-          fi
-          cd ios && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging $TARGET_ARG
+          BRANCH="${{ github.ref_name }}"
+          echo "🚀 Branch: $BRANCH"
 
-      # ── Revopush Promote ──
-      - name: Promote Revopush (Staging → Production)
+          if [ "$BRANCH" == "main" ]; then
+            cd ios && bundle exec --gemfile=../Gemfile fastlane release
+          elif [ "$BRANCH" == "develop" ]; then
+            cd ios && bundle exec --gemfile=../Gemfile fastlane beta
+          else
+            echo "⚠️ No deployment rule for branch: $BRANCH"
+          fi
+
+      # ── Revopush OTA (iOS) ──
+      - name: Setup Revopush CLI
+        if: needs.detect.outputs.deploy_type == 'ota' || needs.detect.outputs.deploy_type == 'promote'
+        uses: 'revopush/revopush-github-action@v1'
+        with:
+          version: 'latest'
+          accessKey: ${{ secrets.REVOPUSH_ACCESS_KEY }}
+
+      - name: Deploy via Revopush
+        if: needs.detect.outputs.deploy_type == 'ota'
+        run: |
+          DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
+          TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
+          # Fastlane 없이 직접 실행 (front 폴더 기준)
+          revopush release-react snaplink ios -d $DEPLOYMENT -t $TARGET_VERSION
+
+      - name: Promote Revopush
         if: needs.detect.outputs.deploy_type == 'promote'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
-        run: cd ios && bundle exec --gemfile=../Gemfile fastlane codepush_promote from:Staging to:Production
+        run: revopush promote snaplink ios Staging Production
 
       # ── Cleanup ──
       - name: Upload build artifacts
@@ -344,7 +399,7 @@ jobs:
   deploy-android:
     name: Android Deploy (${{ needs.detect.outputs.deploy_type }})
     needs: [detect, quality]
-    if: always() && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote')
+    if: always() && needs.detect.outputs.deploy_type != 'skip' && (needs.quality.result == 'success' || needs.detect.outputs.deploy_type == 'promote') && (github.event.inputs.platform == '' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -362,6 +417,9 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Update Open Source Licenses
+        run: npm run licenses
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -401,14 +459,8 @@ jobs:
           SNAPLINK_RELEASE_STORE_PASSWORD=$KEYSTORE_PASSWORD
           SNAPLINK_RELEASE_KEY_PASSWORD=$KEY_PASSWORD
           SNAPLINK_RELEASE_KEY_ALIAS=$KEY_ALIAS
-          SNAPLINK_RELEASE_STORE_FILE=release.keystore
+          SNAPLINK_RELEASE_STORE_FILE=../release.keystore
           EOF
-
-      - name: Create Google Play service account JSON
-        if: needs.detect.outputs.deploy_type == 'native'
-        env:
-          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-        run: echo "$GOOGLE_PLAY_JSON_KEY" > google-play-key.json
 
       - name: Grant execute permission for gradlew
         if: needs.detect.outputs.deploy_type == 'native'
@@ -419,7 +471,7 @@ jobs:
       - name: Build and Deploy to Play Store
         if: needs.detect.outputs.deploy_type == 'native'
         env:
-          GOOGLE_PLAY_JSON_KEY_PATH: ./google-play-key.json
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
         run: |
           BRANCH="${{ github.ref_name }}"
@@ -433,25 +485,25 @@ jobs:
             echo "⚠️ No deployment rule for branch: $BRANCH"
           fi
 
-      # ── Revopush OTA ──
-      - name: Deploy via Revopush (Staging)
-        if: needs.detect.outputs.deploy_type == 'ota'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
-        run: |
-          TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
-          TARGET_ARG=""
-          if [ -n "$TARGET_VERSION" ]; then
-            TARGET_ARG="target_version:$TARGET_VERSION"
-          fi
-          cd android && bundle exec --gemfile=../Gemfile fastlane codepush deployment:Staging $TARGET_ARG
+      # ── Revopush OTA (Android) ──
+      - name: Setup Revopush CLI
+        if: needs.detect.outputs.deploy_type == 'ota' || needs.detect.outputs.deploy_type == 'promote'
+        uses: 'revopush/revopush-github-action@v1'
+        with:
+          version: 'latest'
+          accessKey: ${{ secrets.REVOPUSH_ACCESS_KEY }}
 
-      # ── Revopush Promote ──
-      - name: Promote Revopush (Staging → Production)
+      - name: Deploy via Revopush
+        if: needs.detect.outputs.deploy_type == 'ota'
+        run: |
+          DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
+          TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
+          # Fastlane 없이 직접 실행 (front 폴더 기준)
+          revopush release-react snaplink android -d $DEPLOYMENT -t $TARGET_VERSION
+
+      - name: Promote Revopush
         if: needs.detect.outputs.deploy_type == 'promote'
-        env:
-          REVOPUSH_ACCESS_KEY: ${{ secrets.REVOPUSH_ACCESS_KEY }}
-        run: cd android && bundle exec --gemfile=../Gemfile fastlane codepush_promote from:Staging to:Production
+        run: revopush promote snaplink android Staging Production
 
       # ── Cleanup ──
       - name: Upload build artifacts
@@ -469,4 +521,3 @@ jobs:
         run: |
           rm -f android/release.keystore
           rm -f android/keystore.properties
-          rm -f google-play-key.json

@@ -1,8 +1,8 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
 // import { theme } from '@/theme';
-import { Typography } from '@/components/theme';
-// import Icon from '@/components/Icon.tsx';
+import { Typography } from '@/components/ui';
+// import Icon from '@/components/ui/Icon.tsx';
 // import MoreCircleIcon from '@/assets/icons/more-circle.svg';
 import SettingsIcon from '@/assets/icons/settings.svg';
 import { NotificationItem } from '@/api/notifications.ts';

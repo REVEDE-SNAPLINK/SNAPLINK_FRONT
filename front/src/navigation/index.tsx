@@ -10,6 +10,15 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore.ts';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
+import {
+  safeLogEvent,
+  parseDeepLinkUrl,
+  checkAndMarkFirstInstall,
+  setCrashlyticsContext,
+  safeCrashlyticsLog,
+  trackDeepLinkOpen,
+  resetImpressionCache,
+} from '@/utils/analytics.ts';
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -42,8 +51,34 @@ const linking = {
   },
 };
 
-export const navigateByDeepLink = (url: string) => {
+export const navigateByDeepLink = async (url: string, options?: { userId?: string; userType?: string; isFirstInstall?: boolean }) => {
   console.log('🔗 Processing deep link:', url);
+
+  // ── deep_link_open 이벤트 로깅 ──
+  const parsed = parseDeepLinkUrl(url);
+
+  // EntityType 매핑
+  const mapEntityType = (linkType: string) => {
+    switch (linkType) {
+      case 'photographer_profile': return 'photographer';
+      case 'portfolio_post': return 'portfolio_post';
+      case 'community_post': return 'community_post';
+      case 'booking': return 'booking';
+      case 'chat': return 'room';
+      default: return undefined;
+    }
+  };
+
+  setCrashlyticsContext({
+    flow: 'deep_link',
+    entityId: parsed.targetId,
+    entityType: mapEntityType(parsed.linkType)
+  });
+  safeCrashlyticsLog(`🔗 Deep link opened: ${parsed.linkType} / ${parsed.targetId}`);
+
+  trackDeepLinkOpen(url, parsed, {
+    is_first_open_after_install: options?.isFirstInstall ?? false,
+  });
 
   if (!navigationRef.isReady()) {
     console.log('⚠️ Navigation not ready, retrying in 500ms...');
@@ -74,6 +109,15 @@ export const navigateByDeepLink = (url: string) => {
 
   if (!pathMatch) {
     console.warn('❌ Invalid deeplink format:', routePath);
+    // deep_link_landing_resolved: 실패
+    safeLogEvent('deep_link_landing_resolved', {
+      original_link_type: parsed.linkType,
+      original_target_id: parsed.targetId,
+      resolved_screen: '',
+      resolved_target_id: '',
+      resolve_success: false,
+      fail_reason: 'invalid_link',
+    });
     return;
   }
 
@@ -178,6 +222,16 @@ export const navigateByDeepLink = (url: string) => {
   if (screenName) {
     console.log('🎯 Navigating to:', screenName, 'with params:', screenParams);
 
+    // deep_link_landing_resolved: 성공
+    safeLogEvent('deep_link_landing_resolved', {
+      original_link_type: parsed.linkType,
+      original_target_id: parsed.targetId,
+      resolved_screen: screenName,
+      resolved_target_id: screenParams.photographerId ?? screenParams.postId ?? screenParams.bookingId ?? screenParams.roomId ?? screenParams.reviewId ?? screenParams.noticeId ?? '',
+      resolve_success: true,
+      fail_reason: '',
+    });
+
     // Reset navigation stack with Home first, then target screen
     // This ensures goBack() works properly from the target screen
     let routes: any[] = [{ name: 'Home', params: { tab } }];
@@ -207,6 +261,17 @@ export const navigateByDeepLink = (url: string) => {
     });
   } else {
     console.warn('❌ Unknown route:', tab, remainingPath);
+    // deep_link_landing_resolved: 실패 (알 수 없는 라우트)
+    safeLogEvent('deep_link_landing_resolved', {
+      original_link_type: parsed.linkType,
+      original_target_id: parsed.targetId,
+      resolved_screen: '',
+      resolved_target_id: '',
+      resolve_success: false,
+      fail_reason: 'not_found',
+      user_id: options?.userId ?? 'anonymous',
+      user_type: options?.userType ?? 'guest',
+    });
   }
 };
 
@@ -230,13 +295,20 @@ export default function AppNavigator() {
   useEffect(() => {
     const handleInitialURL = async () => {
       try {
+        const isFirstInstall = await checkAndMarkFirstInstall();
         const initialUrl = await Linking.getInitialURL();
         console.log('🚀 Initial URL from Linking:', initialUrl);
         if (initialUrl) {
           // Wait for navigation to be ready
           setTimeout(() => {
-            navigateByDeepLink(initialUrl);
+            navigateByDeepLink(initialUrl, { userId, userType, isFirstInstall });
           }, 1000);
+        } else if (isFirstInstall) {
+          // 딥링크 없이 최초 설치 후 앱 오픈
+          safeLogEvent('first_open', {
+            user_id: userId || 'anonymous',
+            user_type: userType || 'guest',
+          });
         }
       } catch (error) {
         console.error('❌ Error getting initial URL:', error);
@@ -244,7 +316,7 @@ export default function AppNavigator() {
     };
 
     handleInitialURL();
-  }, []);
+  }, [userId, userType]);
 
   // Handle deep links when app is already open
   useEffect(() => {
@@ -252,7 +324,7 @@ export default function AppNavigator() {
 
     const handleUrl = ({ url }: { url: string }) => {
       console.log('📱 Deep link received (app already open):', url);
-      navigateByDeepLink(url);
+      navigateByDeepLink(url, { userId, userType, isFirstInstall: false });
     };
 
     const subscription = Linking.addEventListener('url', handleUrl);
@@ -263,13 +335,14 @@ export default function AppNavigator() {
       console.log('🛑 Removing deep link listener');
       subscription.remove();
     };
-  }, []);
+  }, [userId, userType]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextState => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
         // 세션 시작
         sessionStartTime.current = Date.now();
+        resetImpressionCache(); // 세션 전환 시 impression dedupe 캐시 초기화
         await analytics().logEvent('session_start');
       }
 
@@ -309,6 +382,9 @@ export default function AppNavigator() {
         const currentRouteName = route ? getActiveRouteName(route) : undefined;
 
         if (currentRouteName && currentRouteName !== routeNameRef.current) {
+          // Crashlytics 현재 화면 attribute 갱신
+          setCrashlyticsContext({ screen: currentRouteName });
+
           // 화면 진입 이벤트
           await analytics().logEvent('screen_view', {
             screen_name: currentRouteName,

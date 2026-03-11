@@ -10,15 +10,15 @@ import { chatQueryKeys } from '@/queries/keys';
 import { ChatMessage } from '@/api/chat';
 import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
 import { requestPermission } from '@/utils/permissions';
-import { Alert } from '@/components/theme';
+import { Alert } from '@/components/ui';
 import { pick } from '@react-native-documents/picker';
 import RNBlobUtil from 'react-native-blob-util';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
-import analytics from '@react-native-firebase/analytics';
+import { safeLogEvent, trackChatEvent } from '@/utils/analytics.ts';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { useLeaveChatRoomMutation } from "@/mutations/chat.ts";
 import { useBlockChatUserMutation, useUnblockChatUserMutation } from "@/mutations/block.ts";
@@ -87,6 +87,9 @@ export default function ChatDetailsContainer() {
   const [messageReadStates, setMessageReadStates] = useState<Record<number, number>>({});
   const didHydrateReadStatesRef = useRef(false);
   const readStatePersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 상대방 메시지 수신 시 enter(읽음) debounce 타이머
+  const enterDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ✅ 채팅 이벤트 추적용 상태
   const [messageCount, setMessageCount] = useState(0);
@@ -159,11 +162,8 @@ export default function ChatDetailsContainer() {
 
   useEffect(() => {
     const logChatEntered = async () => {
-      await analytics().logEvent('activation_chat_entered', {
+      await safeLogEvent('activation_chat_entered', {
         room_id: roomId,
-        platform: Platform.OS,
-        user_id: userId || 'anonymous',
-        user_type: userType || 'guest',
       });
     };
 
@@ -325,12 +325,11 @@ export default function ChatDetailsContainer() {
             const now = Date.now();
             const responseTime = lastUserMessageTimeRef.current ? (now - lastUserMessageTimeRef.current) / 1000 : null;
 
-            analytics().logEvent('photographer_response', {
+            safeLogEvent('photographer_response', {
               photographer_id: message.senderId,
               room_id: roomId,
               is_first_response: photographerFirstResponseRef.current,
               response_time_seconds: responseTime,
-              user_id: userId,
             });
 
             crashlytics().log(`✉️ Photographer responded in room ${roomId} (${responseTime}s)`);
@@ -340,7 +339,7 @@ export default function ChatDetailsContainer() {
 
               // 첫 응답 시간 별도 추적
               if (responseTime !== null) {
-                analytics().logEvent('photographer_first_response_time', {
+                safeLogEvent('photographer_first_response_time', {
                   photographer_id: message.senderId,
                   response_time_seconds: responseTime,
                   response_time_minutes: Math.round(responseTime / 60),
@@ -357,11 +356,17 @@ export default function ChatDetailsContainer() {
             }));
           }
 
-          // ✅ 상대방 메시지를 받으면 enter를 다시 호출하여 읽음 처리
-          // (서버에서 READ_EVENT를 상대방에게 발행)
+          // 상대방 메시지를 받으면 debounce 후 enter로 읽음 처리
+          // (연속 메시지 도착 시 마지막 메시지 기준으로 1회만 READ_EVENT 발행)
           if (message.senderId !== userId) {
-            console.log('[ChatDetails] Received message from partner, calling enter for read receipt');
-            stompClient.enter(roomId);
+            if (enterDebounceRef.current) clearTimeout(enterDebounceRef.current);
+            enterDebounceRef.current = setTimeout(() => {
+              enterDebounceRef.current = null;
+              if (stompClientRef.current?.isConnected()) {
+                console.log('[ChatDetails] Sending debounced enter for read receipt');
+                stompClientRef.current.enter(roomId);
+              }
+            }, 300);
           }
 
           // Update query cache with new message
@@ -399,13 +404,51 @@ export default function ChatDetailsContainer() {
     run();
 
     return () => {
-      console.log('[ChatDetails] Disconnecting WebSocket...');
+      // debounce 타이머 정리
+      if (enterDebounceRef.current) {
+        clearTimeout(enterDebounceRef.current);
+        enterDebounceRef.current = null;
+      }
+      console.log('[ChatDetails] Leaving and disconnecting WebSocket...');
+      // leave를 먼저 전송해야 서버가 unread count를 정확히 관리할 수 있음
+      stompClientRef.current?.leave(roomId);
       stompClientRef.current?.disconnect();
       stompClientRef.current = null;
       // 채팅방 나갈 때 목록 갱신하여 unreadCount 반영
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.rooms() });
     };
   }, [roomId, queryClient, userId, userType, chatRoomDetail?.blocked]);
+
+  // 앱이 백그라운드에서 포그라운드로 복귀했을 때 읽음 처리
+  // (백그라운드 중 받은 메시지를 읽음 처리하기 위해 enter 재전송)
+  useEffect(() => {
+    if (chatRoomDetail?.blocked) return;
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        if (stompClientRef.current?.isConnected()) {
+          console.log('[ChatDetails] App foregrounded, sending enter for read receipt');
+          stompClientRef.current.enter(roomId);
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [roomId, chatRoomDetail?.blocked]);
+
+  // [임시] 5초마다 enter를 보내 상대방이 읽었을 때 READ_EVENT를 수신
+  // 서버에서 lastReadMessageId 기반 읽음 관리가 구현되면 제거할 것
+  useEffect(() => {
+    if (chatRoomDetail?.blocked) return;
+
+    const intervalId = setInterval(() => {
+      if (stompClientRef.current?.isConnected()) {
+        stompClientRef.current.enter(roomId);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [roomId, chatRoomDetail?.blocked]);
 
   const handlePressBack = () => {
     navigation.goBack();
@@ -459,9 +502,7 @@ export default function ChatDetailsContainer() {
       console.log('[ChatDetails] Sending message:', JSON.stringify(messageData, null, 2));
 
       // ✅ 메시지 전송 이벤트 로깅
-      analytics().logEvent('chat_message_sent', {
-        user_id: userId,
-        room_id: roomId,
+      trackChatEvent('chat_message_sent', roomId.toString(), undefined, {
         is_first_message: isFirstMessage,
         message_length: messageInput.trim().length,
         message_count: messageCount + 1,
@@ -487,7 +528,7 @@ export default function ChatDetailsContainer() {
         message: '메시지 전송에 실패했습니다.',
       });
     }
-  }, [messageInput, roomId, userId, isFirstMessage, messageCount]);
+  }, [messageInput, roomId, isFirstMessage, messageCount]);
 
   const handlePressAlbum = useCallback(async () => {
     requestPermission('photo', async () => {
@@ -678,20 +719,22 @@ export default function ChatDetailsContainer() {
         title: '상대방에 대한 차단을 해제하시겠습니까?',
         message: '이제 상대방의 게시물을 다시 볼 수 있으며, 서로 채팅을 주고받을 수 있습니다.',
         buttons: [
-          { text: '취소', onPress: () => {}, type: 'cancel' },
-          { text: '차단 해제', onPress: () => {
-            unblockMutate({ targetId: opponentId, roomId }, {
-              onSuccess: () => {
-                Alert.show({
-                  title: '차단 해제 완료',
-                  message: '해당 사용자가 차단 해제되었습니다.',
-                  buttons: [
-                    { text: '확인', onPress: () => {}}
-                  ]
-                });
-              }
-            })
-            }, type: 'default' },
+          { text: '취소', onPress: () => { }, type: 'cancel' },
+          {
+            text: '차단 해제', onPress: () => {
+              unblockMutate({ targetId: opponentId, roomId }, {
+                onSuccess: () => {
+                  Alert.show({
+                    title: '차단 해제 완료',
+                    message: '해당 사용자가 차단 해제되었습니다.',
+                    buttons: [
+                      { text: '확인', onPress: () => { } }
+                    ]
+                  });
+                }
+              })
+            }, type: 'default'
+          },
         ]
       })
     } else {
@@ -700,26 +743,30 @@ export default function ChatDetailsContainer() {
         title: `상대방을 차단하시겠습니까?`,
         message: "차단 시 상대방의 모든 게시물이 숨겨지며, 채팅을 주고받을 수 없습니다.",
         buttons: [
-          { text: '취소', onPress: () => {}, type: 'cancel' },
-          { text: '차단', onPress: () => {
-            blockMutate({ targetId: opponentId, roomId }, {
-              onSuccess: () => {
-                Alert.show({
-                  title: '차단 완료',
-                  message: '해당 사용자가 차단되었습니다.',
-                  buttons: [
-                    { text: '확인', onPress: () => {
-                      if (navigation.canGoBack()) {
-                        navigation.goBack();
-                      } else {
-                        navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+          { text: '취소', onPress: () => { }, type: 'cancel' },
+          {
+            text: '차단', onPress: () => {
+              blockMutate({ targetId: opponentId, roomId }, {
+                onSuccess: () => {
+                  Alert.show({
+                    title: '차단 완료',
+                    message: '해당 사용자가 차단되었습니다.',
+                    buttons: [
+                      {
+                        text: '확인', onPress: () => {
+                          if (navigation.canGoBack()) {
+                            navigation.goBack();
+                          } else {
+                            navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+                          }
+                        }
                       }
-                    }}
-                  ]
-                });
-              }
-            })
-            }, type: 'destructive' },
+                    ]
+                  });
+                }
+              })
+            }, type: 'destructive'
+          },
         ]
       })
     }
@@ -745,10 +792,12 @@ export default function ChatDetailsContainer() {
             title: '소중한 의견 감사합니다',
             message: '신고는 익명으로 처리됩니다. \n앞으로 더 나은 경험을 할 수 있도록 개선하겠습니다.',
             buttons: [
-              { text: '확인', onPress: () => {
+              {
+                text: '확인', onPress: () => {
                   closeReportModal();
                   setIsModalVisible(false);
-                }}
+                }
+              }
             ]
           });
         } catch (error) {
@@ -769,21 +818,23 @@ export default function ChatDetailsContainer() {
       title: '채팅방을 나가시겠어요?',
       message: '나가기 버튼을 누르면 이 채팅방이 목록에서 사라지고 대화 내용이 모두 삭제됩니다.',
       buttons: [
-        { text: '취소', onPress: () => {}, type: 'cancel' },
-        { text: '나가기', onPress: () => {
+        { text: '취소', onPress: () => { }, type: 'cancel' },
+        {
+          text: '나가기', onPress: () => {
             leaveMutate(roomId, {
               onSuccess: () => {
                 navigation.goBack();
               }
             })
-          }, type: 'destructive' },
+          }, type: 'destructive'
+        },
       ]
     })
     leaveMutate
   }
 
   // 파일 메타데이터 가져오기 (HEAD 요청)
-  const fetchFileMetadata =  useCallback(async (fileUrl: string) => {
+  const fetchFileMetadata = useCallback(async (fileUrl: string) => {
     try {
       const response = await fetch(fileUrl, { method: 'HEAD' });
 

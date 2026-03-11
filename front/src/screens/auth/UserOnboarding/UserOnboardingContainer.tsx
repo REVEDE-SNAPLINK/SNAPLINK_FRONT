@@ -9,7 +9,7 @@ import { requestPermission } from '@/utils/permissions.ts'
 import { useNavigation } from '@react-navigation/native';
 import { MainNavigationProp, RootNavigationProp } from '@/types/navigation.ts';
 import { checkEmail, checkNickname } from '@/api/user.ts';
-import { loadAppleLoginInfo } from '@/auth/tokenStore.ts';
+import { loadAppleLoginInfo, loadNaverLoginInfo } from '@/auth/tokenStore.ts';
 
 const REQUIRED_TERMS = ['age', 'service', 'privacy'];
 const TOTAL_STEPS = 7;
@@ -47,15 +47,28 @@ export default function UserOnboardingContainer() {
     mode: 'onChange',
   });
 
-  // 애플 로그인 시 저장된 이름과 이메일을 불러와서 미리 입력
+  // 애플 또는 네이버 로그인 시 저장된 프로필 정보를 불러와서 미리 입력
   useEffect(() => {
     (async () => {
-      const { name, email } = await loadAppleLoginInfo();
-      if (name) {
-        setValue('name', name);
+      const [appleInfo, naverInfo] = await Promise.all([
+        loadAppleLoginInfo(),
+        loadNaverLoginInfo(),
+      ]);
+
+      if (appleInfo.name) {
+        setValue('name', appleInfo.name);
       }
-      if (email) {
-        setValue('email', email);
+      if (appleInfo.email) {
+        setValue('email', appleInfo.email);
+      }
+
+      if (naverInfo) {
+        if (naverInfo.name) setValue('name', naverInfo.name);
+        if (naverInfo.email) setValue('email', naverInfo.email);
+        if (naverInfo.gender) setValue('gender', naverInfo.gender);
+        if (naverInfo.birthDate) {
+          setValue('birthDate', new Date(naverInfo.birthDate));
+        }
       }
     })();
   }, [setValue]);

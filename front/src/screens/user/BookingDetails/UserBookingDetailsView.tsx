@@ -1,10 +1,10 @@
-import ScreenContainer from '@/components/common/ScreenContainer';
+import ScreenContainer from '@/components/layout/ScreenContainer';
 import styled from '@/utils/scale/CustomStyled.ts';
-import Typography from '@/components/theme/Typography.tsx';
-import Loading from '@/components/Loading.tsx';
+import Typography from '@/components/ui/Typography.tsx';
+import Loading from '@/components/feedback/Loading.tsx';
 import { theme } from '@/theme';
-import Icon from '@/components/Icon.tsx';
-import SubmitButton from '@/components/theme/SubmitButton.tsx';
+import Icon from '@/components/ui/Icon.tsx';
+import SubmitButton from '@/components/ui/SubmitButton.tsx';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 
 interface UserBookingDetailsViewProps {

@@ -149,7 +149,7 @@ jobs:
           fi
 
           # 해당 채널의 히스토리 조회
-          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink/ios $DEPLOY_TARGET --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
+          HISTORY=$(npx -y @revopush/code-push-cli deployment history snaplink-ios $DEPLOY_TARGET --token "$REVOPUSH_ACCESS_KEY" 2>/dev/null) || HISTORY=""
           if [ -n "$HISTORY" ]; then
             COUNT=$(echo "$HISTORY" | grep -c "^|" || true)
             COUNT=$((COUNT > 2 ? COUNT - 2 : 0))
@@ -372,11 +372,11 @@ jobs:
           DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
           TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
           # Fastlane 없이 직접 실행 (front 폴더 기준)
-          revopush release-react snaplink ios -d $DEPLOYMENT -t $TARGET_VERSION
+          revopush release-react snaplink-ios ios -d $DEPLOYMENT -t $TARGET_VERSION
 
       - name: Promote Revopush
         if: needs.detect.outputs.deploy_type == 'promote'
-        run: revopush promote snaplink ios Staging Production
+        run: revopush promote snaplink-ios ios Staging Production
 
       # ── Cleanup ──
       - name: Upload build artifacts
@@ -501,11 +501,11 @@ jobs:
           DEPLOYMENT="${{ needs.detect.outputs.deployment }}"
           TARGET_VERSION="${{ needs.detect.outputs.target_version }}"
           # Fastlane 없이 직접 실행 (front 폴더 기준)
-          revopush release-react snaplink android -d $DEPLOYMENT -t $TARGET_VERSION
+          revopush release-react snaplink-android android -d $DEPLOYMENT -t $TARGET_VERSION
 
       - name: Promote Revopush
         if: needs.detect.outputs.deploy_type == 'promote'
-        run: revopush promote snaplink android Staging Production
+        run: revopush promote snaplink-android android Staging Production
 
       # ── Cleanup ──
       - name: Upload build artifacts

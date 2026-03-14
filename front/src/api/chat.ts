@@ -1,9 +1,9 @@
-import { API_BASE_URL } from '@/config/api';
+import { getApiBaseUrl } from '@/config/api';
 import { authFetch, authMultipartFetch, MultipartPart, toBlobPath } from '@/api/utils';
 import { buildQuery } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 
-const CHAT_BASE = `${API_BASE_URL}/api/chat`;
+const chatBase = () => `${getApiBaseUrl()}/api/chat`;
 
 /** 채팅방 리스트 아이템 */
 export interface ChatRoomItem {
@@ -42,7 +42,7 @@ export interface GetChatMessagesParams {
  * 참여중인 채팅방 목록 조회
  */
 export const getChatRooms = async (): Promise<ChatRoomItem[]> => {
-  const response = await authFetch(`${CHAT_BASE}/rooms`, { method: 'GET' });
+  const response = await authFetch(`${chatBase()}/rooms`, { method: 'GET' });
   if (!response.ok) throw new Error('채팅 목록을 불러올 수 없습니다.');
   return response.json();
 };
@@ -52,7 +52,7 @@ export const getChatRooms = async (): Promise<ChatRoomItem[]> => {
  * 특정 채팅방 정보 조회
  */
 export const getChatRoom = async (roomId: number): Promise<ChatRoomItem> => {
-  const response = await authFetch(`${CHAT_BASE}/rooms/${roomId}/messages`, { method: 'GET' });
+  const response = await authFetch(`${chatBase()}/rooms/${roomId}/messages`, { method: 'GET' });
   if (!response.ok) throw new Error('채팅방 정보를 불러올 수 없습니다.');
   return response.json();
 };
@@ -68,7 +68,7 @@ export const getChatMessages = async (
   params: GetChatMessagesParams,
 ): Promise<ChatMessage[]> => {
   const qs = buildQuery(params);
-  const url = qs ? `${CHAT_BASE}/rooms/${roomId}/messages?${qs}` : `${CHAT_BASE}/rooms/${roomId}/messages`;
+  const url = qs ? `${chatBase()}/rooms/${roomId}/messages?${qs}` : `${chatBase()}/rooms/${roomId}/messages`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('채팅 메시지를 불러올 수 없습니다.');
@@ -87,7 +87,7 @@ export interface CreateOrGetRoomRequest {
 export const createOrGetChatRoom = async (
   body: CreateOrGetRoomRequest,
 ): Promise<number> => {
-  const response = await authFetch(`${CHAT_BASE}/rooms`, {
+  const response = await authFetch(`${chatBase()}/rooms`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -125,7 +125,7 @@ export const uploadChatFile = async (
   ];
 
   const response = await authMultipartFetch(
-    `${CHAT_BASE}/rooms/${params.roomId}/upload`,
+    `${chatBase()}/rooms/${params.roomId}/upload`,
     parts,
     'POST',
   );
@@ -146,7 +146,7 @@ export const uploadChatFile = async (
 export const leaveChatRoom = async (
   roomId: number,
 ) => {
-  const response = await authFetch(`${CHAT_BASE}/rooms/${roomId}`, {
+  const response = await authFetch(`${chatBase()}/rooms/${roomId}`, {
     method: 'DELETE',
   })
 
@@ -164,7 +164,7 @@ export interface GetChatRoomDetail {
 export const getChatRoomDetail = async (
   roomId: number,
 ): Promise<GetChatRoomDetail> => {
-  const response = await authFetch(`${CHAT_BASE}/detail/${roomId}`, {
+  const response = await authFetch(`${chatBase()}/detail/${roomId}`, {
     method: 'GET',
   });
 

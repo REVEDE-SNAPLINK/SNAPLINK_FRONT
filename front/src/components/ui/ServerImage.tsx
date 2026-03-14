@@ -1,5 +1,5 @@
 import { Image as ExpoImage, ImageProps as ExpoImageProps, ImageContentFit } from 'expo-image';
-import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
+import { getCloudfrontBaseUrl } from '@/config/api.ts';
 
 const DefaultProfileImage = require('@/assets/imgs/default_profile.png');
 
@@ -70,7 +70,7 @@ export default function ServerImage({
     return <ExpoImage {...rest} source={{ uri }} contentFit={contentFit} recyclingKey={recyclingKey} />;
   }
 
-  let imageUri = isFullUrl(uri) ? uri : CLOUDFRONT_BASE_URL + uri;
+  let imageUri = isFullUrl(uri) ? uri : getCloudfrontBaseUrl() + uri;
 
   // CloudFront 리사이징 쿼리 파라미터가 필요한 경우 추가 (requestWidth)
   if (requestWidth && requestWidth > 0 && !isFullUrl(uri)) {

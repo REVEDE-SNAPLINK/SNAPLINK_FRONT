@@ -1,11 +1,11 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { UploadImageParams } from '@/types/image.ts';
 import { buildQuery } from '@/utils/format.ts';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { PageableInfo, SortItem } from '@/api/photographers.ts';
 
-const COMMUNITY_BASE = `${API_BASE_URL}/api/community`;
+const communityBase = () => `${getApiBaseUrl()}/api/community`;
 
 export const COMMUNITY_CATEGORIES = {
   'DAILY': '스냅일상',
@@ -42,7 +42,7 @@ export interface CreateCommunityPostParams {
 }
 
 export const createCommunityPost = async (data: CreateCommunityPostParams) => {
-  const url = `${COMMUNITY_BASE}/posts`;
+  const url = `${communityBase()}/posts`;
 
   const parts: MultipartPart[] = [
     // request는 JSON 파트
@@ -204,7 +204,7 @@ export type GetCommentsResponse = CommentPageResponse<Comment>;
 export const getCommunityPosts = async (params: GetPageable): Promise<GetCommunityPostsResponse> => {
   const qs = buildQuery(params);
 
-  const response = await authFetch(`${COMMUNITY_BASE}/posts?${qs}`, {
+  const response = await authFetch(`${communityBase()}/posts?${qs}`, {
     method: 'GET',
   });
 
@@ -214,7 +214,7 @@ export const getCommunityPosts = async (params: GetPageable): Promise<GetCommuni
 }
 
 export const getCommunityPost = async (postId: number): Promise<CommunityPost> => {
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {
+  const response = await authFetch(`${communityBase()}/posts/${postId}`, {
     method: 'GET',
   })
 
@@ -225,7 +225,7 @@ export const getCommunityPost = async (postId: number): Promise<CommunityPost> =
 
 export const getMyPosts = async (pageable: GetPageable): Promise<GetCommunityPostsResponse> => {
   const qs = buildQuery(pageable ?? {});
-  const url = qs ? `${COMMUNITY_BASE}/posts/me?${qs}` : `${COMMUNITY_BASE}/posts/me`;
+  const url = qs ? `${communityBase()}/posts/me?${qs}` : `${communityBase()}/posts/me`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('내 게시글을 불러올 수 없습니다.');
@@ -233,7 +233,7 @@ export const getMyPosts = async (pageable: GetPageable): Promise<GetCommunityPos
 };
 
 export const deletePost = async (postId: number) => {
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}`, {
+  const response = await authFetch(`${communityBase()}/posts/${postId}`, {
     method: 'DELETE',
   })
 
@@ -252,7 +252,7 @@ export interface UpdateCommunityPostParams {
 }
 
 export const updatePost = async (params: UpdateCommunityPostParams) => {
-  const url = `${COMMUNITY_BASE}/posts/${params.postId}`;
+  const url = `${communityBase()}/posts/${params.postId}`;
 
   const parts: MultipartPart[] = [
     // request는 JSON 파트
@@ -291,7 +291,7 @@ export const getComments = async (postId: number, pageable: GetPageable): Promis
   };
   const qs = buildQuery(params);
 
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments?${qs}`, {
+  const response = await authFetch(`${communityBase()}/posts/${postId}/comments?${qs}`, {
     method: 'GET',
   })
 
@@ -301,7 +301,7 @@ export const getComments = async (postId: number, pageable: GetPageable): Promis
 }
 
 export const createComment = async (postId: number, content: string, parentId: number | null) => {
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/comments`, {
+  const response = await authFetch(`${communityBase()}/posts/${postId}/comments`, {
     method: 'POST',
     json: {
       content,
@@ -313,7 +313,7 @@ export const createComment = async (postId: number, content: string, parentId: n
 }
 
 export const updateComment = async (commentId: number, content: string) => {
-  const response = await authFetch(`${COMMUNITY_BASE}/comments/${commentId}`, {
+  const response = await authFetch(`${communityBase()}/comments/${commentId}`, {
     method: 'PATCH',
     json: {
       content,
@@ -324,7 +324,7 @@ export const updateComment = async (commentId: number, content: string) => {
 }
 
 export const deleteComment = async (commentId: number) => {
-  const response = await authFetch(`${COMMUNITY_BASE}/comments/${commentId}`, {
+  const response = await authFetch(`${communityBase()}/comments/${commentId}`, {
     method: 'DELETE',
   })
 
@@ -332,7 +332,7 @@ export const deleteComment = async (commentId: number) => {
 }
 
 export const toggleLike = async (postId: number) => {
-  const response = await authFetch(`${COMMUNITY_BASE}/posts/${postId}/like`, {
+  const response = await authFetch(`${communityBase()}/posts/${postId}/like`, {
     method: 'POST',
   });
 

@@ -1,8 +1,8 @@
 // src/api/notifications.ts
-import { API_BASE_URL } from '@/config/api';
+import { getApiBaseUrl } from '@/config/api';
 import { authFetch } from '@/api/utils';
 
-const NOTIFICATIONS_BASE = `${API_BASE_URL}/api/notifications`;
+const notificationsBase = () => `${getApiBaseUrl()}/api/notifications`;
 
 export interface NotificationItem {
   id: number;
@@ -17,7 +17,7 @@ export interface NotificationItem {
  * 최근 알림 20개 조회
  */
 export const getNotifications = async (): Promise<NotificationItem[]> => {
-  const response = await authFetch(`${NOTIFICATIONS_BASE}`, { method: 'GET' });
+  const response = await authFetch(`${notificationsBase()}`, { method: 'GET' });
   if (!response.ok) throw new Error('알림 목록을 불러올 수 없습니다.');
   return response.json();
 };
@@ -27,7 +27,7 @@ export const getNotifications = async (): Promise<NotificationItem[]> => {
  * 안 읽은 알림 존재 여부(true/false)
  */
 export const getUnreadNotificationStatus = async (): Promise<boolean> => {
-  const response = await authFetch(`${NOTIFICATIONS_BASE}/unread-status`, { method: 'GET' });
+  const response = await authFetch(`${notificationsBase()}/unread-status`, { method: 'GET' });
   if (!response.ok) throw new Error('알림 상태를 불러올 수 없습니다.');
   return response.json();
 };
@@ -43,7 +43,7 @@ export interface PatchNotificationReadParams {
 export const patchNotificationRead = async (
   params: PatchNotificationReadParams,
 ): Promise<void> => {
-  const response = await authFetch(`${NOTIFICATIONS_BASE}/${params.notificationId}/read`, {
+  const response = await authFetch(`${notificationsBase()}/${params.notificationId}/read`, {
     method: 'PATCH',
   });
 

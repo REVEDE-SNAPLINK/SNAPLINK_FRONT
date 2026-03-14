@@ -1,7 +1,7 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
-const REGION_BASE = `${API_BASE_URL}/api/regions`;
+const regionBase = () => `${getApiBaseUrl()}/api/regions`;
 
 export interface GetRegionsResponse {
   id: number;
@@ -9,7 +9,7 @@ export interface GetRegionsResponse {
 }
 
 export const getAllRegions = async (): Promise<GetRegionsResponse[]> => {
-  const response = await authFetch(`${REGION_BASE}`, {
+  const response = await authFetch(`${regionBase()}`, {
     method: 'GET',
   });
 

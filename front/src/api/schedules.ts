@@ -1,11 +1,11 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { buildQuery } from '@/utils/format.ts';
 import { authFetch } from '@/api/utils.ts';
 import { BookingStatus } from '@/api/bookings.ts';
 import { DayOfWeek, PhotographerScheduleItem } from '@/api/photographers.ts';
 
-const SCHEDULES_BASE = `${API_BASE_URL}/api/schedules`;
-const PERSONAL_BASE = `${API_BASE_URL}/api/photographer/personal/schedules`;
+const schedulesBase = () => `${getApiBaseUrl()}/api/schedules`;
+const personalBase = () => `${getApiBaseUrl()}/api/photographer/personal/schedules`;
 
 export interface GetPhotographerMonthSchedulesParams {
   photographerId: string;
@@ -68,7 +68,7 @@ export const getPhotographerMonthSchedules = async (
   { photographerId, year, month }: GetPhotographerMonthSchedulesParams
 ): Promise<GetPhotographerMonthScheduleResponse[]> => {
   const qs = buildQuery({ year, month });
-  const url = `${SCHEDULES_BASE}/photographer/month/${photographerId}?${qs}`;
+  const url = `${schedulesBase()}/photographer/month/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('월간 스케줄을 불러올 수 없습니다.');
@@ -80,7 +80,7 @@ export const getPhotographerDayDetail = async (
   { photographerId, date }: GetPhotographerDayDetailParams
 ): Promise<GetPhotographerDayDetailResponse> => {
   const qs = buildQuery({ date });
-  const url = `${SCHEDULES_BASE}/photographer/day/detail/${photographerId}?${qs}`;
+  const url = `${schedulesBase()}/photographer/day/detail/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('일일 스케줄 상세를 불러올 수 없습니다.');
@@ -92,7 +92,7 @@ export const getAvailableBookingDays = async (
   { photographerId, year, month }: GetPhotographerMonthSchedulesParams
 ): Promise<GetAvailableBookingDayResponse[]> => {
   const qs = buildQuery({ year, month });
-  const url = `${SCHEDULES_BASE}/month/${photographerId}?${qs}`;
+  const url = `${schedulesBase()}/month/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('예약 가능한 날짜를 불러올 수 없습니다.');
@@ -104,7 +104,7 @@ export const getAvailableBookingTimes = async (
   { photographerId, date }: GetPhotographerDayDetailParams
 ): Promise<GetAvailableBookingTimeResponse[]> => {
   const qs = buildQuery({ date });
-  const url = `${SCHEDULES_BASE}/day/${photographerId}?${qs}`;
+  const url = `${schedulesBase()}/day/${photographerId}?${qs}`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('예약 가능한 시간을 불러올 수 없습니다.');
@@ -121,7 +121,7 @@ export interface GetWeeklyScheduleRespnose {
 export const getWeeklySchedule = async (
   photographerId: string,
 ): Promise<GetWeeklyScheduleRespnose[]> => {
-  const response = await authFetch(`${SCHEDULES_BASE}/photographer/weekly/${photographerId}`, {
+  const response = await authFetch(`${schedulesBase()}/photographer/weekly/${photographerId}`, {
     method: 'GET'
   });
 
@@ -133,7 +133,7 @@ export const getWeeklySchedule = async (
 export const updateWeeklySchedule = async (
   photographerId: string, body: { schedules: PhotographerScheduleItem[] }
 )=> {
-  const response = await authFetch(`${SCHEDULES_BASE}/photographer/weekly/${photographerId}`, {
+  const response = await authFetch(`${schedulesBase()}/photographer/weekly/${photographerId}`, {
     method: 'POST',
     json: body
   });
@@ -142,7 +142,7 @@ export const updateWeeklySchedule = async (
 }
 
 export const deletePersonalSchedule = async (id: number) => {
-  const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
+  const response = await authFetch(`${personalBase()}/${id}`, {
     method: 'DELETE'
   });
 
@@ -163,7 +163,7 @@ export interface PersonalScheduleResponse extends PersonalSchedule {
 }
 
 export const getPersonalSchedule = async (id: number): Promise<PersonalScheduleResponse> => {
-  const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
+  const response = await authFetch(`${personalBase()}/${id}`, {
     method: 'GET'
   });
 
@@ -173,7 +173,7 @@ export const getPersonalSchedule = async (id: number): Promise<PersonalScheduleR
 }
 
 export const createPersonalSchedule = async (body: PersonalSchedule): Promise<number> => {
-  const response = await authFetch(`${PERSONAL_BASE}`, {
+  const response = await authFetch(`${personalBase()}`, {
     method: 'POST',
     json: body
   });
@@ -184,7 +184,7 @@ export const createPersonalSchedule = async (body: PersonalSchedule): Promise<nu
 }
 
 export const updatePersonalSchedule = async (id: number, body: PersonalSchedule) => {
-  const response = await authFetch(`${PERSONAL_BASE}/${id}`, {
+  const response = await authFetch(`${personalBase()}/${id}`, {
     method: 'PUT',
     json: body
   });

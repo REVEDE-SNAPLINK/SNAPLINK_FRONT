@@ -1,7 +1,7 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { PageResponse } from '@/api/photographers.ts';
 
-const NOTICES_BASE = `${API_BASE_URL}/api/notices`;
+const noticesBase = () => `${getApiBaseUrl()}/api/notices`;
 
 export interface NoticeDetailResponse {
   id: number;
@@ -14,7 +14,7 @@ export interface NoticeDetailResponse {
 export const getNoticeDetail = async (
   id: number
 ): Promise<NoticeDetailResponse> => {
-  const response = await fetch(`${NOTICES_BASE}/${id}`, {
+  const response = await fetch(`${noticesBase()}/${id}`, {
     method: 'GET',
   });
 
@@ -38,7 +38,7 @@ export const getNotices = async (pageable: { page: number; size?: number }): Pro
     size: (pageable.size || 10).toString(),
   });
 
-  const response = await fetch(`${NOTICES_BASE}?${params}`, {
+  const response = await fetch(`${noticesBase()}?${params}`, {
     method: 'GET',
   });
 

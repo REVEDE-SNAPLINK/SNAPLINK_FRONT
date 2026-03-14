@@ -1,11 +1,11 @@
 import { Platform } from 'react-native';
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
-const FCM_BASE = `${API_BASE_URL}/api/devices`;
+const fcmBase = () => `${getApiBaseUrl()}/api/devices`;
 
 export async function registerFCMdevice(fcmToken: string) {
-  const response = await authFetch(FCM_BASE, {
+  const response = await authFetch(fcmBase(), {
     method: 'POST',
     json: {
       fcmToken,

@@ -1,10 +1,10 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
-const BLOCK_BASE = `${API_BASE_URL}/api/block`;
+const blockBase = () => `${getApiBaseUrl()}/api/block`;
 
 export const unblockUser = async (targetId: string) => {
-  const response = await authFetch(`${BLOCK_BASE}/${targetId}`, {
+  const response = await authFetch(`${blockBase()}/${targetId}`, {
     method: 'DELETE',
   });
 
@@ -12,7 +12,7 @@ export const unblockUser = async (targetId: string) => {
 }
 
 export const blockUser = async (targetId: string) => {
-  const response = await authFetch(`${BLOCK_BASE}/${targetId}`, {
+  const response = await authFetch(`${blockBase()}/${targetId}`, {
     method: 'POST',
   });
 
@@ -26,7 +26,7 @@ export interface BlockResponse {
 }
 
 export const getBlocks = async (): Promise<BlockResponse[]> => {
-  const response = await authFetch(`${BLOCK_BASE}/me`, {
+  const response = await authFetch(`${blockBase()}/me`, {
     method: 'GET',
   });
 

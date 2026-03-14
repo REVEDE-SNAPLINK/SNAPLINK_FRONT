@@ -1,11 +1,11 @@
 // src/api/reviews.ts
-import { API_BASE_URL } from '@/config/api';
+import { getApiBaseUrl } from '@/config/api';
 import { authFetch, authMultipartFetch } from '@/api/utils';
 import RNBlobUtil from 'react-native-blob-util';
 import type { GetPageable, PageResponse } from '@/api/photographers.ts';
 import { buildQuery } from '@/utils/format.ts';
 
-const REVIEWS_BASE = `${API_BASE_URL}/api/reviews`;
+const reviewsBase = () => `${getApiBaseUrl()}/api/reviews`;
 
 /** 리뷰 답글 작성(작가 전용) */
 export interface CreateReviewReplyParams {
@@ -21,7 +21,7 @@ export interface CreateReviewReplyParams {
 export const createReviewReply = async (
   params: CreateReviewReplyParams,
 ): Promise<void> => {
-  const response = await authFetch(`${REVIEWS_BASE}/${params.reviewId}/replies`, {
+  const response = await authFetch(`${reviewsBase()}/${params.reviewId}/replies`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export const createBookingReview = async (
   ];
 
   const response = await authMultipartFetch(
-    `${REVIEWS_BASE}/${params.bookingId}`,
+    `${reviewsBase()}/${params.bookingId}`,
     parts,
     'POST',
   );
@@ -142,7 +142,7 @@ export const updateReview = async (params: UpdateReviewParams): Promise<void> =>
   ];
 
   const response = await authMultipartFetch(
-    `${REVIEWS_BASE}/${params.reviewId}`,
+    `${reviewsBase()}/${params.reviewId}`,
     parts,
     'PATCH',
   );
@@ -157,7 +157,7 @@ export const updateReview = async (params: UpdateReviewParams): Promise<void> =>
  * 리뷰 삭제 (고객 전용)
  */
 export const deleteReview = async (reviewId: number): Promise<void> => {
-  const response = await authFetch(`${REVIEWS_BASE}/${reviewId}`, {
+  const response = await authFetch(`${reviewsBase()}/${reviewId}`, {
     method: 'DELETE',
   });
 
@@ -181,7 +181,7 @@ export interface GetBookingReviewMeResponse {
 }
 
 export const getBookingReviewMe = async (bookingId: number): Promise<GetBookingReviewMeResponse> => {
-  const response = await authFetch(`${REVIEWS_BASE}/${bookingId}/me`, {
+  const response = await authFetch(`${reviewsBase()}/${bookingId}/me`, {
     method: 'GET',
   });
 
@@ -212,7 +212,7 @@ export const getMyReviews = async (
   pageable: GetPageable,
 ): Promise<GetMyReviewsResponse> => {
   const qs = buildQuery(pageable ?? {});
-  const url = qs ? `${REVIEWS_BASE}/me?${qs}` : `${REVIEWS_BASE}/me`;
+  const url = qs ? `${reviewsBase()}/me?${qs}` : `${reviewsBase()}/me`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok)

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAuthStore } from '@/store/authStore.ts';
-import { KAKAO_NATIVE_APP_KEY } from '@/config/api.ts';
+import { initRemoteConfig, getKakaoNativeAppKey } from '@/config/api.ts';
 import { initializeKakaoSDK } from '@react-native-kakao/core';
 import SplashScreen from 'react-native-splash-screen';
 import { loadRefreshToken } from '@/auth/tokenStore.ts';
@@ -19,8 +19,9 @@ export default function AuthInitializer({ children }: { children: React.ReactNod
         console.log('[AuthInitializer] Starting initialization...');
         const startTime = Date.now();
 
+        await initRemoteConfig();
         console.log('[AuthInitializer] Initializing Kakao SDK...');
-        await initializeKakaoSDK(`${KAKAO_NATIVE_APP_KEY}`);
+        await initializeKakaoSDK(`${getKakaoNativeAppKey()}`);
         console.log('[AuthInitializer] Kakao SDK initialized');
 
         // Bootstrap 실행 (FCM 등록은 로그인/회원가입 후 진행)

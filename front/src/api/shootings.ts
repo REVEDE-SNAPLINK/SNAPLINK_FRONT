@@ -1,12 +1,12 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
-const SHOOTINGS_BASE = `${API_BASE_URL}/api/shootings`;
+const shootingsBase = () => `${getApiBaseUrl()}/api/shootings`;
 
 export const deleteShooting = async (
   id: number
 ) => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/${id}`, {
+  const response = await authFetch(`${shootingsBase()}/${id}`, {
     method: 'DELETE',
   })
 
@@ -16,7 +16,7 @@ export const deleteShooting = async (
 export const deleteShootingOption = async (
   optionId: number
 ) => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/options/${optionId}`, {
+  const response = await authFetch(`${shootingsBase()}/options/${optionId}`, {
     method: 'DELETE',
   });
 
@@ -35,7 +35,7 @@ export interface GetShootingOptionResponse {
 export const getShootingOptions = async (
   productId: number
 ): Promise<GetShootingOptionResponse[]>=> {
-  const response = await authFetch(`${SHOOTINGS_BASE}/${productId}/options`, {
+  const response = await authFetch(`${shootingsBase()}/${productId}/options`, {
     method: 'GET',
   })
 
@@ -98,7 +98,7 @@ export interface CreateShootingOptionRequest {
 }
 
 export const getMyShootings = async () : Promise<GetShootingResponse[]> => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/me`, {
+  const response = await authFetch(`${shootingsBase()}/me`, {
     method: 'GET',
   });
 
@@ -109,7 +109,7 @@ export const getMyShootings = async () : Promise<GetShootingResponse[]> => {
 export const createShooting = async (
   body: CreateShootingRequest
 ): Promise<GetShootingResponse> => {
-  const response = await authFetch(`${SHOOTINGS_BASE}`, {
+  const response = await authFetch(`${shootingsBase()}`, {
     method: 'POST',
     json: body
   });
@@ -121,7 +121,7 @@ export const createShooting = async (
 export const createShootingOption = async (
   productId: number, body: CreateShootingOptionRequest
 ): Promise<GetShootingOptionResponse> => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/${productId}/options`, {
+  const response = await authFetch(`${shootingsBase()}/${productId}/options`, {
     method: 'POST',
     json: body
   });
@@ -133,7 +133,7 @@ export const createShootingOption = async (
 export const updateShooting = async (
   id: number, body: CreateShootingRequest
 ): Promise<GetShootingResponse> => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/${id}`, {
+  const response = await authFetch(`${shootingsBase()}/${id}`, {
     method: 'PUT',
     json: body
   });
@@ -145,7 +145,7 @@ export const updateShooting = async (
 export const updateShootingOption = async (
   optionId: number, body: CreateShootingOptionRequest
 ): Promise<GetShootingOptionResponse> => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/options/${optionId}`, {
+  const response = await authFetch(`${shootingsBase()}/options/${optionId}`, {
     method: 'PUT',
     json: body
   });
@@ -157,7 +157,7 @@ export const updateShootingOption = async (
 export const getShootings = async (
   photographerId: string
 ) : Promise<GetShootingResponse[]> => {
-  const response = await authFetch(`${SHOOTINGS_BASE}/${photographerId}`, {
+  const response = await authFetch(`${shootingsBase()}/${photographerId}`, {
     method: 'GET',
   });
 

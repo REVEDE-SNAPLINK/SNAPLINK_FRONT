@@ -7,7 +7,7 @@ import { useBookingPhotosQuery } from '@/queries/bookings.ts';
 import { BookingPhoto } from '@/api/bookings.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
-import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
+import { getCloudfrontBaseUrl } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { safeLogEvent } from '@/utils/analytics.ts';
 import JSZip from 'jszip';
@@ -89,7 +89,7 @@ export default function UserViewPhotosContainer() {
       const downloads = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
       const fileName = `reservation_${bookingId}_original.zip`;
       const filePath = `${downloads}/${fileName}`;
-      const url = CLOUDFRONT_BASE_URL + zipUrl;
+      const url = getCloudfrontBaseUrl() + zipUrl;
 
       if (Platform.OS === 'ios') {
         const response = await RNBlobUtil.config({
@@ -134,7 +134,7 @@ export default function UserViewPhotosContainer() {
     setIsProcessing(true);
 
     try {
-      const url = CLOUDFRONT_BASE_URL + zipUrl;
+      const url = getCloudfrontBaseUrl() + zipUrl;
       const { fs } = RNBlobUtil;
       const tempDir = fs.dirs.CacheDir;
 
@@ -247,7 +247,7 @@ export default function UserViewPhotosContainer() {
       // 각 이미지를 다운로드하여 ZIP에 추가
       for (let i = 0; i < photos.length; i++) {
         const photo = photos[i];
-        const url = CLOUDFRONT_BASE_URL + photo.url;
+        const url = getCloudfrontBaseUrl() + photo.url;
         const ext = photo.url.split('.').pop() || 'jpg';
         const fileName = `photo_${photo.sortOrder}.${ext}`;
 
@@ -315,7 +315,7 @@ export default function UserViewPhotosContainer() {
           const response = await RNBlobUtil.config({
             fileCache: true,
             path: tempPath,
-          }).fetch('GET', CLOUDFRONT_BASE_URL + photo.url);
+          }).fetch('GET', getCloudfrontBaseUrl() + photo.url);
 
           const savedPath = response.path();
           const fileUri = savedPath.startsWith('file://') ? savedPath : `file://${savedPath}`;
@@ -346,7 +346,7 @@ export default function UserViewPhotosContainer() {
               description: '사진 다운로드',
               path: filePath,
             },
-          }).fetch('GET', CLOUDFRONT_BASE_URL + photo.url);
+          }).fetch('GET', getCloudfrontBaseUrl() + photo.url);
         });
 
         await Promise.all(downloadPromises);

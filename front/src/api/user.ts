@@ -1,10 +1,10 @@
-import { API_BASE_URL } from '@/config/api';
+import { getApiBaseUrl } from '@/config/api';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
 import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format.ts';
 import RNBlobUtil from 'react-native-blob-util';
 import { GetPageable, PageResponse } from '@/api/photographers.ts';
 
-const USER_BASE = `${API_BASE_URL}/api/user`;
+const userBase = () => `${getApiBaseUrl()}/api/user`;
 
 /** GET /api/user/me 응답 */
 export interface GetMeResponse {
@@ -26,7 +26,7 @@ export interface PatchMeRequest {
  * 내 기본 프로필 조회 (nickname, name, email)
  */
 export const getMe = async (): Promise<GetMeResponse> => {
-  const response = await authFetch(`${USER_BASE}/me`, { method: 'GET' });
+  const response = await authFetch(`${userBase()}/me`, { method: 'GET' });
 
   if (!response.ok) {
     throw new Error('프로필 정보를 불러올 수 없습니다.');
@@ -40,7 +40,7 @@ export const getMe = async (): Promise<GetMeResponse> => {
  * 내 기본 프로필 수정 (nickname/email 부분 업데이트 가능)
  */
 export const patchMe = async (body: PatchMeRequest) => {
-  const response = await authFetch(`${USER_BASE}/me`, {
+  const response = await authFetch(`${userBase()}/me`, {
     method: 'PATCH',
     json: body,
   });
@@ -96,7 +96,7 @@ export const patchUserProfileImage = async (
   ];
 
   const response = await authMultipartFetch(
-    `${USER_BASE}/profile-image`,
+    `${userBase()}/profile-image`,
     parts,
     'PATCH',
   );
@@ -112,7 +112,7 @@ export const patchUserProfileImage = async (
 export const checkNickname = async (
   nickname: string,
 ): Promise<boolean> => {
-  const response = await authFetch(`${USER_BASE}/check-nickname?nickname=${nickname}`, {
+  const response = await authFetch(`${userBase()}/check-nickname?nickname=${nickname}`, {
     method: 'GET',
   });
 
@@ -124,7 +124,7 @@ export const checkNickname = async (
 export const checkEmail = async (
   email: string,
 ): Promise<boolean> => {
-  const response = await authFetch(`${USER_BASE}/check-email?email=${email}`, {
+  const response = await authFetch(`${userBase()}/check-email?email=${email}`, {
     method: 'GET',
   });
 
@@ -142,7 +142,7 @@ export interface NotificationSettings {
 }
 
 export const getNotificationSettings = async (): Promise<NotificationSettings> => {
-  const response = await authFetch(`${USER_BASE}/me/notifications`, {
+  const response = await authFetch(`${userBase()}/me/notifications`, {
     method: 'GET',
   });
 
@@ -152,7 +152,7 @@ export const getNotificationSettings = async (): Promise<NotificationSettings> =
 }
 
 export const updateNotificationSettings = async (body: NotificationSettings) => {
-  const response = await authFetch(`${USER_BASE}/me/notifications`, {
+  const response = await authFetch(`${userBase()}/me/notifications`, {
     method: 'PATCH',
     json: body,
   });
@@ -177,7 +177,7 @@ export const searchUsersFromNickname = async (
   const params = { ...pageable, nickname };
   const qs = buildQuery(params);
 
-  const url = `${USER_BASE}/search?${qs}`;
+  const url = `${userBase()}/search?${qs}`;
 
   const response = await authFetch(url, {
     method: 'GET',

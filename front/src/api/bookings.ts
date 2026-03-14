@@ -1,13 +1,13 @@
 // src/api/bookings.ts
-import { API_BASE_URL } from '@/config/api';
+import { getApiBaseUrl } from '@/config/api';
 import { authFetch, authMultipartFetch, toBlobPath, MultipartPart } from '@/api/utils';
 import { GetPageable } from '@/api/community';
 import { buildQuery } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 import { UploadImageFile } from '@/api/reviews.ts';
 
-const BOOKINGS_BASE = `${API_BASE_URL}/api/bookings`
-const PHOTOS_BASE = `${API_BASE_URL}/api/booking/photos`;
+const bookingsBase = () => `${getApiBaseUrl()}/api/bookings`;
+const photosBase = () => `${getApiBaseUrl()}/api/booking/photos`;
 
 
 /** Spring Page 응답에 포함되는 Sort 요소 */
@@ -196,8 +196,8 @@ export const getUserBookings = async (
 ): Promise<GetUserBookingsResponse> => {
   const qs = buildQuery(pageable);
   const url = qs
-    ? `${BOOKINGS_BASE}/list/user?${qs}`
-    : `${BOOKINGS_BASE}/list/user`;
+    ? `${bookingsBase()}/list/user?${qs}`
+    : `${bookingsBase()}/list/user`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('예약 내역을 불러올 수 없습니다.');
@@ -214,8 +214,8 @@ export const getPhotographerBookings = async (
 ): Promise<GetPhotographerBookingsResponse> => {
   const qs = buildQuery(pageable);
   const url = qs
-    ? `${BOOKINGS_BASE}/list/photographer?${qs}`
-    : `${BOOKINGS_BASE}/list/photographer`;
+    ? `${bookingsBase()}/list/photographer?${qs}`
+    : `${bookingsBase()}/list/photographer`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('예약 내역을 불러올 수 없습니다.');
@@ -232,7 +232,7 @@ export const rejectBooking = async (
 ) => {
   const { bookingId, reason } = params;
 
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/reject`, {
+  const response = await authFetch(`${bookingsBase()}/${bookingId}/reject`, {
     method: 'PATCH',
     json: { reason },
   });
@@ -249,7 +249,7 @@ export const completeBooking = async (
 ) => {
   const { bookingId } = params;
 
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/complete`, {
+  const response = await authFetch(`${bookingsBase()}/${bookingId}/complete`, {
     method: 'PATCH',
   });
 
@@ -265,7 +265,7 @@ export const cancelBooking = async (
 ) => {
   const { bookingId, reason } = params;
 
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/cancel`, {
+  const response = await authFetch(`${bookingsBase()}/${bookingId}/cancel`, {
     method: 'PATCH',
     json: { reason },
   });
@@ -282,7 +282,7 @@ export const approveBooking = async (
 ) => {
   const { bookingId } = params;
 
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/approve`, {
+  const response = await authFetch(`${bookingsBase()}/${bookingId}/approve`, {
     method: 'PATCH',
   });
 
@@ -296,7 +296,7 @@ export const approveBooking = async (
 export const createBooking = async (
   body: CreateBookingRequest
 ): Promise<number> => {
-  const response = await authFetch(`${BOOKINGS_BASE}`, {
+  const response = await authFetch(`${bookingsBase()}`, {
     method: 'POST',
     json: body,
   });
@@ -313,7 +313,7 @@ export const createBooking = async (
 export const getBookingPhotos = async (
   bookingId: number,
 ): Promise<GetBookingPhotosResponse> => {
-  const response = await authFetch(`${PHOTOS_BASE}/${bookingId}`, {
+  const response = await authFetch(`${photosBase()}/${bookingId}`, {
     method: 'GET',
   });
 
@@ -379,7 +379,7 @@ export const updateBookingPhotos = async (
   }
 
   const response = await authMultipartFetch(
-    `${PHOTOS_BASE}/${bookingId}/update`,
+    `${photosBase()}/${bookingId}/update`,
     parts,
     'POST',
   );
@@ -430,7 +430,7 @@ export const uploadBookingZip = async (params: UploadBookingZipRequest): Promise
   }
 
   const response = await authMultipartFetch(
-    `${PHOTOS_BASE}/${params.bookingId}`,
+    `${photosBase()}/${params.bookingId}`,
     parts,
     'POST',
   );
@@ -447,7 +447,7 @@ export const uploadBookingZip = async (params: UploadBookingZipRequest): Promise
 export const getBookingDetail = async (
   bookingId: number,
 ): Promise<BookingDetail> => {
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}`, {
+  const response = await authFetch(`${bookingsBase()}/${bookingId}`, {
     method: 'GET',
   });
 
@@ -461,7 +461,7 @@ export const getBookingDetail = async (
 export const cancelBookingFromCustomer = async (
   bookingId: number
 ) => {
-  const response = await authFetch(`${BOOKINGS_BASE}/${bookingId}/customer/cancel`, {
+  const response = await authFetch(`${bookingsBase()}/${bookingId}/customer/cancel`, {
     method: 'PATCH',
   });
 

@@ -1,15 +1,15 @@
 // src/api/photographers.ts
-import { API_BASE_URL } from '@/config/api';
+import { getApiBaseUrl } from '@/config/api';
 import { authFetch, authMultipartFetch, MultipartPart } from '@/api/utils';
 import { buildQuery, generateImageFilename, normalizeImageMime } from '@/utils/format';
 import RNBlobUtil from 'react-native-blob-util';
 import { EditingDeadline, EditingType, SelectionAuthority } from '@/api/shootings.ts';
 import { GetRegionsResponse } from '@/api/regions.ts';
 
-const PHOTOGRAPHERS_BASE = `${API_BASE_URL}/api/photographers`;
-const PORTFOLIOS_BASE = `${PHOTOGRAPHERS_BASE}/portfolios`;
-const REVIEWS_BASE = `${API_BASE_URL}/api/reviews/photographers`;
-const HOLIDAYS_BASE = `${PHOTOGRAPHERS_BASE}/holidays`;
+const photographersBase = () => `${getApiBaseUrl()}/api/photographers`;
+const portfoliosBase = () => `${photographersBase()}/portfolios`;
+const reviewsBase = () => `${getApiBaseUrl()}/api/reviews/photographers`;
+const holidaysBase = () => `${photographersBase()}/holidays`;
 
 /* ---------------------------------------------
  * Common: Spring Page types (재사용)
@@ -96,8 +96,8 @@ export const getPhotographerProfile = async (
 ): Promise<GetPhotographerProfileResponse> => {
   const qs = buildQuery(pageable ?? {});
   const url = qs
-    ? `${PHOTOGRAPHERS_BASE}/${photographerId}/profile?${qs}`
-    : `${PHOTOGRAPHERS_BASE}/${photographerId}/profile`;
+    ? `${photographersBase()}/${photographerId}/profile?${qs}`
+    : `${photographersBase()}/${photographerId}/profile`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('작가 프로필을 불러올 수 없습니다.');
@@ -155,7 +155,7 @@ export const patchPhotographerProfileImage = async (
   ];
 
   const response = await authMultipartFetch(
-    `${PHOTOGRAPHERS_BASE}/profile-image`,
+    `${photographersBase()}/profile-image`,
     parts,
     'PATCH',
   );
@@ -226,7 +226,7 @@ export interface PhotographerSignRequest {
 export const signPhotographer = async (
   body: PhotographerSignRequest,
 ): Promise<void> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/sign`, {
+  const response = await authFetch(`${photographersBase()}/sign`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -278,7 +278,7 @@ export const searchPhotographers = async (
   body: SearchPhotographersBody,
 ): Promise<SearchPhotographersResponse> => {
   const qs = buildQuery(pageable);
-  const url = qs ? `${PHOTOGRAPHERS_BASE}/search?${qs}` : `${PHOTOGRAPHERS_BASE}/search`;
+  const url = qs ? `${photographersBase()}/search?${qs}` : `${photographersBase()}/search`;
 
   const response = await authFetch(url, {
     method: 'POST',
@@ -368,7 +368,7 @@ export const createPortfolio = async (
   ];
 
   const response = await authMultipartFetch(
-    `${PORTFOLIOS_BASE}`,
+    `${portfoliosBase()}`,
     parts,
     'POST',
   );
@@ -412,8 +412,8 @@ export const getPhotographerReviews = async (
 ): Promise<GetPhotographerReviewsResponse> => {
   const qs = buildQuery(pageable);
   const url = qs
-    ? `${REVIEWS_BASE}/${photographerId}/reviews?${qs}`
-    : `${REVIEWS_BASE}/${photographerId}/reviews`;
+    ? `${reviewsBase()}/${photographerId}/reviews?${qs}`
+    : `${reviewsBase()}/${photographerId}/reviews`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('리뷰를 불러올 수 없습니다.');
@@ -446,7 +446,7 @@ export interface GetPhotographerReviewSummaryResponse {
 export const getPhotographerReviewSummary = async (
   photographerId: string,
 ): Promise<GetPhotographerReviewSummaryResponse> => {
-  const response = await authFetch(`${REVIEWS_BASE}/${photographerId}/summary`, {
+  const response = await authFetch(`${reviewsBase()}/${photographerId}/summary`, {
     method: 'GET',
   });
 
@@ -466,8 +466,8 @@ export const getMyScrappedPhotographers = async (
 ): Promise<SearchPhotographersResponse> => {
   const qs = buildQuery(pageable);
   const url = qs
-    ? `${PHOTOGRAPHERS_BASE}/me/scrapped?${qs}`
-    : `${PHOTOGRAPHERS_BASE}/me/scrapped`;
+    ? `${photographersBase()}/me/scrapped?${qs}`
+    : `${photographersBase()}/me/scrapped`;
 
   const response = await authFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error('스크랩한 작가를 불러올 수 없습니다.');
@@ -488,7 +488,7 @@ export interface ScrapResponse {
 export const togglePhotographerScrap = async (
   photographerId: string,
 ): Promise<ScrapResponse> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/${photographerId}/scrap`, {
+  const response = await authFetch(`${photographersBase()}/${photographerId}/scrap`, {
     method: 'POST',
   });
 
@@ -499,7 +499,7 @@ export const togglePhotographerScrap = async (
 export const deleteHoliday = async (
   holidayId: number
 ) => {
-  const response = await authFetch(`${HOLIDAYS_BASE}/${holidayId}`, {
+  const response = await authFetch(`${holidaysBase()}/${holidayId}`, {
     method: 'DELETE',
   });
 
@@ -519,7 +519,7 @@ export interface CreateHolidayRequest {
 export const createHolidays = async (
   body: CreateHolidayRequest
 ): Promise<GetHolidayResponse> => {
-  const response = await authFetch(`${HOLIDAYS_BASE}`, {
+  const response = await authFetch(`${holidaysBase()}`, {
     method: 'POST',
     json: body
   });
@@ -534,7 +534,7 @@ export interface Tag {
 }
 
 export const getTags = async (): Promise<Tag[]> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/tag`, {
+  const response = await authFetch(`${photographersBase()}/tag`, {
     method: 'GET',
   });
 
@@ -560,7 +560,7 @@ export interface GetPortfolioResponse {
 }
 
 export const getPortfolioPost = async (postId: number): Promise<GetPortfolioResponse> => {
-  const response = await authFetch(`${PORTFOLIOS_BASE}/${postId}`, {
+  const response = await authFetch(`${portfoliosBase()}/${postId}`, {
     method: 'GET',
   });
 
@@ -629,7 +629,7 @@ export const updatePortfolioPost = async (
   ];
 
   const response = await authMultipartFetch(
-    `${PORTFOLIOS_BASE}/${postId}`,
+    `${portfoliosBase()}/${postId}`,
     parts,
     'PATCH',
   );
@@ -642,7 +642,7 @@ export const updatePortfolioPost = async (
 export const deletePortfolioPost = async (
   postId: number
 ) => {
-  const response = await authFetch(`${PORTFOLIOS_BASE}/${postId}`, {
+  const response = await authFetch(`${portfoliosBase()}/${postId}`, {
     method: 'DELETE',
   });
 
@@ -652,7 +652,7 @@ export const deletePortfolioPost = async (
 export type PhotographerStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'REJECTED' | 'SUSPENDED';
 
 export const getStatusMe = async (): Promise<PhotographerStatus> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/status/me`, {
+  const response = await authFetch(`${photographersBase()}/status/me`, {
     method: 'GET',
   });
 
@@ -662,7 +662,7 @@ export const getStatusMe = async (): Promise<PhotographerStatus> => {
 };
 
 export const activePhotographer = async () => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/me/active`, {
+  const response = await authFetch(`${photographersBase()}/me/active`, {
     method: 'POST',
   });
 
@@ -670,7 +670,7 @@ export const activePhotographer = async () => {
 }
 
 export const inactivePhotographer = async () => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/me/inactive`, {
+  const response = await authFetch(`${photographersBase()}/me/inactive`, {
     method: 'POST',
   });
 
@@ -686,7 +686,7 @@ export interface GetPhotographerRegionsAndConceptsAndTagsResponse {
 export const getPhotographerRegionsAndConceptsAndTags = async (
   photographerId: string,
 ): Promise<GetPhotographerRegionsAndConceptsAndTagsResponse> => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/${photographerId}/regions`, {
+  const response = await authFetch(`${photographersBase()}/${photographerId}/regions`, {
     method: 'GET',
   });
 
@@ -705,7 +705,7 @@ export interface UpdatePhotographerProfileRequest {
 export const updatePhotographerProfile = async (
   body: UpdatePhotographerProfileRequest,
 ) => {
-  const response = await authFetch(`${PHOTOGRAPHERS_BASE}/profile`, {
+  const response = await authFetch(`${photographersBase()}/profile`, {
     method: 'PATCH',
     json: body
   });
@@ -782,7 +782,7 @@ export const searchPhotographersMulti = async (
   }
 
   const response = await authMultipartFetch(
-    `${PHOTOGRAPHERS_BASE}/search/multi`,
+    `${photographersBase()}/search/multi`,
     parts,
     'POST',
   );

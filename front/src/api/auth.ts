@@ -1,8 +1,8 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
-const AUTH_BASE = `${API_BASE_URL}/api/auth`;
-const TEST_AUTH_BASE = `${API_BASE_URL}/api/test/auth`;
+const authBase = () => `${getApiBaseUrl()}/api/auth`;
+const testAuthBase = () => `${getApiBaseUrl()}/api/test/auth`;
 
 type LoginSuccessResponse = {
   status: 'LOGIN_SUCCESS';
@@ -25,7 +25,7 @@ export type SignInResponse =
 
 // 로그인
 export async function signInApi(provider: string, token: string): Promise<SignInResponse> {
-  const response = await fetch(`${AUTH_BASE}/signin`, {
+  const response = await fetch(`${authBase()}/signin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider, token: token }),
@@ -68,7 +68,7 @@ export class RefreshTokenError extends Error {
 
 // 토큰 갱신
 export async function refreshApi(refreshToken: string): Promise<{ accessToken: string; refreshToken?: string }> {
-  const response = await fetch(`${AUTH_BASE}/refresh`, {
+  const response = await fetch(`${authBase()}/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -100,7 +100,7 @@ export interface SignUpFormData {
 export async function signUpApi(formData: SignUpFormData): Promise<LoginSuccessResponse> {
   console.log(formData);
 
-  const response = await fetch(`${AUTH_BASE}/signup`, {
+  const response = await fetch(`${authBase()}/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(formData)
@@ -123,7 +123,7 @@ export async function signUpApi(formData: SignUpFormData): Promise<LoginSuccessR
 
 // 로그아웃
 export async function logoutApi(): Promise<void> {
-  const response = await authFetch(`${AUTH_BASE}/logout`, {
+  const response = await authFetch(`${authBase()}/logout`, {
     method: 'POST',
   })
 
@@ -132,7 +132,7 @@ export async function logoutApi(): Promise<void> {
 
 // 회원 탈퇴
 export async function withdrawApi(): Promise<void> {
-  const response = await authFetch(`${AUTH_BASE}/withdraw`, {
+  const response = await authFetch(`${authBase()}/withdraw`, {
     method: 'DELETE',
   })
 
@@ -145,7 +145,7 @@ export async function withdrawApi(): Promise<void> {
 
 // 테스트 계정 로그인
 export async function testSignInApi(id: string): Promise<SignInResponse> {
-  const response = await fetch(`${TEST_AUTH_BASE}/signin`, {
+  const response = await fetch(`${testAuthBase()}/signin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider: "KAKAO", id }),
@@ -177,7 +177,7 @@ export async function testSignInApi(id: string): Promise<SignInResponse> {
 
 // 테스트 계정 회원가입
 export async function testSignUpApi(formData: SignUpFormData): Promise<LoginSuccessResponse> {
-  const response = await fetch(`${TEST_AUTH_BASE}/signup`, {
+  const response = await fetch(`${testAuthBase()}/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(formData)

@@ -1,7 +1,7 @@
-import { API_BASE_URL } from '@/config/api.ts';
+import { getApiBaseUrl } from '@/config/api.ts';
 import { authFetch } from '@/api/utils.ts';
 
-const REPORTS_BASE = `${API_BASE_URL}/api/reports`;
+const reportsBase = () => `${getApiBaseUrl()}/api/reports`;
 
 export type TargetType = 'CHAT' | 'PROFILE';
 export type CommunityTargetType = 'POST' | 'COMMENT';
@@ -73,7 +73,7 @@ export interface CommunityReportRequest {
 }
 
 export const reportUser = async (body: ReportRequest) => {
-  const response = await authFetch(`${REPORTS_BASE}`, {
+  const response = await authFetch(`${reportsBase()}`, {
     method: 'POST',
     json: body,
   });
@@ -82,7 +82,7 @@ export const reportUser = async (body: ReportRequest) => {
 }
 
 export const reportCommunityUser = async (body: CommunityReportRequest) => {
-  const response = await authFetch(`${REPORTS_BASE}/community`, {
+  const response = await authFetch(`${reportsBase()}/community`, {
     method: 'POST',
     json: body,
   });

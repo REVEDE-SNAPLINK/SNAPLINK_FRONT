@@ -14,7 +14,7 @@ import { Alert } from '@/components/ui';
 import { pick } from '@react-native-documents/picker';
 import RNBlobUtil from 'react-native-blob-util';
 import { AppState, Platform } from 'react-native';
-import { CLOUDFRONT_BASE_URL } from '@/config/api.ts';
+import { getCloudfrontBaseUrl } from '@/config/api.ts';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
@@ -909,7 +909,7 @@ export default function ChatDetailsContainer() {
       }
     }
 
-    const url = `${CLOUDFRONT_BASE_URL}${fileUrl}`;
+    const url = `${getCloudfrontBaseUrl()}${fileUrl}`;
 
     // fileName/fileSize를 로컬 변수로 확정
     let fileName = currentState?.fileName;
@@ -1016,7 +1016,7 @@ export default function ChatDetailsContainer() {
           : RNBlobUtil.fs.dirs.PictureDir;
         const desiredPath = `${downloadDir}/${fileName}`;
 
-        const downloadUrl = `${CLOUDFRONT_BASE_URL}${imageUrl}`;
+        const downloadUrl = `${getCloudfrontBaseUrl()}${imageUrl}`;
         console.log('[ChatDetails] Downloading image to:', desiredPath);
 
         const res = await RNBlobUtil.config({

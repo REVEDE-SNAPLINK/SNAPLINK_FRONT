@@ -20,7 +20,19 @@ export const getWebsiteUrl = () =>
   remoteConfig().getString('WEBSITE_URL') || DEFAULTS.WEBSITE_URL;
 
 export async function initRemoteConfig() {
-  await remoteConfig().setDefaults(DEFAULTS);
-  await remoteConfig().setConfigSettings({ minimumFetchIntervalMillis: 3600000 });
-  await remoteConfig().fetchAndActivate();
+  try {
+    await remoteConfig().setDefaults(DEFAULTS);
+    await remoteConfig().setConfigSettings({ minimumFetchIntervalMillis: 3600000 });
+    const activated = await remoteConfig().fetchAndActivate();
+
+    if (__DEV__) {
+      console.log('[RemoteConfig] fetchAndActivate:', activated);
+      console.log('[RemoteConfig] API_BASE_URL:', remoteConfig().getString('API_BASE_URL'));
+      console.log('[RemoteConfig] CLOUDFRONT_BASE_URL:', remoteConfig().getString('CLOUDFRONT_BASE_URL'));
+      console.log('[RemoteConfig] WEBSITE_URL:', remoteConfig().getString('WEBSITE_URL'));
+      console.log('[RemoteConfig] source:', remoteConfig().getValue('API_BASE_URL').getSource());
+    }
+  } catch (e) {
+    console.warn('[RemoteConfig] fetch failed, using defaults:', e);
+  }
 }

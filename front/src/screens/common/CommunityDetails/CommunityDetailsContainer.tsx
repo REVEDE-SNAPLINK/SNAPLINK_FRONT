@@ -160,7 +160,7 @@ export default function CommunityDetailsContainer() {
         await shareWithShortLink({
           targetType: 'community_post',
           targetId: String(post.id),
-          title: post.content.substring(0, 30) + "...",
+          title: (post.content || '').substring(0, 30) + "...",
           userId,
           userType,
         });

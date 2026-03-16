@@ -104,8 +104,8 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
   console.log('📍 Route path:', routePath);
 
 
-  // Parse the path
-  const pathMatch = routePath.match(/^tab\/(\w+)(?:\/(.+))?(?:\?(.+))?$/);
+  // Parse the path - 쿼리 스트링(?...) 앞까지만 remainingPath로 캡처하도록 수정
+  const pathMatch = routePath.match(/^tab\/(\w+)(?:\/([^?]+))?(?:\?(.+))?$/);
 
   if (!pathMatch) {
     console.warn('❌ Invalid deeplink format:', routePath);
@@ -129,7 +129,9 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
   if (queryString) {
     queryString.split('&').forEach(param => {
       const [key, value] = param.split('=');
-      params[key] = decodeURIComponent(value);
+      if (key && value) {
+        params[key] = decodeURIComponent(value);
+      }
     });
   }
 
@@ -173,7 +175,7 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
       screenName = 'PostDetail';
       screenParams = {
         postId: Number(parts[1]),
-        profileImageURI: params.profileImageURI || '',
+        profileImageURI: params.profileImageURI || params.utm_content || '', // utm_content 폴백 추가
       };
     } else if (firstSegment === 'review') {
       // tab/home/review/:id

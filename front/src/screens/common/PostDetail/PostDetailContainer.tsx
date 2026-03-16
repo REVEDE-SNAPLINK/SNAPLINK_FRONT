@@ -109,7 +109,7 @@ export default function PostDetailContainer() {
         await shareWithShortLink({
           targetType: 'portfolio_post',
           targetId: String(postId),
-          title: post.content.substring(0, 30) + "...",
+          title: (post.content || '').substring(0, 30) + "...",
           userId,
           userType,
           utmContent: profileImageURI, // 기존 profileImageURI를 utmContent로 전달

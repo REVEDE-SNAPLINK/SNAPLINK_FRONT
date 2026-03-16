@@ -31,7 +31,7 @@ export const shareWithShortLink = async ({
       ownerType: 'app_user',
       ownerId: userId || undefined,
       utmContent,
-      label: `[App Share] ${targetType} - ${title.substring(0, 20)}`,
+      label: `[App Share] ${targetType} - ${(title || '').substring(0, 20)}`,
     });
 
     // 2. 시스템 공유창 실행

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Share, TextInput, InteractionManager } from 'react-native';
+import { TextInput, InteractionManager } from 'react-native';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
 import CommunityDetailsView from '@/screens/common/CommunityDetails/CommunityDetailsView.tsx';
 import {
@@ -21,7 +21,8 @@ import {
 } from '@/mutations/community.ts';
 import { Alert } from '@/components/ui';
 
-import { safeLogEvent, generateTrackingCode } from '@/utils/analytics.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
+import { shareWithShortLink } from '@/utils/share';
 import { usePhotographerProfileQuery } from '@/queries/photographers.ts';
 import { useTogglePhotographerScrapMutation } from '@/mutations/photographer.ts';
 import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
@@ -153,28 +154,19 @@ export default function CommunityDetailsContainer() {
     }
   };
 
-  const handlePressShare = () => {
+  const handlePressShare = async () => {
     if (post) {
-      const trackingCode = generateTrackingCode();
-      Share.share({
-        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/community/post/${post.id}?tc=${trackingCode}`,
-      });
-      // Firebase Analytics: 공유 이벤트
-      safeLogEvent('community_post_share', {
-        post_id: post.id,
-        author_user_type: post.author.role?.toLowerCase() ?? 'unknown',
-        has_tagged_creator: (post.taggedUsers?.length ?? 0) > 0,
-        sharer_user_type: userType,
-      });
-
-      safeLogEvent('share_link_created', {
-        link_type: 'community_post',
-        target_id: String(post.id),
-        share_channel: 'system_share',
-        creator_user_id: userId || 'anonymous',
-        creator_user_type: userType || 'guest',
-        tracking_code: trackingCode,
-      });
+      try {
+        await shareWithShortLink({
+          targetType: 'community_post',
+          targetId: String(post.id),
+          title: post.content.substring(0, 30) + "...",
+          userId,
+          userType,
+        });
+      } catch (error) {
+        console.error('Failed to share community post:', error);
+      }
     }
   };
 

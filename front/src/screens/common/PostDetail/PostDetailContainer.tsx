@@ -9,8 +9,8 @@ import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
 
 
-import { Share } from 'react-native';
-import { safeLogEvent, generateTrackingCode } from '@/utils/analytics.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
+import { shareWithShortLink } from '@/utils/share';
 
 type PostDetailRouteProp = RouteProp<MainStackParamList, 'PostDetail'>;
 
@@ -103,24 +103,20 @@ export default function PostDetailContainer() {
     });
   }
 
-  const handleSharePost = () => {
-    const params = new URLSearchParams();
-    params.append('profileImageURI', profileImageURI);
+  const handleSharePost = async () => {
     if (post) {
-      const trackingCode = generateTrackingCode();
-      params.append('tc', trackingCode);
-      Share.share({
-        message: `${post.content.substring(0, 10) + "..."}\nhttps://link.snaplink.run/tab/home/portfolio/${postId}?${params}`,
-      });
-
-      safeLogEvent('share_link_created', {
-        link_type: 'portfolio_post',
-        target_id: String(postId),
-        share_channel: 'system_share',
-        creator_user_id: userId || 'anonymous',
-        creator_user_type: userType || 'guest',
-        tracking_code: trackingCode,
-      });
+      try {
+        await shareWithShortLink({
+          targetType: 'portfolio_post',
+          targetId: String(postId),
+          title: post.content.substring(0, 30) + "...",
+          userId,
+          userType,
+          utmContent: profileImageURI, // 기존 profileImageURI를 utmContent로 전달
+        });
+      } catch (error) {
+        console.error('Failed to share portfolio post:', error);
+      }
     }
   }
 

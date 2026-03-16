@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { safeLogEvent, generateTrackingCode, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
+import { safeLogEvent, trackBookingEvent, trackChatEvent } from '@/utils/analytics.ts';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { MainStackParamList, MainNavigationProp } from '@/types/navigation.ts';
 import PhotographerDetailsView from './PhotographerDetailsView.tsx';
@@ -18,10 +18,10 @@ import { useAuthStore } from '@/store/authStore.ts';
 import { useModalStore } from '@/store/modalStore.ts';
 import { useShootingOptionsQuery, useShootingsQuery } from '@/queries/shootings.ts';
 import { Alert } from '@/components/ui';
-import { Share } from 'react-native';
 import { useUpdatePhotographerProfileMutation } from '@/mutations/photographers';
 import { REASON, reportUser } from '@/api/reports.ts';
 import { showErrorAlert } from '@/utils/error';
+import { shareWithShortLink } from '@/utils/share';
 
 type PhotographerDetailsRouteProp = RouteProp<MainStackParamList, 'PhotographerDetails'>;
 
@@ -138,22 +138,19 @@ export default function PhotographerDetailsContainer() {
     return profilePages.pages.flatMap((page) => page.portfolios || []);
   }, [profilePages]);
 
-  const handlePressShare = useCallback(() => {
+  const handlePressShare = useCallback(async () => {
     if (profileData?.nickname) {
-      const trackingCode = generateTrackingCode();
-      const shareUrl = `https://link.snaplink.run/tab/home/photographer/${photographerId}?tc=${trackingCode}`;
-      Share.share({
-        message: `${profileData?.nickname}\n${shareUrl}`,
-      });
-
-      safeLogEvent('share_link_created', {
-        link_type: 'photographer_profile',
-        target_id: photographerId,
-        share_channel: 'system_share',
-        creator_user_id: userId || 'anonymous',
-        creator_user_type: userType || 'guest',
-        tracking_code: trackingCode,
-      });
+      try {
+        await shareWithShortLink({
+          targetType: 'photographer_profile',
+          targetId: photographerId,
+          title: profileData.nickname,
+          userId,
+          userType,
+        });
+      } catch (error) {
+        console.error('Failed to share photographer profile:', error);
+      }
     }
   }, [profileData?.nickname, photographerId, userId, userType]);
 

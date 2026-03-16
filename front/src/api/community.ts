@@ -86,6 +86,7 @@ export interface CommunityPost {
     userId: string;
     nickname: string;
     profileImageUrl: string;
+    role?: string;
   },
   taggedUsers: {
     userId: string;
@@ -119,6 +120,7 @@ export interface CommunityPostAuthor {
   userId: string;
   nickname: string;
   profileImageUrl: string;
+  role?: string;
 }
 
 export interface GetPageable {

@@ -2145,8 +2145,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-month-year-picker (1.9.0):
-    - React
   - react-native-safe-area-context (5.7.0):
     - React-Core
   - react-native-splash-screen (3.3.0):
@@ -3222,7 +3220,6 @@ DEPENDENCIES:
   - "react-native-document-picker (from `../node_modules/@react-native-documents/picker`)"
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
-  - react-native-month-year-picker (from `../node_modules/react-native-month-year-picker`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -3433,8 +3430,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-get-random-values"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
-  react-native-month-year-picker:
-    :path: "../node_modules/react-native-month-year-picker"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-splash-screen:
@@ -3628,7 +3623,6 @@ SPEC CHECKSUMS:
   react-native-document-picker: fc0718e672d1eef0a9eeb02f31161ececb38fc60
   react-native-get-random-values: 858016fc705257e01e7d4b536edadfb25fe54c00
   react-native-image-picker: 9239facc71518f18a822b88fe111533a553d83cc
-  react-native-month-year-picker: 8b72e984757e47e08fece220fa09fcdf1816203d
   react-native-safe-area-context: e89848fc12d32ccca63d0d7d16dd96918d07c730
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   React-NativeModulesApple: 8c7eb6057b00c191a11ad5ced41826ec5a0e4d78
@@ -3688,6 +3682,6 @@ SPEC CHECKSUMS:
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
   Yoga: 9b30b783a17681321b52ac507a37219d7d795ace
 
-PODFILE CHECKSUM: 700a3a094ffa9c22e8c5daf4657a84d59427cc8d
+PODFILE CHECKSUM: a67b226edf866685448965cf9316a23d38a3ceb2
 
 COCOAPODS: 1.16.2

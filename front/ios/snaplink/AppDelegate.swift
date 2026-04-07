@@ -86,7 +86,7 @@ class AppDelegate: ExpoAppDelegate, UNUserNotificationCenterDelegate {
       return AuthController.handleOpenUrl(url: url)
     }
 
-    return false
+    return RCTLinkingManager.application(app, open: url, options: options)
   }
 
   // 알림 탭 시

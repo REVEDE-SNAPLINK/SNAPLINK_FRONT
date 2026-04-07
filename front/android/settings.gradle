@@ -1,6 +1,22 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+
+// local.properties에서 node 경로 읽기
+def localPropertiesFile = new File(settingsDir, "local.properties")
+def localProperties = new Properties()
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream -> localProperties.load(stream) }
+}
+def nodeDir = localProperties.getProperty("node.dir")
+println "Loaded node.dir from local.properties: $nodeDir"
+def nodeExecutable = nodeDir ? "${nodeDir}/node" : "node"
+def npxExecutable = nodeDir ? "${nodeDir}/npx" : "npx"
+println "Resolved nodeExecutable: $nodeExecutable"
+
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> 
+    ex.autolinkLibrariesFromCommand([npxExecutable, "@react-native-community/cli", "config"]) 
+}
+
 rootProject.name = 'snaplink'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
@@ -16,5 +32,5 @@ dependencyResolutionManagement {
   }
 }
 
-apply from: new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
+apply from: new File([nodeExecutable, "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
 useExpoModules()

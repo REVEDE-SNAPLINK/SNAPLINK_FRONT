@@ -79,6 +79,13 @@ target 'snaplink' do
         end
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       end
+
+      # Xcode 26+: C++ Pod 모듈 검증 비활성화 (iosfwd, string 등 C++ 헤더 미발견 방지)
+      if ['glog', 'DoubleConversion'].include?(target.name)
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'NO'
+        end
+      end
     end
 
     # Fix react-native-date-picker missing string header for Xcode 26+
@@ -97,6 +104,18 @@ target 'snaplink' do
           File.write(file, new_contents)
           puts "Fixed #{file_path} - added missing <string> header"
         end
+      end
+    end
+
+    # Fix fmt consteval compilation error with Xcode 26+ Clang
+    fmt_base = File.join(installer.sandbox.pod_dir('fmt'), 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      content = File.read(fmt_base)
+      patched = content.gsub(/^#\s*define FMT_USE_CONSTEVAL 1$/, '#define FMT_USE_CONSTEVAL 0')
+      if patched != content
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, patched)
+        puts "Patched fmt: FMT_USE_CONSTEVAL set to 0 (Xcode 26+ fix)"
       end
     end
   end

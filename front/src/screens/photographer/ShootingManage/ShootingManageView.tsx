@@ -163,7 +163,7 @@ export default function ShootingManageView({
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         showHeader={false}
-        minHeight={isDefaultSelectedProduct ? 250 : 300}
+        height={isDefaultSelectedProduct ? 250 : 300}
         scrollable={false}
       >
         <EditModalWrapper>
@@ -221,7 +221,7 @@ export default function ShootingManageView({
         visible={scheduleModalVisible}
         onClose={() => setScheduleModalVisible(false)}
         showHeader={false}
-        minHeight={200}
+        height={200}
         scrollable={false}
       >
         <EditModalWrapper>

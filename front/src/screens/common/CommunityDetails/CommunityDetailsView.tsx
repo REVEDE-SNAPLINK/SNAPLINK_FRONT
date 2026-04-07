@@ -681,11 +681,10 @@ export default function CommunityDetailsView({
         title={`댓글  ${actualCommentCount}`}
         headerAlign="left"
         scrollable
-        minHeight={SCREEN_HEIGHT * 0.6}
-        maxHeight={SCREEN_HEIGHT * 0.6}
+        height={SCREEN_HEIGHT * 0.6}
+        expandable
         footerHeight={75}
         keyboardAvoid
-        autoGrowToMax
         onEndReached={hasMoreComments && !isFetchingMoreComments ? onLoadMoreComments : undefined}
         onEndReachedThreshold={0.2}
         footer={
@@ -846,7 +845,7 @@ export default function CommunityDetailsView({
         onClose={onCloseSearchingPhotographerModal}
         showHeader={false}
         scrollable={false}
-        minHeight={SCREEN_HEIGHT * 0.8}
+        height={SCREEN_HEIGHT * 0.8}
       >
         <SearchHeaderWrapper>
           <SearchInputWrapper>
@@ -903,7 +902,7 @@ export default function CommunityDetailsView({
           onClose={onCloseTagModal}
           showHeader={true}
           scrollable={false}
-          minHeight={200}
+          height={200}
           title="이 사진에 태그된 작가"
         >
           <TaggedPhotographerButton onPress={onPressTaggedPhotographer}>

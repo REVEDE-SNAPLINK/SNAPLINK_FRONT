@@ -18,7 +18,6 @@ import { PersonalSchedule as APIPersonalSchedule } from '@/api/schedules';
 import { useCreateHolidayMutation, useDeleteHolidayMutation } from '@/mutations/holidays';
 import { getPhotographerDayDetail } from '@/api/schedules';
 import { useAuthStore } from '@/store/authStore';
-import { useFocusEffect } from '@react-navigation/native';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -162,21 +161,16 @@ export default function AddScheduleModal({
     }
   }, [initialSchedule, isDirty, onClose]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        if (handlePressClose) {
-          handlePressClose();
-          return true; // 시스템 종료 방지
-        }
+  useEffect(() => {
+    if (!visible) return;
 
-        return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
-      };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      handlePressClose();
+      return true;
+    });
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [handlePressClose])
-  );
+    return () => subscription.remove();
+  }, [visible, handlePressClose]);
 
   // 휴가 기간 찾기 함수
   const findHolidayRange = async (baseDate: Date, photographerId: string) => {

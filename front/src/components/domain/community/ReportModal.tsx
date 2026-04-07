@@ -18,7 +18,6 @@ import {
 } from '@/api/reports.ts';
 import LoadingSpinner from '@/components/feedback/LoadingSpinner.tsx';
 import { UserType } from '@/types/auth.ts';
-import { useFocusEffect } from '@react-navigation/native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -112,21 +111,16 @@ export default function ReportModal({
     onClose();
   }, [resetModal, isDirty, onClose]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        if (handlePressClose) {
-          handlePressClose();
-          return true; // 시스템 종료 방지
-        }
+  useEffect(() => {
+    if (!visible) return;
 
-        return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
-      };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      handlePressClose();
+      return true;
+    });
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [handlePressClose])
-  );
+    return () => subscription.remove();
+  }, [visible, handlePressClose]);
 
   const handlePressReasonSelector = () => {
     setIsReasonListVisible(!isReasonListVisible);

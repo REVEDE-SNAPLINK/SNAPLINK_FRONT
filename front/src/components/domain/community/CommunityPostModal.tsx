@@ -32,7 +32,6 @@ import SlideModal from '@/components/ui/SlideModal.tsx';
 import SearchIcon from '@/assets/icons/search-white.svg';
 import { useSearchUsersInfiniteQuery } from '@/queries/user.ts';
 import { useAuthStore } from '@/store/authStore.ts';
-import { useFocusEffect } from '@react-navigation/native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -178,21 +177,16 @@ export default function CommunityPostModal({
     onClose();
   }, [initialPost, isDirty, onClose]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        if (handlePressClose) {
-          handlePressClose();
-          return true; // 시스템 종료 방지
-        }
+  useEffect(() => {
+    if (!visible) return;
 
-        return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
-      };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      handlePressClose();
+      return true;
+    });
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [handlePressClose])
-  );
+    return () => subscription.remove();
+  }, [visible, handlePressClose]);
 
   const handlePressTopicSelector = () => {
     setIsTopicListVisible(!isTopicListVisible);
@@ -499,8 +493,7 @@ export default function CommunityPostModal({
         onClose={handleCloseSearchingPhotographerModal}
         showHeader={false}
         scrollable={false}
-        minHeight={SCREEN_HEIGHT * 0.8}
-        maxHeight={SCREEN_HEIGHT * 0.8}
+        height={SCREEN_HEIGHT * 0.8}
       >
         <SearchHeaderWrapper>
           <SearchInputWrapper>

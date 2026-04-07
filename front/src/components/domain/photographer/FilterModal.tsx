@@ -105,7 +105,7 @@ export default function FilterModal({
       onClose={onClose}
       showHeader={true}
       headerLeft={headerContent}
-      minHeight={300}
+      height={300}
       scrollable={false}
       footer={
         <SubmitButton

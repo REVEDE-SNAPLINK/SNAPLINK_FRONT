@@ -428,7 +428,7 @@ export default function ChatDetailsView({
         visible={isModalVisible}
         onClose={onCloseModal}
         showHeader={false}
-        minHeight={260}
+        height={260}
         scrollable={false}
       >
         <EditModalWrapper>

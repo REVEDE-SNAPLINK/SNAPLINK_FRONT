@@ -17,7 +17,6 @@ import { useDeleteHolidayMutation } from '@/mutations/holidays';
 import { theme } from '@/theme';
 import { getPhotographerDayDetail } from '@/api/schedules';
 import { useAuthStore } from '@/store/authStore';
-import { useFocusEffect } from '@react-navigation/native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -225,21 +224,16 @@ export default function ScheduleDetailModal({
     setIsEditModalVisible(false);
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        if (onClose) {
-          onClose();
-          return true; // 시스템 종료 방지
-        }
+  useEffect(() => {
+    if (!visible) return;
 
-        return false; // 더 이상 뒤로 갈 곳이 없으면 앱 종료 허용
-      };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [onClose])
-  );
+    return () => subscription.remove();
+  }, [visible, onClose]);
 
   if (!visible || !displaySchedule) return null;
 
@@ -312,7 +306,7 @@ export default function ScheduleDetailModal({
         </AnimatedContainer>
       </Overlay>
 
-      <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal} showHeader={false} minHeight={220}>
+      <SlideModal visible={isEditModalVisible} onClose={onCloseEditModal} showHeader={false} height={220}>
         <EditModalWrapper>
           {displaySchedule?.scheduleType !== 'holiday' && (
             <>

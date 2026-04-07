@@ -4,7 +4,7 @@ import { MainNavigationProp, MainStackParamList } from '@/types/navigation';
 import PostDetailView from './PostDetailView';
 import { usePortfolioPostQuery } from '@/queries/photographers';
 import { useAuthStore } from '@/store/authStore.ts';
-import { useDeletePortfolioMutation } from '@/mutations/photographers';
+import { useDeletePortfolioMutation, useTogglePinPortfolioMutation } from '@/mutations/photographers';
 import { Alert } from '@/components/ui';
 import { showErrorAlert } from '@/utils/error';
 
@@ -25,6 +25,7 @@ export default function PostDetailContainer() {
 
   const { data: post, isLoading } = usePortfolioPostQuery(postId);
   const { mutate: deletePortfolio } = useDeletePortfolioMutation(postId, post?.photographerId);
+  const { mutate: togglePin } = useTogglePinPortfolioMutation(postId, post?.photographerId);
 
   const isMyPost = userId === post?.photographerId;
 
@@ -53,6 +54,24 @@ export default function PostDetailContainer() {
 
   const handleCloseMoreModal = () => {
     setIsMoreModalVisible(false);
+  }
+
+  const handleTogglePin = () => {
+    setIsMoreModalVisible(false);
+    togglePin(undefined, {
+      onSuccess: () => {
+        safeLogEvent('portfolio_post_pinned', {
+          post_id: postId,
+        });
+      },
+      onError: (error) => {
+        showErrorAlert({
+          title: '고정 실패',
+          action: '포트폴리오 고정',
+          error,
+        });
+      },
+    });
   }
 
   const handleEditPost = () => {
@@ -133,6 +152,7 @@ export default function PostDetailContainer() {
       onPressMore={handlePressMore}
       onCloseMoreModal={handleCloseMoreModal}
       onSharePost={handleSharePost}
+      onTogglePin={handleTogglePin}
       onEditPost={handleEditPost}
       onDeletePost={handleDeletePost}
       navigation={navigation}

@@ -14,6 +14,7 @@ import {
   deletePortfolioPost,
   updatePhotographerProfile,
   UpdatePhotographerProfileRequest,
+  togglePinPortfolio,
 } from '@/api/photographers.ts';
 import { photographersQueryKeys } from '@/queries/keys.ts';
 
@@ -140,6 +141,23 @@ export const useDeletePortfolioMutation = (postId: number, photographerId?: stri
       await Promise.all([
         qc.invalidateQueries({ queryKey: photographersQueryKeys.portfolio(postId) }),
         qc.invalidateQueries({ queryKey: photographersQueryKeys.all }),
+        ...(photographerId
+          ? [qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) })]
+          : []),
+      ]);
+    },
+  });
+};
+
+/** 포트폴리오 고정/해제 토글 */
+export const useTogglePinPortfolioMutation = (postId: number, photographerId?: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => togglePinPortfolio(postId),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: photographersQueryKeys.portfolio(postId) }),
         ...(photographerId
           ? [qc.invalidateQueries({ queryKey: photographersQueryKeys.profile(photographerId) })]
           : []),

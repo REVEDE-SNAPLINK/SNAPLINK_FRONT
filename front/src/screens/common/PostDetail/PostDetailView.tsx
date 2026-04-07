@@ -9,6 +9,7 @@ import SlideModal from '@/components/ui/SlideModal.tsx';
 import Icon from '@/components/ui/Icon.tsx';
 import EditIcon from '@/assets/icons/edit.svg';
 import DeleteIcon from '@/assets/icons/delete.svg';
+import PinIcon from '@/assets/icons/pin.svg';
 import ServerImage from '@/components/ui/ServerImage.tsx';
 import UploadIcon from '@/assets/icons/upload.svg';
 import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';
@@ -26,6 +27,7 @@ interface PostDetailViewProps {
   setCurrentIndex: (index: number) => void;
   showMoreModal: boolean;
   onCloseMoreModal: () => void;
+  onTogglePin: () => void;
   onEditPost: () => void;
   onDeletePost: () => void;
   onSharePost: () => void;
@@ -44,6 +46,7 @@ export default function PostDetailView({
   showMoreModal,
   onCloseMoreModal,
   onSharePost,
+  onTogglePin,
   onEditPost,
   onDeletePost,
   navigation, }: PostDetailViewProps) {
@@ -155,7 +158,7 @@ export default function PostDetailView({
         onClose={onCloseMoreModal}
         title="더보기"
         headerAlign="center"
-        minHeight={250}
+        height={300}
         scrollable={false}
       >
         <ModalButton onPress={onSharePost}>
@@ -171,6 +174,17 @@ export default function PostDetailView({
         </ModalButton>
         {isMyPost && (
           <>
+            <ModalButton onPress={onTogglePin}>
+              <Icon width={18} height={18} Svg={PinIcon} />
+              <Typography
+                fontSize={14}
+                lineHeight="140%"
+                letterSpacing="-2.5%"
+                marginLeft={8}
+              >
+                {post.pined ? '게시글 고정 해제' : '게시글 고정'}
+              </Typography>
+            </ModalButton>
             <ModalButton onPress={onEditPost}>
               <Icon width={18} height={18} Svg={EditIcon} />
               <Typography

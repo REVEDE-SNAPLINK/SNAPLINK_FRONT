@@ -29,6 +29,7 @@ import DocumentIcon from '@/assets/icons/document.svg';
 import EditIcon from '@/assets/icons/edit.svg';
 import LocationIcon from '@/assets/icons/location.svg';
 import DangerCircleIcon from '@/assets/icons/danger-circle.svg';
+import PinIcon from '@/assets/icons/pin.svg';
 
 export interface ShareLink {
   name: string;
@@ -156,6 +157,11 @@ export default function PhotographerDetailsView({
 
   const renderPortfolioItem = ({ item }: { item: PhotographerPortfolioThumb }) => (
     <PortfolioImageWrapper onPress={() => onPressPortfolioImage(item.id)}>
+      {item.isPinned && (
+        <PortfolioPinIconWrapper>
+          <Icon width={18} height={18} Svg={PinIcon} />
+        </PortfolioPinIconWrapper>
+      )}
       <PortfolioImage uri={item.thumbnailUrl} requestWidth={IMAGE_SIZE * 2} />
     </PortfolioImageWrapper>
   );
@@ -529,7 +535,7 @@ export default function PhotographerDetailsView({
         visible={isMoreModalVisible}
         onClose={onCloseMoreModal}
         title="더보기"
-        minHeight={276}
+        height={276}
         headerAlign="center"
         scrollable={false}
       >
@@ -616,7 +622,7 @@ export default function PhotographerDetailsView({
       <SlideModal
         visible={isProfileInfoModalVisible}
         onClose={onCloseProfileInfoModal}
-        minHeight={300}
+        height={300}
         showHeader={false}
         scrollable={false}
       >
@@ -781,7 +787,15 @@ const PortfolioImageWrapper = styled.TouchableOpacity`
   width: ${IMAGE_SIZE}px;
   height: ${IMAGE_SIZE}px;
   background-color: #F4F4F4;
+  position: relative;
 `;
+
+const PortfolioPinIconWrapper = styled.View`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+`
 
 const PortfolioImage = styled(ServerImage)`
   width: 100%;

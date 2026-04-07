@@ -70,6 +70,8 @@ export interface GetPageable {
 export interface PhotographerPortfolioThumb {
   id: number;
   thumbnailUrl: string;
+  communityId: number;
+  isPinned: boolean;
 }
 
 export interface GetPhotographerProfileResponse {
@@ -557,6 +559,7 @@ export interface GetPortfolioResponse {
   photographerId: string;
   photographerName: string;
   photos: PortfolioPhoto[];
+  pined: boolean;
 }
 
 export const getPortfolioPost = async (postId: number): Promise<GetPortfolioResponse> => {
@@ -793,4 +796,12 @@ export const searchPhotographersMulti = async (
 
   const text = response.text() as string;
   return JSON.parse(text);
+}
+
+export const togglePinPortfolio = async (postId: number) => {
+  const response = await authFetch(`${photographersBase()}/portfolios/${postId}/pin`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) throw new Error('포트폴리오를 고정할 수 없습니다.');
 }

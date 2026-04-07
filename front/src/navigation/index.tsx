@@ -5,7 +5,7 @@ import {
   NavigationState,
 } from '@react-navigation/native';
 import RootNavigator from '@/navigation/RootNavigator.tsx';
-import { AppState, Platform, Linking } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore.ts';
 import analytics from '@react-native-firebase/analytics';
@@ -18,40 +18,26 @@ import {
   safeCrashlyticsLog,
   trackDeepLinkOpen,
   resetImpressionCache,
+  loadAttributionTrackingCode,
 } from '@/utils/analytics.ts';
+import { resolveAndroidInstallReferrer } from '@/utils/installReferrer.ts';
+import { getLinkHubUrl } from '@/config/api';
 
 export const navigationRef = createNavigationContainerRef();
 
-const linking = {
-  prefixes: [
-    'snaplink://',
-    'https://link.snaplink.run',
-  ],
-  config: {
-    screens: {
-      Main: {
-        path: '',
-        screens: {
-          Home: 'tab/:tab',
-          PhotographerDetails: 'tab/home/photographer/:photographerId',
-          PostDetail: 'tab/home/portfolio/:postId',
-          ReviewDetails: 'tab/home/review/:reviewId',
-          CommunityDetails: 'tab/community/post/:postId',
-          ChatDetails: 'tab/chat/:roomId',
-          BookingManage: 'tab/profile/bookings/photographer',
-          BookingHistory: 'tab/profile/bookings/user',
-          BookingDetails: 'tab/profile/booking/:bookingId',
-          ViewPhotos: 'tab/profile/booking/:bookingId/photos',
-          WriteReview: 'tab/profile/booking/:bookingId/writeReview',
-          NoticeDetails: 'tab/profile/notice/:noticeId',
-          AIRecommdationForm: 'tab/home/ai-recommendation',
-        },
-      },
-    },
-  },
-};
+// 미인증 상태에서 수신된 딥링크를 보관한다.
+// 인증 완료 후 pendingDeepLink processing useEffect에서 소비된다.
+let pendingDeepLink: { url: string; isFirstInstall: boolean } | null = null;
 
 export const navigateByDeepLink = async (url: string, options?: { userId?: string; userType?: string; isFirstInstall?: boolean }) => {
+  // 인증 상태 확인 - 미인증이면 보류하고 종료
+  const { status } = useAuthStore.getState();
+  if (status !== 'authed') {
+    console.log('⏳ Deep link deferred (auth status:', status, '):', url);
+    pendingDeepLink = { url, isFirstInstall: options?.isFirstInstall ?? false };
+    return;
+  }
+
   console.log('🔗 Processing deep link:', url);
 
   // ── deep_link_open 이벤트 로깅 ──
@@ -82,7 +68,7 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
 
   if (!navigationRef.isReady()) {
     console.log('⚠️ Navigation not ready, retrying in 500ms...');
-    setTimeout(() => navigateByDeepLink(url), 500);
+    setTimeout(() => navigateByDeepLink(url, options), 500);
     return;
   }
 
@@ -277,6 +263,35 @@ export const navigateByDeepLink = async (url: string, options?: { userId?: strin
   }
 };
 
+/**
+ * 앱 최초 설치 후 실행 시 link-hub에서 deferred deep link를 조회한다.
+ * go.snaplink.run/l/{code} 방문 시 서버에 기록된 핑거프린트와 매칭하여
+ * 설치 전에 클릭한 링크의 목적지로 자동 이동시킨다.
+ */
+const checkDeferredDeepLink = async (options?: { userId?: string; userType?: string }) => {
+  try {
+    const linkHubUrl = getLinkHubUrl();
+    const res = await fetch(`${linkHubUrl}/api/deferred`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (data.found && data.deepLinkUrl) {
+      console.log('🔗 Deferred deep link found:', data.deepLinkUrl);
+      navigateByDeepLink(data.deepLinkUrl, {
+        ...options,
+        isFirstInstall: true,
+      });
+    }
+  } catch (error) {
+    // deferred deep link 실패는 무시 (앱 정상 동작에 영향 없음)
+    console.warn('⚠️ Deferred deep link check failed:', error);
+  }
+};
+
 const getActiveRouteName = (route: Route<string, object | undefined>): string => {
   const state = (route as any)?.state as NavigationState | undefined;
 
@@ -291,26 +306,49 @@ export default function AppNavigator() {
   const sessionStartTime = useRef<number | null>(null);
   const appState = useRef(AppState.currentState)
 
-  const { userId, userType } = useAuthStore();
+  const { status, userId, userType } = useAuthStore();
 
-  // Handle initial deep link (when app is opened via deep link)
+  // 인증 완료 시 보류 중인 딥링크 처리
+  useEffect(() => {
+    if (status === 'authed' && pendingDeepLink) {
+      const { url, isFirstInstall } = pendingDeepLink;
+      pendingDeepLink = null;
+      navigateByDeepLink(url, { userId, userType, isFirstInstall });
+    }
+  }, [status, userId, userType]);
+
+    // 앱 콜드 스타트 시 딥링크 처리 (최초 1회만 실행)
   useEffect(() => {
     const handleInitialURL = async () => {
       try {
+        // 이전 유입 tracking_code 복원 (전환 추적용)
+        await loadAttributionTrackingCode();
+
         const isFirstInstall = await checkAndMarkFirstInstall();
         const initialUrl = await Linking.getInitialURL();
         console.log('🚀 Initial URL from Linking:', initialUrl);
+
         if (initialUrl) {
-          // Wait for navigation to be ready
-          setTimeout(() => {
-            navigateByDeepLink(initialUrl, { userId, userType, isFirstInstall });
-          }, 1000);
-        } else if (isFirstInstall) {
-          // 딥링크 없이 최초 설치 후 앱 오픈
-          safeLogEvent('first_open', {
-            user_id: userId || 'anonymous',
-            user_type: userType || 'guest',
-          });
+          navigateByDeepLink(initialUrl, { userId, userType, isFirstInstall });
+          return;
+        }
+
+        if (isFirstInstall) {
+          // 최초 설치 시 deferred deep link 조회 (first_open은 Firebase가 자동 수집)
+          if (Platform.OS === 'android') {
+            // Android: Install Referrer API로 link_code 직접 복원 (정확도 ~99%)
+            const result = await resolveAndroidInstallReferrer();
+            if (result) {
+              console.log('📦 Android referrer deep link resolved:', result.deepLinkUrl);
+              navigateByDeepLink(result.deepLinkUrl, { userId, userType, isFirstInstall: true });
+            } else {
+              // Referrer 없으면 fingerprint 폴백
+              checkDeferredDeepLink({ userId, userType });
+            }
+          } else {
+            // iOS: fingerprint 매칭
+            checkDeferredDeepLink({ userId, userType });
+          }
         }
       } catch (error) {
         console.error('❌ Error getting initial URL:', error);
@@ -320,7 +358,7 @@ export default function AppNavigator() {
     handleInitialURL();
   }, [userId, userType]);
 
-  // Handle deep links when app is already open
+  // 앱이 이미 실행 중일 때 딥링크 수신
   useEffect(() => {
     console.log('🎧 Setting up deep link listener...');
 
@@ -342,16 +380,16 @@ export default function AppNavigator() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextState => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
-        // 세션 시작
+        // 포그라운드 복귀 (session_start는 Firebase가 자동 수집)
         sessionStartTime.current = Date.now();
         resetImpressionCache(); // 세션 전환 시 impression dedupe 캐시 초기화
-        await analytics().logEvent('session_start');
+        await analytics().logEvent('app_foreground');
       }
 
       if (appState.current === 'active' && nextState.match(/inactive|background/)) {
-        // 세션 종료
+        // 백그라운드 전환
         const duration = sessionStartTime.current ? (Date.now() - sessionStartTime.current) / 1000 : 0;
-        await analytics().logEvent('session_end', { duration_seconds: duration });
+        await analytics().logEvent('app_background', { duration_seconds: duration });
         sessionStartTime.current = null;
       }
 
@@ -363,20 +401,12 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer
-      linking={linking}
       ref={navigationRef}
       onReady={() => {
         const route = navigationRef.getCurrentRoute();
         routeNameRef.current = route ? getActiveRouteName(route) : undefined;
 
-        // 앱 첫 실행 로그
-        analytics().logEvent('app_open', {
-          user_id: userId || 'anonymous',
-          user_type: userType || 'guest',
-          platform: Platform.OS,
-        });
-
-        // Crashlytics 로그
+        // Crashlytics 로그 (app_open은 Firebase가 자동 수집)
         crashlytics().log('App opened');
       }}
       onStateChange={async () => {
@@ -387,13 +417,10 @@ export default function AppNavigator() {
           // Crashlytics 현재 화면 attribute 갱신
           setCrashlyticsContext({ screen: currentRouteName });
 
-          // 화면 진입 이벤트
-          await analytics().logEvent('screen_view', {
-            screen_name: currentRouteName,
-            platform: Platform.OS,
-            user_id: userId || 'anonymous',
-            user_type: userType || 'guest',
-            session_start_timestamp: sessionStartTime.current,
+          // 화면 진입 이벤트 (GA4 표준 screen_view)
+          await analytics().logScreenView({
+            screenName: currentRouteName,
+            screenClass: currentRouteName,
           });
 
           routeNameRef.current = currentRouteName;

@@ -1,10 +1,10 @@
 import UserBookingDetailsView from '@/screens/user/BookingDetails/UserBookingDetailsView.tsx';
-import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useBookingDetailQuery } from '@/queries/bookings.ts';
 import { MainNavigationProp, MainStackParamList } from '@/types/navigation.ts';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
-import { trackScreenView, safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
+import { safeLogEvent, trackBookingEvent } from '@/utils/analytics.ts';
 import { useCreateOrGetChatRoomMutation } from '@/queries/chat.ts';
 import { chatQueryKeys } from '@/queries/keys.ts';
 import { queryClient } from '@/config/queryClient.ts';
@@ -55,12 +55,6 @@ export default function UserBookingDetailsContainer() {
       setShouldFetchReview(false);
     }
   }, [isReviewError, shouldFetchReview, bookingId, navigation]);
-
-  useFocusEffect(
-    useCallback(() => {
-      trackScreenView('BookingDetails');
-    }, [])
-  );
 
   // 예약 상태 변화 추적 (세션 간 중복 방지: AsyncStorage)
   // 유저가 BookingDetails를 열었을 때 상태를 보고 최초 1회만 이벤트 발송

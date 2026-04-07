@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import BookingHistoryView from '@/screens/user/BookingHistory/BookingHistoryView.tsx';
 import { useUserBookingsInfiniteQuery } from '@/queries/bookings.ts'
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { useBookingReviewMeQuery } from '@/queries/reviews.ts';
 import { reviewsQueryKeys } from '@/queries/keys.ts';
-import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
+import { safeLogEvent } from '@/utils/analytics.ts';
 import { useCancelBookingFromCustomerMutation } from '@/mutations/bookings.ts';
 import { Alert } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,12 +35,6 @@ export default function BookingHistoryContainer() {
 
   const { data: bookingReview, isError: isReviewError } = useBookingReviewMeQuery(selectedBookingId);
   const cancelBookingMutation = useCancelBookingFromCustomerMutation();
-
-  useFocusEffect(
-    useCallback(() => {
-      trackScreenView('BookingHistory');
-    }, [])
-  );
 
   useEffect(() => {
     if (bookingReview && selectedBookingId) {

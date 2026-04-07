@@ -1,4 +1,4 @@
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import MyReviewsView from '@/screens/user/MyReviews/MyReviewsView';
 import { useDeleteReviewMutation } from '@/mutations/reviews';
 import { Alert } from '@/components/ui';
@@ -6,8 +6,7 @@ import { showErrorAlert } from '@/utils/error';
 import { useMyReviewsInfiniteQuery } from '@/queries/reviews.ts';
 import { MainNavigationProp } from '@/types/navigation.ts';
 import { GetMyReviewsResponse, MyReviewItem } from '@/api/reviews.ts';
-import { trackScreenView, safeLogEvent } from '@/utils/analytics.ts';
-import { useCallback } from 'react';
+import { safeLogEvent } from '@/utils/analytics.ts';
 
 export default function MyReviewsContainer() {
   const navigation = useNavigation<MainNavigationProp>();
@@ -15,12 +14,6 @@ export default function MyReviewsContainer() {
   // Fetch my reviews
   const { data, isLoading, error } = useMyReviewsInfiniteQuery({ size: 10 });
   const deleteReviewMutation = useDeleteReviewMutation();
-
-  useFocusEffect(
-    useCallback(() => {
-      trackScreenView('MyReviews');
-    }, [])
-  );
 
   const handlePressBack = () => navigation.goBack();
 

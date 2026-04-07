@@ -26,8 +26,14 @@ let sessionTrackingCode: string | undefined = undefined;
 const EVENT_VERSION = 1;
 
 export const setAnalyticsUserContext = (userId?: string, userType?: 'user' | 'photographer' | 'guest') => {
-    if (userId !== undefined) globalUserId = userId;
-    if (userType !== undefined) globalUserType = userType;
+    if (userId !== undefined) {
+        globalUserId = userId;
+        analytics().setUserId(userId || null).catch(() => {});
+    }
+    if (userType !== undefined) {
+        globalUserType = userType;
+        analytics().setUserProperty('user_type', userType).catch(() => {});
+    }
 };
 
 export const setAnalyticsFlowContext = (screen?: string, source?: string, entrySource?: string, trackingCode?: string) => {
@@ -60,10 +66,7 @@ const injectCommonParams = (params?: Record<string, any>) => {
         user_type: params?.user_type ?? globalUserType,
         platform: params?.platform ?? Platform.OS,
         screen: params?.screen ?? currentScreen,
-        source: params?.source ?? currentSource,
-        entry_source: params?.entry_source ?? currentEntrySource,
         tracking_code: params?.tracking_code ?? sessionTrackingCode,
-        session_start_timestamp: Date.now(),
         event_version: params?.event_version ?? EVENT_VERSION,
     };
 };
@@ -206,7 +209,11 @@ export const trackScreenView = async (screenName: string, params?: Record<string
     lastScreenView = screenName;
     setAnalyticsFlowContext(screenName); // 글로벌 컨텍스트 업데이트
 
-    await safeLogEvent('screen_view', { ...params });
+    try {
+        await analytics().logScreenView({ screenName, screenClass: screenName });
+    } catch (e) {
+        console.warn(`[Analytics] Failed to log screen_view "${screenName}":`, e);
+    }
 };
 
 /**
@@ -247,6 +254,7 @@ export const trackDeepLinkOpen = (rawUrl: string, parsedData: ParsedDeepLink, pa
     if (parsedData.trackingCode) {
         setAnalyticsFlowContext(undefined, 'deep_link', parsedData.sourceChannel, parsedData.trackingCode);
         sessionTrackingCode = parsedData.trackingCode; // 세션 전역 유지
+        saveAttributionTrackingCode(parsedData.trackingCode); // 앱 재시작 후에도 유지
     }
 
     safeLogEvent('deep_link_open', {
@@ -311,7 +319,40 @@ export const trackChatEvent = (
 
 
 // ────────────────────────────────────────────
-// 5) First install detection
+// 5) Attribution tracking code persistence
+// ────────────────────────────────────────────
+
+const ATTRIBUTION_TRACKING_CODE_KEY = '@snaplink_attribution_tracking_code';
+
+/**
+ * 링크 클릭으로 유입된 tracking_code를 AsyncStorage에 저장합니다.
+ * 앱 재시작 후에도 유입 경로를 유지해 전환 이벤트에 속성 추적이 가능합니다.
+ */
+export const saveAttributionTrackingCode = async (code: string): Promise<void> => {
+    try {
+        await AsyncStorage.setItem(ATTRIBUTION_TRACKING_CODE_KEY, code);
+    } catch (e) {
+        console.warn('[Analytics] Failed to save attribution tracking code:', e);
+    }
+};
+
+/**
+ * 저장된 attribution tracking_code를 AsyncStorage에서 불러와 세션 컨텍스트에 설정합니다.
+ * 앱 시작 시 1회 호출해야 합니다.
+ */
+export const loadAttributionTrackingCode = async (): Promise<void> => {
+    try {
+        const code = await AsyncStorage.getItem(ATTRIBUTION_TRACKING_CODE_KEY);
+        if (code && !sessionTrackingCode) {
+            sessionTrackingCode = code;
+        }
+    } catch (e) {
+        console.warn('[Analytics] Failed to load attribution tracking code:', e);
+    }
+};
+
+// ────────────────────────────────────────────
+// 6) First install detection
 // ────────────────────────────────────────────
 
 const FIRST_INSTALL_KEY = '@snaplink_first_install';
@@ -339,6 +380,24 @@ export interface ParsedDeepLink {
     targetId: string;
     trackingCode: string | null;
     sourceChannel: SourceChannel;
+}
+
+// link-hub LinkChannel → analytics SourceChannel 매핑
+function mapLinkChannelToSourceChannel(channel: string): SourceChannel {
+    switch (channel) {
+        case 'instagram_ads':
+        case 'instagram_profile':
+            return 'instagram';
+        case 'creator_personal':
+        case 'app_share':
+            return 'system_share';
+        case 'blogger':
+        case 'landing_download':
+        case 'manual_campaign':
+            return 'external';
+        default:
+            return 'unknown';
+    }
 }
 
 export const parseDeepLinkUrl = (url: string): ParsedDeepLink => {
@@ -372,16 +431,17 @@ export const parseDeepLinkUrl = (url: string): ParsedDeepLink => {
         });
     }
 
-    const trackingCode = queryParams['tc'] || null;
+    const trackingCode = queryParams['tracking_code'] || null;
+    const channel = queryParams['channel'] || null;
 
-    // source 판별
+    // source 판별: link-hub가 전달한 channel 파라미터를 우선 사용
     let sourceChannel: SourceChannel = 'unknown';
-    if (trackingCode) {
-        sourceChannel = 'system_share'; // 일단 share로 통일
-    } else if (url.startsWith('https://')) {
-        sourceChannel = 'external';
+    if (channel) {
+        sourceChannel = mapLinkChannelToSourceChannel(channel);
     } else if (url.startsWith('snaplink://')) {
         sourceChannel = 'internal';
+    } else if (url.startsWith('https://')) {
+        sourceChannel = 'external';
     }
 
     // 경로 패턴에서 타입과 ID 추출

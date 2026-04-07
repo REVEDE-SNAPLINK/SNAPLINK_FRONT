@@ -5,6 +5,7 @@ const DEFAULTS = {
   KAKAO_NATIVE_APP_KEY: 'fa46338c23ef208df3620a7eef81f6a6',
   CLOUDFRONT_BASE_URL: 'https://datsbgc37wc3i.cloudfront.net/',
   WEBSITE_URL: 'https://www.snaplink.run',
+  LINK_HUB_URL: 'https://go.snaplink.run',
 };
 
 export const getApiBaseUrl = () =>
@@ -18,6 +19,9 @@ export const getCloudfrontBaseUrl = () =>
 
 export const getWebsiteUrl = () =>
   remoteConfig().getString('WEBSITE_URL') || DEFAULTS.WEBSITE_URL;
+
+export const getLinkHubUrl = () =>
+  remoteConfig().getString('LINK_HUB_URL') || DEFAULTS.LINK_HUB_URL;
 
 export async function initRemoteConfig() {
   try {

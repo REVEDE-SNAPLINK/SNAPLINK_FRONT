@@ -22,7 +22,7 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     setTheme(R.style.AppTheme)
     SplashScreen.show(this)
-    super.onCreate(savedInstanceState)
+    super.onCreate(null)
   }
 
   /**

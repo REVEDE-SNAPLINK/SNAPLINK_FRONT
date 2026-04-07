@@ -9,7 +9,7 @@ import SlideModal from '@/components/ui/SlideModal.tsx';
 import Icon from '@/components/ui/Icon.tsx';
 import EditIcon from '@/assets/icons/edit.svg';
 import DeleteIcon from '@/assets/icons/delete.svg';
-import PinIcon from '@/assets/icons/pin.svg';
+import PinIcon from '@/assets/icons/pin_black.svg';
 import ServerImage from '@/components/ui/ServerImage.tsx';
 import UploadIcon from '@/assets/icons/upload.svg';
 import LogoColorSmallIcon from '@/assets/icons/logo-color-icon-small.svg';

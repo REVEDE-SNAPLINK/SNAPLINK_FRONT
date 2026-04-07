@@ -9,8 +9,7 @@ import dayjs from 'dayjs';
 import Icon from '@/components/ui/Icon.tsx';
 import { View, TouchableOpacity } from 'react-native';
 import Animated, { useAnimatedStyle, useDerivedValue, SharedValue, useSharedValue } from 'react-native-reanimated';
-// MonthPicker는 BookingCalendarView에서 사용
-export { default as MonthPicker } from 'react-native-month-year-picker';
+
 
 LocaleConfig.locales['ko'] = {
   monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],

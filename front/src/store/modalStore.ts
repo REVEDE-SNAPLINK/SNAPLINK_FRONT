@@ -52,6 +52,16 @@ interface ReportModalState {
   isLoading?: boolean;
 }
 
+interface MonthPickerModalState {
+  visible: boolean;
+  value: Date;
+  onConfirm?: (date: Date) => void;
+  minYear?: number;
+  maxYear?: number;
+}
+
+
+
 interface ModalStore {
   communityPostModal: CommunityPostModalState;
   openCommunityPostModal: (
@@ -84,6 +94,12 @@ interface ModalStore {
   ) => void;
   closeReportModal: () => void;
   setReportModalLoading: (isLoading: boolean) => void;
+
+
+
+  monthPickerModal: MonthPickerModalState;
+  openMonthPickerModal: (value: Date, onConfirm: (date: Date) => void, minYear?: number, maxYear?: number) => void;
+  closeMonthPickerModal: () => void;
 
   /** 모든 모달을 닫음 (로그아웃 시 터치 블록 방지) */
   resetAllModals: () => void;
@@ -213,11 +229,30 @@ export const useModalStore = create<ModalStore>((set) => ({
       },
     })),
 
-  resetAllModals: () =>
+
+
+  monthPickerModal: {
+    visible: false,
+    value: new Date(),
+    onConfirm: undefined,
+    minYear: undefined,
+    maxYear: undefined,
+  },
+  openMonthPickerModal: (value, onConfirm, minYear, maxYear) =>
     set({
+      monthPickerModal: { visible: true, value, onConfirm, minYear, maxYear },
+    }),
+  closeMonthPickerModal: () =>
+    set((state) => ({
+      monthPickerModal: { ...state.monthPickerModal, visible: false },
+    })),
+
+  resetAllModals: () =>
+    set((state) => ({
       communityPostModal: { visible: false, initialPost: undefined, onSubmit: undefined, isLoading: false },
       addScheduleModal: { visible: false, initialSchedule: undefined, onSubmit: undefined, isDuplicate: false, initialStartDate: undefined },
       scheduleDetailModal: { visible: false, schedule: undefined, scheduleId: undefined },
       reportModal: { visible: false, targetId: undefined, targetType: undefined, targetUserType: undefined, initialReason: undefined, onSubmit: undefined, isLoading: false },
-    }),
+      monthPickerModal: { ...state.monthPickerModal, visible: false },
+    })),
 }));

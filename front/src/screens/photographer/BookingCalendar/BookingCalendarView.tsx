@@ -2,8 +2,8 @@ import {
   ScheduleCalendarHeader,
   ScheduleCalendarGrid,
   EnhancedScheduleData,
-  MonthPicker,
 } from '@/components/domain/booking/ScheduleCalendar.tsx';
+import { useModalStore } from '@/store/modalStore';
 import styled from '@/utils/scale/CustomStyled.ts';
 import { Typography } from '@/components/ui';
 import { theme } from '@/theme';
@@ -91,14 +91,14 @@ export default function BookingCalendarView({
   onPressAddSchedule,
   onMonthChange,
 }: BookingCalendarViewProps) {
+  const { openMonthPickerModal } = useModalStore();
+
   const [containerHeight, setContainerHeight] = useState(0);
   // containerHeight에서 동기 계산 (useEffect 비동기 딜레이 제거)
   const defaultHeight = containerHeight > 0
     ? containerHeight - (CALENDAR_HEADER_HEIGHT + MAX_WEEK_COUNT * DAY_HEIGHT) + 20
     : 0;
   const [renderType, setRenderType] = useState<'HIDDEN' | 'DEFAULT' | 'FULL'>('HIDDEN');
-  const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
-  const isPickerActiveRef = useRef(false); // 다이얼로그가 열려있거나 처리 중인지 추적
 
   // onLayout 측정 완료 여부
   const isLayoutReady = containerHeight > 0;
@@ -198,37 +198,24 @@ export default function BookingCalendarView({
   }, [currentYearMonth, onMonthChange]);
 
   // 헤더 연도.월 클릭 핸들러
-  const handlePressYearMonth = useCallback(() => {
-    // 이미 picker가 활성화되어 있으면 무시
-    if (isPickerActiveRef.current) return;
-    isPickerActiveRef.current = true;
-    setIsMonthPickerVisible(true);
-  }, []);
-
-  // MonthPicker 선택 핸들러
   const currentDateForPicker = useMemo(() => {
     const [year, month] = currentYearMonth.split('-').map(Number);
     return new Date(year, month - 1, 1);
   }, [currentYearMonth]);
 
-  const handleMonthPickerChange = useCallback((_event: string, newDate: Date) => {
-    // 이미 비활성화 상태면 무시
-    if (!isPickerActiveRef.current) return;
-
-    // 즉시 false로 설정하여 리렌더링 시 재마운트 방지
-    isPickerActiveRef.current = false;
-    setIsMonthPickerVisible(false);
-
-    if (_event === 'dateSetAction' || _event === 'neutralAction') {
-      const year = newDate.getFullYear();
-      const month = String(newDate.getMonth() + 1).padStart(2, '0');
-      const yearMonth = `${year}-${month}`;
-      // 다음 프레임에서 호출하여 상태 업데이트 완료 후 실행
-      setTimeout(() => {
-        onMonthChange(yearMonth);
-      }, 50);
-    }
-  }, [onMonthChange]);
+  const handlePressYearMonth = useCallback(() => {
+    openMonthPickerModal(
+      currentDateForPicker,
+      (newDate: Date) => {
+        const year = newDate.getFullYear();
+        const month = String(newDate.getMonth() + 1).padStart(2, '0');
+        setTimeout(() => {
+          onMonthChange(`${year}-${month}`);
+        }, 50);
+      },
+      2001,
+    );
+  }, [currentDateForPicker, onMonthChange, openMonthPickerModal]);
 
   // 오늘 버튼 클릭 핸들러 - 오늘 날짜가 있는 달로 이동
   const handleSelectToday = useCallback(() => {
@@ -584,15 +571,7 @@ export default function BookingCalendarView({
           </Animated.View>
         </BookingContentContainer>
       </Container>
-      {isMonthPickerVisible && isPickerActiveRef.current && (
-        <MonthPicker
-          value={currentDateForPicker}
-          onChange={handleMonthPickerChange}
-          locale="ko"
-          okButton="확인"
-          cancelButton="취소"
-        />
-      )}
+
     </>
   );
 }

@@ -9,6 +9,7 @@ import ReportModal from '@/components/domain/community/ReportModal';
 import AddScheduleModal from '@/screens/photographer/BookingCalendar/AddScheduleModal';
 import ScheduleDetailModal from '@/screens/photographer/BookingCalendar/ScheduleDetailModal';
 import { CreateCommunityPostParams } from '@/api/community.ts';
+import WheelDatePicker from '@/components/ui/WheelDatePicker';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -23,6 +24,8 @@ export default function RootNavigator() {
     closeScheduleDetailModal,
     reportModal,
     closeReportModal,
+    monthPickerModal,
+    closeMonthPickerModal,
   } = useModalStore();
 
   const handleCloseCommunityPostModal = () => {
@@ -95,6 +98,21 @@ export default function RootNavigator() {
         targetUserType={reportModal.targetUserType || 'user'}
         isLoading={!!reportModal.isLoading}
       />
+
+      <WheelDatePicker
+        mode="month"
+        visible={monthPickerModal.visible}
+        value={monthPickerModal.value}
+        onConfirm={(date) => {
+          monthPickerModal.onConfirm?.(date);
+          closeMonthPickerModal();
+        }}
+        onCancel={closeMonthPickerModal}
+        minimumDate={monthPickerModal.minYear ? new Date(monthPickerModal.minYear, 0, 1) : undefined}
+        maximumDate={monthPickerModal.maxYear ? new Date(monthPickerModal.maxYear, 11, 31) : undefined}
+      />
     </>
   );
 }
+
+

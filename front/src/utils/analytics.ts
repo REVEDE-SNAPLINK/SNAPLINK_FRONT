@@ -18,10 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let globalUserId: string | undefined = undefined;
 let globalUserType: 'user' | 'photographer' | 'guest' = 'guest';
-// 현재 화면, 진입 출처, 직전 액션 유지
 let currentScreen: string = 'Unknown';
-let currentEntrySource: string = 'direct';
-let currentSource: string = 'direct';
 let sessionTrackingCode: string | undefined = undefined;
 const EVENT_VERSION = 1;
 
@@ -36,10 +33,8 @@ export const setAnalyticsUserContext = (userId?: string, userType?: 'user' | 'ph
     }
 };
 
-export const setAnalyticsFlowContext = (screen?: string, source?: string, entrySource?: string, trackingCode?: string) => {
+export const setAnalyticsFlowContext = (screen?: string, trackingCode?: string) => {
     if (screen) currentScreen = screen;
-    if (source) currentSource = source;
-    if (entrySource) currentEntrySource = entrySource;
     if (trackingCode !== undefined) sessionTrackingCode = trackingCode;
 };
 
@@ -204,7 +199,7 @@ export const resetImpressionCache = (): void => {
 /**
  * [Screen View] - 중복 진입 방지
  */
-export const trackScreenView = async (screenName: string, params?: Record<string, any>) => {
+export const trackScreenView = async (screenName: string) => {
     if (lastScreenView === screenName) return; // Dedupe
     lastScreenView = screenName;
     setAnalyticsFlowContext(screenName); // 글로벌 컨텍스트 업데이트
@@ -252,7 +247,7 @@ export const trackDeepLinkOpen = (rawUrl: string, parsedData: ParsedDeepLink, pa
 
     // 글로벌 컨텍스트에 trackingCode 등 전파 (세션 유지)
     if (parsedData.trackingCode) {
-        setAnalyticsFlowContext(undefined, 'deep_link', parsedData.sourceChannel, parsedData.trackingCode);
+        setAnalyticsFlowContext(undefined, parsedData.trackingCode);
         sessionTrackingCode = parsedData.trackingCode; // 세션 전역 유지
         saveAttributionTrackingCode(parsedData.trackingCode); // 앱 재시작 후에도 유지
     }

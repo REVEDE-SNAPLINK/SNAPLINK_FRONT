@@ -279,6 +279,8 @@ export default function UserOnboardingContainer() {
       isSubmitDisabled={!isStepValid}
       submitButtonText={submitButtonText}
       navigation={navigation}
+      birthDate={watchedBirthDate}
+      onBirthDateChange={(date) => setValue('birthDate', date)}
     />
   );
 }

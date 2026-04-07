@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import Animated, {
   useSharedValue,
@@ -19,6 +19,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import TypeUserImg from '@/assets/imgs/type-user.svg';
 import ArrowRightIcon from '@/assets/icons/arrow-right2.svg';
 import TypePhotographerImg from '@/assets/imgs/type-photographer.svg';
+import WheelDatePicker from '@/components/ui/WheelDatePicker';
 
 // Email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -49,6 +50,8 @@ interface UserOnboardingViewProps {
   isSubmitDisabled: boolean;
   submitButtonText: string;
   navigation?: any;
+  birthDate: Date;
+  onBirthDateChange: (date: Date) => void;
 }
 
 const TERMS_DATA: TermItem[] = [
@@ -82,7 +85,10 @@ export default function UserOnboardingView({
   isSubmitDisabled,
   submitButtonText,
   navigation,
+  birthDate,
+  onBirthDateChange,
 }: UserOnboardingViewProps) {
+  const [isBirthDatePickerVisible, setIsBirthDatePickerVisible] = useState(false);
   const opacity = useSharedValue(1);
 
   useEffect(() => {
@@ -110,7 +116,13 @@ export default function UserOnboardingView({
       case 4:
         return <UserOnboardingStep5 control={control} errors={errors}  nicknameError={nicknameError} />;
       case 5:
-        return <UserOnboardingStep6 control={control} errors={errors} />;
+        return (
+          <UserOnboardingStep6
+            control={control}
+            errors={errors}
+            onBirthDatePickerOpen={() => setIsBirthDatePickerVisible(true)}
+          />
+        );
       case 6:
         return <UserOnboardingStep7 control={control} errors={errors} />;
       default:
@@ -119,38 +131,50 @@ export default function UserOnboardingView({
   };
 
   return (
-    <ScreenContainer
-      headerShown
-      isShowLogo
-      onPressBack={onPressBack}
-      navigation={navigation}
-    >
-      <Container>
-        <KeyboardAwareScrollView
-          enableOnAndroid
-          keyboardShouldPersistTaps="handled"
-          extraScrollHeight={100}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        >
-          <AnimatedFormContainer style={animatedStyle}>
-            {renderStep()}
-          </AnimatedFormContainer>
-        </KeyboardAwareScrollView>
-        {currentStep > 0 &&
-          <Footer>
-            <SubmitButton
-              onPress={onPressSubmit}
-              width={327}
-              disabled={isSubmitDisabled}
-              text={submitButtonText}
-              position="absolute"
-              bottom={33}
-            />
-          </Footer>
-        }
-      </Container>
-    </ScreenContainer>
+    <>
+      <ScreenContainer
+        headerShown
+        isShowLogo
+        onPressBack={onPressBack}
+        navigation={navigation}
+      >
+        <Container>
+          <KeyboardAwareScrollView
+            enableOnAndroid
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={100}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
+            <AnimatedFormContainer style={animatedStyle}>
+              {renderStep()}
+            </AnimatedFormContainer>
+          </KeyboardAwareScrollView>
+          {currentStep > 0 &&
+            <Footer>
+              <SubmitButton
+                onPress={onPressSubmit}
+                width={327}
+                disabled={isSubmitDisabled}
+                text={submitButtonText}
+                position="absolute"
+                bottom={33}
+              />
+            </Footer>
+          }
+        </Container>
+      </ScreenContainer>
+      <WheelDatePicker
+        mode="date"
+        visible={isBirthDatePickerVisible}
+        value={birthDate}
+        onConfirm={(date) => {
+          onBirthDateChange(date);
+          setIsBirthDatePickerVisible(false);
+        }}
+        onCancel={() => setIsBirthDatePickerVisible(false)}
+      />
+    </>
   );
 }
 
@@ -398,9 +422,10 @@ UserOnboardingStep5.displayName = 'UserOnboardingStep5';
 interface UserOnboardingStep6Props {
   control: Control<UserOnboardingFormData>;
   errors: FieldErrors<UserOnboardingFormData>;
+  onBirthDatePickerOpen: () => void;
 }
 
-const UserOnboardingStep6 = ({ control, errors }: UserOnboardingStep6Props) => {
+const UserOnboardingStep6 = ({ control, errors, onBirthDatePickerOpen }: UserOnboardingStep6Props) => {
   return (
     <>
       <Typography fontSize={18} lineHeight="140%" marginBottom={20}>
@@ -421,11 +446,11 @@ const UserOnboardingStep6 = ({ control, errors }: UserOnboardingStep6Props) => {
         rules={{
           required: '생년월일을 입력해주세요.',
         }}
-        render={({ field: { onChange, value } }) => (
+        render={({ field: { value } }) => (
           <DateInput
             placeholder="YYYY.MM.DD *"
             value={value}
-            onChange={onChange}
+            onPress={onBirthDatePickerOpen}
             errorMessage={errors.birthDate?.message}
           />
         )}
